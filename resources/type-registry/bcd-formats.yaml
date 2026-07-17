@@ -1,0 +1,32 @@
+# BCD16/BCD32 — NOT real data types. Transcribed from Siemens' S7-1200
+# manual, "PLC concepts > Data types": "Although not available as data
+# types, the following BCD numeric format is supported by the
+# conversion instructions."
+#
+# A linter must NOT accept these as a Datatype in a VAR declaration or
+# STRUCT member (unlike everything in base-types.yaml) — they only ever
+# appear as a literal-value format understood by specific conversion
+# instructions (instruction-registry/11-conversion.yaml's Convert, and
+# any dedicated BCD_TO_INT/INT_TO_BCD-style instruction not yet in that
+# registry — add it there, following its own verification workflow, if
+# you need to lint one).
+
+BCD16:
+  kind: numeric-format-only
+  notAValidDatatype: true
+  sizeBits: 16
+  numberRepresentations:
+    - { form: bcd, range: "-999 to 999", example: "123, -123" }
+  confidence: official-doc
+  source: "Siemens S7-1200 manual — Data types"
+  notes: "Illegal as a VAR/STRUCT member Datatype. Only meaningful as the format a conversion instruction reads/writes."
+
+BCD32:
+  kind: numeric-format-only
+  notAValidDatatype: true
+  sizeBits: 32
+  numberRepresentations:
+    - { form: bcd, range: "-9999999 to 9999999", example: "1234567, -1234567" }
+  confidence: official-doc
+  source: "Siemens S7-1200 manual — Data types"
+  notes: "Illegal as a VAR/STRUCT member Datatype. Only meaningful as the format a conversion instruction reads/writes."

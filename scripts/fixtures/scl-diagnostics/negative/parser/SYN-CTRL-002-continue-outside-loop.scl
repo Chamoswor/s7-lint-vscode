@@ -1,0 +1,19 @@
+FUNCTION_BLOCK "Syntax_ContinueOutsideLoop"
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+
+VAR
+    a        : Int := 1;
+    b        : Int := 2;
+    result   : Int := 0;
+    flag     : Bool := TRUE;
+    i        : Int := 0;
+    values   : Array[0..9] of Int;
+END_VAR
+BEGIN
+    CONTINUE;
+    // EXPECT: error[syntax.continue-outside-loop] SYN-CTRL-002
+    #result := 123;
+    // RECOVERY
+
+END_FUNCTION_BLOCK

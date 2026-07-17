@@ -1,0 +1,17 @@
+﻿{
+    S7_Optimized := "TRUE";
+    S7_PreferredLanguage := "LAD";
+    S7_Version := "0.1"
+}
+ORGANIZATION_BLOCK "Main"
+    { S7_Language := "LAD" }
+    NETWORK
+        RUNG wire#powerrail
+        END_RUNG
+    END_NETWORK
+    { S7_Language := "LAD" }
+    NETWORK
+        RUNG wire#powerrail
+        END_RUNG
+    END_NETWORK
+END_ORGANIZATION_BLOCK

@@ -1,0 +1,43 @@
+﻿{
+    S7_Optimized := "TRUE";
+    S7_PreferredLanguage := "FBD";
+    S7_Version := "0.1"
+}
+FUNCTION_BLOCK "CLAUDE_REF_SHIFT-AND-ROTATE"
+    { S7_Language := "FBD" }
+    NETWORK
+        RUNG
+            Shr(
+                in :=  ,
+                n :=  ,
+                out =>  
+            )
+        END_RUNG
+        RUNG
+            Shl(
+                in :=  ,
+                n :=  ,
+                out =>  
+            )
+        END_RUNG
+        RUNG
+            Ror(
+                in :=  ,
+                n :=  ,
+                out =>  
+            )
+        END_RUNG
+        RUNG
+            Rol(
+                in :=  ,
+                n :=  ,
+                out =>  
+            )
+        END_RUNG
+    END_NETWORK
+    { S7_Language := "FBD" }
+    NETWORK
+        RUNG
+        END_RUNG
+    END_NETWORK
+END_FUNCTION_BLOCK

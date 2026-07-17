@@ -1,0 +1,80 @@
+﻿{
+    S7_Optimized := "TRUE";
+    S7_PreferredLanguage := "FBD";
+    S7_Version := "0.1"
+}
+FUNCTION_BLOCK "CLAUDE_REF_WORD-LOGIC-OPERATIONS"
+    { S7_Language := "FBD" }
+    NETWORK
+        RUNG
+            And(
+                in1 :=  ,
+                in2 :=  ,
+                out =>  
+            )
+        END_RUNG
+        RUNG
+            Or(
+                in1 :=  ,
+                in2 :=  ,
+                out =>  
+            )
+        END_RUNG
+        RUNG
+            Xor(
+                in1 :=  ,
+                in2 :=  ,
+                out =>  
+            )
+        END_RUNG
+        RUNG
+            Inv(
+                in :=  ,
+                out =>  
+            )
+        END_RUNG
+        RUNG
+            DECO(
+                in :=  ,
+                out =>  
+            )
+        END_RUNG
+        RUNG
+            ENCO(
+                in :=  ,
+                out =>  
+            )
+        END_RUNG
+        RUNG
+            SEL(
+                g :=  ,
+                in0 :=  ,
+                in1 :=  ,
+                out =>  
+            )
+        END_RUNG
+        RUNG
+            Mux(
+                k :=  ,
+                in0 :=  ,
+                in1 :=  ,
+                else :=  ,
+                out =>  
+            )
+        END_RUNG
+        RUNG
+            Demux(
+                k :=  ,
+                in :=  ,
+                out0 =>  ,
+                out1 =>  ,
+                else =>  
+            )
+        END_RUNG
+    END_NETWORK
+    { S7_Language := "FBD" }
+    NETWORK
+        RUNG
+        END_RUNG
+    END_NETWORK
+END_FUNCTION_BLOCK

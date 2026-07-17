@@ -1,0 +1,147 @@
+# Hardware and I/O address conversion — LAD/FBD registry.
+#
+# Graphical instruction aliases and pin casing are retained from anonymized
+# reference fixtures and apply to both LAD and FBD.
+#
+# Exported `:=` connections cannot distinguish INPUT from IN_OUT. Independently
+# documented IN_OUT parameters are corrected explicitly.
+#
+# Graphical instructions use pins and therefore have `result: { kind: none }`.
+# Missing dataTypes are intentional; unresolved types are never guessed.
+
+$fileLanguage: [LAD, FBD]
+GEO2LOG:
+  family: extended
+  callShape: box
+  instanceType: null
+  pins:
+  - name: GEOADDR
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [Variant]
+  - name: RET_VAL
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Int]
+  - name: LADDR
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [HW_ANY]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Convert a slot's geographic (rack/slot) address to its logical (hardware ID) address.
+  source: "official instruction documentation (paraphrased)"
+  result:
+    kind: none
+LOG2GEO:
+  family: extended
+  callShape: box
+  instanceType: null
+  pins:
+  - name: LADDR
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [HW_ANY]
+  - name: Ret_Val
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Int]
+  - name: GEOADDR
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Variant]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Convert a logical address to its geographic address, inverse of GEO2LOG.
+  source: "official instruction documentation (paraphrased)"
+  result:
+    kind: none
+IO2MOD:
+  family: extended
+  callShape: box
+  instanceType: null
+  pins:
+  - name: ADDR
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [UInt]
+  - name: RET_VAL
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Int]
+  - name: LADDR
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [HW_ANY]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Convert an I/O address to the logical address of the module that occupies it.
+  source: "official instruction documentation (paraphrased)"
+  result:
+    kind: none
+RD_ADDR:
+  family: extended
+  callShape: box
+  instanceType: null
+  pins:
+  - name: LADDR
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [HW_ANY]
+  - name: Ret_Val
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Int]
+  - name: PIADDR
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [UInt]
+  - name: PICount
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [UInt]
+  - name: PQADDR
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [UInt]
+  - name: PQCount
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [UInt]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Read a module's process-image input/output address ranges.
+  source: "official instruction documentation (paraphrased)"
+  result:
+    kind: none

@@ -1,0 +1,132 @@
+# Process-image update and synchronization — LAD/FBD registry.
+#
+# Graphical instruction aliases and pin casing are retained from anonymized
+# reference fixtures and apply to both LAD and FBD.
+#
+# Exported `:=` connections cannot distinguish INPUT from IN_OUT. Independently
+# documented IN_OUT parameters are corrected explicitly.
+#
+# Graphical instructions use pins and therefore have `result: { kind: none }`.
+# Missing dataTypes are intentional; unresolved types are never guessed.
+
+$fileLanguage: [LAD, FBD]
+UPDAT_PI:
+  family: extended
+  callShape: box
+  instanceType: null
+  pins:
+  - name: PART
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [PIP]
+  - name: RET_VAL
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Int]
+  - name: FLADDR
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [HW_IO]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Update part of the process-image input table.
+  source: "official instruction documentation (paraphrased)"
+  result:
+    kind: none
+UPDAT_PO:
+  family: extended
+  callShape: box
+  instanceType: null
+  pins:
+  - name: PART
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [PIP]
+  - name: RET_VAL
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Int]
+  - name: FLADDR
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [HW_IO]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Update part of the process-image output table.
+  source: "official instruction documentation (paraphrased)"
+  result:
+    kind: none
+SYNC_PI:
+  family: extended
+  callShape: box
+  instanceType: null
+  pins:
+  - name: PART
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [PIP]
+  - name: RET_VAL
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Int]
+  - name: FLADDR
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [HW_IO]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Synchronous (isochronous) update of part of the process-image input table.
+  source: "official instruction documentation (paraphrased)"
+  result:
+    kind: none
+SYNC_PO:
+  family: extended
+  callShape: box
+  instanceType: null
+  pins:
+  - name: PART
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [PIP]
+  - name: RET_VAL
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Int]
+  - name: FLADDR
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [HW_IO]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Synchronous (isochronous) update of part of the process-image output table.
+  source: "official instruction documentation (paraphrased)"
+  result:
+    kind: none

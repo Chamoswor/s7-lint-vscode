@@ -1,0 +1,316 @@
+# LAD/FBD runtime-control instruction registry.
+#
+# Instruction names and pin casing follow the graphical/export naming used by
+# this registry. Parameter datatypes, memory areas and semantics follow the
+# Siemens STEP 7 runtime-control documentation.
+#
+# INIT_RD and WAIT are available only for S7-1500. The remaining instructions
+# are available for S7-1200, S7-1500 and S7-1200 G2 in STEP 7 V21.
+#
+$fileLanguage: [LAD, FBD]
+
+ENDIS_PW:
+  family: runtime-control
+  callShape: box
+  instanceType: null
+  pins:
+    - name: REQ
+      dir: in
+      required: true
+      dataTypes: [Bool]
+      memoryAreas: [I, Q, M, D, L, constant]
+      note: "FALSE queries the current password states without changing them; TRUE applies the F_PWD, FULL_PWD, R_PWD and HMI_PWD requests."
+    - name: F_PWD
+      dir: in
+      required: true
+      dataTypes: [Bool]
+      memoryAreas: [I, Q, M, D, L, constant]
+      note: "FALSE locks and TRUE releases the fail-safe full-access password. This input must be TRUE on a standard CPU."
+    - name: FULL_PWD
+      dir: in
+      required: true
+      dataTypes: [Bool]
+      memoryAreas: [I, Q, M, D, L, constant]
+      note: "FALSE locks and TRUE releases the full-access password. It must be TRUE when no password is configured for this access level."
+    - name: R_PWD
+      dir: in
+      required: true
+      dataTypes: [Bool]
+      memoryAreas: [I, Q, M, D, L, constant]
+      note: "FALSE locks and TRUE releases the read-access password. It must be TRUE when no password is configured for this access level."
+    - name: HMI_PWD
+      dir: in
+      required: true
+      dataTypes: [Bool]
+      memoryAreas: [I, Q, M, D, L, constant]
+      note: "FALSE locks and TRUE releases the HMI-access password. Locking it prevents HMI systems from accessing the CPU."
+    - name: Ret_Val
+      dir: out
+      required: true
+      dataTypes: [Word]
+      memoryAreas: [I, Q, M, D, L]
+      note: "Official parameter RET_VAL. W#16#0000 means no error; 8090 means unsupported; 80D0 through 80D3 identify invalid password-input states."
+    - name: F_PWD_ON
+      dir: out
+      required: true
+      dataTypes: [Bool]
+      memoryAreas: [I, Q, M, D, L]
+      note: "Current state of the fail-safe full-access password after the call: FALSE locked, TRUE released."
+    - name: FULL_PWD_ON
+      dir: out
+      required: true
+      dataTypes: [Bool]
+      memoryAreas: [I, Q, M, D, L]
+      note: "Current state of the full-access password after the call: FALSE locked, TRUE released."
+    - name: R_PWD_ON
+      dir: out
+      required: true
+      dataTypes: [Bool]
+      memoryAreas: [I, Q, M, D, L]
+      note: "Current state of the read-access password after the call: FALSE locked, TRUE released."
+    - name: HMI_PWD_ON
+      dir: out
+      required: true
+      dataTypes: [Bool]
+      memoryAreas: [I, Q, M, D, L]
+      note: "Current state of the HMI-access password after the call: FALSE locked, TRUE released."
+  enEno:
+    en:
+      present: true
+      dataTypes: [Bool]
+      memoryArea:
+        "S7-1200": [I, Q, M, D, L, constant]
+        "S7-1500": [I, Q, M, D, L, constant]
+    eno:
+      present: true
+      dataTypes: [Bool]
+      memoryArea:
+        "S7-1200": [I, Q, M, D, L]
+        "S7-1500": [I, Q, M, D, L]
+  result: { kind: none }
+  template: { shape: none, keys: [], extra: {} }
+  confidence: official-doc
+  notes: >-
+    Locks, releases or queries the CPU access-level passwords. If the instruction returns an error, none
+    of the requested password-state changes take effect.
+  source: "official instruction documentation (paraphrased)"
+RE_TRIGR:
+  family: runtime-control
+  callShape: box
+  instanceType: null
+  pins: []
+  enEno:
+    en:
+      present: true
+      dataTypes: [Bool]
+      memoryArea:
+        "S7-1200": [I, Q, M, D, L, constant]
+        "S7-1500": [I, Q, M, D, L, constant]
+    eno:
+      present: true
+      dataTypes: [Bool]
+      memoryArea:
+        "S7-1200": [I, Q, M, D, L]
+        "S7-1500": [I, Q, M, D, L]
+  result: { kind: none }
+  template: { shape: none, keys: [], extra: {} }
+  confidence: official-doc
+  notes: >-
+    Restarts the CPU cycle-monitoring time. The total extension is limited to ten times the configured
+    maximum program-cycle time. Siemens documents an overlapping firmware boundary for S7-1200 V2.2:
+    firmware <= 2.2 is restricted to a priority-1 program-cycle OB, while firmware >= 2.2 is allowed in
+    all OBs.
+  source: "official instruction documentation (paraphrased)"
+STP:
+  family: runtime-control
+  callShape: box
+  instanceType: null
+  pins: []
+  enEno:
+    en:
+      present: true
+      dataTypes: [Bool]
+      memoryArea:
+        "S7-1200": [I, Q, M, D, L, constant]
+        "S7-1500": [I, Q, M, D, L, constant]
+    eno:
+      present: true
+      dataTypes: [Bool]
+      memoryArea:
+        "S7-1200": [I, Q, M, D, L]
+        "S7-1500": [I, Q, M, D, L]
+  result: { kind: none }
+  template: { shape: none, keys: [], extra: {} }
+  confidence: official-doc
+  notes: >-
+    Sets the CPU to STOP when EN/RLO is TRUE and ends program execution. Siemens explicitly lists EN and
+    ENO for LAD/FBD; the output signal state is not evaluated by the instruction.
+  source: "official instruction documentation (paraphrased)"
+GetError:
+  family: runtime-control
+  callShape: box
+  instanceType: null
+  pins:
+    - name: error
+      dir: out
+      required: true
+      dataTypes: [ErrorStruct]
+      memoryAreas: [D, L]
+      note: "Official parameter ERROR. Receives detailed information about the first unhandled local execution error."
+  enEno:
+    en:
+      present: true
+      dataTypes: [Bool]
+      memoryArea:
+        "S7-1200": [I, Q, M, D, L, constant]
+        "S7-1500": [I, Q, M, D, L, constant]
+    eno:
+      present: true
+      dataTypes: [Bool]
+      memoryArea:
+        "S7-1200": [I, Q, M, D, L]
+        "S7-1500": [I, Q, M, D, L]
+  result: { kind: none }
+  template: { shape: none, keys: [], extra: {} }
+  confidence: official-doc
+  notes: >-
+    GET_ERROR activates local error handling for the containing block. ENO is TRUE only when EN is TRUE
+    and error information is available. ERROR is not overwritten when no new error information is
+    present.
+  source: "official instruction documentation (paraphrased)"
+GetErrorID:
+  family: runtime-control
+  callShape: box
+  instanceType: null
+  pins:
+    - name: ID
+      dir: out
+      required: true
+      dataTypes: [Word]
+      memoryAreas: [I, Q, M, D, L]
+      note: "Error identifier for the first unhandled local execution error."
+  enEno:
+    en:
+      present: true
+      dataTypes: [Bool]
+      memoryArea:
+        "S7-1200": [I, Q, M, D, L, constant]
+        "S7-1500": [I, Q, M, D, L, constant]
+    eno:
+      present: true
+      dataTypes: [Bool]
+      memoryArea:
+        "S7-1200": [I, Q, M, D, L]
+        "S7-1500": [I, Q, M, D, L]
+  result: { kind: none }
+  template: { shape: none, keys: [], extra: {} }
+  confidence: official-doc
+  notes: >-
+    GET_ERR_ID activates local error handling for the containing block. ENO is TRUE only when EN is TRUE
+    and error information is available. ID is not overwritten when no new error information is present.
+  source: "official instruction documentation (paraphrased)"
+INIT_RD:
+  family: runtime-control
+  callShape: box
+  instanceType: null
+  pins:
+    - name: REQ
+      dir: in
+      required: true
+      dataTypes: [Bool]
+      memoryAreas: [I, Q, M, D, L, T, C, constant]
+      note: "TRUE resets all retentive data in data blocks, bit memories and SIMATIC timers and counters."
+    - name: Ret_Val
+      dir: out
+      required: true
+      dataTypes: [Int]
+      memoryAreas: [I, Q, M, D, L]
+      note: "Official parameter RET_VAL. Value 0 means no error; W#16#80B5 means the instruction was called outside a startup OB."
+  enEno:
+    en:
+      present: true
+      dataTypes: [Bool]
+      memoryArea:
+        "S7-1200": []
+        "S7-1500": [I, Q, M, D, L, constant]
+    eno:
+      present: true
+      dataTypes: [Bool]
+      memoryArea:
+        "S7-1200": []
+        "S7-1500": [I, Q, M, D, L]
+  result: { kind: none }
+  template: { shape: none, keys: [], extra: {} }
+  confidence: official-doc
+  notes: >-
+    S7-1500 only. The instruction may be executed only in a startup OB.
+  source: "official instruction documentation (paraphrased)"
+WAIT:
+  family: runtime-control
+  callShape: box
+  instanceType: null
+  pins:
+    - name: WT
+      dir: in
+      required: true
+      dataTypes: [Int]
+      memoryAreas: [I, Q, M, D, L, P, constant]
+      note: "Delay in microseconds. The valid INT range is -32768 through 32767; a negative value causes ENO to be FALSE and performs no delay."
+  enEno:
+    en:
+      present: true
+      dataTypes: [Bool]
+      memoryArea:
+        "S7-1200": []
+        "S7-1500": [I, Q, M, D, L, constant]
+    eno:
+      present: true
+      dataTypes: [Bool]
+      memoryArea:
+        "S7-1200": []
+        "S7-1500": [I, Q, M, D, L]
+  result: { kind: none }
+  template: { shape: none, keys: [], extra: {} }
+  confidence: official-doc
+  notes: >-
+    S7-1500 only. Pauses program execution for WT microseconds. Higher-priority events may interrupt
+    execution, but the configured delay interval continues.
+  source: "official instruction documentation (paraphrased)"
+Runtime:
+  family: runtime-control
+  callShape: box
+  instanceType: null
+  pins:
+    - name: ret_val
+      dir: out
+      required: true
+      dataTypes: [LReal]
+      memoryAreas: [I, Q, M, D, L]
+      note: "Official parameter RET_VAL. Measured elapsed time in seconds."
+    - name: mem
+      dir: inout
+      required: true
+      dataTypes: [LReal]
+      memoryAreas: [I, Q, M, D, L]
+      note: "Official parameter MEM. Opaque internal measurement state; the same operand must be used for both calls."
+  enEno:
+    en:
+      present: true
+      dataTypes: [Bool]
+      memoryArea:
+        "S7-1200": [I, Q, M, D, L]
+        "S7-1500": [I, Q, M, D, L]
+    eno:
+      present: true
+      dataTypes: [Bool]
+      memoryArea:
+        "S7-1200": [I, Q, M, D, L]
+        "S7-1500": [I, Q, M, D, L]
+  result: { kind: none }
+  template: { shape: none, keys: [], extra: {} }
+  confidence: official-doc
+  notes: >-
+    Measures elapsed runtime using two calls with the same MEM operand. The first call stores the start
+    value; the second call returns the elapsed time. Values <= 0.0 caused by counter overflow must be
+    ignored on affected S7-1200 firmware versions below V4.2.
+  source: "official instruction documentation (paraphrased)"

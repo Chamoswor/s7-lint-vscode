@@ -1,0 +1,19 @@
+FUNCTION_BLOCK "Syntax_ForWrongEndKeyword"
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+
+VAR
+    a        : Int := 1;
+    b        : Int := 2;
+    result   : Int := 0;
+    flag     : Bool := TRUE;
+    i        : Int := 0;
+    values   : Array[0..9] of Int;
+END_VAR
+BEGIN
+    FOR #i := 0 TO 9 DO
+        #values[#i] := #i;
+    END_FORR;
+    // EXPECT: error[syntax.expected-end-for] SYN-FOR-004
+
+END_FUNCTION_BLOCK

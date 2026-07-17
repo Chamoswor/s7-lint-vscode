@@ -1,0 +1,274 @@
+# Which datatypes are legal in which VAR_* interface section (Constant,
+# InOut, Input, Output, Static, Temp). Source: data-types-ext/*.md,
+# user-confirmed against Siemens' own reference tables for S7-1200/S7-1500
+# (2026-07-13). confidence: official-doc, same tier as base-types.yaml.
+#
+# EVENT_HWINT / OB_HWINT (originally transcribed as EVENT_HWNT / OB_HWNT
+# from data-types-ext) corrected 2026-07-13 after platform-availability.NOTLOADED.yaml
+# confirmed that spelling from a second, independent Siemens source
+# (the "Overview of the valid data types" table) — see that file's
+# trailing `notes` block.
+#
+# This is a different axis than base-types.yaml / composition-rules.yaml:
+# those describe what a type IS (size, ranges, nesting rules); this file
+# describes WHERE a given type name may legally be declared. A lint
+# server should check both — e.g. `Variant` is a valid Datatype per
+# base-types.yaml, but illegal in a `Static` or `Output` section per this
+# file.
+#
+# Several type names below (HW_*, OB_*, EVENT_*, CONN_*, DB_ANY/DB_DYN/
+# DB_WWW, IEC_*, PID_Compact*, AOM_IDENT, PORT, PIP, RTM, OPC_UA_*, CREF,
+# NREF, Remote, ErrorStruct, F_SYSINFO) are NOT in base-types.yaml —
+# they're system/parameter/library types with no entry there yet, and
+# not PLC data types (UDTs) resolvable via udt-dependency-cache.md
+# either. Treat them here as opaque legal names: a lint server checking
+# section legality only needs "is this name allowed in this section",
+# not their internal structure. `Any` and `Pointer` USED to be in this
+# list too — RESOLVED 2026-07-13, both now have real base-types.yaml
+# entries (see any-pointer.yaml and pointer-type.yaml for their full
+# shape) and no longer need opaque-name treatment.
+#
+# Current limitation: the sections below describe code-block VAR_* contexts.
+# A PLC data type's member list is a separate declaration context and is not
+# modeled here. Do not reuse Static's `additionalDatatypes` for UDT members
+# without independently established rules.
+
+allSections:
+  notes: "Legal in every one of the six sections below, on top of each section's own additionalDatatypes list."
+  confidence: official-doc
+  source: data-types-ext/All.md
+  datatypes:
+    - AOM_IDENT
+    - Bool
+    - Byte
+    - CONN_ANY
+    - CONN_OUC
+    - CONN_PRG
+    - Char
+    - DB_ANY
+    - DB_DYN
+    - DB_WWW
+    - DInt
+    - DTL
+    - DWord
+    - Date
+    - EVENT_ANY
+    - EVENT_ATT
+    - EVENT_HWINT
+    - HW_ANY
+    - HW_DEVICE
+    - HW_DPSLAVE
+    - HW_HSC
+    - HW_IEPORT
+    - HW_INTERFACE
+    - HW_IO
+    - HW_IOSYSTEM
+    - HW_MODULE
+    - HW_PTO
+    - HW_PWM
+    - HW_SUBMODULE
+    - Int
+    - LDT
+    - LInt
+    - LReal
+    - LTime
+    - LTime_Of_Day
+    - LWord
+    - OB_ANY
+    - OB_ATT
+    - OB_CYCLIC
+    - OB_DELAY
+    - OB_DIAG
+    - OB_HWINT
+    - OB_PCYCLE
+    - OB_STARTUP
+    - OB_TIMEERROR
+    - OB_TOD
+    - OPC_UA_ByteStringActualLength
+    - OPC_UA_LocalizedTextEncodingMask
+    - PIP
+    - PORT
+    - RTM
+    - Real
+    - SInt
+    - String
+    - Time
+    - Time_Of_Day
+    - UDInt
+    - UInt
+    - ULInt
+    - USInt
+    - WChar
+    - WString
+    - Word
+
+sections:
+  Constant:
+    additionalDatatypes: []
+    confidence: official-doc
+    source: data-types-ext/Constant.md
+    notes: "No additional types beyond allSections."
+
+  InOut:
+    additionalDatatypes:
+      - Any
+      - "Array[0..1] of"
+      - CREF
+      - ErrorStruct
+      - F_SYSINFO
+      - IEC_COUNTER
+      - IEC_DCOUNTER
+      - IEC_LCOUNTER
+      - IEC_LTIMER
+      - IEC_SCOUNTER
+      - IEC_TIMER
+      - IEC_UCOUNTER
+      - IEC_UDCOUNTER
+      - IEC_ULCOUNTER
+      - IEC_USCOUNTER
+      - NREF
+      - PID_CompactConfig
+      - PID_CompactControl
+      - PID_CompactControlParams
+      - PID_CompactRetain
+      - PID_CompactSelfTune
+      - PID_Compact_SUT
+      - PID_Compact_TIR
+      - PID_CycleTime
+      - PID_GradientEstimation
+      - PID_GradientParams
+      - PID_Scaling
+      - PID_StandardDeviation
+      - Pointer
+      - Remote
+      - Struct
+      - Variant
+    confidence: official-doc
+    source: data-types-ext/InOut.md
+
+  Input:
+    additionalDatatypes:
+      - Any
+      - "Array[0..1] of"
+      - CREF
+      - ErrorStruct
+      - F_SYSINFO
+      - IEC_COUNTER
+      - IEC_DCOUNTER
+      - IEC_LCOUNTER
+      - IEC_LTIMER
+      - IEC_SCOUNTER
+      - IEC_TIMER
+      - IEC_UCOUNTER
+      - IEC_UDCOUNTER
+      - IEC_ULCOUNTER
+      - IEC_USCOUNTER
+      - NREF
+      - PID_CompactConfig
+      - PID_CompactControl
+      - PID_CompactControlParams
+      - PID_CompactRetain
+      - PID_CompactSelfTune
+      - PID_Compact_SUT
+      - PID_Compact_TIR
+      - PID_CycleTime
+      - PID_GradientEstimation
+      - PID_GradientParams
+      - PID_Scaling
+      - PID_StandardDeviation
+      - Pointer
+      - Remote
+      - Struct
+      - Variant
+    confidence: official-doc
+    source: data-types-ext/Input.md
+    notes: "Identical additionalDatatypes list to InOut."
+
+  Output:
+    additionalDatatypes:
+      - "Array[0..1] of"
+      - CREF
+      - ErrorStruct
+      - F_SYSINFO
+      - NREF
+      - PID_CompactConfig
+      - PID_CompactControl
+      - PID_CompactControlParams
+      - PID_CompactRetain
+      - PID_CompactSelfTune
+      - PID_Compact_SUT
+      - PID_Compact_TIR
+      - PID_CycleTime
+      - PID_GradientEstimation
+      - PID_GradientParams
+      - PID_Scaling
+      - PID_StandardDeviation
+      - Struct
+    confidence: official-doc
+    source: data-types-ext/Output.md
+    notes: "No Any/Pointer/Variant/IEC_*/Remote — narrower than InOut/Input."
+
+  Static:
+    additionalDatatypes:
+      - "Array[0..1] of"
+      - CREF
+      - ErrorStruct
+      - F_SYSINFO
+      - IEC_COUNTER
+      - IEC_DCOUNTER
+      - IEC_LCOUNTER
+      - IEC_LTIMER
+      - IEC_SCOUNTER
+      - IEC_TIMER
+      - IEC_UCOUNTER
+      - IEC_UDCOUNTER
+      - IEC_ULCOUNTER
+      - IEC_USCOUNTER
+      - NREF
+      - PID_CompactConfig
+      - PID_CompactControl
+      - PID_CompactControlParams
+      - PID_CompactRetain
+      - PID_CompactSelfTune
+      - PID_Compact_SUT
+      - PID_Compact_TIR
+      - PID_CycleTime
+      - PID_GradientEstimation
+      - PID_GradientParams
+      - PID_Scaling
+      - PID_StandardDeviation
+      - Struct
+    confidence: official-doc
+    source: data-types-ext/Static.md
+    notes: "Has IEC_* instance types (unlike Output) but no Any/Pointer/Variant/Remote."
+
+  Temp:
+    additionalDatatypes:
+      - "Array[0..1] of"
+      - CREF
+      - ErrorStruct
+      - F_SYSINFO
+      - NREF
+      - PID_CompactConfig
+      - PID_CompactControl
+      - PID_CompactControlParams
+      - PID_CompactRetain
+      - PID_CompactSelfTune
+      - PID_Compact_SUT
+      - PID_Compact_TIR
+      - PID_CycleTime
+      - PID_GradientEstimation
+      - PID_GradientParams
+      - PID_Scaling
+      - PID_StandardDeviation
+      - Struct
+      - Variant
+    confidence: official-doc
+    source: data-types-ext/Temp.md
+    notes: "Has Variant (unlike Output/Static) but no Any/Pointer/IEC_*/Remote."
+
+# "Array[0..1] of" is not a literal type name — data-types-ext used it as
+# a placeholder to mean "array types are permitted here" (any bounds, any
+# element type). A lint server should treat any `TypeRef` of kind "array"
+# (see udt-dependency-cache.md) as matching this entry, not do a literal
+# string match against "Array[0..1] of".

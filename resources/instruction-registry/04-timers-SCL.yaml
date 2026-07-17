@@ -1,0 +1,278 @@
+# SCL IEC-timer instruction registry.
+#
+# TP, TON, TOF and TONR are stateful IEC-timer instance calls. They expose
+# output parameters but no function return value.
+#
+# Shared timer DB:
+#   "TimerDB".TON(IN := #Start, PT := T#5s, Q => #Done, ET => #Elapsed);
+#
+# Static multi-instance:
+#   #Timer(IN := #Start, PT := T#5s, Q => #Done, ET => #Elapsed);
+#
+# RESET_TIMER and PRESET_TIMER are ordinary SCL instruction calls operating on
+# an already declared IEC-timer instance.
+#
+# Memory-area conventions:
+# - Timer-call input parameters: I, Q, M, D, L, P; SCL constants are also legal
+#   actual arguments for BOOL/TIME inputs.
+# - Timer-call output parameters: I, Q, M, D, L or P.
+# - RESET_TIMER/PRESET_TIMER timer references: D or L.
+# - PRESET_TIMER.PT: I, Q, M, D or L; Siemens' own example also uses a TIME
+#   literal, so `constant` is included.
+#
+# TIME is supported on S7-1200 and S7-1500. LTIME and the IEC_LTIMER/*_LTIME
+# instance variants are S7-1500-only.
+$fileLanguage: [SCL]
+
+TP:
+  family: timer
+  callShape: instance-dot
+  instanceType: TP_TIME
+
+  pins:
+    - name: IN
+      dir: in
+      required: false
+      dataTypes: [Bool]
+      memoryAreas: [I, Q, M, D, L, P, constant]
+      note: Positive-edge start input.
+
+    - name: PT
+      dir: in
+      required: false
+      dataTypes: [Time, LTime]
+      memoryAreas: [I, Q, M, D, L, P, constant]
+      note: Positive pulse duration. LTIME is S7-1500-only.
+
+    - name: Q
+      dir: out
+      required: false
+      dataTypes: [Bool]
+      memoryAreas: [I, Q, M, D, L, P]
+      note: TRUE for the programmed PT duration after a positive IN edge.
+
+    - name: ET
+      dir: out
+      required: false
+      dataTypes: [Time, LTime]
+      memoryAreas: [I, Q, M, D, L, P]
+      note: Current elapsed time. LTIME is S7-1500-only.
+
+  result:
+    kind: none
+
+  template: { shape: none, keys: [], extra: {} }
+  confidence: official-doc
+  notes: >-
+    Generate pulse. A positive edge at IN starts the timer. Q remains TRUE for PT regardless of
+    subsequent IN changes, and additional rising edges while active do not restart the pulse. Q and ET
+    are updated when interconnected or explicitly accessed.
+  source: "official instruction documentation (paraphrased)"
+TON:
+  family: timer
+  callShape: instance-dot
+  instanceType: TON_TIME
+
+  pins:
+    - name: IN
+      dir: in
+      required: false
+      dataTypes: [Bool]
+      memoryAreas: [I, Q, M, D, L, P, constant]
+      note: Positive-edge start input; FALSE resets the on-delay state.
+
+    - name: PT
+      dir: in
+      required: false
+      dataTypes: [Time, LTime]
+      memoryAreas: [I, Q, M, D, L, P, constant]
+      note: Positive on-delay duration. LTIME is S7-1500-only.
+
+    - name: Q
+      dir: out
+      required: false
+      dataTypes: [Bool]
+      memoryAreas: [I, Q, M, D, L, P]
+      note: TRUE after PT expires and while IN remains TRUE.
+
+    - name: ET
+      dir: out
+      required: false
+      dataTypes: [Time, LTime]
+      memoryAreas: [I, Q, M, D, L, P]
+      note: Current elapsed time; reset when IN becomes FALSE. LTIME is S7-1500-only.
+
+  result:
+    kind: none
+
+  template: { shape: none, keys: [], extra: {} }
+  confidence: official-doc
+  notes: >-
+    Generate on-delay. Timing begins on a positive IN edge. Q becomes TRUE after PT and remains TRUE
+    only while IN remains TRUE. Q and ET are updated when interconnected or explicitly accessed.
+  source: "official instruction documentation (paraphrased)"
+TOF:
+  family: timer
+  callShape: instance-dot
+  instanceType: TOF_TIME
+
+  pins:
+    - name: IN
+      dir: in
+      required: false
+      dataTypes: [Bool]
+      memoryAreas: [I, Q, M, D, L, P, constant]
+      note: Start/control input; a negative edge starts the off-delay.
+
+    - name: PT
+      dir: in
+      required: false
+      dataTypes: [Time, LTime]
+      memoryAreas: [I, Q, M, D, L, P, constant]
+      note: Positive off-delay duration. LTIME is S7-1500-only.
+
+    - name: Q
+      dir: out
+      required: false
+      dataTypes: [Bool]
+      memoryAreas: [I, Q, M, D, L, P]
+      note: TRUE while IN is TRUE and during the active off-delay.
+
+    - name: ET
+      dir: out
+      required: false
+      dataTypes: [Time, LTime]
+      memoryAreas: [I, Q, M, D, L, P]
+      note: Current off-delay time; reset when IN returns to TRUE. LTIME is S7-1500-only.
+
+  result:
+    kind: none
+
+  template: { shape: none, keys: [], extra: {} }
+  confidence: official-doc
+  notes: >-
+    Generate off-delay. Q is set while IN is TRUE. A negative IN edge starts PT; Q remains TRUE until PT
+    expires. Returning IN to TRUE cancels an active off-delay and resets ET.
+  source: "official instruction documentation (paraphrased)"
+TONR:
+  family: timer
+  callShape: instance-dot
+  instanceType: TONR_TIME
+
+  pins:
+    - name: IN
+      dir: in
+      required: false
+      dataTypes: [Bool]
+      memoryAreas: [I, Q, M, D, L, P, constant]
+      note: Accumulation enable. Timing accumulates while TRUE and pauses while FALSE.
+
+    - name: R
+      dir: in
+      required: false
+      dataTypes: [Bool]
+      memoryAreas: [I, Q, M, D, L, P, constant]
+      note: Reset input. TRUE resets Q and ET and blocks accumulation.
+
+    - name: PT
+      dir: in
+      required: false
+      dataTypes: [Time, LTime]
+      memoryAreas: [I, Q, M, D, L, P, constant]
+      note: Positive maximum accumulation duration. LTIME is S7-1500-only.
+
+    - name: Q
+      dir: out
+      required: false
+      dataTypes: [Bool]
+      memoryAreas: [I, Q, M, D, L, P]
+      note: TRUE after accumulated ET reaches PT; reset by R.
+
+    - name: ET
+      dir: out
+      required: false
+      dataTypes: [Time, LTime]
+      memoryAreas: [I, Q, M, D, L, P]
+      note: Accumulated elapsed time. LTIME is S7-1500-only.
+
+  result:
+    kind: none
+
+  template: { shape: none, keys: [], extra: {} }
+  confidence: official-doc
+  notes: >-
+    Time accumulator. Elapsed time is accumulated while IN is TRUE and retained while IN is FALSE. R
+    resets Q and ET and blocks timing while TRUE. Q and ET are updated when interconnected or explicitly
+    accessed.
+  source: "official instruction documentation (paraphrased)"
+RESET_TIMER:
+  family: timer
+  callShape: box
+  instanceType: null
+
+  pins:
+    - name: TIMER
+      dir: out
+      required: true
+      dataTypes:
+        - IEC_TIMER
+        - IEC_LTIMER
+        - TP_TIME
+        - TP_LTIME
+        - TON_TIME
+        - TON_LTIME
+        - TOF_TIME
+        - TOF_LTIME
+        - TONR_TIME
+        - TONR_LTIME
+      memoryAreas: [D, L]
+      note: IEC-timer instance whose complete timer structure is reset to zero.
+
+  result:
+    kind: none
+
+  template: { shape: none, keys: [], extra: {} }
+  confidence: official-doc
+  notes: >-
+    Resets the referenced IEC timer. Siemens requires RESET_TIMER to be programmed in an IF instruction.
+    Timer data is updated when the instruction is called, not continuously on every later access.
+  source: "official instruction documentation (paraphrased)"
+PRESET_TIMER:
+  family: timer
+  callShape: box
+  instanceType: null
+
+  pins:
+    - name: PT
+      dir: in
+      required: true
+      dataTypes: [Time, LTime]
+      memoryAreas: [I, Q, M, D, L, constant]
+      note: New duration written into the IEC-timer structure. LTIME is S7-1500-only.
+
+    - name: TIMER
+      dir: out
+      required: true
+      dataTypes:
+        - IEC_TIMER
+        - IEC_LTIMER
+        - TP_TIME
+        - TP_LTIME
+        - TON_TIME
+        - TON_LTIME
+        - TOF_TIME
+        - TOF_LTIME
+        - TONR_TIME
+        - TONR_LTIME
+      memoryAreas: [D, L]
+      note: IEC-timer instance whose programmed duration is modified.
+
+  result:
+    kind: none
+
+  template: { shape: none, keys: [], extra: {} }
+  confidence: official-doc
+  notes: >-
+    Writes PT into the referenced IEC-timer structure when called. If the timer is already running, the
+    new duration can change its status at the next Q or ET update.
+  source: "official instruction documentation (paraphrased)"

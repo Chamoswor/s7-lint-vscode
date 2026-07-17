@@ -1,0 +1,19 @@
+FUNCTION_BLOCK "Syntax_IfMissingThen"
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+
+VAR
+    a        : Int := 1;
+    b        : Int := 2;
+    result   : Int := 0;
+    flag     : Bool := TRUE;
+    i        : Int := 0;
+    values   : Array[0..9] of Int;
+END_VAR
+BEGIN
+    IF #flag
+        #result := 1;
+    END_IF;
+    // EXPECT: error[syntax.if-missing-then] SYN-IF-001
+
+END_FUNCTION_BLOCK

@@ -1,0 +1,145 @@
+# REF_TO / REF() / dereferencing (^) — typed, S7-1500-only references.
+# Pasted by user 2026-07-13 from Siemens' "References" documentation
+# section; narrative example walkthroughs (SCL/LAD figures, the
+# Telegram1/Telegram2 VARIANT example, the Callee-function and
+# FB-LineData/FC-StationData call examples) were discarded per the
+# user's own instruction — every field below is a rule, not an example.
+# confidence: official-doc.
+
+platform:
+  requirement: "S7-1500 series CPU, firmware >= V2.5"
+  notes: "No S7-1200 support at all (any firmware) — References simply don't exist there, unlike most other gaps in this repo which are S7-1200-vs-S7-1500 SPLITS. platform-availability.NOTLOADED.yaml's existing `pointer.References` row (S7-1500 true, S7-1200 G2 true, S7-1200 false) already matches this; this page adds the firmware >=V2.5 floor as a refinement — a fourth availability axis, the same shape as 02-comparators.yaml's STRUCT/ARRAY/VARIANT-comparison firmware gate (S7-1200>=V4.2 / S7-1500>=V2.0)."
+
+declaration:
+  keyword: "REF_TO <data type>"
+  # Keys/values are the full block-type keyword and `.s7dcl` VAR_* section
+  # keyword this project's own parser uses (parser/s7dclParser.ts's
+  # BLOCK_KEYWORDS/VAR_KEYWORDS) -- machine-checkable directly against a
+  # parsed block, not the source table's own FC/FB/OB + Input/Output/Temp
+  # shorthand. FUNCTION's source-table `Return` entry is genuinely legal
+  # (a REF_TO return type) but is DELIBERATELY OMITTED here: this parser
+  # has no VAR_RETURN-style section at all (a FUNCTION's return type is
+  # part of the block header, not a VAR_* member) -- there is currently no
+  # parsed construct this fact could be checked against, so it isn't
+  # encoded as a checkable section rather than encoded and silently wrong.
+  legalSections:
+    FUNCTION: [VAR_INPUT, VAR_OUTPUT, VAR_TEMP]
+    FUNCTION_BLOCK: [VAR_TEMP]
+    ORGANIZATION_BLOCK: [VAR_TEMP]
+  # Declaration CONTEXTS (as opposed to VAR_* sections above) where a
+  # REF_TO member is always illegal, regardless of block type/section --
+  # `STRUCT` matches parser/s7dclParser.ts's own STRUCT-vs-VAR_* member
+  # context distinction (a struct body member is never itself inside a
+  # VAR_* section).
+  illegalContexts: [STRUCT]
+  illegal:
+    - "As a member inside a STRUCT/PLC-data-type declaration — references cannot be struct members at all, no exceptions listed."
+  notes: "A NEW axis for section-legality.yaml to eventually cover — that file's model is generic per-VAR_*-section (Constant/InOut/Input/Output/Static/Temp) with no block-type dimension, but REF_TO's legal-section set additionally depends on block type (FC vs. FB vs. OB). FB/OB only allow it in Temp — notably NOT Static, unlike most other complex/system types in section-legality.yaml."
+
+referenceableTargets:
+  bitStrings:
+    allowed: [Byte, Word, DWord, LWord]
+    disallowed: [Bool]
+  integers: { allowed: true }
+  floatingPoint: { allowed: true }
+  characterStrings:
+    allowed: true
+    notes: "No length declaration on the reference itself — REF_TO String, not REF_TO String[10]."
+  iecTimers:
+    allowed: [IEC_TIMER, IEC_LTIMER]
+    disallowed: "Derived instruction-specific aliases (TON_TIME, TP_TIME, etc.) — only the two raw system-types.yaml structs, not their per-instruction convenience types."
+  iecCounters:
+    allowed: [IEC_COUNTER, IEC_UCOUNTER, IEC_SCOUNTER, IEC_USCOUNTER, IEC_DCOUNTER, IEC_UDCOUNTER]
+    disallowed: "Derived instruction-specific aliases (CTU_INT etc.) — same restriction pattern as timers. Note IEC_LCOUNTER/IEC_ULCOUNTER aren't mentioned in the source list at all — unconfirmed whether that's a real exclusion or just an omission; don't assume either way."
+  plcDataTypes: { allowed: true }
+  systemDataTypes: { allowed: true }
+  array:
+    allowed: "ARRAY of any of the above-listed target types"
+    disallowed:
+      - "ARRAY[*] (dynamic-limit array) as a reference target"
+      - "ARRAY of REF_TO <type> — an array OF references is illegal too, the reverse direction from a reference TO an array"
+  technologyObjects:
+    allowed: "As of firmware V3.0, Motion and SIMATIC Ident categories only"
+    maxPerBlock: 10
+    disallowed: "REF_TO ARRAY of <technology object> — arrays of tech-object references illegal, mirroring the ARRAY-of-REF_TO restriction above"
+  dataBlock:
+    allowed: "Reference to an ENTIRE data block, only if that DB was originally derived from a PLC data type (UDT) or system data type (SDT) — not an arbitrary/anonymous DB."
+
+initialization:
+  # Quoted deliberately -- an UNQUOTED `NULL`/`Null`/`null`/`~` is the YAML
+  # 1.1 null scalar (parses to JS `null`, not the string "NULL"), which
+  # would silently lose the actual literal keyword a lint check needs to
+  # compare real source text against.
+  default: "NULL"
+  accessBeforeAssignment: "A programming error at runtime if a NULL (unassigned) reference is dereferenced."
+  manualInitialValue: "Not permitted in the block interface — must use the REF() instruction instead."
+
+retentivity:
+  referenceItself: "Can NEVER be retentive."
+  referencedData: "MAY be retentive — the restriction is only on the reference tag itself, not on what it points to."
+
+maxReferenceParamsPerBlock:
+  notes: "A variable, compiler-enforced limit depending on block type, how many other structured-type parameters (ARRAYs, PLC data types, etc.) are declared, and instance count — NOT independently computable ahead of time. TIA reports a compile error if exceeded; a lint server can't predict the exact threshold without replicating TIA's own internal accounting, so treat this as 'let the compiler catch it,' not something to pre-validate statically."
+
+refInstruction:
+  syntax: "REF(<tag>)"
+  typeMatch: "The tag's data type must match the declared reference's data type EXACTLY — no implicit conversion (a REF_TO Int reference can only take REF() of an actual Int tag)."
+  legalTargets:
+    mustBe: "A global DB tag or a Static-section tag, AND located in an OPTIMIZED memory area."
+    mustNotBe:
+      - "Temporary local data (VAR_TEMP)"
+      - "Global tags from the PLC tag table (as opposed to a DB-resident tag)"
+      - "Block parameters (Input/Output/InOut formal parameters)"
+      - "Constants"
+      - "Write-protected tags"
+  arrayRules:
+    - "Array bounds and dimensions of the reference and the referenced tag must be IDENTICAL — stricter than, and a DIFFERENT mechanism from, 02-comparators.yaml's ARRAY-via-VARIANT comparison rule (which only requires matching element type/count, not exact bounds). Don't conflate the two."
+    - "REF() to an Array[*] (dynamic-limit array) is illegal."
+    - "REF() to a UDT-derived Array DB uses special syntax: REF(\"my_ArrayDB_UDT\".\"THIS\") or, indexed, REF(\"my_ArrayDB_UDT\".\"THIS\"[i])."
+  technologyObjects: "CANNOT be referenced with REF() at all — UNRESOLVED APPARENT CONTRADICTION with referenceableTargets.technologyObjects above (which says tech-object references ARE declarable as of FW V3.0): this says the REF() instruction specifically can't target one. Most likely reading: tech-object references get populated some OTHER way (direct instance assignment?), not via REF() — not confirmed how; flagged rather than guessed at."
+  asActualParameter:
+    onlyFor: "A function's (FC's) Input parameter — NOT FB, NOT an Output/InOut parameter of any block type."
+    cannotTarget: "A VARIANT-typed formal parameter."
+    typeMatch: "Exact match required, same as direct REF() usage — no conversion."
+    technologyObjectAsymmetry: "A reference to a DERIVED technology-object type CAN be passed to a formal parameter of the BASIC type; the reverse (basic passed where derived is expected) is NOT allowed."
+
+dereferencing:
+  syntax: "^ (caret) appended to the reference, e.g. #myRef^"
+  usable: "As input/output of assignments or comparison instructions; a dereferenced value can be used as a parameter of any instruction, provided the type matches."
+
+assignment:
+  operator: ":="
+  semantics: "Assigns the ADDRESS (not the value) — same as any tag-to-tag reference assignment."
+  typeMatch: "References can only be assigned to each other if they refer to the EXACT same data type — no implicit conversion. For PLC-data-type references specifically, the UDTs must be the exact same NAMED type; two UDTs with an identical member layout but different names do NOT count as matching."
+  toVariant:
+    allowed: true
+    condition: "Only if the target VARIANT tag is declared Temp."
+  technologyObjectRules:
+    - "Two technology objects of the SAME type can be assigned to each other."
+    - "A derived type can be assigned to its basic type."
+    - "A basic type CANNOT be assigned to its derived type."
+    - "Assignment to a pointer (e.g. VARIANT) is NOT possible for technology-object references — NOTE: this contradicts the general 'a reference can be assigned to a Temp VARIANT' rule above at first glance; that general rule apparently doesn't extend to technology-object references specifically. Don't assume the VARIANT-assignment exception applies uniformly across every reference kind."
+
+comparison:
+  allowed: "ONLY against NULL, to check whether a reference has been assigned yet."
+  disallowed: "Any other comparison."
+  crossReference: "instruction-registry/02-comparators.yaml's EQ/NE/GE/LE/GT/LT_Contact `dataTypes` lists do NOT currently include Reference as a legal operand type — keep it that way. If Reference is ever added there, model it as a NULL-only special case, not a normal comparable type the way Struct/Variant/Any are for EQ/NE."
+
+assignmentAttempt:
+  operator: "?="
+  purpose: "Runtime-checked assignment for sources whose type isn't statically guaranteed to match the reference — VARIANT-to-reference or DB_ANY-to-technology-object-reference specifically. Not usable (and not needed) for an already-statically-typed source; use plain := there."
+  outcome: "Success -> a valid reference in the target. Failure -> NULL in the target. Always resolves to one of these two outcomes, never a runtime exception."
+  successCheck:
+    ladFbd: "The box's ENO output — signal state 1 iff the attempt succeeded; downstream network elements only execute when ENO=1."
+    stlScl: "IS_NULL / NOT_NULL instructions."
+  variantSourceRules:
+    - "The VARIANT must point to an address in an OPTIMIZED memory area."
+    - "The VARIANT must NOT point to an address in a TEMPORARY memory area."
+    - "For an ARRAY-typed reference target: the VARIANT's ARRAY bounds must EXACTLY match the reference's declared bounds (e.g. a VARIANT pointing to ARRAY[0..9] does NOT match a REF_TO ARRAY[1..10] target) — STRICTER than 02-comparators.yaml's ARRAY-via-VARIANT comparison rule (element type/count only, bounds don't need to match there). Two different mechanisms with different bound-matching rules, don't conflate them."
+    - "Recommended (a workflow caution, not a hard compile rule — not statically lintable): compile the blocks that produced the VARIANT's value at least once on a real S7-1500 FW>=V2.5 CPU first."
+  technologyObjectSourceRules:
+    - "The source DB_ANY must point to a technology object in an OPTIMIZED memory area."
+    - "Two technology objects of the same type can be assigned to each other."
+    - "A derived type can be assigned to its basic type."
+    - "A basic type CANNOT be assigned to its derived type."
+  sclRestriction: "Assignment attempts cannot be chained in SCL's multiple-assignment form (a := b := c;)."

@@ -1,0 +1,12 @@
+FUNCTION_BLOCK "Syntax_UnterminatedString"
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+
+VAR
+    text : String[20];
+END_VAR
+
+BEGIN
+    #text := 'unterminated;
+    // EXPECT: error[syntax.unterminated-string] SYN-LEX-001
+END_FUNCTION_BLOCK

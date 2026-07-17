@@ -1,0 +1,175 @@
+# SCL comparator instruction registry.
+#
+# Siemens' SCL comparator instruction category contains datatype-query
+# functions rather than the ordinary comparison operators (=, <>, <, <=, >,
+# >=), which are native SCL language operators.
+#
+# TypeOf, TypeOfElements and TypeOfDB produce compile-time type expressions.
+# They do not return ordinary runtime values. IS_ARRAY is unusual: Siemens V21
+# documents its function value as UDINT while also restricting its use to an
+# IF instruction.
+#
+# The canonical registry label `Timers` corresponds to Siemens' parameter-table
+# category "times".
+$fileLanguage: [SCL]
+
+TypeOf:
+  family: comparator
+  callShape: box
+  instanceType: null
+
+  pins:
+    - name: null
+      dir: in
+      required: true
+      dataTypes:
+        - "Binary numbers"
+        - "Integers"
+        - "Floating-point numbers"
+        - "Timers"
+        - "Date and time"
+        - "Character strings"
+        - Variant
+        - ResolvedSymbol
+      memoryAreas: [L]
+      allowedDeclarations: [Input, InOut, Temp]
+      note: >-
+        Operand whose datatype is queried. Siemens restricts the declaration
+        to the Input, InOut or Temp section of the block interface.
+
+  result:
+    kind: type-expression
+    sourcePins: [0]
+    transform: identity
+    usage:
+      storable: false
+      allowedContexts:
+        - type-comparison
+        - case-selector
+    notes: >-
+      Represents the resolved datatype of the operand; it is not an ordinary
+      runtime value.
+
+  template:
+    shape: none
+    keys: []
+    extra: {}
+
+  confidence: official-doc
+  notes: >-
+    May only be used within IF or CASE. The resulting type expression may be compared with another
+    TypeOf expression or directly with an elementary or PLC datatype.
+  source: "official instruction documentation (paraphrased)"
+TypeOfElements:
+  family: comparator
+  callShape: box
+  instanceType: null
+
+  pins:
+    - name: null
+      dir: in
+      required: true
+      dataTypes: [Variant, ResolvedSymbol]
+      memoryAreas: [L]
+      allowedDeclarations: [Input, InOut, Temp]
+      note: >-
+        VARIANT or ResolvedSymbol operand whose referenced ARRAY element type
+        is queried. Siemens restricts the declaration to Input, InOut or Temp.
+
+  result:
+    kind: type-expression
+    sourcePins: [0]
+    transform: array-element-type
+    usage:
+      storable: false
+      allowedContexts:
+        - type-comparison
+        - case-selector
+    notes: >-
+      Represents the element datatype when the referenced value is an ARRAY.
+
+  template:
+    shape: none
+    keys: []
+    extra: {}
+
+  confidence: official-doc
+  notes: >-
+    May only be used within IF or CASE. The resulting element-type expression may be compared with an
+    elementary or PLC datatype.
+  source: "official instruction documentation (paraphrased)"
+IS_ARRAY:
+  family: comparator
+  callShape: box
+  instanceType: null
+
+  pins:
+    - name: null
+      dir: in
+      required: true
+      dataTypes: [Variant, ResolvedSymbol]
+      memoryAreas: [L]
+      allowedDeclarations: [Input, InOut, Temp]
+      note: >-
+        VARIANT or ResolvedSymbol operand queried to determine whether it
+        references an ARRAY. The declaration is limited to Input, InOut or Temp.
+
+  result:
+    kind: value
+    dataTypes: [UDInt]
+    notes: >-
+      Siemens V21 documents the function value as UDINT and lists I, Q, M, D
+      and L as its memory areas. The same instruction page restricts use of
+      IS_ARRAY to an IF instruction.
+
+  template:
+    shape: none
+    keys: []
+    extra: {}
+
+  confidence: official-doc
+  notes: >-
+    Checks whether the operand references an ARRAY. When an ARRAY DB is converted from DB_ANY to
+    VARIANT, Siemens requires a downloaded symbolic use of that ARRAY DB as an actual VARIANT parameter
+    elsewhere in the program.
+  source: "official instruction documentation (paraphrased)"
+TypeOfDB:
+  family: comparator
+  callShape: box
+  instanceType: null
+
+  pins:
+    - name: null
+      dir: in
+      required: true
+      dataTypes: [DB_ANY]
+      memoryAreas: [L]
+      allowedDeclarations: [Input, InOut, Temp]
+      note: >-
+        DB_ANY operand addressing the data block whose datatype is queried.
+        Siemens restricts the declaration to Input, InOut or Temp.
+
+  result:
+    kind: type-expression
+    sourcePins: [0]
+    transform: identity
+    usage:
+      storable: false
+      allowedContexts:
+        - type-comparison
+        - case-selector
+    notes: >-
+      Represents the datatype of the data block addressed by the DB_ANY
+      operand.
+
+  template:
+    shape: none
+    keys: []
+    extra: {}
+
+  confidence: official-doc
+  notes: >-
+    S7-1500 only. May only be used within IF or CASE. The type expression may be compared with another
+    tag type or directly with a PLC datatype, system datatype, technology-object type or function-block
+    type.
+  source: "official instruction documentation (paraphrased)"

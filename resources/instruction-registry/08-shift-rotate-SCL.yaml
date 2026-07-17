@@ -1,0 +1,135 @@
+# SCL shift-and-rotate instruction registry.
+#
+# SHR, SHL, ROR and ROL are functions in SCL. IN and N are input parameters;
+# the calculated value is represented by `result`, not by an OUT pin.
+#
+# Parameter data types and memory areas follow the Siemens STEP 7 V20 SCL
+# parameter tables. The source tables contain S7-1200 and S7-1500 columns, but
+# no separate S7-1200 G2 column. By the registry's standing convention,
+# S7-1200 G2 follows the S7-1500 entry where the two columns differ.
+#
+$fileLanguage: [SCL]
+
+SHR:
+  family: shift-rotate
+  callShape: box
+  instanceType: null
+  pins:
+  - name: IN
+    dir: in
+    required: true
+    dataTypes: ["Bit strings", "Integers"]
+    memoryAreas: [I, Q, M, D, L]
+    note: Value to shift right. The operand datatype determines the result width and signedness.
+  - name: N
+    dir: in
+    required: true
+    dataTypes: [USInt, UInt, UDInt, ULInt]
+    memoryAreas: [I, Q, M, D, L]
+    note: Number of bit positions to shift. ULInt is available on S7-1500 and, by registry convention, S7-1200 G2; it is not listed for the original S7-1200.
+  result:
+    kind: inferred
+    rule: instruction-specific
+    sourcePins: [0]
+    dataTypes: ["Bit strings", "Integers"]
+    notes: Function value with the same selected datatype as IN. Siemens lists I, Q, M, D and L as valid destination memory areas.
+  template: {shape: none, keys: [], extra: {}}
+  confidence: official-doc
+  notes: >-
+    Shifts IN to the right by N bit positions. N = 0 returns IN unchanged. If N exceeds the operand
+    width, the shift is limited to the available width. Vacated high-order bits are filled with zero for
+    unsigned values and with the sign bit for signed values. Example: #Result := SHR(IN := #Value, N :=
+    #Count);
+  source: "official instruction documentation (paraphrased)"
+SHL:
+  family: shift-rotate
+  callShape: box
+  instanceType: null
+  pins:
+  - name: IN
+    dir: in
+    required: true
+    dataTypes: ["Bit strings", "Integers"]
+    memoryAreas: [I, Q, M, D, L]
+    note: Value to shift left. The operand datatype determines the result width.
+  - name: N
+    dir: in
+    required: true
+    dataTypes: [USInt, UInt, UDInt, ULInt]
+    memoryAreas: [I, Q, M, D, L]
+    note: Number of bit positions to shift. ULInt is available on S7-1500 and, by registry convention, S7-1200 G2; it is not listed for the original S7-1200.
+  result:
+    kind: inferred
+    rule: instruction-specific
+    sourcePins: [0]
+    dataTypes: ["Bit strings", "Integers"]
+    notes: Function value with the same selected datatype as IN. Siemens lists I, Q, M, D and L as valid destination memory areas.
+  template: {shape: none, keys: [], extra: {}}
+  confidence: official-doc
+  notes: >-
+    Shifts IN to the left by N bit positions. N = 0 returns IN unchanged. If N exceeds the operand
+    width, the shift is limited to the available width. Vacated low-order bits are filled with zero.
+    Example: #Result := SHL(IN := #Value, N := #Count);
+  source: "official instruction documentation (paraphrased)"
+ROR:
+  family: shift-rotate
+  callShape: box
+  instanceType: null
+  pins:
+  - name: IN
+    dir: in
+    required: true
+    dataTypes: ["Bit strings", "Integers"]
+    memoryAreas: [I, Q, M, D, L]
+    note: Value to rotate right. The operand datatype determines the result width.
+  - name: N
+    dir: in
+    required: true
+    dataTypes: [USInt, UInt, UDInt, ULInt]
+    memoryAreas: [I, Q, M, D, L]
+    note: Number of bit positions to rotate. ULInt is available on S7-1500 and, by registry convention, S7-1200 G2; it is not listed for the original S7-1200.
+  result:
+    kind: inferred
+    rule: instruction-specific
+    sourcePins: [0]
+    dataTypes: ["Bit strings", "Integers"]
+    notes: Function value with the same selected datatype as IN. Siemens lists I, Q, M, D and L as valid destination memory areas.
+  template: {shape: none, keys: [], extra: {}}
+  confidence: official-doc
+  notes: >-
+    Rotates IN to the right by N bit positions. Bits leaving the low-order side re-enter at the
+    high-order side, so no bits are discarded. N = 0 returns IN unchanged. If N exceeds the operand
+    width, rotation is still performed using the specified count. Example: #Result := ROR(IN := #Value,
+    N := #Count);
+  source: "official instruction documentation (paraphrased)"
+ROL:
+  family: shift-rotate
+  callShape: box
+  instanceType: null
+  pins:
+  - name: IN
+    dir: in
+    required: true
+    dataTypes: ["Bit strings", "Integers"]
+    memoryAreas: [I, Q, M, D, L]
+    note: Value to rotate left. The operand datatype determines the result width.
+  - name: N
+    dir: in
+    required: true
+    dataTypes: [USInt, UInt, UDInt, ULInt]
+    memoryAreas: [I, Q, M, D, L]
+    note: Number of bit positions to rotate. ULInt is available on S7-1500 and, by registry convention, S7-1200 G2; it is not listed for the original S7-1200.
+  result:
+    kind: inferred
+    rule: instruction-specific
+    sourcePins: [0]
+    dataTypes: ["Bit strings", "Integers"]
+    notes: Function value with the same selected datatype as IN. Siemens lists I, Q, M, D and L as valid destination memory areas.
+  template: {shape: none, keys: [], extra: {}}
+  confidence: official-doc
+  notes: >-
+    Rotates IN to the left by N bit positions. Bits leaving the high-order side re-enter at the
+    low-order side, so no bits are discarded. N = 0 returns IN unchanged. If N exceeds the operand
+    width, rotation is still performed using the specified count. Example: #Result := ROL(IN := #Value,
+    N := #Count);
+  source: "official instruction documentation (paraphrased)"

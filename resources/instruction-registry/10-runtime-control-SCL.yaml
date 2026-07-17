@@ -1,0 +1,199 @@
+# SCL runtime-control instruction registry.
+#
+# SCL calling forms differ materially from LAD/FBD:
+# - ENDIS_PW, GET_ERR_ID, INIT_RD and RUNTIME are functions.
+# - GET_ERROR, RE_TRIGR, STP and WAIT are procedure-style calls.
+# - Function values are represented by `result`, not by RET_VAL/ID output pins.
+#
+# INIT_RD and WAIT are available only for S7-1500. The remaining instructions
+# are available for S7-1200, S7-1500 and S7-1200 G2 in STEP 7 V21.
+#
+$fileLanguage: [SCL]
+
+ENDIS_PW:
+  family: runtime-control
+  callShape: box
+  instanceType: null
+  pins:
+    - name: REQ
+      dir: in
+      required: true
+      dataTypes: [Bool]
+      memoryAreas: [I, Q, M, D, L, constant]
+      note: "FALSE queries the current password states without changing them; TRUE applies the password requests."
+    - name: F_PWD
+      dir: in
+      required: true
+      dataTypes: [Bool]
+      memoryAreas: [I, Q, M, D, L, constant]
+      note: "FALSE locks and TRUE releases the fail-safe full-access password. This input must be TRUE on a standard CPU."
+    - name: FULL_PWD
+      dir: in
+      required: true
+      dataTypes: [Bool]
+      memoryAreas: [I, Q, M, D, L, constant]
+      note: "FALSE locks and TRUE releases the full-access password."
+    - name: R_PWD
+      dir: in
+      required: true
+      dataTypes: [Bool]
+      memoryAreas: [I, Q, M, D, L, constant]
+      note: "FALSE locks and TRUE releases the read-access password."
+    - name: HMI_PWD
+      dir: in
+      required: true
+      dataTypes: [Bool]
+      memoryAreas: [I, Q, M, D, L, constant]
+      note: "FALSE locks and TRUE releases the HMI-access password."
+    - name: F_PWD_ON
+      dir: out
+      required: false
+      dataTypes: [Bool]
+      memoryAreas: [I, Q, M, D, L]
+      note: "Optional status output: FALSE locked, TRUE released."
+    - name: FULL_PWD_ON
+      dir: out
+      required: false
+      dataTypes: [Bool]
+      memoryAreas: [I, Q, M, D, L]
+      note: "Optional status output: FALSE locked, TRUE released."
+    - name: R_PWD_ON
+      dir: out
+      required: false
+      dataTypes: [Bool]
+      memoryAreas: [I, Q, M, D, L]
+      note: "Optional status output: FALSE locked, TRUE released."
+    - name: HMI_PWD_ON
+      dir: out
+      required: false
+      dataTypes: [Bool]
+      memoryAreas: [I, Q, M, D, L]
+      note: "Optional status output: FALSE locked, TRUE released."
+  result:
+    kind: value
+    dataTypes: [Word]
+    notes: "Function value RET_VAL. W#16#0000 means no error; 8090 and 80D0 through 80D3 report the documented password-control errors. The destination may use I, Q, M, D or L."
+  template: { shape: none, keys: [], extra: {} }
+  confidence: official-doc
+  notes: >-
+    Function form. Example: #Status := ENDIS_PW(REQ := #Req, F_PWD := #F, FULL_PWD := #Full, R_PWD :=
+    #Read, HMI_PWD := #Hmi, F_PWD_ON => #FOn); If an error is returned, none of the requested
+    password-state changes take effect.
+  source: "official instruction documentation (paraphrased)"
+RE_TRIGR:
+  family: runtime-control
+  callShape: box
+  instanceType: null
+  pins: []
+  result: { kind: none }
+  template: { shape: none, keys: [], extra: {} }
+  confidence: official-doc
+  notes: >-
+    Procedure-style call with no parameters and no error information. Restarts the configured CPU
+    cycle-monitoring time, subject to the documented S7-1200 firmware and OB-priority restrictions.
+  source: "official instruction documentation (paraphrased)"
+STP:
+  family: runtime-control
+  callShape: box
+  instanceType: null
+  pins: []
+  result: { kind: none }
+  template: { shape: none, keys: [], extra: {} }
+  confidence: official-doc
+  notes: >-
+    Procedure-style call with no parameters. Sets the CPU to STOP and terminates program execution.
+  source: "official instruction documentation (paraphrased)"
+GET_ERROR:
+  family: runtime-control
+  callShape: box
+  instanceType: null
+  pins:
+    - name: ERROR
+      dir: out
+      required: true
+      dataTypes: [ErrorStruct]
+      memoryAreas: [D, L]
+      note: "Receives detailed information about the first unhandled local execution error. The operand is changed only when error information is available."
+  result: { kind: none }
+  template: { shape: none, keys: [], extra: {} }
+  confidence: official-doc
+  notes: >-
+    Procedure-style call, normally written GET_ERROR(#Error). Merely inserting the instruction activates
+    local error handling for the containing block and suppresses the predefined system reactions for
+    handled execution errors.
+  source: "official instruction documentation (paraphrased)"
+GET_ERR_ID:
+  family: runtime-control
+  callShape: box
+  instanceType: null
+  pins: []
+  result:
+    kind: value
+    dataTypes: [Word]
+    notes: "Function value containing the first unhandled local error ID. Siemens lists D and L as valid destination memory areas."
+  template: { shape: none, keys: [], extra: {} }
+  confidence: official-doc
+  notes: >-
+    Function form with no parameters, for example #ErrorId := GET_ERR_ID(). The destination is changed
+    only when error information is available. Inserting the instruction activates local error handling
+    for the block.
+  source: "official instruction documentation (paraphrased)"
+INIT_RD:
+  family: runtime-control
+  callShape: box
+  instanceType: null
+  pins:
+    - name: REQ
+      dir: in
+      required: true
+      dataTypes: [Bool]
+      memoryAreas: [I, Q, M, D, L]
+      note: "TRUE resets all retentive data in data blocks, bit memories and SIMATIC timers and counters."
+  result:
+    kind: value
+    dataTypes: [Int]
+    notes: "Function value RET_VAL. Value 0 means no error; W#16#80B5 means the call was made outside a startup OB. The destination may use I, Q, M, D or L."
+  template: { shape: none, keys: [], extra: {} }
+  confidence: official-doc
+  notes: >-
+    S7-1500-only function. It may be called only in a startup OB. Example: #Result := INIT_RD(#Request);
+  source: "official instruction documentation (paraphrased)"
+WAIT:
+  family: runtime-control
+  callShape: box
+  instanceType: null
+  pins:
+    - name: WT
+      dir: in
+      required: true
+      dataTypes: [Int]
+      memoryAreas: [I, Q, M, D, L, P, constant]
+      note: "Delay in microseconds. The valid INT range is -32768 through 32767; a negative value performs no delay."
+  result: { kind: none }
+  template: { shape: none, keys: [], extra: {} }
+  confidence: official-doc
+  notes: >-
+    S7-1500-only procedure-style call. Execution may be interrupted by higher-priority events, but the
+    configured delay interval continues.
+  source: "official instruction documentation (paraphrased)"
+RUNTIME:
+  family: runtime-control
+  callShape: box
+  instanceType: null
+  pins:
+    - name: MEM
+      dir: inout
+      required: true
+      dataTypes: [LReal]
+      memoryAreas: [I, Q, M, D, L]
+      note: "Opaque internal measurement state. The same operand must be supplied to the first and second call."
+  result:
+    kind: value
+    dataTypes: [LReal]
+    notes: "Function value RET_VAL containing elapsed time in seconds. The destination may use I, Q, M, D or L."
+  template: { shape: none, keys: [], extra: {} }
+  confidence: official-doc
+  notes: >-
+    Function form. The first call stores the starting counter value in MEM and the second call with the
+    same MEM operand returns the elapsed time. Example: #Elapsed := RUNTIME(#RuntimeMemory);
+  source: "official instruction documentation (paraphrased)"

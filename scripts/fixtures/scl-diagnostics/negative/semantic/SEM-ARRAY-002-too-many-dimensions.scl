@@ -1,0 +1,11 @@
+FUNCTION_BLOCK "Semantic_ArrayTooManyDimensions"
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+
+VAR
+    values : Array[0..1, 0..1, 0..1, 0..1, 0..1, 0..1, 0..1] of Int;
+    // EXPECT: error[array.too-many-dimensions] SEM-ARRAY-002
+END_VAR
+
+BEGIN
+END_FUNCTION_BLOCK

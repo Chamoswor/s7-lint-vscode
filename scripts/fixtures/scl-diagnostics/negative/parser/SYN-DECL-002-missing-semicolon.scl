@@ -1,0 +1,13 @@
+FUNCTION_BLOCK "Syntax_DeclarationMissingSemicolon"
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+
+VAR
+    value : Int
+    // EXPECT: error[syntax.declaration-missing-semicolon] SYN-DECL-002
+    recovery : Int;
+END_VAR
+
+BEGIN
+    #recovery := 123;
+END_FUNCTION_BLOCK

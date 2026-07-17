@@ -1,0 +1,653 @@
+# Point-to-point communication — LAD/FBD registry.
+#
+# Graphical instruction aliases and pin casing follow anonymized reference
+# fixture evidence and apply to both LAD and FBD.
+#
+# Exported `:=` connections cannot distinguish Input from InOut. Parameters
+# independently documented as InOut have therefore been corrected explicitly.
+# Every entry has `result: { kind: none }`.
+#
+# Missing dataTypes are intentional: unknown types are not guessed.
+
+$fileLanguage: [LAD, FBD]
+Port_Config:
+  family: communication
+  callShape: instance-dot
+  instanceType: Port_Config
+  pins:
+  - name: REQ
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: PORT
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [PORT]
+  - name: PROTOCOL
+    dir: in
+    required: true
+    note: ''
+  - name: BAUD
+    dir: in
+    required: true
+    note: ''
+  - name: PARITY
+    dir: in
+    required: true
+    note: ''
+  - name: DATABITS
+    dir: in
+    required: true
+    note: ''
+  - name: STOPBITS
+    dir: in
+    required: true
+    note: ''
+  - name: FLOWCTRL
+    dir: in
+    required: true
+    note: ''
+  - name: XONCHAR
+    dir: in
+    required: true
+    note: ''
+  - name: XOFFCHAR
+    dir: in
+    required: true
+    note: ''
+  - name: WAITTIME
+    dir: in
+    required: true
+    note: ''
+  - name: MODE
+    dir: in
+    required: true
+    note: ''
+  - name: LINE_PRE
+    dir: in
+    required: true
+    note: ''
+  - name: BRK_DET
+    dir: in
+    required: true
+    note: ''
+  - name: DONE
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: ERROR
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: STATUS
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Word]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: shape-only
+  notes: >-
+    . Point-to-point (serial) port configuration FB.
+  source: "anonymized reference fixture (signature only)"
+  result:
+    kind: none
+Send_Config:
+  family: communication
+  callShape: instance-dot
+  instanceType: Send_Config
+  pins:
+  - name: REQ
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: PORT
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [PORT]
+  - name: RTSONDLY
+    dir: in
+    required: true
+    note: ''
+  - name: RTSOFFDLY
+    dir: in
+    required: true
+    note: ''
+  - name: BREAK
+    dir: in
+    required: true
+    note: ''
+  - name: IDLELINE
+    dir: in
+    required: true
+    note: ''
+  - name: USR_END
+    dir: in
+    required: true
+    note: ''
+  - name: APP_END
+    dir: in
+    required: true
+    note: ''
+  - name: DONE
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: ERROR
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: STATUS
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Word]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: shape-only
+  notes: >-
+    . Point-to-point send configuration FB.
+  source: "anonymized reference fixture (signature only)"
+  result:
+    kind: none
+Receive_Config:
+  family: communication
+  callShape: instance-dot
+  instanceType: Receive_Config
+  pins:
+  - name: REQ
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: PORT
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [PORT]
+  - name: Receive_Conditions
+    dir: in
+    required: true
+    note: ''
+  - name: DONE
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: ERROR
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: STATUS
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Word]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: shape-only
+  notes: >-
+    . Point-to-point receive configuration FB.
+  source: "anonymized reference fixture (signature only)"
+  result:
+    kind: none
+P3964_Config:
+  family: communication
+  callShape: instance-dot
+  instanceType: P3964_Config
+  pins:
+  - name: REQ
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: PORT
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [PORT]
+  - name: BCC
+    dir: in
+    required: true
+    note: ''
+  - name: Priority
+    dir: in
+    required: true
+    note: ''
+  - name: CharacterDelayTime
+    dir: in
+    required: true
+    note: ''
+  - name: AcknDelayTime
+    dir: in
+    required: true
+    note: ''
+  - name: BuildupAttempts
+    dir: in
+    required: true
+    note: ''
+  - name: RepetitionAttempts
+    dir: in
+    required: true
+    note: ''
+  - name: DONE
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: ERROR
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: STATUS
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Word]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: shape-only
+  notes: >-
+    . Point-to-point 3964(R) protocol configuration FB.
+  source: "anonymized reference fixture (signature only)"
+  result:
+    kind: none
+Send_P2P:
+  family: communication
+  callShape: instance-dot
+  instanceType: Send_P2P
+  pins:
+  - name: REQ
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: PORT
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [PORT]
+  - name: BUFFER
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [Variant]
+  - name: LENGTH
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [UInt]
+  - name: UNIVERSAL
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: DONE
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: ERROR
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: STATUS
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Word]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    . Point-to-point send FB.
+  source: "official instruction documentation (paraphrased)"
+  result:
+    kind: none
+Receive_P2P:
+  family: communication
+  callShape: instance-dot
+  instanceType: Receive_P2P
+  pins:
+  - name: PORT
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [PORT]
+  - name: BUFFER
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [Variant]
+  - name: UNIVERSAL
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: NDR
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: LENGTH
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [UInt]
+  - name: ERROR
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: STATUS
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Word]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    . Point-to-point receive FB — no REQ pin, unlike Send_P2P (presumably cyclic/polled rather than
+    request-triggered), a real shape difference transcribed as-is.
+  source: "official instruction documentation (paraphrased)"
+  result:
+    kind: none
+Receive_Reset:
+  family: communication
+  callShape: instance-dot
+  instanceType: Receive_Reset
+  pins:
+  - name: REQ
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: PORT
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [PORT]
+  - name: DONE
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: ERROR
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: STATUS
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Word]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: shape-only
+  notes: >-
+    . Point-to-point receive-buffer reset FB.
+  source: "anonymized reference fixture (signature only)"
+  result:
+    kind: none
+Signal_Get:
+  family: communication
+  callShape: instance-dot
+  instanceType: Signal_Get
+  pins:
+  - name: REQ
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: PORT
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [PORT]
+  - name: NDR
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: ERROR
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: STATUS
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Word]
+  - name: DTR
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: DSR
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: RTS
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: CTS
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: DCD
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: RING
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: shape-only
+  notes: >-
+    . Read serial-port RS-232/RS-485 signal lines.
+  source: "anonymized reference fixture (signature only)"
+  result:
+    kind: none
+Signal_Set:
+  family: communication
+  callShape: instance-dot
+  instanceType: Signal_Set
+  pins:
+  - name: REQ
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: PORT
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [PORT]
+  - name: SIGNAL
+    dir: in
+    required: true
+    note: ''
+  - name: RTS
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: DTR
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: DSR
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: DONE
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: ERROR
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: STATUS
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Word]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: shape-only
+  notes: >-
+    . Set serial-port signal lines — note RTS/DTR/DSR are `dir: in` HERE (writing lines) vs.
+    Signal_Get's `dir: out` (reading the same-named lines), opposite roles, transcribed exactly per each
+    real export.
+  source: "anonymized reference fixture (signature only)"
+  result:
+    kind: none
+Get_Features:
+  family: communication
+  callShape: instance-dot
+  instanceType: Get_Features
+  pins:
+  - name: REQ
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: PORT
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [PORT]
+  - name: NDR
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: ERROR
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: STATUS
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Word]
+  - name: MODBUS_CRC
+    dir: out
+    required: true
+    note: ''
+  - name: DIAG_ALARM
+    dir: out
+    required: true
+    note: ''
+  - name: SUPPLY_VOLT
+    dir: out
+    required: true
+    note: ''
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: shape-only
+  notes: >-
+    . Query CM/point-to-point-module feature flags.
+  source: "anonymized reference fixture (signature only)"
+  result:
+    kind: none
+Set_Features:
+  family: communication
+  callShape: instance-dot
+  instanceType: Set_Features
+  pins:
+  - name: REQ
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: PORT
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [PORT]
+  - name: EN_MODBUS_CRC
+    dir: in
+    required: true
+    note: ''
+  - name: EN_DIAG_ALARM
+    dir: in
+    required: true
+    note: ''
+  - name: EN_SUPPLY_VOLT
+    dir: in
+    required: true
+    note: ''
+  - name: DONE
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: ERROR
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: STATUS
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Word]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: shape-only
+  notes: >-
+    . Set CM/point-to-point-module feature flags, paired with Get_Features above.
+  source: "anonymized reference fixture (signature only)"
+  result:
+    kind: none

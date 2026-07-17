@@ -1,0 +1,497 @@
+# Interrupt and fault-event control — LAD/FBD registry.
+#
+# Graphical instruction aliases and pin casing are retained from anonymized
+# reference fixtures and apply to both LAD and FBD.
+#
+# Exported `:=` connections cannot distinguish INPUT from IN_OUT. Independently
+# documented IN_OUT parameters are corrected explicitly.
+#
+# Graphical instructions use pins and therefore have `result: { kind: none }`.
+# Missing dataTypes are intentional; unresolved types are never guessed.
+
+$fileLanguage: [LAD, FBD]
+ATTACH:
+  family: extended
+  callShape: box
+  instanceType: null
+  pins:
+  - name: OB_NR
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [OB_ANY]
+  - name: EVENT
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [EVENT_ANY]
+  - name: ADD
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: RET_VAL
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Int]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Attach an OB to a hardware-interrupt event.
+  source: "official instruction documentation (paraphrased)"
+  result:
+    kind: none
+DETACH:
+  family: extended
+  callShape: box
+  instanceType: null
+  pins:
+  - name: OB_NR
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [OB_ANY]
+  - name: EVENT
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [EVENT_ANY]
+  - name: RET_VAL
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Int]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Detach an OB from a hardware-interrupt event, inverse of ATTACH.
+  source: "official instruction documentation (paraphrased)"
+  result:
+    kind: none
+SET_CINT:
+  family: extended
+  callShape: box
+  instanceType: null
+  pins:
+  - name: OB_NR
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [OB_CYCLIC]
+  - name: CYCLE
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [Time]
+  - name: PHASE
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [Time]
+  - name: RET_VAL
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Int]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Set a cyclic-interrupt OB's cycle time/phase offset.
+  source: "official instruction documentation (paraphrased)"
+  result:
+    kind: none
+QRY_CINT:
+  family: extended
+  callShape: box
+  instanceType: null
+  pins:
+  - name: OB_NR
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [OB_CYCLIC]
+  - name: RET_VAL
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Int]
+  - name: CYCLE
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Time]
+  - name: PHASE
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Time]
+  - name: STATUS
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Word]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Query a cyclic-interrupt OB's current cycle time/phase/status, read-side counterpart of SET_CINT.
+  source: "official instruction documentation (paraphrased)"
+  result:
+    kind: none
+SET_TINTL:
+  family: extended
+  callShape: box
+  instanceType: null
+  pins:
+  - name: OB_NR
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [OB_TOD]
+  - name: SDT
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [LDT]
+  - name: LOCAL
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: PERIOD
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [UInt]
+  - name: ACTIVATE
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: RET_VAL
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Int]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Set a time-of-day interrupt OB's start date/time and period.
+  source: "official instruction documentation (paraphrased)"
+  result:
+    kind: none
+CAN_TINT:
+  family: extended
+  callShape: box
+  instanceType: null
+  pins:
+  - name: OB_NR
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [OB_TOD]
+  - name: Ret_Val
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Int]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Cancel a time-of-day interrupt.
+  source: "official instruction documentation (paraphrased)"
+  result:
+    kind: none
+ACT_TINT:
+  family: extended
+  callShape: box
+  instanceType: null
+  pins:
+  - name: OB_NR
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [OB_TOD]
+  - name: Ret_Val
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Int]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    (Re-)activate a time-of-day interrupt configured via SET_TINTL.
+  source: "official instruction documentation (paraphrased)"
+  result:
+    kind: none
+QRY_TINT:
+  family: extended
+  callShape: box
+  instanceType: null
+  pins:
+  - name: OB_NR
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [OB_TOD]
+  - name: Ret_Val
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Int]
+  - name: STATUS
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Word]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Query a time-of-day interrupt's current status.
+  source: "official instruction documentation (paraphrased)"
+  result:
+    kind: none
+MSK_FLT:
+  family: extended
+  callShape: box
+  instanceType: null
+  pins:
+  - name: PRGFLT_SET_MASK
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [DWord]
+  - name: ACCFLT_SET_MASK
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [DWord]
+  - name: RET_VAL
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Int]
+  - name: PRGFLT_MASKED
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [DWord]
+  - name: ACCFLT_MASKED
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [DWord]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Mask (suppress) synchronous programming/access faults.
+  source: "official instruction documentation (paraphrased)"
+  result:
+    kind: none
+DMSK_FLT:
+  family: extended
+  callShape: box
+  instanceType: null
+  pins:
+  - name: PRGFLT_RESET_MASK
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [DWord]
+  - name: ACCFLT_RESET_MASK
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [DWord]
+  - name: RET_VAL
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Int]
+  - name: PRGFLT_MASKED
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [DWord]
+  - name: ACCFLT_MASKED
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [DWord]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Demask (re-enable) synchronous programming/access faults, inverse of MSK_FLT.
+  source: "official instruction documentation (paraphrased)"
+  result:
+    kind: none
+READ_ERR:
+  family: extended
+  callShape: box
+  instanceType: null
+  pins:
+  - name: PRGFLT_QUERY
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [DWord]
+  - name: ACCFLT_QUERY
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [DWord]
+  - name: RET_VAL
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Int]
+  - name: PRGFLT_CLR
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [DWord]
+  - name: ACCFLT_CLR
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [DWord]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Read pending masked programming/access faults.
+  source: "official instruction documentation (paraphrased)"
+  result:
+    kind: none
+DIS_IRT:
+  family: extended
+  callShape: box
+  instanceType: null
+  pins:
+  - name: MODE
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [UInt]
+  - name: OB_NR
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [OB_ANY]
+  - name: RET_VAL
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Int]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Disable interrupt processing (specific OB or globally, per MODE).
+  source: "official instruction documentation (paraphrased)"
+  result:
+    kind: none
+EN_IRT:
+  family: extended
+  callShape: box
+  instanceType: null
+  pins:
+  - name: MODE
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [UInt]
+  - name: OB_NR
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [OB_ANY]
+  - name: RET_VAL
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Int]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Enable interrupt processing, inverse of DIS_IRT.
+  source: "official instruction documentation (paraphrased)"
+  result:
+    kind: none
+DIS_AIRT:
+  family: extended
+  callShape: box
+  instanceType: null
+  pins:
+  - name: RET_VAL
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Int]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Disable ALL interrupts and asynchronous fault processing (delay them).
+  source: "official instruction documentation (paraphrased)"
+  result:
+    kind: none
+EN_AIRT:
+  family: extended
+  callShape: box
+  instanceType: null
+  pins:
+  - name: RET_VAL
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Int]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Re-enable all interrupts/asynchronous fault processing, inverse of DIS_AIRT.
+  source: "official instruction documentation (paraphrased)"
+  result:
+    kind: none

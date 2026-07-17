@@ -1,0 +1,268 @@
+# File handling, random values and SHA-2 — SCL registry.
+#
+# SCL callable names and parameter casing use Siemens' canonical spelling.
+# Function returns are represented by `result`, not by graphical OUT/RET_VAL pins.
+#
+# S_Move and generic S_CONV are intentionally not emitted as callable SCL
+# entries. Their SCL forms are assignment and typed <source>_TO_<destination>
+# conversion respectively. T_COMBINE expands to CONCAT_DATE_TOD or
+# CONCAT_DATE_LTOD.
+#
+# Missing dataTypes are intentional; unresolved types are never guessed.
+
+$fileLanguage: [SCL]
+FileReadC:
+  family: extended
+  callShape: instance-dot
+  instanceType: FileReadC
+  pins:
+  - name: REQ
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: Name
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [String]
+  - name: Offset
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [UDInt]
+  - name: Length
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [UDInt]
+  - name: Done
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: Busy
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: Error
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: Status
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [DWord]
+  - name: ResultLength
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [UDInt]
+  - name: Data
+    dir: inout
+    required: true
+    note: ''
+    dataTypes: [Variant]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Read from a file on a memory card. VAR declaration in the source export names the instance
+    `FileReadC_SFB_Instance` — `_SFB` suffix transcribed as-is, same pattern as
+    RCVREC/PRVREC/GetStationInfo above.
+  source: "official instruction documentation (paraphrased)"
+  result:
+    kind: none
+FileWriteC:
+  family: extended
+  callShape: instance-dot
+  instanceType: FileWriteC
+  pins:
+  - name: REQ
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: Name
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [String]
+  - name: Offset
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [UDInt]
+  - name: Length
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [UDInt]
+  - name: Done
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: Busy
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: Error
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: Status
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [DWord]
+  - name: ResultLength
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [UDInt]
+  - name: Data
+    dir: inout
+    required: true
+    note: ''
+    dataTypes: [Variant]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Write to a file on a memory card, inverse of FileReadC — same `_SFB`-suffixed instance-name pattern
+    (FileWriteC_SFB_Instance).
+  source: "official instruction documentation (paraphrased)"
+  result:
+    kind: none
+FileDelete:
+  family: extended
+  callShape: instance-dot
+  instanceType: FileDelete
+  pins:
+  - name: REQ
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: Name
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [String]
+  - name: Done
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: Busy
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: Error
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: Status
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [DWord]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Delete a file on a memory card.
+  source: "official instruction documentation (paraphrased)"
+  result:
+    kind: none
+Random:
+  family: extended
+  callShape: box
+  instanceType: null
+  pins: []
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Generate a random number.
+  source: "official instruction documentation (paraphrased)"
+  result:
+    kind: value
+    dataTypes: [UDInt]
+    notes: SCL function return value.
+SHA2:
+  family: extended
+  callShape: instance-dot
+  instanceType: SHA2
+  pins:
+  - name: REQ
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: Data
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [Variant]
+  - name: DataLen
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [UDInt]
+  - name: HashLen
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [UInt]
+  - name: Done
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: Busy
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: Error
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: Status
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [DWord]
+  - name: Hash
+    dir: inout
+    required: true
+    note: ''
+    dataTypes: [Variant]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Compute a SHA-2 family hash over a data buffer.
+  source: "official instruction documentation (paraphrased)"
+  result:
+    kind: none

@@ -1,0 +1,228 @@
+# Runtime data-block functions — LAD/FBD registry.
+#
+# Graphical instruction aliases and pin casing are retained from anonymized
+# reference fixtures and apply to both LAD and FBD.
+#
+# Exported `:=` connections cannot distinguish INPUT from IN_OUT. Independently
+# documented IN_OUT parameters are corrected explicitly.
+#
+# Graphical instructions use pins and therefore have `result: { kind: none }`.
+# Missing dataTypes are intentional; unresolved types are never guessed.
+
+$fileLanguage: [LAD, FBD]
+CREATE_DB:
+  family: extended
+  callShape: box
+  instanceType: null
+  pins:
+  - name: REQ
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: LOW_LIMIT
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [UInt]
+  - name: UP_LIMIT
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [UInt]
+  - name: COUNT
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [UInt]
+  - name: ATTRIB
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [Byte]
+  - name: SRCBLK
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [DB_ANY]
+  - name: RET_VAL
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Int]
+  - name: BUSY
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: DB_NUM
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [UInt]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Dynamically create a new data block at runtime.
+  source: "official instruction documentation (paraphrased)"
+  result:
+    kind: none
+READ_DBL:
+  family: extended
+  callShape: box
+  instanceType: null
+  pins:
+  - name: REQ
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: SRCBLK
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [DB_ANY]
+  - name: RET_VAL
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Int]
+  - name: BUSY
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: DSTBLK
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [DB_ANY]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Read a data block from the load memory into the work memory.
+  source: "official instruction documentation (paraphrased)"
+  result:
+    kind: none
+WRIT_DBL:
+  family: extended
+  callShape: box
+  instanceType: null
+  pins:
+  - name: REQ
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: SRCBLK
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [DB_ANY]
+  - name: RET_VAL
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Int]
+  - name: BUSY
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: DSTBLK
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [DB_ANY]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Write a data block from the work memory into the load memory, inverse of READ_DBL — identical pin
+    shape, not assumed identical semantics.
+  source: "official instruction documentation (paraphrased)"
+  result:
+    kind: none
+ATTR_DB:
+  family: extended
+  callShape: box
+  instanceType: null
+  pins:
+  - name: REQ
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: DB_NUMBER
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [DB_ANY]
+  - name: RET_VAL
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Int]
+  - name: DB_LENGTH
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [UDInt]
+  - name: ATTRIB
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Byte]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Query a data block's attributes (length, read-only/etc.).
+  source: "official instruction documentation (paraphrased)"
+  result:
+    kind: none
+DELETE_DB:
+  family: extended
+  callShape: box
+  instanceType: null
+  pins:
+  - name: REQ
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: DB_NUMBER
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [DB_ANY]
+  - name: Ret_Val
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Int]
+  - name: BUSY
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Dynamically delete a data block created via CREATE_DB.
+  source: "official instruction documentation (paraphrased)"
+  result:
+    kind: none

@@ -1,0 +1,561 @@
+﻿{
+    S7_BlockComment := "Fixture";
+    S7_BlockTitle := "Fixture";
+    S7_Optimized := "TRUE";
+    S7_PreferredLanguage := "FBD";
+    S7_Version := "0.1"
+}
+FUNCTION_BLOCK "FB_DualPump"
+    VAR_INPUT
+        { S7_MLC := "Fixture" }
+        i_xCmdStart : Bool;
+        { S7_MLC := "Fixture" }
+        i_xCmdStop : Bool;
+        { S7_MLC := "Fixture" }
+        i_iCmdSelect : Int;
+        { S7_MLC := "Fixture" }
+        i_xFlowOk : Bool;
+        { S7_MLC := "Fixture" }
+        i_xMotorProtectionSignalA : Bool;
+        { S7_MLC := "Fixture" }
+        i_xMotorProtectionSignalB : Bool;
+        { S7_MLC := "Fixture" }
+        i_xMotorProtectionNormallyClosed : Bool := FALSE;
+        { S7_MLC := "Fixture" }
+        i_xInterlock : Bool;
+        { S7_MLC := "Fixture" }
+        i_xAckAlarm : Bool;
+        { S7_MLC := "Fixture" }
+        i_tFlowDelay : Time := T#10S;
+        { S7_MLC := "Fixture" }
+        i_tFlowDebounce : Time := T#1S;
+    END_VAR
+    VAR_OUTPUT
+        { S7_MLC := "Fixture" }
+        q_xRunA : Bool;
+        { S7_MLC := "Fixture" }
+        q_xRunB : Bool;
+        { S7_MLC := "Fixture" }
+        q_xRunning : Bool;
+        { S7_MLC := "Fixture" }
+        q_iActivePump : Int;
+        { S7_MLC := "Fixture" }
+        q_xBlocked : Bool;
+        { S7_MLC := "Fixture" }
+        q_xFlowMonitoring : Bool;
+        { S7_MLC := "Fixture" }
+        q_xAlarmFlow : Bool;
+        { S7_MLC := "Fixture" }
+        q_xAlarmMotorProtectionA : Bool;
+        { S7_MLC := "Fixture" }
+        q_xAlarmMotorProtectionB : Bool;
+        { S7_MLC := "Fixture" }
+        q_xFault : Bool;
+        { S7_MLC := "Fixture" }
+        q_xAlarmGroup : Bool;
+        { S7_MLC := "Fixture" }
+        q_diRunSecA : DInt;
+        { S7_MLC := "Fixture" }
+        q_diRunSecB : DInt;
+    END_VAR
+    VAR
+        { S7_MLC := "Fixture" }
+        fbMotorProtectionA : _.FB_MotorProtection;
+        { S7_MLC := "Fixture" }
+        fbMotorProtectionB : _.FB_MotorProtection;
+        { S7_MLC := "Fixture" }
+        fbFlow : _.FB_FlowMonitor;
+        statRunReq : Bool;
+        statRunReqPrev : Bool;
+        statActiveSel : Int;
+        statActivePrev : Int;
+        statPumpChanged : Bool;
+        statTriedA : Bool;
+        statTriedB : Bool;
+        statBothFailed : Bool;
+        { S7_MLC := "Fixture" }
+        statRunSec_A : DInt;
+        { S7_MLC := "Fixture" }
+        statRunSec_B : DInt;
+        trigStart : R_TRIG;
+        trigStop : R_TRIG;
+        tonTick : TON_TIME;
+        { S7_Setpoint := "True" }
+        tonTickTrg : Bool;
+    END_VAR
+    VAR_TEMP
+        tStartBlocked : Bool;
+        tMprTripAct : Bool;
+        tActiveFault : Bool;
+        tTripActive : Bool;
+        tTickPulse : Bool;
+    END_VAR
+    VAR CONSTANT
+        PUMP_NONE : Int := 0;
+        PUMP_A : Int := 1;
+        PUMP_B : Int := 2;
+    END_VAR
+
+    {
+        S7_Language := "FBD";
+        S7_NetworkTitle := "Fixture"
+    }
+    NETWORK
+        RUNG
+            #fbMotorProtectionA(
+                i_xMprSignal := #i_xMotorProtectionSignalA,
+                i_xNormallyClosed := #i_xMotorProtectionNormallyClosed,
+                i_xPumpRunning := #q_xRunA,
+                i_tDebounce :=  ,
+                i_xAckAlarm := #i_xAckAlarm,
+                q_xTrip =>  ,
+                q_xTripInRun =>  ,
+                q_xAlarmMpr =>  ,
+                q_xBlockStart =>  ,
+                q_xAlarmGroup =>  
+            )
+        END_RUNG
+        RUNG
+            #fbMotorProtectionB(
+                i_xMprSignal := #i_xMotorProtectionSignalB,
+                i_xNormallyClosed := #i_xMotorProtectionNormallyClosed,
+                i_xPumpRunning := #q_xRunB,
+                i_tDebounce :=  ,
+                i_xAckAlarm := #i_xAckAlarm,
+                q_xTrip =>  ,
+                q_xTripInRun =>  ,
+                q_xAlarmMpr =>  ,
+                q_xBlockStart =>  ,
+                q_xAlarmGroup =>  
+            )
+        END_RUNG
+    END_NETWORK
+    {
+        S7_Language := "FBD";
+        S7_NetworkTitle := "Fixture"
+    }
+    NETWORK
+        RUNG
+            #trigStart.R_TRIG(
+                clk := #i_xCmdStart,
+                q =>  
+            )
+        END_RUNG
+        RUNG
+            #trigStop.R_TRIG(
+                clk := #i_xCmdStop,
+                q =>  
+            )
+        END_RUNG
+    END_NETWORK
+    {
+        S7_Language := "FBD";
+        S7_NetworkTitle := "Fixture"
+    }
+    NETWORK
+        RUNG #i_xInterlock
+            O( in2 := wire#w1 )
+            Coil( #tStartBlocked )
+        END_RUNG
+        RUNG #fbMotorProtectionA.q_xBlockStart
+            A( in2 := #fbMotorProtectionB.q_xBlockStart )
+        END_RUNG wire#w1
+    END_NETWORK
+    {
+        S7_Language := "FBD";
+        S7_NetworkTitle := "Fixture"
+    }
+    NETWORK
+        RUNG #trigStart.Q
+            A( in2 := NOT #tStartBlocked )
+            S_Coil( #statRunReq )
+        END_RUNG
+        RUNG #trigStop.Q
+            O(
+                in2 := #i_xInterlock,
+                in3 := #statBothFailed
+            )
+            R_Coil( #statRunReq )
+        END_RUNG
+        RUNG #fbMotorProtectionA.q_xBlockStart
+            O( in2 := #fbMotorProtectionB.q_xBlockStart )
+            Coil( #tTripActive )
+        END_RUNG
+    END_NETWORK
+    {
+        S7_Language := "FBD";
+        S7_NetworkTitle := "Fixture"
+    }
+    NETWORK
+        RUNG #statRunReq
+            A( in2 := NOT #statRunReqPrev )
+            wire#w1
+            R_Coil( #statTriedA )
+            R_Coil( #statTriedB )
+            R_Coil( #statBothFailed )
+        END_RUNG
+        RUNG wire#w1
+            O(
+                in2 := wire#w2,
+                in3 := wire#w3
+            )
+            Move(
+                in := #i_iCmdSelect,
+                out1 => #statActiveSel
+            )
+        END_RUNG
+        RUNG
+            { S7_Templates := "SrcType := Int" }
+            EQ_Contact(
+                in1 := #i_iCmdSelect,
+                in2 := #PUMP_A
+            )
+        END_RUNG wire#w2
+        RUNG
+            { S7_Templates := "SrcType := Int" }
+            EQ_Contact(
+                in1 := #i_iCmdSelect,
+                in2 := #PUMP_B
+            )
+        END_RUNG wire#w3
+        RUNG wire#w1
+            A( in2 := wire#w4 )
+            wire#w5
+            A( in2 := #tTripActive )
+            wire#w6
+            A(
+                in2 := #fbMotorProtectionA.q_xBlockStart,
+                in3 := NOT #fbMotorProtectionB.q_xBlockStart
+            )
+            Move(
+                in := #PUMP_B,
+                out1 => #statActiveSel
+            )
+        END_RUNG
+        RUNG
+            { S7_Templates := "SrcType := Int" }
+            EQ_Contact(
+                in1 := #i_iCmdSelect,
+                in2 := #PUMP_NONE
+            )
+        END_RUNG wire#w4
+        RUNG wire#w6
+            A(
+                in2 := #fbMotorProtectionB.q_xBlockStart,
+                in3 := NOT #fbMotorProtectionA.q_xBlockStart
+            )
+            Move(
+                in := #PUMP_A,
+                out1 => #statActiveSel
+            )
+        END_RUNG
+        RUNG wire#w5
+            A( in2 := NOT #tTripActive )
+            wire#w7
+            A( in2 := wire#w8 )
+            Move(
+                in := #PUMP_A,
+                out1 => #statActiveSel
+            )
+        END_RUNG
+        RUNG
+            { S7_Templates := "SrcType := DInt" }
+            LE_Contact(
+                in1 := #statRunSec_A,
+                in2 := #statRunSec_B
+            )
+        END_RUNG wire#w8
+        RUNG wire#w7
+            A( in2 := wire#w9 )
+            Move(
+                in := #PUMP_B,
+                out1 => #statActiveSel
+            )
+        END_RUNG
+        RUNG
+            { S7_Templates := "SrcType := DInt" }
+            GT_Contact(
+                in1 := #statRunSec_A,
+                in2 := #statRunSec_B
+            )
+        END_RUNG wire#w9
+        RUNG #statRunReq
+            Coil( #statRunReqPrev )
+        END_RUNG
+    END_NETWORK
+    {
+        S7_Language := "FBD";
+        S7_NetworkComment := "Fixture";
+        S7_NetworkTitle := "Fixture"
+    }
+    NETWORK
+        RUNG
+            { S7_Templates := "SrcType := Int" }
+            NE_Contact(
+                in1 := #statActiveSel,
+                in2 := #statActivePrev
+            )
+            Coil( #statPumpChanged )
+        END_RUNG
+        RUNG
+            Move(
+                in := #statActiveSel,
+                out1 => #statActivePrev
+            )
+        END_RUNG
+    END_NETWORK
+    {
+        S7_Language := "FBD";
+        S7_NetworkTitle := "Fixture"
+    }
+    NETWORK
+        RUNG
+            #fbFlow(
+                i_xFlowRaw := #i_xFlowOk,
+                i_xPumpRunning := wire#w2,
+                i_tStartDelay := #i_tFlowDelay,
+                i_tDebounce := #i_tFlowDebounce,
+                i_xAckAlarm := #i_xAckAlarm,
+                q_xFlowOk =>  ,
+                q_xMonitoring =>  ,
+                q_xLowFlow =>  ,
+                q_xAlarmFlow =>  ,
+                q_xStandbyTrig =>  ,
+                q_xAlarmGroup =>  
+            )
+        END_RUNG
+        RUNG #statRunReq
+            A(
+                in2 := wire#w1,
+                in3 := NOT #statPumpChanged
+            )
+        END_RUNG wire#w2
+        RUNG
+            { S7_Templates := "SrcType := Int" }
+            NE_Contact(
+                in1 := #statActiveSel,
+                in2 := #PUMP_NONE
+            )
+        END_RUNG wire#w1
+    END_NETWORK
+    {
+        S7_Language := "FBD";
+        S7_NetworkTitle := "Fixture"
+    }
+    NETWORK
+        RUNG
+            { S7_Templates := "SrcType := Int" }
+            EQ_Contact(
+                in1 := #statActiveSel,
+                in2 := #PUMP_A
+            )
+            A( in2 := #fbMotorProtectionA.q_xTrip )
+            O( in2 := wire#w1 )
+            Coil( #tMprTripAct )
+        END_RUNG
+        RUNG
+            { S7_Templates := "SrcType := Int" }
+            EQ_Contact(
+                in1 := #statActiveSel,
+                in2 := #PUMP_B
+            )
+            A( in2 := #fbMotorProtectionB.q_xTrip )
+        END_RUNG wire#w1
+        RUNG #fbFlow.q_xStandbyTrig
+            O( in2 := #tMprTripAct )
+            Coil( #tActiveFault )
+        END_RUNG
+    END_NETWORK
+    {
+        S7_Language := "FBD";
+        S7_NetworkTitle := "Fixture"
+    }
+    NETWORK
+        RUNG #statRunReq
+            A(
+                in2 := #tActiveFault,
+                in3 := NOT #statPumpChanged
+            )
+            wire#w1
+            A(
+                in2 := wire#w2,
+                in3 := NOT #statTriedB
+            )
+            Move(
+                in := #PUMP_B,
+                out1 => #statActiveSel
+            )
+        END_RUNG
+        RUNG
+            { S7_Templates := "SrcType := Int" }
+            EQ_Contact(
+                in1 := #statActiveSel,
+                in2 := #PUMP_A
+            )
+        END_RUNG wire#w2
+        RUNG wire#w1
+            A(
+                in2 := wire#w3,
+                in3 := NOT #statTriedA
+            )
+            Move(
+                in := #PUMP_A,
+                out1 => #statActiveSel
+            )
+        END_RUNG
+        RUNG
+            { S7_Templates := "SrcType := Int" }
+            EQ_Contact(
+                in1 := #statActiveSel,
+                in2 := #PUMP_B
+            )
+        END_RUNG wire#w3
+        RUNG wire#w1
+            A(
+                in2 := #statTriedA,
+                in3 := #statTriedB
+            )
+            S_Coil( #statBothFailed )
+        END_RUNG
+    END_NETWORK
+    {
+        S7_Language := "FBD";
+        S7_NetworkTitle := "Fixture"
+    }
+    NETWORK
+        RUNG
+            { S7_Templates := "SrcType := Int" }
+            EQ_Contact(
+                in1 := #statActiveSel,
+                in2 := #PUMP_A
+            )
+            S_Coil( #statTriedA )
+        END_RUNG
+        RUNG
+            { S7_Templates := "SrcType := Int" }
+            EQ_Contact(
+                in1 := #statActiveSel,
+                in2 := #PUMP_B
+            )
+            S_Coil( #statTriedB )
+        END_RUNG
+    END_NETWORK
+    {
+        S7_Language := "FBD";
+        S7_NetworkTitle := "Fixture"
+    }
+    NETWORK
+        RUNG #statRunReq
+            A( in2 := NOT #statBothFailed )
+            wire#w1
+            A( in2 := wire#w2 )
+            Coil( #q_xRunA )
+        END_RUNG
+        RUNG
+            { S7_Templates := "SrcType := Int" }
+            EQ_Contact(
+                in1 := #statActiveSel,
+                in2 := #PUMP_A
+            )
+        END_RUNG wire#w2
+        RUNG wire#w1
+            A( in2 := wire#w3 )
+            Coil( #q_xRunB )
+        END_RUNG
+        RUNG
+            { S7_Templates := "SrcType := Int" }
+            EQ_Contact(
+                in1 := #statActiveSel,
+                in2 := #PUMP_B
+            )
+        END_RUNG wire#w3
+        RUNG #statRunReq
+            NOT O( in2 := #statBothFailed )
+            Move(
+                in := #PUMP_NONE,
+                out1 => #statActiveSel
+            )
+        END_RUNG
+    END_NETWORK
+    {
+        S7_Language := "FBD";
+        S7_NetworkTitle := "Fixture"
+    }
+    NETWORK
+        RUNG #tonTickTrg
+            { S7_Templates := "time_type := Time" }
+            NOT #tonTick.TON(
+                pt := T#1s,
+                et =>  
+            )
+            Coil( #tTickPulse )
+            Coil( #tonTickTrg )
+        END_RUNG
+        RUNG #tTickPulse
+            A( in2 := #q_xRunA )
+            Add(
+                in1 := #statRunSec_A,
+                in2 := 1,
+                out => #statRunSec_A
+            )
+        END_RUNG
+        RUNG #tTickPulse
+            A( in2 := #q_xRunB )
+            Add(
+                in1 := #statRunSec_B,
+                in2 := 1,
+                out => #statRunSec_B
+            )
+        END_RUNG
+    END_NETWORK
+    {
+        S7_Language := "FBD";
+        S7_NetworkTitle := "Fixture"
+    }
+    NETWORK
+        RUNG #statRunReq
+            A( in2 := wire#w1 )
+            Coil( #q_xRunning )
+        END_RUNG
+        RUNG #q_xRunA
+            O( in2 := #q_xRunB )
+        END_RUNG wire#w1
+        RUNG
+            Move(
+                in := #statActiveSel,
+                out1 => #q_iActivePump
+            )
+        END_RUNG
+        RUNG #tStartBlocked
+            Coil( #q_xBlocked )
+        END_RUNG
+        RUNG #fbFlow.q_xMonitoring
+            Coil( #q_xFlowMonitoring )
+        END_RUNG
+        RUNG #fbFlow.q_xAlarmFlow
+            Coil( #q_xAlarmFlow )
+        END_RUNG
+        RUNG #fbMotorProtectionA.q_xAlarmMpr
+            Coil( #q_xAlarmMotorProtectionA )
+        END_RUNG
+        RUNG #fbMotorProtectionB.q_xAlarmMpr
+            Coil( #q_xAlarmMotorProtectionB )
+        END_RUNG
+        RUNG #statBothFailed
+            Coil( #q_xFault )
+        END_RUNG
+        RUNG #fbFlow.q_xAlarmGroup
+            O(
+                in2 := #fbMotorProtectionA.q_xAlarmGroup,
+                in3 := #fbMotorProtectionB.q_xAlarmGroup,
+                in4 := #statBothFailed
+            )
+            Coil( #q_xAlarmGroup )
+        END_RUNG
+    END_NETWORK
+    { S7_Language := "FBD" }
+    NETWORK
+        RUNG
+        END_RUNG
+    END_NETWORK
+END_FUNCTION_BLOCK

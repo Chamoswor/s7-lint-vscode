@@ -1,0 +1,192 @@
+{
+    S7_BlockComment := "Fixture";
+    S7_BlockTitle := "Fixture";
+    S7_Optimized := "TRUE";
+    S7_PreferredLanguage := "FBD";
+    S7_Version := "0.1"
+}
+FUNCTION_BLOCK "FB_Pump"
+    VAR_INPUT
+        { S7_MLC := "Fixture" }
+        i_xCmdStart : Bool;
+        { S7_MLC := "Fixture" }
+        i_xCmdStop : Bool;
+        { S7_MLC := "Fixture" }
+        i_xMprTrip : Bool;
+        { S7_MLC := "Fixture" }
+        i_xInterlock : Bool;
+        { S7_MLC := "Fixture" }
+        i_xAckAlarm : Bool;
+        { S7_MLC := "Fixture" }
+        i_tAutoStop : Time := T#0MS;
+    END_VAR
+    VAR_OUTPUT
+        { S7_MLC := "Fixture" }
+        q_xRun : Bool;
+        { S7_MLC := "Fixture" }
+        q_xRunning : Bool;
+        { S7_MLC := "Fixture" }
+        q_xBlocked : Bool;
+        { S7_MLC := "Fixture" }
+        q_xAlarmMpr : Bool;
+        { S7_MLC := "Fixture" }
+        q_xAlarmGroup : Bool;
+        { S7_MLC := "Fixture" }
+        q_diRunSec : DInt;
+    END_VAR
+    VAR
+        statRunReq : Bool;
+        statAlmMpr : Bool;
+        { S7_MLC := "Fixture" }
+        statRunSec : DInt;
+        trigStart : R_TRIG;
+        trigStop : R_TRIG;
+        tonAutoStop : TON_TIME;
+        tonTick : TON_TIME;
+        { S7_Setpoint := "True" }
+        tonTickTrg : Bool;
+    END_VAR
+    VAR_TEMP
+        tBlocked : Bool;
+        tTickPulse : Bool;
+    END_VAR
+
+    {
+        S7_Language := "FBD";
+        S7_NetworkTitle := "Fixture"
+    }
+    NETWORK
+        RUNG
+            #trigStart.R_TRIG(
+                clk := #i_xCmdStart,
+                q =>
+            )
+        END_RUNG
+        RUNG
+            #trigStop.R_TRIG(
+                clk := #i_xCmdStop,
+                q =>
+            )
+        END_RUNG
+    END_NETWORK
+    {
+        S7_Language := "FBD";
+        S7_NetworkTitle := "Fixture"
+    }
+    NETWORK
+        RUNG #i_xInterlock
+            O( in2 := #i_xMprTrip )
+            Coil( #tBlocked )
+        END_RUNG
+    END_NETWORK
+    {
+        S7_Language := "FBD";
+        S7_NetworkTitle := "Fixture"
+    }
+    NETWORK
+        RUNG #trigStart.Q
+            A( in2 := NOT #tBlocked )
+            S_Coil( #statRunReq )
+        END_RUNG
+        RUNG #trigStop.Q
+            O( in2 := #tBlocked )
+            R_Coil( #statRunReq )
+        END_RUNG
+    END_NETWORK
+    {
+        S7_Language := "FBD";
+        S7_NetworkTitle := "Fixture"
+    }
+    NETWORK
+        RUNG #statRunReq
+            A( in2 := wire#w1 )
+            { S7_Templates := "time_type := Time" }
+            #tonAutoStop.TON(
+                pt := #i_tAutoStop,
+                et =>
+            )
+        END_RUNG
+        RUNG
+            { S7_Templates := "SrcType := Time" }
+            GT_Contact(
+                in1 := #i_tAutoStop,
+                in2 := T#0s
+            )
+        END_RUNG wire#w1
+        RUNG #tonAutoStop.Q
+            R_Coil( #statRunReq )
+        END_RUNG
+    END_NETWORK
+    {
+        S7_Language := "FBD";
+        S7_NetworkTitle := "Fixture"
+    }
+    NETWORK
+        RUNG #statRunReq
+            Coil( #q_xRun )
+        END_RUNG
+    END_NETWORK
+    {
+        S7_Language := "FBD";
+        S7_NetworkTitle := "Fixture"
+    }
+    NETWORK
+        RUNG #tonTickTrg
+            { S7_Templates := "time_type := Time" }
+            NOT #tonTick.TON(
+                pt := T#1s,
+                et =>
+            )
+            Coil( #tTickPulse )
+            Coil( #tonTickTrg )
+        END_RUNG
+        RUNG #tTickPulse
+            A( in2 := #q_xRun )
+            Add(
+                in1 := #statRunSec,
+                in2 := 1,
+                out => #statRunSec
+            )
+        END_RUNG
+    END_NETWORK
+    {
+        S7_Language := "FBD";
+        S7_NetworkTitle := "Fixture"
+    }
+    NETWORK
+        RUNG #i_xMprTrip
+            S_Coil( #statAlmMpr )
+        END_RUNG
+        RUNG #i_xAckAlarm
+            A( in2 := NOT #i_xMprTrip )
+            R_Coil( #statAlmMpr )
+        END_RUNG
+    END_NETWORK
+    {
+        S7_Language := "FBD";
+        S7_NetworkTitle := "Fixture"
+    }
+    NETWORK
+        RUNG #statRunReq
+            Coil( #q_xRunning )
+        END_RUNG
+        RUNG #tBlocked
+            Coil( #q_xBlocked )
+        END_RUNG
+        RUNG #statAlmMpr
+            Coil( #q_xAlarmMpr )
+            Coil( #q_xAlarmGroup )
+        END_RUNG
+        RUNG
+            Move(
+                in := #statRunSec,
+                out1 => #q_diRunSec
+            )
+        END_RUNG
+    END_NETWORK
+    { S7_Language := "FBD" }
+    NETWORK
+        RUNG
+        END_RUNG
+    END_NETWORK
+END_FUNCTION_BLOCK

@@ -1,0 +1,137 @@
+# Codes emitted by linter/synStructureChecks.ts -- a dedicated, ADDITIVE
+# recursive-descent structural/syntax checker over an SCL BEGIN...END body
+# (and its VAR sections), separate from parser/s7dclParser.ts's own
+# deliberately tolerant parser. It never changes what s7dclParser.ts or
+# documentIndex.ts do -- it only adds diagnostics for constructs that are
+# genuinely, unrecoverably malformed (a missing THEN/DO/OF/semicolon, an
+# unclosed paren/bracket, a wrong/unmatched END_xxx keyword, ...). See
+# See scripts/fixtures/scl-diagnostics/manifest.yaml and its negative/parser
+# fixtures for the executable cases this checker was built against.
+
+syn-missing-semicolon:
+  severity: error
+  message: "Every SCL statement must terminate with a semicolon."
+
+syn-expected-assignment-operator:
+  severity: error
+  message: "Value assignment uses ':=', not '='."
+
+syn-expected-right-parenthesis:
+  severity: error
+  message: "Missing closing ')' -- every opening '(' must have a matching closing parenthesis."
+
+syn-expected-expression:
+  severity: error
+  message: "Expected an expression here -- an operator cannot be left dangling with no right-hand operand."
+
+syn-if-missing-then:
+  severity: error
+  message: "IF condition must be followed by THEN."
+
+syn-expected-end-if:
+  severity: error
+  message: "IF is terminated by 'END_IF;', not '{tokenText}'."
+
+syn-elsif-missing-then:
+  severity: error
+  message: "ELSIF condition must be followed by THEN."
+
+syn-unmatched-end-if:
+  severity: error
+  message: "END_IF cannot occur without a corresponding IF."
+
+syn-case-missing-of:
+  severity: error
+  message: "CASE test expression must be followed by OF."
+
+syn-case-label-missing-colon:
+  severity: error
+  message: "A CASE value/list must be followed by a colon."
+
+syn-invalid-case-range:
+  severity: error
+  message: "A CASE range uses exactly two periods: 'lo..hi'."
+
+syn-expected-end-case:
+  severity: error
+  message: "CASE must be terminated by 'END_CASE;'."
+
+syn-for-missing-assignment:
+  severity: error
+  message: "FOR header requires 'loop-variable := start-value'."
+
+syn-for-missing-to:
+  severity: error
+  message: "FOR header requires TO between the start and end values."
+
+syn-for-missing-do:
+  severity: error
+  message: "FOR header must end with DO."
+
+syn-expected-end-for:
+  severity: error
+  message: "FOR is terminated by 'END_FOR;', not '{tokenText}'."
+
+syn-unmatched-end-for:
+  severity: error
+  message: "END_FOR cannot occur without a corresponding FOR."
+
+syn-while-missing-do:
+  severity: error
+  message: "WHILE condition must be followed by DO."
+
+syn-expected-end-while:
+  severity: error
+  message: "WHILE is terminated by 'END_WHILE;', not '{tokenText}'."
+
+syn-repeat-missing-until:
+  severity: error
+  message: "REPEAT body must be followed by 'UNTIL condition' before END_REPEAT."
+
+syn-expected-end-repeat:
+  severity: error
+  message: "REPEAT must be terminated by 'END_REPEAT;'."
+
+syn-exit-outside-loop:
+  severity: error
+  message: "EXIT is legal only inside a FOR, WHILE, or REPEAT loop."
+
+syn-continue-outside-loop:
+  severity: error
+  message: "CONTINUE is legal only inside a FOR, WHILE, or REPEAT loop."
+
+syn-mismatched-block-terminator:
+  severity: error
+  message: "'{tokenText}' closes an outer construct out of order -- nested control statements must close in last-opened, first-closed order."
+
+syn-declaration-missing-colon:
+  severity: error
+  message: "A variable declaration requires 'name : data-type;'."
+
+syn-declaration-missing-semicolon:
+  severity: error
+  message: "A declaration must terminate with a semicolon."
+
+syn-expected-end-var:
+  severity: error
+  message: "A VAR section must be terminated by END_VAR."
+
+syn-expected-begin:
+  severity: error
+  message: "Executable statements must follow BEGIN."
+
+syn-expected-right-bracket:
+  severity: error
+  message: "Missing closing ']' -- an array index's opening '[' must have a matching closing bracket."
+
+syn-expected-comma:
+  severity: error
+  message: "Named call arguments must be comma-separated."
+
+syn-unterminated-string:
+  severity: error
+  message: "String literal is never terminated before the end of the file."
+
+syn-unterminated-comment:
+  severity: error
+  message: "Block comment is never terminated before the end of the file."

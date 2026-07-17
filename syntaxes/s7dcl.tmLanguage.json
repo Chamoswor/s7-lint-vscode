@@ -1,0 +1,150 @@
+{
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "name": "S7 Declaration (LAD/FBD)",
+  "scopeName": "source.s7dcl",
+  "patterns": [
+    { "include": "#comments" },
+    { "include": "#pragma" },
+    { "include": "#strings" },
+    { "include": "#block-keywords" },
+    { "include": "#var-keywords" },
+    { "include": "#network-keywords" },
+    { "include": "#other-keywords" },
+    { "include": "#scl-conditional-keywords" },
+    { "include": "#scl-loop-keywords" },
+    { "include": "#scl-other-control-keywords" },
+    { "include": "#scl-logical-operators" },
+    { "include": "#scl-boolean-literals" },
+    { "include": "#scl-null-literals" },
+    { "include": "#scl-base-types" },
+    { "include": "#instance-call" },
+    { "include": "#call" },
+    { "include": "#pin-key" },
+    { "include": "#tag-reference" },
+    { "include": "#numbers" },
+    { "include": "#operators" }
+  ],
+  "repository": {
+    "comments": {
+      "patterns": [
+        { "name": "comment.line.double-slash.s7dcl", "match": "//.*$" },
+        { "name": "comment.block.s7dcl", "begin": "\\(\\*", "end": "\\*\\)" },
+        { "name": "comment.block.s7dcl", "begin": "/\\*", "end": "\\*/" }
+      ]
+    },
+    "strings": {
+      "patterns": [
+        {
+          "name": "string.quoted.double.s7dcl",
+          "begin": "\"",
+          "end": "\"",
+          "patterns": [{ "match": "\\$.", "name": "constant.character.escape.s7dcl" }]
+        },
+        {
+          "name": "string.quoted.single.s7dcl",
+          "begin": "'",
+          "end": "'",
+          "patterns": [{ "match": "\\$.", "name": "constant.character.escape.s7dcl" }]
+        }
+      ]
+    },
+    "pragma": {
+      "begin": "\\{",
+      "end": "\\}",
+      "name": "meta.pragma.s7dcl",
+      "beginCaptures": { "0": { "name": "punctuation.definition.pragma.begin.s7dcl" } },
+      "endCaptures": { "0": { "name": "punctuation.definition.pragma.end.s7dcl" } },
+      "patterns": [
+        { "include": "#comments" },
+        { "include": "#strings" },
+        {
+          "match": "\\b([A-Za-z_][A-Za-z0-9_]*)\\b\\s*(:=)",
+          "captures": {
+            "1": { "name": "support.type.property-name.s7dcl" },
+            "2": { "name": "keyword.operator.assignment.s7dcl" }
+          }
+        },
+        { "match": ";", "name": "punctuation.separator.s7dcl" }
+      ]
+    },
+    "block-keywords": {
+      "name": "keyword.control.block.s7dcl",
+      "match": "\\b(FUNCTION_BLOCK|FUNCTION|ORGANIZATION_BLOCK|DATA_BLOCK|END_FUNCTION_BLOCK|END_FUNCTION|END_ORGANIZATION_BLOCK|END_DATA_BLOCK|TYPE|END_TYPE|STRUCT|END_STRUCT|BEGIN)\\b"
+    },
+    "var-keywords": {
+      "name": "keyword.control.var.s7dcl",
+      "match": "\\b(VAR_INPUT|VAR_OUTPUT|VAR_IN_OUT|VAR_TEMP|VAR_CONSTANT|VAR|END_VAR|RETAIN|NON_RETAIN)\\b"
+    },
+    "network-keywords": {
+      "name": "keyword.control.network.s7dcl",
+      "match": "\\b(NETWORK|END_NETWORK|RUNG|END_RUNG)\\b"
+    },
+    "other-keywords": {
+      "patterns": [
+        { "name": "keyword.other.version.s7dcl", "match": "\\bVERSION\\b" },
+        { "name": "storage.type.array.s7dcl", "match": "\\b(ARRAY|[Oo][Ff])\\b" }
+      ]
+    },
+    "scl-conditional-keywords": {
+      "comment": "An authored .scl source file's BEGIN...END statement body -- see parser/s7dclParser.ts's own SCL_RESERVED_KEYWORDS, which this list mirrors. Placed ahead of #call in the top-level patterns array so e.g. 'IF (' isn't misparsed as a call to a function named IF.",
+      "name": "keyword.control.conditional.s7dcl",
+      "match": "\\b(IF|THEN|ELSE|ELSIF|END_IF|CASE|END_CASE)\\b"
+    },
+    "scl-loop-keywords": {
+      "name": "keyword.control.loop.s7dcl",
+      "match": "\\b(FOR|TO|BY|DO|END_FOR|WHILE|END_WHILE|REPEAT|UNTIL|END_REPEAT|CONTINUE|EXIT)\\b"
+    },
+    "scl-other-control-keywords": {
+      "name": "keyword.control.s7dcl",
+      "match": "\\b(GOTO|RETURN|REGION|END_REGION)\\b"
+    },
+    "scl-logical-operators": {
+      "name": "keyword.operator.logical.s7dcl",
+      "match": "\\b(AND|OR|XOR|NOT|MOD)\\b"
+    },
+    "scl-boolean-literals": {
+      "name": "constant.language.boolean.s7dcl",
+      "match": "\\b(TRUE|FALSE)\\b"
+    },
+    "scl-null-literals": {
+      "name": "constant.language.s7dcl",
+      "match": "\\b(NULL|ZERO)\\b"
+    },
+    "scl-base-types": {
+      "comment": "Elementary/base type names (rules/base-types.yaml's own key list) -- static duplicate here since a TextMate grammar can't read the runtime yaml registry; keep in sync if base-types.yaml's key set changes. Instance/system/UDT type names (TON_TIME, IEC_TIMER, a project's own FB names, ...) are deliberately NOT listed here -- those depend on workspace data no static grammar can see, and are colored instead by the semantic-tokens provider (analysis/documentIndex.ts's pushTypeNameSpan).",
+      "name": "storage.type.primitive.s7dcl",
+      "match": "\\b(Bool|Byte|Word|DWord|LWord|Char|WChar|SInt|USInt|Int|UInt|DInt|UDInt|LInt|ULInt|Real|LReal|S5Time|Time|LTime|Date|Time_Of_Day|LTime_Of_Day|LDT|Date_And_Time|DTL|String|WString|Variant|Void|Any|Pointer|Array|Struct|Reference)\\b"
+    },
+    "numbers": {
+      "name": "constant.numeric.s7dcl",
+      "match": "-?\\b[0-9]+(\\.[0-9]+)?\\b"
+    },
+    "operators": {
+      "patterns": [
+        { "name": "keyword.operator.assignment.input.s7dcl", "match": ":=" },
+        { "name": "keyword.operator.assignment.output.s7dcl", "match": "=>" },
+        { "name": "punctuation.separator.s7dcl", "match": "[;,.:]" }
+      ]
+    },
+    "instance-call": {
+      "match": "(#[A-Za-z_][A-Za-z0-9_]*)(\\.)([A-Za-z_][A-Za-z0-9_]*)(?=\\s*\\()",
+      "captures": {
+        "1": { "name": "variable.other.instance.s7dcl" },
+        "2": { "name": "punctuation.accessor.s7dcl" },
+        "3": { "name": "entity.name.function.s7dcl" }
+      }
+    },
+    "call": {
+      "match": "\\b([A-Za-z_][A-Za-z0-9_]*)\\b(?=\\s*\\()",
+      "name": "entity.name.function.s7dcl"
+    },
+    "pin-key": {
+      "match": "\\b([A-Za-z_][A-Za-z0-9_]*)\\b(?=\\s*(:=|=>))",
+      "name": "variable.parameter.s7dcl"
+    },
+    "tag-reference": {
+      "name": "variable.other.readwrite.s7dcl",
+      "match": "#[A-Za-z_][A-Za-z0-9_]*"
+    }
+  }
+}

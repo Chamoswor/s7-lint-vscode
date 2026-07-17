@@ -1,0 +1,11 @@
+FUNCTION_BLOCK "Semantic_ArrayBoundOutOfRange"
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+
+VAR
+    values : Array[0..32768] of Int;
+    // EXPECT: error[array.bound-out-of-range] SEM-ARRAY-004
+END_VAR
+
+BEGIN
+END_FUNCTION_BLOCK

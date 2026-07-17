@@ -1,0 +1,179 @@
+﻿{
+    S7_Optimized := "TRUE";
+    S7_PreferredLanguage := "FBD";
+    S7_Version := "0.1"
+}
+FUNCTION_BLOCK "CLAUDE_REF_TIMER-OPERATION"
+    VAR
+        { S7_Setpoint := "True" }
+        S1 : Bool;
+        TIME_Optional : Time;
+        TP_TIME_Instance : TP_TIME;
+        TON_TIME_Instance : TON_TIME;
+        TOF_TIME_Instance : TOF_TIME;
+        TONR_TIME_Instance : TONR_TIME;
+    END_VAR
+    VAR_TEMP
+        T1 : Bool;
+        T2 : Bool;
+    END_VAR
+    VAR CONSTANT
+        TIMEC1 : Time := T#100ms;
+    END_VAR
+
+    {
+        S7_Language := "FBD";
+        S7_NetworkTitle := "MLC_33t"
+    }
+    NETWORK
+        RUNG #T1
+            { S7_Templates := "time_type := Time" }
+            #TP_TIME_Instance.TP(
+                pt := #TIMEC1,
+                et => #TIME_Optional
+            )
+        END_RUNG
+    END_NETWORK
+    {
+        S7_Language := "FBD";
+        S7_NetworkTitle := "MLC_4fs"
+    }
+    NETWORK
+        RUNG #T1
+            { S7_Templates := "time_type := Time" }
+            #TON_TIME_Instance.TON(
+                pt := #TIMEC1,
+                et => #TIME_Optional
+            )
+        END_RUNG
+    END_NETWORK
+    {
+        S7_Language := "FBD";
+        S7_NetworkTitle := "MLC_34H"
+    }
+    NETWORK
+        RUNG #T1
+            { S7_Templates := "time_type := Time" }
+            #TOF_TIME_Instance.TOF(
+                pt := #TIMEC1,
+                et => #TIME_Optional
+            )
+        END_RUNG
+    END_NETWORK
+    {
+        S7_Language := "FBD";
+        S7_NetworkTitle := "MLC_tG"
+    }
+    NETWORK
+        RUNG #T1
+            { S7_Templates := "time_type := Time" }
+            #TONR_TIME_Instance.TONR(
+                r := #T2,
+                pt := #TIMEC1,
+                et => #TIME_Optional
+            )
+        END_RUNG
+    END_NETWORK
+    { S7_Language := "FBD" }
+    NETWORK
+        RUNG #T1
+            { S7_Templates := "time_type := Time" }
+            TP_Coil(
+                timer => #TP_TIME_Instance,
+                pt := #TIMEC1
+            )
+        END_RUNG
+    END_NETWORK
+    {
+        S7_Language := "FBD";
+        S7_NetworkTitle := "MLC_az"
+    }
+    NETWORK
+        RUNG #T1
+            { S7_Templates := "time_type := Time" }
+            TON_Coil(
+                timer => #TON_TIME_Instance,
+                pt := #TIMEC1
+            )
+        END_RUNG
+    END_NETWORK
+    {
+        S7_Language := "FBD";
+        S7_NetworkTitle := "MLC_TG"
+    }
+    NETWORK
+        RUNG #T1
+            { S7_Templates := "time_type := Time" }
+            TOF_Coil(
+                timer => #TOF_TIME_Instance,
+                pt := #TIMEC1
+            )
+        END_RUNG
+    END_NETWORK
+    {
+        S7_Language := "FBD";
+        S7_NetworkTitle := "MLC_3Aj"
+    }
+    NETWORK
+        RUNG #T1
+            { S7_Templates := "time_type := Time" }
+            TONR_Coil(
+                timer => #TONR_TIME_Instance,
+                pt := #TIMEC1
+            )
+        END_RUNG
+    END_NETWORK
+    {
+        S7_Language := "FBD";
+        S7_NetworkTitle := "MLC_3mM"
+    }
+    NETWORK
+        RUNG #T1
+            RT_Coil( #TP_TIME_Instance )
+        END_RUNG
+        RUNG #T1
+            RT_Coil( #TON_TIME_Instance )
+        END_RUNG
+        RUNG #T1
+            RT_Coil( #TOF_TIME_Instance )
+        END_RUNG
+        RUNG #T1
+            RT_Coil( #TONR_TIME_Instance )
+        END_RUNG
+    END_NETWORK
+    {
+        S7_Language := "FBD";
+        S7_NetworkTitle := "MLC_3Zh"
+    }
+    NETWORK
+        RUNG #T1
+            PT_Coil(
+                timer => #TP_TIME_Instance,
+                PT := #TIMEC1
+            )
+        END_RUNG
+        RUNG #T1
+            PT_Coil(
+                timer => #TON_TIME_Instance,
+                PT := #TIMEC1
+            )
+        END_RUNG
+        RUNG #T1
+            PT_Coil(
+                timer => #TOF_TIME_Instance,
+                PT := #TIMEC1
+            )
+        END_RUNG
+        RUNG #T1
+            PT_Coil(
+                timer => #TONR_TIME_Instance,
+                PT := #TIMEC1
+            )
+        END_RUNG
+    END_NETWORK
+    { S7_Language := "FBD" }
+    NETWORK
+        RUNG
+        END_RUNG
+    END_NETWORK
+END_FUNCTION_BLOCK

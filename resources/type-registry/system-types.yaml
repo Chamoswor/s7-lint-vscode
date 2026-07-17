@@ -1,0 +1,998 @@
+# Siemens system data types — types shipped with TIA Portal itself
+# (not user-authored) that don't fit base-types.yaml (elementary types)
+# or udt-dependency-cache.md (user-defined UDTs). Two shapes, both under
+# `category`:
+#
+#   - `system-struct`  — fixed-member STRUCTs (IEC_TIMER, ERROR_STRUCT,
+#     TCON_Param, ...). `members` is the eventual field-level breakdown.
+#   - `system-alias`   — single-parent identifier/handle types with a
+#     `basicDataType` pointing either straight at a base-types.yaml
+#     elementary type (e.g. HW_ANY -> UInt) or at ANOTHER entry in this
+#     same file (e.g. HW_HSC -> HW_SUBMODULE -> HW_IO -> HW_ANY -> UInt).
+#     Resolving one of these to its real storage type means walking
+#     `basicDataType` recursively until it lands on a base-types.yaml
+#     name — the same "walk until you hit a known leaf" idea
+#     udt-dependency-cache.md uses for UDTs, just a single edge per node
+#     instead of a member list.
+#
+# Pasted directly from Siemens' TIA Portal Information System "System
+# data types" / "Hardware data types" reference pages by the user
+# (2026-07-13). confidence: official-doc.
+#
+# Several of these are already referenced as opaque legal section names
+# in section-legality.yaml (IEC_TIMER, IEC_LTIMER, IEC_*COUNTER, CREF,
+# NREF, ErrorStruct, HW_ANY, HW_DEVICE, HW_DPSLAVE, HW_HSC, HW_IEPORT,
+# HW_INTERFACE, HW_IO, HW_IOSYSTEM, HW_MODULE, HW_PTO, HW_PWM,
+# HW_SUBMODULE, EVENT_ANY, EVENT_ATT, EVENT_HWNT, OB_*, PORT, RTM, PIP,
+# CONN_ANY, CONN_OUC, CONN_PRG, DB_ANY, DB_DYN, DB_WWW, AOM_IDENT). NOTE
+# naming mismatches spotted between that file (transcribed from
+# data-types-ext) and this one (transcribed from the Siemens hardware
+# data types page) — verify the exact spelling against a real .s7dcl/.xml
+# export before picking one canonically for the linter:
+#   - ErrorStruct / ERROR_STRUCT — RESOLVED 2026-07-13: a real TIA
+#     Interface editor export confirms the key is 'ErrorStruct' (matches
+#     section-legality.yaml); the Siemens 'System data types' reference
+#     page's 'ERROR_STRUCT' spelling was not what TIA itself uses.
+#   - EVENT_HWINT / OB_HWINT — RESOLVED 2026-07-13: platform-availability.NOTLOADED.yaml
+#     (a second, independent Siemens source) agrees with the spelling
+#     used here; section-legality.yaml's EVENT_HWNT / OB_HWNT was a
+#     transcription typo and has been corrected to match.
+# `HW_DPMASTER` and `CONN_R_ID` are new here and not present in
+# section-legality.yaml — RESOLVED: platform-availability.NOTLOADED.yaml shows
+# both are S7-1500-only, so their absence from data-types-ext
+# (S7-1200-scoped) is expected, not a registry gap. `Remote` (originally
+# transcribed here as `REMOTE` from the Siemens hardware-data-types page)
+# — RESOLVED 2026-07-13: real TIA export confirms `Remote`, matching
+# section-legality.yaml exactly; entry below renamed to match.
+#
+# `members` is null on every `system-struct` entry until it's been
+# mapped from a real TIA Portal reference (Interface editor "Var" row
+# export) — not guessed here. Once filled, each entry is:
+#
+#   members:
+#     - name: PT
+#       type: { kind: named, name: Time }
+#     - name: LOCAL_TSAP_ID
+#       type: { kind: array, bounds: [[1, 16]], of: { kind: named, name: Byte } }
+#       comment: "TSAP id/local port number"
+#     - name: ERROR_ID
+#       type: { kind: named, name: Word }
+#       defaultValue: "16#0"
+#
+# `type` reuses udt-dependency-cache.md's TypeRef shape verbatim (`kind:
+# named | array | inline-struct`) so a resolver written for UDT members
+# works unchanged on system-struct members. `comment` is the source
+# export's description column, omitted when TIA didn't have one for that
+# row. `defaultValue` is the export's Default value column, omitted when
+# blank (e.g. CREF/NREF/other struct-typed members never have one). The
+# export's four per-member BooleanAttribute columns (ExternalAccessible/
+# ExternalVisible/ExternalWritable/SetPoint, see copilot-instructions.md's
+# Member schema) are NOT carried into `members` — they vary per struct
+# (ErrorStruct's top-level fields are True/True/True/False, not the
+# uniform False seen in IEC_TIMER/TCON_Param/PID_CompactConfig), so
+# they're not safe to assume and not load-bearing for shape-checking
+# either way; skip recording them per-member.
+
+IEC_TIMER:
+  sizeBytes: 16
+  category: system-struct
+  description: "Timer structure (PT, ET, IN, Q parameters); time values are TIME."
+  usedByInstructions: [TP, TOF, TON, TONR, RT_Coil, PT_Coil]
+  members:
+    - name: PT
+      type: { kind: named, name: Time }
+    - name: ET
+      type: { kind: named, name: Time }
+    - name: IN
+      type: { kind: named, name: Bool }
+    - name: Q
+      type: { kind: named, name: Bool }
+  confidence: official-doc
+  source: "TIA Portal Interface editor export, pasted by user, 2026-07-13"
+  notes: "PT+ET (4 bytes each, Time) + IN+Q (rounds up in the struct layout) accounts for the 16-byte sizeBytes above. INDEPENDENTLY RE-CONFIRMED 2026-07-13 via a real compiled XML block export (TEST.xml, SystemArray2/IEC_TIMER's fully-expanded nested <Section Name=\"None\"> members) — exact same PT/ET/IN/Q member set and types. Two independent sources now agree. usedByInstructions' RT/PT entries CORRECTED 2026-07-13 to RT_Coil/PT_Coil — matches the actual instruction-registry/04-timers.yaml keys (coil-ref call shape); the bare 'PT' name would otherwise be ambiguous with this same struct's own PT member."
+
+IEC_LTIMER:
+  sizeBytes: 32
+  category: system-struct
+  description: "Timer structure (PT, ET, IN, Q parameters); time values are LTime."
+  usedByInstructions: [TP, TOF, TON, TONR, RT_Coil, PT_Coil]
+  members:
+    - name: PT
+      type: { kind: named, name: LTime }
+    - name: ET
+      type: { kind: named, name: LTime }
+    - name: IN
+      type: { kind: named, name: Bool }
+    - name: Q
+      type: { kind: named, name: Bool }
+  confidence: official-doc
+  source: "TIA Portal Interface editor export, pasted by user, 2026-07-13"
+  notes: "PT+ET (8 bytes each, LTime) = 16 bytes; remaining 16 of the 32-byte sizeBytes is IN/Q plus struct-alignment padding, same non-literal-sum pattern as IEC_TIMER."
+
+IEC_SCOUNTER:
+  sizeBytes: 3
+  category: system-struct
+  description: "Counter structure; count values are SInt."
+  usedByInstructions: [CTU, CTD, CTUD]
+  members:
+    - name: CU
+      type: { kind: named, name: Bool }
+    - name: CD
+      type: { kind: named, name: Bool }
+    - name: R
+      type: { kind: named, name: Bool }
+    - name: LD
+      type: { kind: named, name: Bool }
+    - name: QU
+      type: { kind: named, name: Bool }
+    - name: QD
+      type: { kind: named, name: Bool }
+    - name: PV
+      type: { kind: named, name: SInt }
+    - name: CV
+      type: { kind: named, name: SInt }
+  confidence: official-doc
+  source: "TIA Portal Interface editor export, pasted by user, 2026-07-13"
+  notes: "The six Bool fields (CU/CD/R/LD/QU/QD) must be BIT-PACKED into a single byte, not one byte each — six byte-aligned Bools alone would already exceed the 3-byte sizeBytes before PV/CV are even counted. 1 packed byte + PV (SInt, 1 byte) + CV (SInt, 1 byte) = 3. Don't assume `Array of struct{Bool}` members are byte-aligned by default the way top-level VAR/STRUCT Bools usually are documented — this system struct packs them."
+
+IEC_USCOUNTER:
+  sizeBytes: 3
+  category: system-struct
+  description: "Counter structure; count values are USInt."
+  usedByInstructions: [CTU, CTD, CTUD]
+  members:
+    - name: CU
+      type: { kind: named, name: Bool }
+    - name: CD
+      type: { kind: named, name: Bool }
+    - name: R
+      type: { kind: named, name: Bool }
+    - name: LD
+      type: { kind: named, name: Bool }
+    - name: QU
+      type: { kind: named, name: Bool }
+    - name: QD
+      type: { kind: named, name: Bool }
+    - name: PV
+      type: { kind: named, name: USInt }
+    - name: CV
+      type: { kind: named, name: USInt }
+  confidence: official-doc
+  source: "TIA Portal Interface editor export, pasted by user, 2026-07-13"
+  notes: "Same bit-packing as IEC_SCOUNTER — the six Bool fields (CU/CD/R/LD/QU/QD) pack into a single byte; 1 packed byte + PV (USInt, 1 byte) + CV (USInt, 1 byte) = 3."
+
+IEC_COUNTER:
+  sizeBytes: 6
+  category: system-struct
+  description: "Counter structure; count values are Int."
+  usedByInstructions: [CTU, CTD, CTUD]
+  members:
+    - name: CU
+      type: { kind: named, name: Bool }
+    - name: CD
+      type: { kind: named, name: Bool }
+    - name: R
+      type: { kind: named, name: Bool }
+    - name: LD
+      type: { kind: named, name: Bool }
+    - name: QU
+      type: { kind: named, name: Bool }
+    - name: QD
+      type: { kind: named, name: Bool }
+    - name: PV
+      type: { kind: named, name: Int }
+    - name: CV
+      type: { kind: named, name: Int }
+  confidence: official-doc
+  source: "TIA Portal Interface editor export, pasted by user, 2026-07-13"
+  notes: "Same bit-packed-bools layout as IEC_SCOUNTER/IEC_USCOUNTER: 1 packed byte for CU/CD/R/LD/QU/QD, but here it's followed by 1 byte of alignment padding (Int is 2-byte aligned) before PV/CV — 1 + 1(pad) + 2 + 2 = 6."
+
+IEC_UCOUNTER:
+  sizeBytes: 6
+  category: system-struct
+  description: "Counter structure; count values are UInt."
+  usedByInstructions: [CTU, CTD, CTUD]
+  members:
+    - name: CU
+      type: { kind: named, name: Bool }
+    - name: CD
+      type: { kind: named, name: Bool }
+    - name: R
+      type: { kind: named, name: Bool }
+    - name: LD
+      type: { kind: named, name: Bool }
+    - name: QU
+      type: { kind: named, name: Bool }
+    - name: QD
+      type: { kind: named, name: Bool }
+    - name: PV
+      type: { kind: named, name: UInt }
+    - name: CV
+      type: { kind: named, name: UInt }
+  confidence: official-doc
+  source: "TIA Portal Interface editor export, pasted by user, 2026-07-13"
+  notes: "Same layout as IEC_COUNTER: 1 packed bool byte + 1 alignment-padding byte + PV (UInt, 2) + CV (UInt, 2) = 6."
+
+IEC_DCOUNTER:
+  sizeBytes: 12
+  category: system-struct
+  description: "Counter structure; count values are DInt."
+  usedByInstructions: [CTU, CTD, CTUD]
+  members:
+    - name: CU
+      type: { kind: named, name: Bool }
+    - name: CD
+      type: { kind: named, name: Bool }
+    - name: R
+      type: { kind: named, name: Bool }
+    - name: LD
+      type: { kind: named, name: Bool }
+    - name: QU
+      type: { kind: named, name: Bool }
+    - name: QD
+      type: { kind: named, name: Bool }
+    - name: PV
+      type: { kind: named, name: DInt }
+    - name: CV
+      type: { kind: named, name: DInt }
+  confidence: official-doc
+  source: "TIA Portal Interface editor export, pasted by user, 2026-07-13"
+  notes: "1 packed bool byte + 3 bytes alignment padding (DInt is 4-byte aligned) + PV (DInt, 4) + CV (DInt, 4) = 12."
+
+IEC_UDCOUNTER:
+  sizeBytes: 12
+  category: system-struct
+  description: "Counter structure; count values are UDInt."
+  usedByInstructions: [CTU, CTD, CTUD]
+  members:
+    - name: CU
+      type: { kind: named, name: Bool }
+    - name: CD
+      type: { kind: named, name: Bool }
+    - name: R
+      type: { kind: named, name: Bool }
+    - name: LD
+      type: { kind: named, name: Bool }
+    - name: QU
+      type: { kind: named, name: Bool }
+    - name: QD
+      type: { kind: named, name: Bool }
+    - name: PV
+      type: { kind: named, name: UDInt }
+    - name: CV
+      type: { kind: named, name: UDInt }
+  confidence: official-doc
+  source: "TIA Portal Interface editor export, pasted by user, 2026-07-13"
+  notes: "Same layout as IEC_DCOUNTER: 1 packed bool byte + 3 alignment-padding bytes + PV (UDInt, 4) + CV (UDInt, 4) = 12."
+
+IEC_LCOUNTER:
+  sizeBytes: 24
+  category: system-struct
+  description: "Counter structure; count values are LInt."
+  usedByInstructions: [CTU, CTD, CTUD]
+  members:
+    - name: CU
+      type: { kind: named, name: Bool }
+    - name: CD
+      type: { kind: named, name: Bool }
+    - name: R
+      type: { kind: named, name: Bool }
+    - name: LD
+      type: { kind: named, name: Bool }
+    - name: QU
+      type: { kind: named, name: Bool }
+    - name: QD
+      type: { kind: named, name: Bool }
+    - name: PV
+      type: { kind: named, name: LInt }
+    - name: CV
+      type: { kind: named, name: LInt }
+  confidence: official-doc
+  source: "TIA Portal Interface editor export, pasted by user, 2026-07-13"
+  notes: "RESOLVED — the real Interface editor export confirms PV/CV are LInt, not UDInt as the originally-pasted 'System data types' reference table text claimed (that was a copy-paste error in Siemens' own doc page, per the earlier suspicion here). Size checks out: 1 packed bool byte + 7 alignment-padding bytes (LInt is 8-byte aligned) + PV (LInt, 8) + CV (LInt, 8) = 24."
+
+IEC_ULCOUNTER:
+  sizeBytes: 24
+  category: system-struct
+  description: "Counter structure; count values are ULInt."
+  usedByInstructions: [CTU, CTD, CTUD]
+  members:
+    - name: CU
+      type: { kind: named, name: Bool }
+    - name: CD
+      type: { kind: named, name: Bool }
+    - name: R
+      type: { kind: named, name: Bool }
+    - name: LD
+      type: { kind: named, name: Bool }
+    - name: QU
+      type: { kind: named, name: Bool }
+    - name: QD
+      type: { kind: named, name: Bool }
+    - name: PV
+      type: { kind: named, name: ULInt }
+    - name: CV
+      type: { kind: named, name: ULInt }
+  confidence: official-doc
+  source: "TIA Portal Interface editor export, pasted by user, 2026-07-13"
+  notes: "RESOLVED — the real Interface editor export confirms PV/CV are ULInt, not UInt as the originally-pasted 'System data types' reference table text claimed (same copy-paste error pattern as IEC_LCOUNTER, likely the two rows got swapped in Siemens' own doc page). Size checks out: 1 packed bool byte + 7 alignment-padding bytes (ULInt is 8-byte aligned) + PV (ULInt, 8) + CV (ULInt, 8) = 24."
+
+ErrorStruct:
+  sizeBytes: 28
+  category: system-struct
+  description: "Error information for a programming or I/O access error."
+  usedByInstructions: [GET_ERROR]
+  members:
+    - name: ERROR_ID
+      type: { kind: named, name: Word }
+      defaultValue: "16#0"
+    - name: FLAGS
+      type: { kind: named, name: Byte }
+      defaultValue: "16#0"
+      notes: "SOURCED 2026-07-13 from GetError's own reference page: 16#01 = error occurred during a program block CALL specifically; 16#00 = no error during a program block call (the error, if any, occurred elsewhere, e.g. within the current block's own instructions rather than at a call boundary)."
+    - name: REACTION
+      type: { kind: named, name: Byte }
+      defaultValue: "16#0"
+      notes: "SOURCED 2026-07-13 from GetError's own reference page — the CPU's default system reaction to this error: 0 = Ignore (write error); 1 = Continue with substitute value 0 (read error); 2 = Skip instruction (system error). GetError's own worked example checks REACTION=1 specifically via EQ_Contact to detect a read/access error and reset a downstream flag — the canonical lint-relevant use of this field."
+    - name: CODE_ADDRESS
+      type: { kind: named, name: CREF }
+    - name: MODE
+      type: { kind: named, name: Byte }
+      defaultValue: "16#0"
+    - name: OPERAND_NUMBER
+      type: { kind: named, name: UInt }
+      defaultValue: 0
+    - name: POINTER_NUMBER_LOCATION
+      type: { kind: named, name: UInt }
+      defaultValue: 0
+    - name: SLOT_NUMBER_SCOPE
+      type: { kind: named, name: UInt }
+      defaultValue: 0
+    - name: DATA_ADDRESS
+      type: { kind: named, name: NREF }
+  errorIdCodes:
+    notes: "SOURCED 2026-07-13 from the GetError ('Get error locally', GET_ERROR) instruction's own reference page — the legal values of the ERROR_ID member specifically. Cross-referenced from instruction-registry/10-runtime-control.yaml's GetError entry rather than duplicated there, per this project's duplication standard."
+    "0000": "No error"
+    "2503": "Invalid pointer"
+    "2520": "Invalid STRING"
+    "2522": "Read error: Operand outside the valid range"
+    "2523": "Write error: Operand outside the valid range"
+    "2524": "Read error: Invalid operand"
+    "2525": "Write error: Invalid operand"
+    "2528": "Read error: Data alignment"
+    "2529": "Write error: Data alignment"
+    "252C": "Invalid pointer"
+    "2530": "Write error: Data block"
+    "2533": "Invalid reference used"
+    "2538": "Access error: DB does not exist"
+    "2539": "Access error: Wrong DB used"
+    "253A": "Global data block does not exist"
+    "253C": "Faulty information or the function does not exist"
+    "253D": "System function does not exist"
+    "253E": "Faulty information or the function block does not exist"
+    "253F": "System block does not exist"
+    "2550": "Access error: DB does not exist"
+    "2551": "Access error: Wrong DB used"
+    "2575": "Error in the program nesting depth"
+    "2576": "Error in the local data distribution"
+    "2577": "The block property 'Parameter passing via registers' is not selected"
+    "25A0": "Internal error in TP"
+    "25A1": "Tag is write-protected"
+    "25A2": "Invalid numerical value of tag"
+    "2942": "Read error: Input"
+    "2943": "Write error: Output"
+  confidence: official-doc
+  source: "TIA Portal Interface editor export, pasted by user, 2026-07-13; GetError/GET_ERROR instruction reference page, pasted by user, 2026-07-13"
+  notes: "RESOLVED naming mismatch — confirmed real TIA export key is 'ErrorStruct' (matches section-legality.yaml), not 'ERROR_STRUCT' as the Siemens 'System data types' reference page spelled it; treat ErrorStruct as canonical. Size checks out: ERROR_ID(2)+FLAGS(1)+REACTION(1)+CODE_ADDRESS(CREF,8)+MODE(1)+1 pad(to 2-byte-align OPERAND_NUMBER)+OPERAND_NUMBER(2)+POINTER_NUMBER_LOCATION(2)+SLOT_NUMBER_SCOPE(2)+DATA_ADDRESS(NREF,8) = 28. Also: unlike every system-struct filled in so far, this export's per-member ExternalAccessible/ExternalVisible/ExternalWritable/SetPoint columns are NOT uniformly False (top-level fields show True/True/True/False) — the file-header claim that they're 'uniformly False for every system-struct member' is wrong; they're just not being recorded here regardless, since they're TIA export metadata rather than shape data. INDEPENDENTLY RE-CONFIRMED 2026-07-13 via a real compiled XML block export (TEST.xml's fully-expanded nested <Section Name=\"None\"> members for a SystemVar1/ErrorStruct field) — exact same 9-member set, order, and types. XML also confirms `Version=\"1.0\"` accompanies the Datatype attribute for system-struct references (matches the .udt file's `LibVersion := '1.0'` observation). THIRD INDEPENDENT CONFIRMATION 2026-07-13 via GetError's own reference page, which reprints the exact same 9-member set/order/types a third time, plus a REACTION value table and a FLAGS bit meaning that were NOT previously captured — both now recorded directly on their own member entries above (REACTION.notes / FLAGS.notes)."
+
+CREF:
+  sizeBytes: 8
+  category: system-struct
+  description: "Component of ErrorStruct — address information about a block."
+  usedByInstructions: []
+  members:
+    - name: BLOCK_TYPE
+      type: { kind: named, name: Byte }
+      defaultValue: "16#0"
+      notes: "SOURCED 2026-07-13 from GetError's own reference page: 1 = Organization block (OB); 2 = Function (FC); 3 = Function block (FB) — the program block type in which the error occurred."
+    - name: CB_NUMBER
+      type: { kind: named, name: UInt }
+      defaultValue: 0
+    - name: OFFSET
+      type: { kind: named, name: UDInt }
+      defaultValue: 0
+  confidence: official-doc
+  source: "TIA Portal Interface editor export, pasted by user, 2026-07-13; GetError/GET_ERROR instruction reference page, pasted by user, 2026-07-13"
+  notes: "Also a directly-declarable section type per section-legality.yaml (InOut/Input/Output/Static/Temp), not only nested inside ErrorStruct. Size checks out: BLOCK_TYPE(1) + 1 pad (to 2-byte-align CB_NUMBER) + CB_NUMBER(2) + OFFSET(4) = 8. INDEPENDENTLY RE-CONFIRMED 2026-07-13 via TEST.xml's fully-expanded CODE_ADDRESS/CREF nested members — exact same 3-member set/order/types. THIRD CONFIRMATION 2026-07-13 via GetError's own reference page, which also supplied BLOCK_TYPE's value table (see that member's notes) — not previously captured."
+
+NREF:
+  sizeBytes: 8
+  category: system-struct
+  description: "Component of ErrorStruct — address information about an operand."
+  usedByInstructions: []
+  members:
+    - name: AREA
+      type: { kind: named, name: Byte }
+      defaultValue: "16#0"
+      notes: "SOURCED 2026-07-13 from GetError's own reference page — memory area encoding: L = 16#40-16#7F, 16#86, 16#87, 16#8E, 16#8F, 16#C0-16#FF; I = 16#81; Q = 16#82; M = 16#83; DB = 16#40, 16#84, 16#85, 16#8A, 16#8B; PI = 16#01; PQ = 16#02; Technological objects = 16#04. FLAGGED, transcribed exactly as the doc gives it: L's range and DB's code set BOTH include 16#40 — the same single byte value cannot legally decode to two different memory areas, so this looks like a Siemens doc transcription artifact (possibly L's range should start higher, e.g. 16#50 or similar) rather than genuine overlap; not silently corrected since the true boundary isn't independently known. A THIRD distinct memory-area coding scheme in this project, alongside any-pointer.yaml's `memoryAreaCodes` (B#16#80-87 range, ANY-pointer-specific) and pointer-type.yaml's own table (also its own distinct range/values) — do not conflate the three; each belongs to its own pointer/reference mechanism and none of them share a single canonical code space."
+    - name: DB_NUMBER
+      type: { kind: named, name: UInt }
+      defaultValue: 0
+    - name: OFFSET
+      type: { kind: named, name: UDInt }
+      defaultValue: 0
+  confidence: official-doc
+  source: "TIA Portal Interface editor export, pasted by user, 2026-07-13; GetError/GET_ERROR instruction reference page, pasted by user, 2026-07-13"
+  notes: "Also a directly-declarable section type per section-legality.yaml (InOut/Input/Output/Static/Temp), not only nested inside ErrorStruct. Size checks out: AREA(1) + 1 pad (to 2-byte-align DB_NUMBER) + DB_NUMBER(2) + OFFSET(4) = 8. INDEPENDENTLY RE-CONFIRMED 2026-07-13 via TEST.xml's fully-expanded DATA_ADDRESS/NREF nested members — exact same 3-member set/order/types. THIRD CONFIRMATION 2026-07-13 via GetError's own reference page, which also supplied AREA's value table (see that member's notes, including a flagged apparent transcription overlap at 16#40) — not previously captured."
+
+VREF:
+  sizeBytes: 12
+  category: system-struct
+  description: "Storage for a Variant pointer."
+  usedByInstructions: ["S7-1200/1500 Motion Control instructions (unspecified in source)"]
+  members: null # TODO
+  confidence: shape-only
+  source: "Siemens TIA Portal Information System — System data types"
+  notes: "Not present in section-legality.yaml or data-types-ext — confirm which VAR_* sections legally accept it before relying on that as a gap vs. an omission. CORRECTED 2026-07-13 — user could not declare VREF on a real S7-1200 G2 CPU; platform-availability.NOTLOADED.yaml's S7-1200 G2 column updated to false (was wrongly 'true', a bad guess from an ambiguous 3-token source-table row). S7-1500 availability still unconfirmed — don't assume it from this entry's platform data alone."
+
+SSL_HEADER:
+  sizeBytes: 4
+  category: system-struct
+  description: "Structure for data records read from the system status lists (SSL)."
+  usedByInstructions: [RDSYSST]
+  members: null # TODO
+  confidence: official-doc
+  source: "Siemens TIA Portal Information System — System data types"
+  notes: "Not present in section-legality.yaml or data-types-ext — same caveat as VREF. CONFIRMED 2026-07-13 — user could not find/declare RDSYSST on a real S7-1200 G2 CPU either, matching this entry's S7-300/400-only platform data in platform-availability.NOTLOADED.yaml. RDSYSST is a legacy SFC51-era instruction with no S7-1200/S7-1500/G2 equivalent — out of scope for this project's target platforms (see tia_target_platforms memory), deprioritize filling in `members` here."
+
+CONDITIONS:
+  sizeBytes: 52
+  category: system-struct
+  description: "User-defined data structure defining start/end conditions for a data reception."
+  usedByInstructions: [RCV_CFG]
+  members: null # TODO
+  confidence: official-doc
+  source: "Siemens TIA Portal Information System — System data types"
+  notes: "Not present in section-legality.yaml or data-types-ext — same caveat as VREF."
+
+TADDR_Param:
+  sizeBytes: 8
+  category: system-struct
+  description: "Structure of a DB storing connection descriptions for Open User Communication via UDP."
+  usedByInstructions: ["TUSEND", "TURSV"]
+  members:
+    - name: REM_IP_ADDR
+      type: { kind: array, bounds: [[1, 4]], of: { kind: named, name: USInt } }
+      comment: "remote station address"
+    - name: REM_PORT_NR
+      type: { kind: named, name: UInt }
+      comment: "remote port number"
+    - name: RESERVED
+      type: { kind: named, name: Word }
+      comment: "unused; has to be 0"
+  confidence: shape-only
+  source: "TIA Portal Interface editor export, pasted by user, 2026-07-13"
+  notes: "Instruction names as pasted ('TUSEND'/'TURSV') don't match the usual Siemens UDP instruction family naming (TUSEND/TURCV) — likely a transcription typo in the source table; confirm exact instruction names before wiring into instruction-registry. Size checks out exactly, no padding needed: REM_IP_ADDR (4×USInt=4) + REM_PORT_NR (UInt, 2) + RESERVED (Word, 2) = 8."
+
+TCON_Param:
+  sizeBytes: 64
+  category: system-struct
+  description: "Structure of a DB storing connection descriptions for Open User Communication via Industrial Ethernet (PROFINET)."
+  usedByInstructions: ["TSEND", "TRSV"]
+  members:
+    - name: BLOCK_LENGTH
+      type: { kind: named, name: UInt }
+      comment: "byte length of SDT"
+    - name: ID
+      type: { kind: named, name: CONN_OUC }
+      comment: "reference to the connection"
+    - name: CONNECTION_TYPE
+      type: { kind: named, name: USInt }
+      comment: "17: TCP/IP, 18: ISO on TCP, 19: UDP"
+    - name: ACTIVE_EST
+      type: { kind: named, name: Bool }
+      comment: "active/passive connection establishment"
+    - name: LOCAL_DEVICE_ID
+      type: { kind: named, name: USInt }
+      comment: "1: local IE interface"
+    - name: LOCAL_TSAP_ID_LEN
+      type: { kind: named, name: USInt }
+      comment: "byte length of local TSAP id/port number"
+    - name: REM_SUBNET_ID_LEN
+      type: { kind: named, name: USInt }
+      comment: "byte length of remote subnet id"
+    - name: REM_STADDR_LEN
+      type: { kind: named, name: USInt }
+      comment: "byte length of remote IP address"
+    - name: REM_TSAP_ID_LEN
+      type: { kind: named, name: USInt }
+      comment: "byte length of remote port/TSAP id"
+    - name: NEXT_STADDR_LEN
+      type: { kind: named, name: USInt }
+      comment: "byte length of next station address"
+    - name: LOCAL_TSAP_ID
+      type: { kind: array, bounds: [[1, 16]], of: { kind: named, name: Byte } }
+      comment: "TSAP id/local port number"
+    - name: REM_SUBNET_ID
+      type: { kind: array, bounds: [[1, 6]], of: { kind: named, name: USInt } }
+      comment: "remote subnet id"
+    - name: REM_STADDR
+      type: { kind: array, bounds: [[1, 6]], of: { kind: named, name: USInt } }
+      comment: "remote IP address"
+    - name: REM_TSAP_ID
+      type: { kind: array, bounds: [[1, 16]], of: { kind: named, name: Byte } }
+      comment: "TSAP id/remote port number"
+    - name: NEXT_STADDR
+      type: { kind: array, bounds: [[1, 6]], of: { kind: named, name: Byte } }
+      comment: "next station address"
+    - name: SPARE
+      type: { kind: named, name: Word }
+      comment: "reserved"
+  confidence: shape-only
+  source: "TIA Portal Interface editor export, pasted by user, 2026-07-13"
+  notes: "Instruction names as pasted ('TSEND'/'TRSV') don't match the usual Siemens naming (TSEND/TRCV) — likely the same transcription typo pattern as TADDR_Param; confirm exact instruction names before wiring into instruction-registry. Member sizes sum exactly to sizeBytes: 64 (2+2+1+1+1+1+1+1+1+1 scalar bytes + 16+6+6+16+6 array bytes + 2 SPARE = 64), which cross-checks the member list itself even though the surrounding instruction names are suspect."
+
+HSC_Period:
+  sizeBytes: 12
+  category: system-struct
+  description: "Structure of a DB for time-period measurement with the extended high-speed counter."
+  usedByInstructions: [CTRL_HSC_EXT]
+  members:
+    - name: ElapsedTime
+      type: { kind: named, name: UDInt }
+    - name: EdgeCount
+      type: { kind: named, name: UDInt }
+    - name: EnHSC
+      type: { kind: named, name: Bool }
+    - name: EnPeriod
+      type: { kind: named, name: Bool }
+    - name: NewPeriod
+      type: { kind: named, name: Int }
+  confidence: official-doc
+  source: "TIA Portal Interface editor export, pasted by user, 2026-07-13"
+  notes: "Not present in section-legality.yaml or data-types-ext — same caveat as VREF. Size checks out exactly, no padding needed: ElapsedTime (4) + EdgeCount (4) + EnHSC (1) + EnPeriod (1) + NewPeriod (Int, 2) = 12."
+
+AssocValues:
+  sizeBytes: 16
+  category: system-struct
+  description: "Defines which associated values are sent with a message."
+  usedByInstructions: [Gen_UsrMsg]
+  members:
+    - name: Value
+      type: { kind: array, bounds: [[1, 8]], of: { kind: named, name: UInt } }
+  confidence: official-doc
+  source: "TIA Portal Interface editor export, pasted by user, 2026-07-13"
+  notes: "Not present in section-legality.yaml or data-types-ext — same caveat as VREF. Size checks out exactly: Value (8×UInt=16)."
+
+ResolvedSymbol:
+  sizeBytes: 3
+  category: system-struct
+  description: "Saves references to tags in the PLC program, plus status information for generating the references. Required for the 'Symbolic access during runtime' function (see symbolic-runtime-access.yaml)."
+  usedByInstructions: ["CountOfElements (IN parameter — CONFIRMED 2026-07-13, official doc for 'Get number of ARRAY elements' explicitly lists VARIANT/ResolvedSymbol as IN's legal types)", "ResolveSymbols (referenceList parameter — CONFIRMED 2026-07-13 from ResolveSymbols' own official doc: 'specify an Array of ResolvedSymbol (SDT) in which the references are to be saved' — upgraded from the earlier 'plausible, unconfirmed' guess)", "MoveResolvedSymbolsToBuffer (src parameter — CONFIRMED 2026-07-13 from the 'Symbolic access during runtime' overview doc's step-2 example: 'the Array of ResolvedSymbol (SDT) that contains the references to the resolved tags')", "MoveResolvedSymbolsFromBuffer (dst parameter — INFERRED by src/dst symmetry with MoveResolvedSymbolsToBuffer, NOT independently doc-confirmed — see that instruction's own entry notes in instruction-registry/06-move.yaml)"]
+  memoryArea: "MUST be in an OPTIMIZED memory area — a hard requirement per the SDT's own reference page, not just a general recommendation. This directly matches ResolveSymbols' own pin-level note that referenceList (an Array of ResolvedSymbol) must be optimized, now confirmed from the type's own side too, not just the instruction's."
+  platformNote: "As of FW V3.0 (matching symbolic-runtime-access.yaml's overall S7-1500 FW>=V3.0 gate), ResolvedSymbol can additionally be declared as an element of a PLC data type (UDT) — not just used directly as an ARRAY element type in a block interface/DB the way it's used by ResolveSymbols/CountOfElements/MoveResolvedSymbolsToBuffer above."
+  members:
+    - name: status
+      type: { kind: named, name: Int }
+      notes: "0 = the tag was resolved cleanly and the struct's contents are reliable. Non-zero has DIFFERENT meanings depending on `resolved`'s value (see that member's notes) — status is not simply an error/no-error flag on its own, its meaning is conditional on resolved. A NEGATIVE status value (when resolved=FALSE) means the symbol itself couldn't be resolved (e.g. a range violation); a POSITIVE status value (when resolved=FALSE) means the tag exists but isn't accessible/writable via HMI/OPC UA/Web API — sign carries real semantic meaning here, not just magnitude. Error-code table (W#16#..., i.e. these are effectively unsigned/hex-displayed despite the signed-INT type and the negative-vs-positive distinction above — a linter should not assume the hex codes below are the literal negative-status case, that distinction is separate from this list): 8021 the WSTRING tag name is empty; 8022 the WSTRING tag name contains invalid characters; 8023 the referenced tag's data type declaration is missing; 8024 the reference points to a tag that no longer exists (may have been overwritten by a RUN-mode load — see the entry-level runMode note); 8054 the referenced tag's data type isn't supported for symbolic access (cross-reference symbolic-runtime-access.yaml's accessTable for which types ARE supported); 80B4 the project is inconsistent."
+    - name: resolved
+      type: { kind: named, name: Bool }
+      notes: "Combines with `status` to form FOUR distinct states, not a simple pass/fail: (1) resolved=FALSE, status=0 -> no resolution attempt has been made yet (the initial/reset state — matches ResolveSymbols' own doc note that referenceList's array values are RESET before resolution begins). (2) resolved=FALSE, status<>0 -> resolution FAILED; status's value (and its sign) indicates why/where, see status's own notes. (3) resolved=TRUE, status=0 -> successfully resolved, struct contents reliable. (4) resolved=TRUE, status<>0 -> was successfully resolved at the time, but the underlying DB has since been overwritten by a RUN-mode load, making the struct's reference potentially stale/invalid despite resolved still reading TRUE — a real 'looks fine but isn't' trap worth a lint/runtime-guidance note, not just an error case."
+  internalHiddenParameters: "Beyond `resolved`/`status`, the SDT contains INTERNAL parameters (data type, length, and address of the referenced tag) that are NOT accessible/visible to the program — confirms this struct's real member list is intentionally incomplete from the program's point of view, not a gap in this file's own transcription. Do not attempt to model these as additional `members` entries — they're genuinely opaque by Siemens' own design, unlike this project's other 'gap, needs more data' flags."
+  runModeInvalidation: "A DB containing resolved references can be overwritten by a subsequent download/load while the CPU is in RUN — when that happens, a previously-successful reference (resolved=TRUE) can go stale (status becomes non-zero, case 4 above) or point at a tag that no longer exists at all (status=8024). Siemens' own recommended recovery pattern (SCL, paraphrased): before each MoveResolvedSymbolsToBuffer/FromBuffer call, check resolved/status per entry; if a copy fails anyway (the Move instruction's own RET_VAL/err-style output reports a failed-copy COUNT, not per-element detail), scan the whole array with a FOR loop, find entries with resolved=FALSE, and re-run the asynchronous ResolveSymbols instruction to refresh them. This is a real, Siemens-documented usage pattern worth surfacing as a lint suggestion (flag MoveResolvedSymbolsToBuffer/FromBuffer calls with no apparent preceding resolved/status guard) rather than a hard correctness rule, since it's a runtime-robustness concern, not a static type error."
+  confidence: official-doc
+  source: "TIA Portal Interface editor export, pasted by user, 2026-07-13; SDT reference page (Description/Structure/Invalid-references sections), pasted by user, 2026-07-13"
+  notes: "Not present in section-legality.yaml or data-types-ext — same caveat as VREF. Size checks out exactly: status (Int, 2) + resolved (Bool, 1) = 3. Lowercase member names (status/resolved) are notable — every other system-struct so far uses UPPER_CASE or CamelCase members; this one doesn't."
+
+PID_CompactConfig:
+  sizeBytes: null
+  category: system-struct
+  description: "Configuration structure for the PID_Compact instruction (limits, warning levels, output-selection, PWM timing, input scaling)."
+  usedByInstructions: ["PID_Compact"]
+  members:
+    - name: InputPerOn
+      type: { kind: named, name: Bool }
+      comment: "activate peripheral input"
+    - name: InvertControl
+      type: { kind: named, name: Bool }
+      comment: "invert control direction"
+    - name: OutputSelect
+      type: { kind: named, name: Int }
+      comment: "select kind of output (0-PER,1-REAL,2-PWM)"
+    - name: InputUpperLimit
+      type: { kind: named, name: Real }
+      comment: "input (process value) upper limit"
+    - name: InputLowerLimit
+      type: { kind: named, name: Real }
+      comment: "input (process value) lower limit"
+    - name: InputUpperWarning
+      type: { kind: named, name: Real }
+      comment: "input (process value) upper level warning"
+    - name: InputLowerWarning
+      type: { kind: named, name: Real }
+      comment: "input (process value) lower level warning"
+    - name: OutputUpperLimit
+      type: { kind: named, name: Real }
+      comment: "output value upper limit"
+    - name: OutputLowerLimit
+      type: { kind: named, name: Real }
+      comment: "output value lower limit"
+    - name: SetpointUpperLimit
+      type: { kind: named, name: Real }
+      comment: "setpoint upper limit value"
+    - name: SetpointLowerLimit
+      type: { kind: named, name: Real }
+      comment: "setpoint lower limit value"
+    - name: MinimumOnTime
+      type: { kind: named, name: Real }
+      comment: "PWM minimum on time"
+    - name: MinimumOffTime
+      type: { kind: named, name: Real }
+      comment: "PWM minimum off time"
+    - name: InputScaling
+      type: { kind: named, name: PID_Scaling }
+      comment: "input scaling"
+  confidence: shape-only
+  source: "TIA Portal Interface editor export, pasted by user, 2026-07-13"
+  notes: "New entry — PID_CompactConfig previously only existed as an opaque name in section-legality.yaml's InOut/Input additionalDatatypes. The member list ends at InputScaling with no visible END_STRUCT marker; PID_Compact's real config struct is known to be considerably larger (hysteresis, self-tuning, alarm settings, ...) — treat this as a PARTIAL member list, not the complete struct, until confirmed otherwise. sizeBytes left null since a partial member list can't be summed honestly. InputScaling's own struct is PID_Scaling, below."
+
+PID_Scaling:
+  sizeBytes: 16
+  category: system-struct
+  description: "Input/output scaling range used by PID_CompactConfig (and other PID_* config structs)."
+  usedByInstructions: ["PID_Compact"]
+  members:
+    - name: UpperPointIn
+      type: { kind: named, name: Real }
+      comment: "high value (input range of scaling)"
+    - name: LowerPointIn
+      type: { kind: named, name: Real }
+      comment: "low value (input range of scaling)"
+    - name: UpperPointOut
+      type: { kind: named, name: Real }
+      comment: "high value (output range of scaling)"
+    - name: LowerPointOut
+      type: { kind: named, name: Real }
+      comment: "low value (output range of scaling)"
+  confidence: shape-only
+  source: "TIA Portal Interface editor export, pasted by user, 2026-07-13"
+  notes: "New entry, nested inside PID_CompactConfig via its InputScaling member. Four Real fields (4 bytes each) account for the 16-byte sizeBytes cleanly, unlike PID_CompactConfig itself — this one looks complete as pasted, but wasn't independently confirmed as the full struct (could still have trailing padding/reserved fields TIA doesn't surface in the Interface editor view)."
+
+# --- Hardware data types (system-alias: single-parent identifier/handle
+# types) — pasted from Siemens' "Hardware data types" reference page.
+# `basicDataType` is the immediate parent in the resolution chain; walk
+# it recursively (via this same file, falling through to
+# base-types.yaml) to reach the real underlying elementary type.
+
+Remote:
+  basicDataType: Any
+  category: system-alias
+  description: "Specifies the address of a remote CPU."
+  usedByInstructions: [PUT, GET]
+  confidence: official-doc
+  source: "TIA Portal Interface editor export, pasted by user, 2026-07-13"
+  notes: "RESOLVED naming — real TIA export confirms 'Remote' (matches section-legality.yaml's InOut additionalDatatypes entry), not 'REMOTE' as the Siemens 'Hardware data types' reference page spelled it. basicDataType CASING FIXED 2026-07-13 (was 'ANY', now 'Any') to match base-types.yaml's actual key spelling — base-types.yaml gained a real `Any` entry after this note was originally written, so the chain now DOES resolve to a known leaf: Remote -> Any (see any-pointer.yaml for Any's full 10-byte layout). The cache build algorithm's `named` TypeRef resolution should match this exact casing."
+
+HW_ANY:
+  basicDataType: UInt
+  category: system-alias
+  description: "Identification of any hardware component, e.g. a module."
+  usedByInstructions: []
+  confidence: official-doc
+  source: "Siemens TIA Portal Information System — Hardware data types"
+  notes: ""
+
+HW_DEVICE:
+  basicDataType: HW_ANY
+  category: system-alias
+  description: "Identification of a DP slave / PROFINET IO device."
+  usedByInstructions: []
+  confidence: official-doc
+  source: "Siemens TIA Portal Information System — Hardware data types"
+  notes: ""
+
+HW_DPMASTER:
+  basicDataType: HW_INTERFACE
+  category: system-alias
+  description: "Identification of a DP master."
+  usedByInstructions: []
+  confidence: official-doc
+  source: "Siemens TIA Portal Information System — Hardware data types"
+  notes: "RESOLVED — not present in section-legality.yaml's allSections list, but platform-availability.NOTLOADED.yaml shows HW_DPMASTER is S7-1500-only; data-types-ext (S7-1200-scoped) correctly excludes it. Not a registry gap."
+
+HW_DPSLAVE:
+  basicDataType: HW_DEVICE
+  category: system-alias
+  description: "Identification of a DP slave."
+  usedByInstructions: []
+  confidence: official-doc
+  source: "Siemens TIA Portal Information System — Hardware data types"
+  notes: ""
+
+HW_IO:
+  basicDataType: HW_ANY
+  category: system-alias
+  description: "Identification number of the CPU or the interface. Automatically allocated, stored in the CPU/interface's hardware-configuration properties."
+  usedByInstructions: []
+  confidence: official-doc
+  source: "Siemens TIA Portal Information System — Hardware data types"
+  notes: ""
+
+HW_IOSYSTEM:
+  basicDataType: HW_ANY
+  category: system-alias
+  description: "Identification of a PN/IO system or DP master system."
+  usedByInstructions: []
+  confidence: official-doc
+  source: "Siemens TIA Portal Information System — Hardware data types"
+  notes: ""
+
+HW_SUBMODULE:
+  basicDataType: HW_IO
+  category: system-alias
+  description: "Identification of a central hardware component."
+  usedByInstructions: []
+  confidence: official-doc
+  source: "Siemens TIA Portal Information System — Hardware data types"
+  notes: ""
+
+HW_MODULE:
+  basicDataType: HW_IO
+  category: system-alias
+  description: "Identification of a module."
+  usedByInstructions: []
+  confidence: official-doc
+  source: "Siemens TIA Portal Information System — Hardware data types"
+  notes: ""
+
+HW_INTERFACE:
+  basicDataType: HW_SUBMODULE
+  category: system-alias
+  description: "Identification of an interface component."
+  usedByInstructions: []
+  confidence: official-doc
+  source: "Siemens TIA Portal Information System — Hardware data types"
+  notes: ""
+
+HW_IEPORT:
+  basicDataType: HW_SUBMODULE
+  category: system-alias
+  description: "Identification of a port (PN/IO)."
+  usedByInstructions: []
+  confidence: official-doc
+  source: "Siemens TIA Portal Information System — Hardware data types"
+  notes: ""
+
+HW_HSC:
+  basicDataType: HW_SUBMODULE
+  category: system-alias
+  description: "Identification of a high-speed counter."
+  usedByInstructions: [CTRL_HSC, CTRL_HSC_EXT]
+  confidence: official-doc
+  source: "Siemens TIA Portal Information System — Hardware data types"
+  notes: "Only CTRL_HSC_EXT currently has an instruction-registry entry. The base CTRL_HSC signature is not established and must not be inferred from the extended variant."
+
+HW_PWM:
+  basicDataType: HW_SUBMODULE
+  category: system-alias
+  description: "Identification of a pulse width modulation."
+  usedByInstructions: [CTRL_PWM]
+  confidence: official-doc
+  source: "Siemens TIA Portal Information System — Hardware data types"
+  notes: ""
+
+HW_PTO:
+  basicDataType: HW_SUBMODULE
+  category: system-alias
+  description: "Identification of a pulse encoder. Used for Motion Control."
+  usedByInstructions: []
+  confidence: official-doc
+  source: "Siemens TIA Portal Information System — Hardware data types"
+  notes: ""
+
+EVENT_ANY:
+  basicDataType: AOM_IDENT
+  category: system-alias
+  description: "Used to identify any event."
+  usedByInstructions: []
+  confidence: shape-only
+  source: "Siemens TIA Portal Information System — Hardware data types"
+  notes: "basicDataType AOM_IDENT is itself only an opaque name in section-legality.yaml (allSections), not resolved to an elementary type anywhere yet — chain doesn't currently bottom out at a base-types.yaml leaf."
+
+EVENT_ATT:
+  basicDataType: EVENT_ANY
+  category: system-alias
+  description: "Specifies an event that can be assigned dynamically to an OB."
+  usedByInstructions: [ATTACH, DETACH]
+  confidence: official-doc
+  source: "Siemens TIA Portal Information System — Hardware data types"
+  notes: ""
+
+EVENT_HWINT:
+  basicDataType: EVENT_ATT
+  category: system-alias
+  description: "Specifies a hardware interrupt event."
+  usedByInstructions: []
+  confidence: shape-only
+  source: "Siemens TIA Portal Information System — Hardware data types"
+  notes: "Confirmed canonical spelling — platform-availability.NOTLOADED.yaml (a second, independent Siemens source) agrees. section-legality.yaml's earlier 'EVENT_HWNT' (transcribed from data-types-ext) was a typo and has been corrected."
+
+OB_ANY:
+  basicDataType: Int
+  category: system-alias
+  description: "Serves to specify any organization block."
+  usedByInstructions: []
+  confidence: official-doc
+  source: "Siemens TIA Portal Information System — Hardware data types"
+  notes: ""
+
+OB_DELAY:
+  basicDataType: OB_ANY
+  category: system-alias
+  description: "Specifies an organization block called when a time-delay interrupt occurs."
+  usedByInstructions: [SRT_DINT, CAN_DINT]
+  confidence: official-doc
+  source: "Siemens TIA Portal Information System — Hardware data types"
+  notes: ""
+
+OB_TOD:
+  basicDataType: OB_ANY
+  category: system-alias
+  description: "Specifies the number of a time-of-day interrupt OB."
+  usedByInstructions: [SET_TINT, CAN_TINT, ACT_TINT, QRY_TINT]
+  confidence: official-doc
+  source: "Siemens TIA Portal Information System — Hardware data types"
+  notes: ""
+
+OB_CYCLIC:
+  basicDataType: OB_ANY
+  category: system-alias
+  description: "Specifies an organization block called when a watchdog interrupt occurs."
+  usedByInstructions: []
+  confidence: official-doc
+  source: "Siemens TIA Portal Information System — Hardware data types"
+  notes: ""
+
+OB_ATT:
+  basicDataType: OB_ANY
+  category: system-alias
+  description: "Specifies an organization block that can be assigned dynamically to an event."
+  usedByInstructions: [ATTACH, DETACH]
+  confidence: official-doc
+  source: "Siemens TIA Portal Information System — Hardware data types"
+  notes: ""
+
+OB_PCYCLE:
+  basicDataType: OB_ANY
+  category: system-alias
+  description: "Specifies an organization block that can be assigned to an event of the 'Cyclic program' event class."
+  usedByInstructions: []
+  confidence: official-doc
+  source: "Siemens TIA Portal Information System — Hardware data types"
+  notes: ""
+
+OB_HWINT:
+  basicDataType: OB_ATT
+  category: system-alias
+  description: "Specifies an organization block called when a hardware interrupt occurs."
+  usedByInstructions: []
+  confidence: shape-only
+  source: "Siemens TIA Portal Information System — Hardware data types"
+  notes: "Confirmed canonical spelling — platform-availability.NOTLOADED.yaml (a second, independent Siemens source) agrees. section-legality.yaml's earlier 'OB_HWNT' (transcribed from data-types-ext) was a typo and has been corrected."
+
+OB_DIAG:
+  basicDataType: OB_ANY
+  category: system-alias
+  description: "Specifies an organization block called when a diagnostic interrupt occurs."
+  usedByInstructions: []
+  confidence: official-doc
+  source: "Siemens TIA Portal Information System — Hardware data types"
+  notes: ""
+
+OB_TIMEERROR:
+  basicDataType: OB_ANY
+  category: system-alias
+  description: "Specifies an organization block called when a time error occurs."
+  usedByInstructions: []
+  confidence: official-doc
+  source: "Siemens TIA Portal Information System — Hardware data types"
+  notes: ""
+
+OB_STARTUP:
+  basicDataType: OB_ANY
+  category: system-alias
+  description: "Specifies an organization block called when a startup event occurs."
+  usedByInstructions: []
+  confidence: official-doc
+  source: "Siemens TIA Portal Information System — Hardware data types"
+  notes: ""
+
+PORT:
+  basicDataType: HW_SUBMODULE
+  category: system-alias
+  description: "Specifies a communication port. Used for point-to-point communication."
+  usedByInstructions: []
+  confidence: official-doc
+  source: "Siemens TIA Portal Information System — Hardware data types"
+  notes: ""
+
+RTM:
+  basicDataType: UInt
+  category: system-alias
+  description: "Specifies the number of an operating-hours counter."
+  usedByInstructions: [RTM]
+  confidence: official-doc
+  source: "Siemens TIA Portal Information System — Hardware data types"
+  notes: "Both the type name and the instruction that uses it are 'RTM' — not a typo, per the source table."
+
+PIP:
+  basicDataType: UInt
+  category: system-alias
+  description: "Used to create and connect a 'Synchronous Cycle' OB."
+  usedByInstructions: [SFC26, SFC27, SFC126, SFC127]
+  confidence: official-doc
+  source: "Siemens TIA Portal Information System — Hardware data types"
+  notes: ""
+
+CONN_ANY:
+  basicDataType: Word
+  category: system-alias
+  description: "Serves to specify any connection."
+  usedByInstructions: []
+  confidence: official-doc
+  source: "Siemens TIA Portal Information System — Hardware data types"
+  notes: ""
+
+CONN_PRG:
+  basicDataType: CONN_ANY
+  category: system-alias
+  description: "Specifies a connection for open communication over UDP."
+  usedByInstructions: []
+  confidence: official-doc
+  source: "Siemens TIA Portal Information System — Hardware data types"
+  notes: ""
+
+CONN_OUC:
+  basicDataType: CONN_ANY
+  category: system-alias
+  description: "Specifies a connection for open communication over Industrial Ethernet (PROFINET)."
+  usedByInstructions: []
+  confidence: official-doc
+  source: "Siemens TIA Portal Information System — Hardware data types"
+  notes: ""
+
+CONN_R_ID:
+  basicDataType: DWord
+  category: system-alias
+  description: "Data type for the R_ID parameter on S7 communication blocks."
+  usedByInstructions: []
+  confidence: official-doc
+  source: "Siemens TIA Portal Information System — Hardware data types"
+  notes: "RESOLVED — not present in section-legality.yaml's allSections CONN_* set (CONN_ANY/CONN_OUC/CONN_PRG only), but platform-availability.NOTLOADED.yaml shows CONN_R_ID is S7-1500-only; data-types-ext (S7-1200-scoped) correctly excludes it. Not a registry gap."
+
+DB_ANY:
+  basicDataType: UInt
+  category: system-alias
+  description: "Identification (name or number) of a DB."
+  usedByInstructions: []
+  confidence: official-doc
+  source: "Siemens TIA Portal Information System — Hardware data types"
+  notes: "Has length 0 specifically in the Temp section, per the source table — a size exception worth carrying into whatever sizing check the lint server runs on Temp-section members."
+
+DB_WWW:
+  basicDataType: DB_ANY
+  category: system-alias
+  description: "Number of a DB generated via the Web application (e.g. the 'WWW' instruction)."
+  usedByInstructions: [WWW]
+  confidence: official-doc
+  source: "Siemens TIA Portal Information System — Hardware data types"
+  notes: "Has length 0 specifically in the Temp section, per the source table — same exception as DB_ANY."
+
+DB_DYN:
+  basicDataType: DB_ANY
+  category: system-alias
+  description: "Number of a DB generated by the user program."
+  usedByInstructions: []
+  confidence: official-doc
+  source: "Siemens TIA Portal Information System — Hardware data types"
+  notes: ""

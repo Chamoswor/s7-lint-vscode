@@ -1,0 +1,535 @@
+# LAD/FBD math instruction registry.
+#
+# This file models graphical math boxes. Their calculated value is exposed
+# through an explicit OUT pin, or written back through the single operand of
+# INC/DEC. They therefore do not have a separate function return value:
+#
+#   result:
+#     kind: none
+#
+# Memory-area conventions from Siemens STEP 7 V21:
+# - Ordinary numeric/expression inputs: I, Q, M, D, L, P or constant.
+# - Explicit OUT pins: I, Q, M, D, L or P.
+# - INC/DEC read/write operand: I, Q, M, D or L.
+#
+# EN and ENO remain represented by the existing `enEno` field. EN permits T
+# and C only on S7-1500 where the individual instruction table states this.
+#
+# `inN` represents additional consecutively numbered graphical inputs. It is
+# a registry placeholder, not a literal pin name in exported block code.
+#
+$fileLanguage: [LAD, FBD]
+
+Calculate:
+  family: math
+  callShape: box
+  instanceType:
+  pins:
+  - {name: in1, dir: in, required: true, dataTypes: ["Bit strings", "Integers", "Floating-point numbers"], note: "First
+      input operand.", memoryAreas: [I, Q, M, D, L, P, constant]}
+  - {name: in2, dir: in, required: true, dataTypes: ["Bit strings", "Integers", "Floating-point numbers"], note: "Second
+      input operand.", memoryAreas: [I, Q, M, D, L, P, constant]}
+  - {name: inN, dir: in, required: false, dataTypes: ["Bit strings", "Integers", "Floating-point numbers"], note: "Optional
+      consecutively numbered additional input operands.", memoryAreas: [I, Q, M, D, L, P, constant]}
+  - {name: out, dir: out, required: true, dataTypes: ["Bit strings", "Integers", "Floating-point numbers"], note: "Calculated
+      output value.", memoryAreas: [I, Q, M, D, L, P]}
+  result:
+    kind: none
+  enEno:
+    en: {present: true, dataTypes: [Bool], memoryArea: {"S7-1200": [I, Q, M, D, L, constant], "S7-1500": [I, Q, M, D, L, T, C, constant]}}
+    eno: {present: true, dataTypes: [Bool], memoryArea: {"S7-1200": [I, Q, M, D, L], "S7-1500": [I, Q, M, D, L]}}
+  template: {shape: none, keys: [], extra: {}}
+  confidence: shape-only
+  notes: >-
+    Evaluates the expression configured in the CALCULATE dialog and writes the final value to OUT.
+    Additional inputs are numbered consecutively and may not contain gaps.
+  source: "docs/fbd-knowhow/05-Math.md"
+Add:
+  family: math
+  callShape: box
+  instanceType:
+  pins:
+  - {name: in1, dir: in, required: true, dataTypes: ["Integers", "Floating-point numbers"], note: "First input operand.",
+    memoryAreas: [I, Q, M, D, L, P, constant]}
+  - {name: in2, dir: in, required: true, dataTypes: ["Integers", "Floating-point numbers"], note: "Second input operand.",
+    memoryAreas: [I, Q, M, D, L, P, constant]}
+  - {name: inN, dir: in, required: false, dataTypes: ["Integers", "Floating-point numbers"], note: "Optional consecutively
+      numbered additional input operands.", memoryAreas: [I, Q, M, D, L, P, constant]}
+  - {name: out, dir: out, required: true, dataTypes: ["Integers", "Floating-point numbers"], note: "Calculated output
+      value.", memoryAreas: [I, Q, M, D, L, P]}
+  result:
+    kind: none
+  enEno:
+    en: {present: true, dataTypes: [Bool], memoryArea: {"S7-1200": [I, Q, M, D, L, constant], "S7-1500": [I, Q, M, D, L, T, C, constant]}}
+    eno: {present: true, dataTypes: [Bool], memoryArea: {"S7-1200": [I, Q, M, D, L], "S7-1500": [I, Q, M, D, L]}}
+  template: {shape: none, keys: [], extra: {}}
+  confidence: confirmed-compiled
+  notes: >-
+    Adds IN1, IN2 and any consecutively inserted INn inputs. The selected numeric type determines range,
+    overflow and floating-point behavior.
+  source: "docs/fbd-knowhow/05-Math.md"
+Sub:
+  family: math
+  callShape: box
+  instanceType:
+  pins:
+  - {name: in1, dir: in, required: true, dataTypes: ["Integers", "Floating-point numbers"], note: "Minuend.", 
+      memoryAreas: [I, Q, M, D, L, P, constant]}
+  - {name: in2, dir: in, required: true, dataTypes: ["Integers", "Floating-point numbers"], note: "Subtrahend.", 
+      memoryAreas: [I, Q, M, D, L, P, constant]}
+  - {name: out, dir: out, required: true, dataTypes: ["Integers", "Floating-point numbers"], note: "Calculated output
+      value.", memoryAreas: [I, Q, M, D, L, P]}
+  result:
+    kind: none
+  enEno:
+    en: {present: true, dataTypes: [Bool], memoryArea: {"S7-1200": [I, Q, M, D, L, constant], "S7-1500": [I, Q, M, D, L, T, C, constant]}}
+    eno: {present: true, dataTypes: [Bool], memoryArea: {"S7-1200": [I, Q, M, D, L], "S7-1500": [I, Q, M, D, L]}}
+  template: {shape: none, keys: [], extra: {}}
+  confidence: confirmed-compiled
+  notes: >-
+    Subtracts IN2 from IN1. The graphical instruction has exactly two arithmetic inputs.
+  source: "docs/fbd-knowhow/05-Math.md"
+Mul:
+  family: math
+  callShape: box
+  instanceType:
+  pins:
+  - {name: in1, dir: in, required: true, dataTypes: ["Integers", "Floating-point numbers"], note: "First input operand.",
+    memoryAreas: [I, Q, M, D, L, P, constant]}
+  - {name: in2, dir: in, required: true, dataTypes: ["Integers", "Floating-point numbers"], note: "Second input operand.",
+    memoryAreas: [I, Q, M, D, L, P, constant]}
+  - {name: inN, dir: in, required: false, dataTypes: ["Integers", "Floating-point numbers"], note: "Optional consecutively
+      numbered additional input operands.", memoryAreas: [I, Q, M, D, L, P, constant]}
+  - {name: out, dir: out, required: true, dataTypes: ["Integers", "Floating-point numbers"], note: "Calculated output
+      value.", memoryAreas: [I, Q, M, D, L, P]}
+  result:
+    kind: none
+  enEno:
+    en: {present: true, dataTypes: [Bool], memoryArea: {"S7-1200": [I, Q, M, D, L, constant], "S7-1500": [I, Q, M, D, L, T, C, constant]}}
+    eno: {present: true, dataTypes: [Bool], memoryArea: {"S7-1200": [I, Q, M, D, L], "S7-1500": [I, Q, M, D, L]}}
+  template: {shape: none, keys: [], extra: {}}
+  confidence: confirmed-compiled
+  notes: >-
+    Multiplies IN1, IN2 and any consecutively inserted INn inputs. The selected numeric type determines
+    range and floating-point behavior.
+  source: "docs/fbd-knowhow/05-Math.md"
+Div:
+  family: math
+  callShape: box
+  instanceType:
+  pins:
+  - {name: in1, dir: in, required: true, dataTypes: ["Integers", "Floating-point numbers"], note: "Dividend.", 
+      memoryAreas: [I, Q, M, D, L, P, constant]}
+  - {name: in2, dir: in, required: true, dataTypes: ["Integers", "Floating-point numbers"], note: "Divisor.", 
+      memoryAreas: [I, Q, M, D, L, P, constant]}
+  - {name: out, dir: out, required: true, dataTypes: ["Integers", "Floating-point numbers"], note: "Calculated output
+      value.", memoryAreas: [I, Q, M, D, L, P]}
+  result:
+    kind: none
+  enEno:
+    en: {present: true, dataTypes: [Bool], memoryArea: {"S7-1200": [I, Q, M, D, L, constant], "S7-1500": [I, Q, M, D, L, T, C, constant]}}
+    eno: {present: true, dataTypes: [Bool], memoryArea: {"S7-1200": [I, Q, M, D, L], "S7-1500": [I, Q, M, D, L]}}
+  template: {shape: none, keys: [], extra: {}}
+  confidence: confirmed-compiled
+  notes: >-
+    Divides IN1 by IN2. Division by zero and invalid floating-point operands produce type-dependent
+    OUT/ENO behavior defined by the target CPU.
+  source: "docs/fbd-knowhow/05-Math.md"
+Mod:
+  family: math
+  callShape: box
+  instanceType:
+  pins:
+  - {name: in1, dir: in, required: true, dataTypes: ["Integers"], note: "Dividend.", memoryAreas: [I, Q, M, D, L, P,
+      constant]}
+  - {name: in2, dir: in, required: true, dataTypes: ["Integers"], note: "Divisor.", memoryAreas: [I, Q, M, D, L, P, 
+        constant]}
+  - {name: out, dir: out, required: true, dataTypes: ["Integers"], note: "Calculated output value.", memoryAreas: [
+        I, Q, M, D, L, P]}
+  result:
+    kind: none
+  enEno:
+    en: {present: true, dataTypes: [Bool], memoryArea: {"S7-1200": [I, Q, M, D, L, constant], "S7-1500": [I, Q, M, D, L, T, C, constant]}}
+    eno: {present: true, dataTypes: [Bool], memoryArea: {"S7-1200": [I, Q, M, D, L], "S7-1500": [I, Q, M, D, L]}}
+  template: {shape: none, keys: [], extra: {}}
+  confidence: confirmed-compiled
+  notes: >-
+    Returns the integer remainder of IN1 divided by IN2.
+  source: "docs/fbd-knowhow/05-Math.md"
+Neg:
+  family: math
+  callShape: box
+  instanceType:
+  pins:
+  - {name: in, dir: in, required: true, dataTypes: [SInt, Int, DInt, LInt, "Floating-point numbers"], note: "Input operand.",
+    memoryAreas: [I, Q, M, D, L, P, constant]}
+  - {name: out, dir: out, required: true, dataTypes: [SInt, Int, DInt, LInt, "Floating-point numbers"], note: "Calculated
+      output value.", memoryAreas: [I, Q, M, D, L, P]}
+  result:
+    kind: none
+  enEno:
+    en: {present: true, dataTypes: [Bool], memoryArea: {"S7-1200": [I, Q, M, D, L, constant], "S7-1500": [I, Q, M, D, L, T, C, constant]}}
+    eno: {present: true, dataTypes: [Bool], memoryArea: {"S7-1200": [I, Q, M, D, L], "S7-1500": [I, Q, M, D, L]}}
+  template: {shape: single, keys: [SrcType], extra: {}}
+  confidence: confirmed-compiled
+  notes: >-
+    Returns the arithmetic negation (two's complement) of the signed integer or floating-point input.
+  source: "docs/fbd-knowhow/05-Math.md"
+Inc:
+  family: math
+  callShape: box
+  instanceType:
+  pins:
+  - {name: null, dir: in, required: true, dataTypes: ["Integers"], note: "Integer operand read and written in place.
+      A constant and peripheral operand are not valid destinations.", memoryAreas: [I, Q, M, D, L]}
+  result:
+    kind: none
+  enEno:
+    en: {present: true, dataTypes: [Bool], memoryArea: {"S7-1200": [I, Q, M, D, L, constant], "S7-1500": [I, Q, M, D, L, T, C, constant]}}
+    eno: {present: true, dataTypes: [Bool], memoryArea: {"S7-1200": [I, Q, M, D, L], "S7-1500": [I, Q, M, D, L]}}
+  template: {shape: none, keys: [], extra: {}}
+  confidence: shape-only
+  notes: >-
+    Increments the connected integer operand in place by one.
+  source: "docs/fbd-knowhow/05-Math.md"
+Dec:
+  family: math
+  callShape: box
+  instanceType:
+  pins:
+  - {name: null, dir: in, required: true, dataTypes: ["Integers"], note: "Integer operand read and written in place.
+      A constant and peripheral operand are not valid destinations.", memoryAreas: [I, Q, M, D, L]}
+  result:
+    kind: none
+  enEno:
+    en: {present: true, dataTypes: [Bool], memoryArea: {"S7-1200": [I, Q, M, D, L, constant], "S7-1500": [I, Q, M, D, L, T, C, constant]}}
+    eno: {present: true, dataTypes: [Bool], memoryArea: {"S7-1200": [I, Q, M, D, L], "S7-1500": [I, Q, M, D, L]}}
+  template: {shape: none, keys: [], extra: {}}
+  confidence: shape-only
+  notes: >-
+    Decrements the connected integer operand in place by one.
+  source: "docs/fbd-knowhow/05-Math.md"
+Expt:
+  family: math
+  callShape: box
+  instanceType:
+  pins:
+  - {name: in1, dir: in, required: true, dataTypes: ["Floating-point numbers"], note: "Floating-point base value.", 
+      memoryAreas: [I, Q, M, D, L, P, constant]}
+  - {name: in2, dir: in, required: true, dataTypes: ["Integers", "Floating-point numbers"], note: "Exponent.", 
+      memoryAreas: [I, Q, M, D, L, P, constant]}
+  - {name: out, dir: out, required: true, dataTypes: ["Floating-point numbers"], note: "Calculated output value.", 
+      memoryAreas: [I, Q, M, D, L, P]}
+  result:
+    kind: none
+  enEno:
+    en: {present: true, dataTypes: [Bool], memoryArea: {"S7-1200": [I, Q, M, D, L, constant], "S7-1500": [I, Q, M, D, L, T, C, constant]}}
+    eno: {present: true, dataTypes: [Bool], memoryArea: {"S7-1200": [I, Q, M, D, L], "S7-1500": [I, Q, M, D, L]}}
+  template: {shape: none, keys: [], extra: {}}
+  confidence: shape-only
+  notes: >-
+    Raises floating-point base IN1 to exponent IN2 and writes the floating-point result to OUT.
+  source: "docs/fbd-knowhow/05-Math.md"
+Abs:
+  family: math
+  callShape: box
+  instanceType:
+  pins:
+  - {name: in, dir: in, required: true, dataTypes: [SInt, Int, DInt, LInt, "Floating-point numbers"], note: "Input operand.",
+    memoryAreas: [I, Q, M, D, L, P, constant]}
+  - {name: out, dir: out, required: true, dataTypes: [SInt, Int, DInt, LInt, "Floating-point numbers"], note: "Calculated
+      output value.", memoryAreas: [I, Q, M, D, L, P]}
+  result:
+    kind: none
+  enEno:
+    en: {present: true, dataTypes: [Bool], memoryArea: {"S7-1200": [I, Q, M, D, L, constant], "S7-1500": [I, Q, M, D, L, T, C, constant]}}
+    eno: {present: true, dataTypes: [Bool], memoryArea: {"S7-1200": [I, Q, M, D, L], "S7-1500": [I, Q, M, D, L]}}
+  template: {shape: single, keys: [SrcType], extra: {}}
+  confidence: shape-only
+  notes: >-
+    Returns the absolute value of the signed integer or floating-point input.
+  source: "docs/fbd-knowhow/05-Math.md"
+MIN:
+  family: math
+  callShape: box
+  instanceType:
+  pins:
+  - {name: in1, dir: in, required: true, dataTypes: ["Integers", "Floating-point numbers", DTL, Date_And_Time], 
+      note: "First input operand.", memoryAreas: [I, Q, M, D, L, P, constant]}
+  - {name: in2, dir: in, required: true, dataTypes: ["Integers", "Floating-point numbers", DTL, Date_And_Time], 
+      note: "Second input operand.", memoryAreas: [I, Q, M, D, L, P, constant]}
+  - {name: inN, dir: in, required: false, dataTypes: ["Integers", "Floating-point numbers", DTL, Date_And_Time], 
+      note: "Optional consecutively numbered additional input operands.", memoryAreas: [I, Q, M, D, L, P, constant]}
+  - {name: out, dir: out, required: true, dataTypes: ["Integers", "Floating-point numbers", DTL, Date_And_Time], 
+      note: "Calculated output value.", memoryAreas: [I, Q, M, D, L, P]}
+  result:
+    kind: none
+  enEno:
+    en: {present: true, dataTypes: [Bool], memoryArea: {"S7-1200": [I, Q, M, D, L, constant], "S7-1500": [I, Q, M, D, L, T, C, constant]}}
+    eno: {present: true, dataTypes: [Bool], memoryArea: {"S7-1200": [I, Q, M, D, L], "S7-1500": [I, Q, M, D, L]}}
+  template: {shape: eno-pair, keys: [value_type], extra: {S7_GenerateENO: "TRUE"}}
+  confidence: shape-only
+  notes: >-
+    Returns the lowest value among IN1, IN2 and any consecutively inserted INn inputs. All connected
+    operands must satisfy the instruction's datatype-compatibility rules.
+  source: "docs/fbd-knowhow/05-Math.md"
+MAX:
+  family: math
+  callShape: box
+  instanceType:
+  pins:
+  - {name: in1, dir: in, required: true, dataTypes: ["Integers", "Floating-point numbers", DTL, Date_And_Time], 
+      note: "First input operand.", memoryAreas: [I, Q, M, D, L, P, constant]}
+  - {name: in2, dir: in, required: true, dataTypes: ["Integers", "Floating-point numbers", DTL, Date_And_Time], 
+      note: "Second input operand.", memoryAreas: [I, Q, M, D, L, P, constant]}
+  - {name: inN, dir: in, required: false, dataTypes: ["Integers", "Floating-point numbers", DTL, Date_And_Time], 
+      note: "Optional consecutively numbered additional input operands.", memoryAreas: [I, Q, M, D, L, P, constant]}
+  - {name: out, dir: out, required: true, dataTypes: ["Integers", "Floating-point numbers", DTL, Date_And_Time], 
+      note: "Calculated output value.", memoryAreas: [I, Q, M, D, L, P]}
+  result:
+    kind: none
+  enEno:
+    en: {present: true, dataTypes: [Bool], memoryArea: {"S7-1200": [I, Q, M, D, L, constant], "S7-1500": [I, Q, M, D, L, T, C, constant]}}
+    eno: {present: true, dataTypes: [Bool], memoryArea: {"S7-1200": [I, Q, M, D, L], "S7-1500": [I, Q, M, D, L]}}
+  template: {shape: eno-pair, keys: [value_type], extra: {S7_GenerateENO: "TRUE"}}
+  confidence: shape-only
+  notes: >-
+    Returns the greatest value among IN1, IN2 and any consecutively inserted INn inputs. All connected
+    operands must satisfy the instruction's datatype-compatibility rules.
+  source: "docs/fbd-knowhow/05-Math.md"
+Limit:
+  family: math
+  callShape: box
+  instanceType:
+  pins:
+  - {name: min, dir: in, required: true, dataTypes: ["Integers", "Floating-point numbers", Time, Time_Of_Day, Date, 
+        DTL, Date_And_Time, LTime, LTime_Of_Day, LDT], note: "Low limit.", memoryAreas: [I, Q, M, D, L, P, constant]}
+  - {name: in, dir: in, required: true, dataTypes: ["Integers", "Floating-point numbers", Time, Time_Of_Day, Date, 
+        DTL, Date_And_Time, LTime, LTime_Of_Day, LDT], note: "Input operand.", memoryAreas: [I, Q, M, D, L, P, 
+        constant]}
+  - {name: max, dir: in, required: true, dataTypes: ["Integers", "Floating-point numbers", Time, Time_Of_Day, Date, 
+        DTL, Date_And_Time, LTime, LTime_Of_Day, LDT], note: "High limit.", memoryAreas: [I, Q, M, D, L, P, 
+        constant]}
+  - {name: out, dir: out, required: true, dataTypes: ["Integers", "Floating-point numbers", Time, Time_Of_Day, Date,
+      DTL, Date_And_Time, LTime, LTime_Of_Day, LDT], note: "Calculated output value.", memoryAreas: [I, Q, M, D, L, 
+        P]}
+  result:
+    kind: none
+  enEno:
+    en: {present: true, dataTypes: [Bool], memoryArea: {"S7-1200": [I, Q, M, D, L, constant], "S7-1500": [I, Q, M, D, L, T, C, constant]}}
+    eno: {present: true, dataTypes: [Bool], memoryArea: {"S7-1200": [I, Q, M, D, L], "S7-1500": [I, Q, M, D, L]}}
+  template: {shape: eno-pair, keys: [value_type], extra: {S7_GenerateENO: "TRUE"}}
+  confidence: confirmed-compiled
+  notes: >-
+    Clamps IN to the inclusive interval defined by the low and high limits. If the low limit is greater
+    than the high limit, OUT follows IN and ENO is cleared.
+  source: "docs/fbd-knowhow/05-Math.md"
+Sqr:
+  family: math
+  callShape: box
+  instanceType:
+  pins:
+  - {name: in, dir: in, required: true, dataTypes: ["Floating-point numbers"], note: "Input operand.", memoryAreas: [
+      I, Q, M, D, L, P, constant]}
+  - {name: out, dir: out, required: true, dataTypes: ["Floating-point numbers"], note: "Calculated output value.", 
+      memoryAreas: [I, Q, M, D, L, P]}
+  result:
+    kind: none
+  enEno:
+    en: {present: true, dataTypes: [Bool], memoryArea: {"S7-1200": [I, Q, M, D, L, constant], "S7-1500": [I, Q, M, D, L, T, C, constant]}}
+    eno: {present: true, dataTypes: [Bool], memoryArea: {"S7-1200": [I, Q, M, D, L], "S7-1500": [I, Q, M, D, L]}}
+  template: {shape: none, keys: [], extra: {}}
+  confidence: shape-only
+  notes: >-
+    Squares the floating-point input.
+  source: "docs/fbd-knowhow/05-Math.md"
+Sqrt:
+  family: math
+  callShape: box
+  instanceType:
+  pins:
+  - {name: in, dir: in, required: true, dataTypes: ["Floating-point numbers"], note: "Input operand.", memoryAreas: [
+      I, Q, M, D, L, P, constant]}
+  - {name: out, dir: out, required: true, dataTypes: ["Floating-point numbers"], note: "Calculated output value.", 
+      memoryAreas: [I, Q, M, D, L, P]}
+  result:
+    kind: none
+  enEno:
+    en: {present: true, dataTypes: [Bool], memoryArea: {"S7-1200": [I, Q, M, D, L, constant], "S7-1500": [I, Q, M, D, L, T, C, constant]}}
+    eno: {present: true, dataTypes: [Bool], memoryArea: {"S7-1200": [I, Q, M, D, L], "S7-1500": [I, Q, M, D, L]}}
+  template: {shape: none, keys: [], extra: {}}
+  confidence: shape-only
+  notes: >-
+    Returns the square root. A negative input produces an invalid floating-point result.
+  source: "docs/fbd-knowhow/05-Math.md"
+Ln:
+  family: math
+  callShape: box
+  instanceType:
+  pins:
+  - {name: in, dir: in, required: true, dataTypes: ["Floating-point numbers"], note: "Input operand.", memoryAreas: [
+      I, Q, M, D, L, P, constant]}
+  - {name: out, dir: out, required: true, dataTypes: ["Floating-point numbers"], note: "Calculated output value.", 
+      memoryAreas: [I, Q, M, D, L, P]}
+  result:
+    kind: none
+  enEno:
+    en: {present: true, dataTypes: [Bool], memoryArea: {"S7-1200": [I, Q, M, D, L, constant], "S7-1500": [I, Q, M, D, L, T, C, constant]}}
+    eno: {present: true, dataTypes: [Bool], memoryArea: {"S7-1200": [I, Q, M, D, L], "S7-1500": [I, Q, M, D, L]}}
+  template: {shape: none, keys: [], extra: {}}
+  confidence: shape-only
+  notes: >-
+    Returns the natural logarithm. Inputs below zero produce an invalid floating-point result.
+  source: "docs/fbd-knowhow/05-Math.md"
+Exp:
+  family: math
+  callShape: box
+  instanceType:
+  pins:
+  - {name: in, dir: in, required: true, dataTypes: ["Floating-point numbers"], note: "Input operand.", memoryAreas: [
+      I, Q, M, D, L, P, constant]}
+  - {name: out, dir: out, required: true, dataTypes: ["Floating-point numbers"], note: "Calculated output value.", 
+      memoryAreas: [I, Q, M, D, L, P]}
+  result:
+    kind: none
+  enEno:
+    en: {present: true, dataTypes: [Bool], memoryArea: {"S7-1200": [I, Q, M, D, L, constant], "S7-1500": [I, Q, M, D, L, T, C, constant]}}
+    eno: {present: true, dataTypes: [Bool], memoryArea: {"S7-1200": [I, Q, M, D, L], "S7-1500": [I, Q, M, D, L]}}
+  template: {shape: none, keys: [], extra: {}}
+  confidence: shape-only
+  notes: >-
+    Returns e raised to the floating-point input.
+  source: "docs/fbd-knowhow/05-Math.md"
+Sin:
+  family: math
+  callShape: box
+  instanceType:
+  pins:
+  - {name: in, dir: in, required: true, dataTypes: ["Floating-point numbers"], note: "Angle expressed in radians.", 
+      memoryAreas: [I, Q, M, D, L, P, constant]}
+  - {name: out, dir: out, required: true, dataTypes: ["Floating-point numbers"], note: "Calculated output value.", 
+      memoryAreas: [I, Q, M, D, L, P]}
+  result:
+    kind: none
+  enEno:
+    en: {present: true, dataTypes: [Bool], memoryArea: {"S7-1200": [I, Q, M, D, L, constant], "S7-1500": [I, Q, M, D, L, T, C, constant]}}
+    eno: {present: true, dataTypes: [Bool], memoryArea: {"S7-1200": [I, Q, M, D, L], "S7-1500": [I, Q, M, D, L]}}
+  template: {shape: none, keys: [], extra: {}}
+  confidence: shape-only
+  notes: >-
+    Returns the sine of the input angle expressed in radians.
+  source: "docs/fbd-knowhow/05-Math.md"
+Cos:
+  family: math
+  callShape: box
+  instanceType:
+  pins:
+  - {name: in, dir: in, required: true, dataTypes: ["Floating-point numbers"], note: "Angle expressed in radians.", 
+      memoryAreas: [I, Q, M, D, L, P, constant]}
+  - {name: out, dir: out, required: true, dataTypes: ["Floating-point numbers"], note: "Calculated output value.", 
+      memoryAreas: [I, Q, M, D, L, P]}
+  result:
+    kind: none
+  enEno:
+    en: {present: true, dataTypes: [Bool], memoryArea: {"S7-1200": [I, Q, M, D, L, constant], "S7-1500": [I, Q, M, D, L, T, C, constant]}}
+    eno: {present: true, dataTypes: [Bool], memoryArea: {"S7-1200": [I, Q, M, D, L], "S7-1500": [I, Q, M, D, L]}}
+  template: {shape: none, keys: [], extra: {}}
+  confidence: shape-only
+  notes: >-
+    Returns the cosine of the input angle expressed in radians.
+  source: "docs/fbd-knowhow/05-Math.md"
+Tan:
+  family: math
+  callShape: box
+  instanceType:
+  pins:
+  - {name: in, dir: in, required: true, dataTypes: ["Floating-point numbers"], note: "Angle expressed in radians.", 
+      memoryAreas: [I, Q, M, D, L, P, constant]}
+  - {name: out, dir: out, required: true, dataTypes: ["Floating-point numbers"], note: "Calculated output value.", 
+      memoryAreas: [I, Q, M, D, L, P]}
+  result:
+    kind: none
+  enEno:
+    en: {present: true, dataTypes: [Bool], memoryArea: {"S7-1200": [I, Q, M, D, L, constant], "S7-1500": [I, Q, M, D, L, T, C, constant]}}
+    eno: {present: true, dataTypes: [Bool], memoryArea: {"S7-1200": [I, Q, M, D, L], "S7-1500": [I, Q, M, D, L]}}
+  template: {shape: none, keys: [], extra: {}}
+  confidence: shape-only
+  notes: >-
+    Returns the tangent of the input angle expressed in radians.
+  source: "docs/fbd-knowhow/05-Math.md"
+Asin:
+  family: math
+  callShape: box
+  instanceType:
+  pins:
+  - {name: in, dir: in, required: true, dataTypes: ["Floating-point numbers"], note: "Sine value in the interval [-1,
+      +1].", memoryAreas: [I, Q, M, D, L, P, constant]}
+  - {name: out, dir: out, required: true, dataTypes: ["Floating-point numbers"], note: "Calculated output value.", 
+      memoryAreas: [I, Q, M, D, L, P]}
+  result:
+    kind: none
+  enEno:
+    en: {present: true, dataTypes: [Bool], memoryArea: {"S7-1200": [I, Q, M, D, L, constant], "S7-1500": [I, Q, M, D, L, T, C, constant]}}
+    eno: {present: true, dataTypes: [Bool], memoryArea: {"S7-1200": [I, Q, M, D, L], "S7-1500": [I, Q, M, D, L]}}
+  template: {shape: none, keys: [], extra: {}}
+  confidence: shape-only
+  notes: >-
+    Returns the arcsine in radians. Valid finite input values are limited to the interval [-1, +1].
+  source: "docs/fbd-knowhow/05-Math.md"
+Acos:
+  family: math
+  callShape: box
+  instanceType:
+  pins:
+  - {name: in, dir: in, required: true, dataTypes: ["Floating-point numbers"], note: "Cosine value in the interval [-1,
+      +1].", memoryAreas: [I, Q, M, D, L, P, constant]}
+  - {name: out, dir: out, required: true, dataTypes: ["Floating-point numbers"], note: "Calculated output value.", 
+      memoryAreas: [I, Q, M, D, L, P]}
+  result:
+    kind: none
+  enEno:
+    en: {present: true, dataTypes: [Bool], memoryArea: {"S7-1200": [I, Q, M, D, L, constant], "S7-1500": [I, Q, M, D, L, T, C, constant]}}
+    eno: {present: true, dataTypes: [Bool], memoryArea: {"S7-1200": [I, Q, M, D, L], "S7-1500": [I, Q, M, D, L]}}
+  template: {shape: none, keys: [], extra: {}}
+  confidence: shape-only
+  notes: >-
+    Returns the arccosine in radians. Valid finite input values are limited to the interval [-1, +1].
+  source: "docs/fbd-knowhow/05-Math.md"
+Atan:
+  family: math
+  callShape: box
+  instanceType:
+  pins:
+  - {name: in, dir: in, required: true, dataTypes: ["Floating-point numbers"], note: "Tangent value.", memoryAreas: [
+      I, Q, M, D, L, P, constant]}
+  - {name: out, dir: out, required: true, dataTypes: ["Floating-point numbers"], note: "Calculated output value.", 
+      memoryAreas: [I, Q, M, D, L, P]}
+  result:
+    kind: none
+  enEno:
+    en: {present: true, dataTypes: [Bool], memoryArea: {"S7-1200": [I, Q, M, D, L, constant], "S7-1500": [I, Q, M, D, L, T, C, constant]}}
+    eno: {present: true, dataTypes: [Bool], memoryArea: {"S7-1200": [I, Q, M, D, L], "S7-1500": [I, Q, M, D, L]}}
+  template: {shape: none, keys: [], extra: {}}
+  confidence: shape-only
+  notes: >-
+    Returns the arctangent in radians.
+  source: "docs/fbd-knowhow/05-Math.md"
+Frac:
+  family: math
+  callShape: box
+  instanceType:
+  pins:
+  - {name: in, dir: in, required: true, dataTypes: ["Floating-point numbers"], note: "Input operand.", memoryAreas: [
+      I, Q, M, D, L, P, constant]}
+  - {name: out, dir: out, required: true, dataTypes: ["Floating-point numbers"], note: "Calculated output value.", 
+      memoryAreas: [I, Q, M, D, L, P]}
+  result:
+    kind: none
+  enEno:
+    en: {present: true, dataTypes: [Bool], memoryArea: {"S7-1200": [I, Q, M, D, L, constant], "S7-1500": [I, Q, M, D, L, T, C, constant]}}
+    eno: {present: true, dataTypes: [Bool], memoryArea: {"S7-1200": [I, Q, M, D, L], "S7-1500": [I, Q, M, D, L]}}
+  template: {shape: none, keys: [], extra: {}}
+  confidence: shape-only
+  notes: >-
+    Returns the fractional part of the floating-point input.
+  source: "docs/fbd-knowhow/05-Math.md"

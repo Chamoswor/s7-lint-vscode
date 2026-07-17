@@ -1,0 +1,612 @@
+# USS drive communication — LAD/FBD registry.
+#
+# Graphical instruction aliases and pin casing follow anonymized reference
+# fixture evidence and apply to both LAD and FBD.
+#
+# Exported `:=` connections cannot distinguish Input from InOut. Parameters
+# independently documented as InOut have therefore been corrected explicitly.
+# Every entry has `result: { kind: none }`.
+#
+# Missing dataTypes are intentional: unknown types are not guessed.
+
+$fileLanguage: [LAD, FBD]
+USS_Port_Scan:
+  family: communication
+  callShape: instance-dot
+  instanceType: USS_Port_Scan
+  pins:
+  - name: PORT
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [PORT]
+  - name: BAUD
+    dir: in
+    required: true
+    note: ''
+  - name: ERROR
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: STATUS
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Word]
+  - name: USS_DB
+    dir: inout
+    required: true
+    note: ''
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: shape-only
+  notes: >-
+    . USS drive-protocol cyclic port scan/poll FB.
+  source: "anonymized reference fixture (signature only)"
+  result:
+    kind: none
+USS_Drive_Control:
+  family: communication
+  callShape: instance-dot
+  instanceType: USS_Drive_Control
+  pins:
+  - name: RUN
+    dir: in
+    required: true
+    note: ''
+  - name: OFF2
+    dir: in
+    required: true
+    note: ''
+  - name: OFF3
+    dir: in
+    required: true
+    note: ''
+  - name: F_ACK
+    dir: in
+    required: true
+    note: ''
+  - name: DIR
+    dir: in
+    required: true
+    note: ''
+  - name: DRIVE
+    dir: in
+    required: true
+    note: ''
+  - name: PZD_LEN
+    dir: in
+    required: true
+    note: ''
+  - name: SPEED_SP
+    dir: in
+    required: true
+    note: ''
+  - name: CTRL3
+    dir: in
+    required: true
+    note: ''
+  - name: CTRL4
+    dir: in
+    required: true
+    note: ''
+  - name: CTRL5
+    dir: in
+    required: true
+    note: ''
+  - name: CTRL6
+    dir: in
+    required: true
+    note: ''
+  - name: CTRL7
+    dir: in
+    required: true
+    note: ''
+  - name: CTRL8
+    dir: in
+    required: true
+    note: ''
+  - name: NDR
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: ERROR
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: STATUS
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Word]
+  - name: RUN_EN
+    dir: out
+    required: true
+    note: ''
+  - name: D_DIR
+    dir: out
+    required: true
+    note: ''
+  - name: INHIBIT
+    dir: out
+    required: true
+    note: ''
+  - name: FAULT
+    dir: out
+    required: true
+    note: ''
+  - name: SPEED
+    dir: out
+    required: true
+    note: ''
+  - name: STATUS1
+    dir: out
+    required: true
+    note: ''
+  - name: STATUS3
+    dir: out
+    required: true
+    note: ''
+  - name: STATUS4
+    dir: out
+    required: true
+    note: ''
+  - name: STATUS5
+    dir: out
+    required: true
+    note: ''
+  - name: STATUS6
+    dir: out
+    required: true
+    note: ''
+  - name: STATUS7
+    dir: out
+    required: true
+    note: ''
+  - name: STATUS8
+    dir: out
+    required: true
+    note: ''
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: shape-only
+  notes: >-
+    . USS drive control-word/status-word FB (PZD channel).
+  source: "anonymized reference fixture (signature only)"
+  result:
+    kind: none
+USS_Read_Param:
+  family: communication
+  callShape: box
+  instanceType: null
+  pins:
+  - name: REQ
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: DRIVE
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [USInt]
+  - name: PARAM
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [UInt]
+  - name: INDEX
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [UInt]
+  - name: DONE
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: ERROR
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: STATUS
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [UInt]
+  - name: VALUE
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Variant]
+  - name: USS_DB
+    dir: inout
+    required: true
+    note: ''
+    dataTypes: [PLC data type]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    . USS drive-parameter read FB. NOTABLE: called as a BARE box (`USS_Read_Param(...)`, no `#Instance.`
+    prefix) in the real export, despite taking a USS_DB reference parameter — unlike almost every other
+    FB in this file, which are called instance-dot. Not normalized to instance-dot; callShape: box
+    reflects the real export.
+  source: "official instruction documentation (paraphrased)"
+  result:
+    kind: none
+USS_Write_Param:
+  family: communication
+  callShape: box
+  instanceType: null
+  pins:
+  - name: REQ
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: DRIVE
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [USInt]
+  - name: PARAM
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [UInt]
+  - name: INDEX
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [UInt]
+  - name: EEPROM
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: VALUE
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [Variant]
+  - name: DONE
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: ERROR
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: STATUS
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [UInt]
+  - name: USS_DB
+    dir: inout
+    required: true
+    note: ''
+    dataTypes: [PLC data type]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    . USS drive-parameter write FB, same bare-box call shape as USS_Read_Param (see that entry's note) —
+    not normalized to instance-dot.
+  source: "official instruction documentation (paraphrased)"
+  result:
+    kind: none
+USS_Port_Scan_31:
+  family: communication
+  callShape: instance-dot
+  instanceType: USS_Port_Scan_31
+  pins:
+  - name: PORT
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [PORT]
+  - name: BAUD
+    dir: in
+    required: true
+    note: ''
+  - name: ERROR
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: STATUS
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Word]
+  - name: USS_DB
+    dir: inout
+    required: true
+    note: ''
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: shape-only
+  notes: >-
+    . USS port scan, version supporting up to 31 drives (vs. USS_Port_Scan's presumably-smaller drive
+    count) — same pin shape as USS_Port_Scan, not assumed identical internal limits.
+  source: "anonymized reference fixture (signature only)"
+  result:
+    kind: none
+USS_Drive_Control_31:
+  family: communication
+  callShape: instance-dot
+  instanceType: USS_Drive_Control_31
+  pins:
+  - name: RUN
+    dir: in
+    required: true
+    note: ''
+  - name: OFF2
+    dir: in
+    required: true
+    note: ''
+  - name: OFF3
+    dir: in
+    required: true
+    note: ''
+  - name: F_ACK
+    dir: in
+    required: true
+    note: ''
+  - name: DIR
+    dir: in
+    required: true
+    note: ''
+  - name: DRIVE
+    dir: in
+    required: true
+    note: ''
+  - name: PZD_LEN
+    dir: in
+    required: true
+    note: ''
+  - name: SPEED_SP
+    dir: in
+    required: true
+    note: ''
+  - name: CTRL3
+    dir: in
+    required: true
+    note: ''
+  - name: CTRL4
+    dir: in
+    required: true
+    note: ''
+  - name: CTRL5
+    dir: in
+    required: true
+    note: ''
+  - name: CTRL6
+    dir: in
+    required: true
+    note: ''
+  - name: CTRL7
+    dir: in
+    required: true
+    note: ''
+  - name: CTRL8
+    dir: in
+    required: true
+    note: ''
+  - name: NDR
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: ERROR
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: STATUS
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Word]
+  - name: RUN_EN
+    dir: out
+    required: true
+    note: ''
+  - name: D_DIR
+    dir: out
+    required: true
+    note: ''
+  - name: INHIBIT
+    dir: out
+    required: true
+    note: ''
+  - name: FAULT
+    dir: out
+    required: true
+    note: ''
+  - name: SPEED
+    dir: out
+    required: true
+    note: ''
+  - name: STATUS1
+    dir: out
+    required: true
+    note: ''
+  - name: STATUS3
+    dir: out
+    required: true
+    note: ''
+  - name: STATUS4
+    dir: out
+    required: true
+    note: ''
+  - name: STATUS5
+    dir: out
+    required: true
+    note: ''
+  - name: STATUS6
+    dir: out
+    required: true
+    note: ''
+  - name: STATUS7
+    dir: out
+    required: true
+    note: ''
+  - name: STATUS8
+    dir: out
+    required: true
+    note: ''
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: shape-only
+  notes: >-
+    . 31-drive-capable variant of USS_Drive_Control — identical pin shape.
+  source: "anonymized reference fixture (signature only)"
+  result:
+    kind: none
+USS_Read_Param_31:
+  family: communication
+  callShape: box
+  instanceType: null
+  pins:
+  - name: REQ
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: DRIVE
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [USInt]
+  - name: PARAM
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [UInt]
+  - name: INDEX
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [UInt]
+  - name: DONE
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: ERROR
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: STATUS
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [UInt]
+  - name: VALUE
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Variant]
+  - name: USS_DB
+    dir: inout
+    required: true
+    note: ''
+    dataTypes: [PLC data type]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    . 31-drive-capable variant of USS_Read_Param — same bare-box call shape (no instance-dot prefix in
+    the real export).
+  source: "official instruction documentation (paraphrased)"
+  result:
+    kind: none
+USS_Write_Param_31:
+  family: communication
+  callShape: box
+  instanceType: null
+  pins:
+  - name: REQ
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: DRIVE
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [USInt]
+  - name: PARAM
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [UInt]
+  - name: INDEX
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [UInt]
+  - name: EEPROM
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: VALUE
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [Variant]
+  - name: DONE
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: ERROR
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: STATUS
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [UInt]
+  - name: USS_DB
+    dir: inout
+    required: true
+    note: ''
+    dataTypes: [PLC data type]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    . 31-drive-capable variant of USS_Write_Param — same bare-box call shape.
+  source: "official instruction documentation (paraphrased)"
+  result:
+    kind: none

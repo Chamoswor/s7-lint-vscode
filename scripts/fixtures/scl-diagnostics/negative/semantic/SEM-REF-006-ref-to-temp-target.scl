@@ -1,0 +1,13 @@
+FUNCTION_BLOCK "Semantic_RefToTempTarget"
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+
+VAR_TEMP
+    target       : Int;
+    badReference : REF_TO Int;
+END_VAR
+
+BEGIN
+    #badReference := REF(#target);
+    // EXPECT: error[reference.illegal-ref-target-memory] SEM-REF-006
+END_FUNCTION_BLOCK

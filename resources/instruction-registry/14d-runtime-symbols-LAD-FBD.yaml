@@ -1,0 +1,207 @@
+# Runtime symbol and instance information — LAD/FBD registry.
+#
+# Graphical instruction aliases and pin casing are retained from anonymized
+# reference fixtures and apply to both LAD and FBD.
+#
+# Exported `:=` connections cannot distinguish INPUT from IN_OUT. Independently
+# documented IN_OUT parameters are corrected explicitly.
+#
+# Graphical instructions use pins and therefore have `result: { kind: none }`.
+# Missing dataTypes are intentional; unresolved types are never guessed.
+
+$fileLanguage: [LAD, FBD]
+GetSymbolName:
+  family: extended
+  callShape: box
+  instanceType: null
+  pins:
+  - name: variable
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [Variant]
+  - name: size
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [UInt]
+  - name: out
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [WString]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Read the symbolic name of a referenced tag at runtime.
+  source: "official instruction documentation (paraphrased)"
+  result:
+    kind: none
+GetSymbolPath:
+  family: extended
+  callShape: box
+  instanceType: null
+  pins:
+  - name: variable
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [Variant]
+  - name: size
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [UInt]
+  - name: out
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [WString]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Read the full symbolic path of a referenced tag at runtime.
+  source: "official instruction documentation (paraphrased)"
+  result:
+    kind: none
+GetInstanceName:
+  family: extended
+  callShape: box
+  instanceType: null
+  pins:
+  - name: size
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [UInt]
+  - name: out
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [WString]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Read the calling block's own instance name.
+  source: "official instruction documentation (paraphrased)"
+  result:
+    kind: none
+GetInstancePath:
+  family: extended
+  callShape: box
+  instanceType: null
+  pins:
+  - name: size
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [UInt]
+  - name: out
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [WString]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Read the calling block's own instance path.
+  source: "official instruction documentation (paraphrased)"
+  result:
+    kind: none
+GetBlockName:
+  family: extended
+  callShape: box
+  instanceType: null
+  pins:
+  - name: size
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [UInt]
+  - name: ret_val
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [WString]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Read the calling block's own name.
+  source: "official instruction documentation (paraphrased)"
+  result:
+    kind: none
+GetSymbolForReference:
+  family: extended
+  callShape: instance-dot
+  instanceType: GetSymbolForReference
+  pins:
+  - name: execute
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: objectRef
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [Reference]
+  - name: size
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [UInt]
+  - name: done
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: busy
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: error
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: status
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Word]
+  - name: reliability
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [UInt]
+  - name: symbol
+    dir: inout
+    required: true
+    note: ''
+    dataTypes: [WString]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Resolves the symbolic name for a Reference-typed tag (`objectRef`).
+  source: "official instruction documentation (paraphrased)"
+  result:
+    kind: none

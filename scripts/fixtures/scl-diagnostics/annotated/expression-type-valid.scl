@@ -1,0 +1,62 @@
+FUNCTION_BLOCK "ExpressionTypeValid"
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+
+VAR
+    v_bool   : Bool := FALSE;
+
+    v_int_a  : Int := 1;
+    v_int_b  : Int := 2;
+
+    v_dint_a : DInt := 1000;
+    v_dint_b : DInt := 2000;
+
+    v_real_a : Real := 10.0;
+    v_real_b : Real := 2.5;
+
+    v_time_a : Time := T#10ms;
+    v_time_b : Time := T#20ms;
+
+    v_word_a : Word := W#16#00F0;
+    v_word_b : Word := W#16#000F;
+END_VAR
+
+BEGIN
+    // Same-type arithmetic
+    #v_int_a := #v_int_a + #v_int_b;
+    // EXPECT-PASS: TT-P001
+
+    #v_dint_a := #v_dint_a - #v_dint_b;
+    // EXPECT-PASS: TT-P002
+
+    #v_real_a := #v_real_a * #v_real_b;
+    // EXPECT-PASS: TT-P003
+
+    // Explicit numeric conversion
+    #v_real_a := #v_real_a + INT_TO_REAL(#v_int_a);
+    // EXPECT-PASS: TT-P004
+
+    // TIME arithmetic
+    #v_time_a := #v_time_a + #v_time_b;
+    // EXPECT-PASS: TT-P005
+
+    #v_time_a := #v_time_a - T#1ms;
+    // EXPECT-PASS: TT-P006
+
+    // Comparison expressions produce BOOL
+    #v_bool := #v_int_a < #v_int_b;
+    // EXPECT-PASS: TT-P007
+
+    #v_bool := #v_real_a >= #v_real_b;
+    // EXPECT-PASS: TT-P008
+
+    // Boolean operators
+    #v_bool := (#v_int_a < #v_int_b)
+        OR (#v_real_a >= #v_real_b);
+    // EXPECT-PASS: TT-P009
+
+    // Bit-string operators
+    #v_word_a := #v_word_a AND #v_word_b;
+    // EXPECT-PASS: TT-P010
+
+END_FUNCTION_BLOCK

@@ -1,0 +1,34 @@
+# Codes emitted by MORE THAN ONE check module. Kept in one shared file
+# (rather than duplicated -- and risking drift -- into each owning file)
+# because the schema has no way to express "this code also lives over
+# there"; grep the `notes` field below or resources/diagnostic-registry/
+# README.md's ownership table if you're not sure which check(s) a given
+# code here belongs to.
+
+unknown-instruction:
+  severity: error
+  variants:
+    catalog: "Unknown instruction '{callName}' -- not found in the instruction registry. Check spelling; if this is a genuine Siemens instruction, it may not be catalogued yet (see LintServer/README.md)."
+    scl: "Unknown instruction {shown} -- not found in the instruction registry or the workspace's known blocks. Check spelling; if this is a genuine Siemens instruction, it may not be catalogued yet (see LintServer/README.md)."
+  notes: "'catalog' -- linter/instructionChecks.ts's checkCall (a LAD/FBD RUNG call). 'scl' -- linter/sclInstructionChecks.ts's resolveCallEntry, which ALSO checks the workspace BlockIndex for a project-authored custom FB/FC before giving up -- hence the extra 'or the workspace's known blocks' wording, and its own `shown` param (pre-formatted to show the bare-instance-call form when relevant, e.g. '#fbPumpe (declared as ...)')."
+
+unknown-pin:
+  severity: error
+  variants:
+    catalog: "Unknown pin '{pinName}' on instruction '{callName}'."
+    fb-instance: "Unknown pin '{pinName}' on '{callName}' -- '{ownerBlock}' has no such VAR_INPUT/VAR_OUTPUT/VAR_IN_OUT member."
+    scl: "Unknown parameter '{pinName}' on instruction '{callName}'."
+  notes: "'catalog' -- instructionChecks.ts's checkCall for a LAD/FBD RUNG call, against an instruction-registry entry's own pin list. 'scl' -- the SAME checkCall call site, but for an SCL call (networkLanguage === \"SCL\") -- SCL has no 'pin' concept, so this says 'parameter' instead. 'fb-instance' -- analysis/documentIndex.ts's checkFbInstancePin, against a project-authored FB/FC's own declared VAR_INPUT/VAR_OUTPUT/VAR_IN_OUT members (no instruction-registry entry exists for a custom block)."
+
+pin-case-mismatch:
+  severity: warning
+  variants:
+    catalog: "Pin '{pinName}' doesn't match registry casing '{registryName}' on '{callName}' -- .s7dcl pin names are case-sensitive."
+    fb-instance: "Pin '{pinName}' doesn't match '{ownerBlock}'s casing '{matchName}' on '{callName}' -- .s7dcl pin names are case-sensitive."
+    scl: "Parameter '{pinName}' doesn't match registry casing '{registryName}' on '{callName}' -- SCL parameter names are case-sensitive."
+  notes: "Same catalog/fb-instance/scl split as unknown-pin, same call sites."
+
+resolve-symbols-bounds-mismatch:
+  severity: error
+  message: "'{instruction}''s {pin1} and {pin2} must declare the SAME ARRAY bounds -- got [{bounds1}] vs [{bounds2}] (symbolic-runtime-access.yaml{notesSuffix})."
+  notes: "Emitted by both sclInstructionChecks.ts's checkMatchingArrayBounds (an SCL-body call) and documentIndex.ts's walkCallArgs (a LAD/FBD RUNG call) -- identical wording in both places, so a single shared 'message' (no variant needed)."

@@ -1,0 +1,344 @@
+# Canonical schema for the optional `result` field used by entries in
+# instruction-registry/*.yaml.
+#
+# `result` describes the value produced by the instruction expression itself.
+# It does NOT describe OUT/IN_OUT pins, ENO, instance state, or the destination
+# receiving the result.
+#
+# Examples:
+#
+#   result:
+#     kind: value
+#     dataTypes: [Bool]
+#
+#   result:
+#     kind: inferred
+#     rule: common-compatible-type
+#     sourcePins: [0, 1]
+#
+#   result:
+#     kind: type-expression
+#     sourcePins: [0]
+#     transform: array-element-type
+#
+# An omitted `result` field is equivalent to:
+#
+#   result:
+#     kind: none
+
+schemaVersion: 1
+
+resultField:
+  path: instruction.result
+  required: false
+  omittedMeans:
+    kind: none
+
+  description: >-
+    Describes the single return result produced by an instruction or SCL
+    expression. OUT and IN_OUT parameters remain entries in `pins`, even when
+    the instruction has no return result.
+
+  invariants:
+    singleResultOnly: true
+    outputParametersRemainPins: true
+    enoRemainsPinOrLanguageMetadata: true
+    instanceStateIsNotAResult: true
+    destinationStorageIsNotAResultMetadata: true
+
+  forbiddenKeys:
+    - memoryAreas
+    - allowedDeclarations
+    - dir
+    - required
+
+properties:
+  kind:
+    type: string
+    required: true
+    enum:
+      - none
+      - value
+      - inferred
+      - type-expression
+    description: Selects the semantic model used for the result.
+
+  dataTypes:
+    type: sequence
+    minItems: 1
+    uniqueItems: true
+    itemType: data-type-reference
+    resolvesAgainst:
+      - base-types.yaml
+      - system-types.yaml
+      - category-index.yaml:umbrellaLabels
+      - user-defined-plc-data-types
+    description: >-
+      Fixed runtime datatype or allowed fixed datatype set. Use only when the
+      instruction result type is explicitly known without inspecting operand
+      types. Names and casing must match the existing type registries.
+
+  rule:
+    type: string
+    resolvesAgainst: inferenceRules
+    description: >-
+      Type-inference rule used when `kind` is `inferred`. The rule is applied
+      to the operands selected by `sourcePins`.
+
+  sourcePins:
+    type: sequence
+    minItems: 1
+    uniqueItems: true
+    itemType: integer
+    minimumItemValue: 0
+    indexBase: 0
+    description: >-
+      Zero-based indexes into the instruction's `pins` sequence. Indexes are
+      used instead of names because valid instruction definitions may contain
+      unnamed pins (`name: null`).
+
+  transform:
+    type: string
+    default: identity
+    resolvesAgainst: transforms
+    description: >-
+      Optional transformation applied after selecting or inferring the source
+      type. Primarily used by `type-expression` results.
+
+  usage:
+    type: mapping
+    required: false
+    description: Optional restrictions on how the produced result may be used.
+    properties:
+      storable:
+        type: boolean
+        description: >-
+          Whether the result may be assigned to a runtime tag or passed as an
+          ordinary runtime value.
+      allowedContexts:
+        type: sequence
+        uniqueItems: true
+        itemType: string
+        resolvesAgainst: usageContexts
+        description: >-
+          Explicit contexts in which the result is legal. Omit for an ordinary
+          runtime value unless the instruction requires narrower semantics.
+
+  notes:
+    type: string
+    required: false
+    description: Human-readable clarification that does not replace validation.
+
+resultKinds:
+  none:
+    description: >-
+      The instruction has no return result. Effects are exposed through OUT or
+      IN_OUT pins, instance state, or control-flow behavior.
+    requiredKeys:
+      - kind
+    optionalKeys:
+      - notes
+    forbiddenKeys:
+      - dataTypes
+      - rule
+      - sourcePins
+      - transform
+      - usage
+    defaults:
+      usage:
+        storable: false
+        allowedContexts: []
+
+  value:
+    description: A normal runtime value with a fixed datatype or fixed type set.
+    requiredKeys:
+      - kind
+      - dataTypes
+    optionalKeys:
+      - usage
+      - notes
+    forbiddenKeys:
+      - rule
+      - sourcePins
+      - transform
+    defaults:
+      usage:
+        storable: true
+        allowedContexts:
+          - value-expression
+
+  inferred:
+    description: >-
+      A normal runtime value whose datatype is derived from one or more operand
+      pins according to an inference rule.
+    requiredKeys:
+      - kind
+      - rule
+      - sourcePins
+    optionalKeys:
+      - dataTypes
+      - transform
+      - usage
+      - notes
+    defaults:
+      transform: identity
+      usage:
+        storable: true
+        allowedContexts:
+          - value-expression
+    constraints:
+      dataTypes: >-
+        When present, `dataTypes` constrains the possible result after
+        inference; it does not replace the inference rule.
+
+  type-expression:
+    description: >-
+      A compile-time datatype expression, not an ordinary runtime value.
+      Examples include TypeOf(...) and TypeOfElements(...).
+    requiredKeys:
+      - kind
+      - sourcePins
+    optionalKeys:
+      - transform
+      - usage
+      - notes
+    forbiddenKeys:
+      - dataTypes
+      - rule
+    defaults:
+      transform: identity
+      usage:
+        storable: false
+        allowedContexts:
+          - type-comparison
+          - case-selector
+
+inferenceRules:
+  same-as-source:
+    sourcePinCount:
+      min: 1
+      max: 1
+    description: Result datatype is identical to the selected source pin type.
+
+  common-compatible-type:
+    sourcePinCount:
+      min: 2
+    description: >-
+      Resolve the common compatible type for all selected operands according to
+      the target CPU and language conversion rules.
+
+  numeric-expression:
+    sourcePinCount:
+      min: 1
+    description: >-
+      Infer the numeric result type from the selected operands, operator, target
+      CPU, and Siemens implicit-conversion rules.
+
+  bit-string-expression:
+    sourcePinCount:
+      min: 1
+    description: >-
+      Infer the binary/bit-string result type from the selected operands and
+      operation width rules.
+
+  instruction-specific:
+    sourcePinCount:
+      min: 1
+    requiresInstructionResolver: true
+    description: >-
+      Escape hatch for an officially documented result rule that cannot be
+      represented by the generic rules. The instruction entry must explain the
+      exact rule in `notes`, and the linter must have a named implementation for
+      that instruction.
+
+transforms:
+  identity:
+    description: Preserve the selected or inferred type unchanged.
+
+  array-element-type:
+    description: >-
+      Return the element datatype of the selected array operand. Invalid when
+      the resolved source operand is not an array.
+
+  dereferenced-type:
+    description: >-
+      Return the target datatype of a reference or pointer-like operand.
+      Validity depends on the concrete source type and target CPU.
+
+usageContexts:
+  value-expression:
+    description: >-
+      Ordinary runtime expression context, including assignment sources,
+      compatible function arguments, and larger expressions.
+
+  type-comparison:
+    description: >-
+      Datatype comparison context, for example comparing TypeOf(...) with a
+      datatype token.
+
+  case-selector:
+    description: >-
+      CASE selector context where Siemens permits the special result form.
+
+validationOrder:
+  - resolve-kind
+  - validate-key-set-for-kind
+  - resolve-source-pin-indexes
+  - resolve-fixed-data-types
+  - apply-inference-rule
+  - apply-transform
+  - enforce-usage-context
+
+examples:
+  noReturn:
+    instruction: R_TRIG
+    result:
+      kind: none
+
+  fixedBool:
+    instruction: IS_ARRAY
+    result:
+      kind: value
+      dataTypes:
+        - Bool
+
+  inferredNumeric:
+    instruction: example-numeric-operation
+    result:
+      kind: inferred
+      rule: common-compatible-type
+      sourcePins:
+        - 0
+        - 1
+
+  operandType:
+    instruction: TypeOf
+    result:
+      kind: type-expression
+      sourcePins:
+        - 0
+      transform: identity
+      usage:
+        storable: false
+        allowedContexts:
+          - type-comparison
+          - case-selector
+
+  arrayElementType:
+    instruction: TypeOfElements
+    result:
+      kind: type-expression
+      sourcePins:
+        - 0
+      transform: array-element-type
+      usage:
+        storable: false
+        allowedContexts:
+          - type-comparison
+          - case-selector
+
+notes: >-
+  A function may have both a `result` and OUT/IN_OUT pins. A function block or
+  instruction instance commonly has `kind: none` while still exposing output
+  pins. Do not represent absence of a result as `dataTypes: [Void]`; use
+  `kind: none`.

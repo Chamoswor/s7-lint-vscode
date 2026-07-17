@@ -1,0 +1,828 @@
+# Open User Communication — SCL registry.
+#
+# Instruction names and named-parameter casing use the exact Siemens spelling.
+# No automatic case transformation is applied.
+#
+# These are FB/library/procedure calls, not value-returning functions. Every
+# entry therefore has `result: { kind: none }`. For FB instance calls only
+# InOut operands remain structurally required; bare FC/procedure calls retain
+# required input and InOut operands.
+#
+# Missing dataTypes are intentional: unknown types are not guessed.
+
+$fileLanguage: [SCL]
+TSEND_C:
+  family: communication
+  callShape: instance-dot
+  instanceType: TSEND_C
+  pins:
+  - name: REQ
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: CONT
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: LEN
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [UDInt]
+  - name: DONE
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: BUSY
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: ERROR
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: STATUS
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Word]
+  - name: CONNECT
+    dir: inout
+    required: true
+    note: ''
+    dataTypes: [Variant]
+  - name: DATA
+    dir: inout
+    required: true
+    note: ''
+    dataTypes: [Variant]
+  - name: ADDR
+    dir: inout
+    required: true
+    note: ''
+    dataTypes: [Variant]
+  - name: COM_RST
+    dir: inout
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    . TCP/ISO-on-TCP send FB with integrated connection setup.
+  source: "official instruction documentation (paraphrased)"
+  result:
+    kind: none
+TRCV_C:
+  family: communication
+  callShape: instance-dot
+  instanceType: TRCV_C
+  pins:
+  - name: EN_R
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: CONT
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: LEN
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [UDInt]
+  - name: ADHOC
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: DONE
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: BUSY
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: ERROR
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: STATUS
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Word]
+  - name: RCVD_LEN
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [UDInt]
+  - name: CONNECT
+    dir: inout
+    required: true
+    note: ''
+    dataTypes: [Variant]
+  - name: DATA
+    dir: inout
+    required: true
+    note: ''
+    dataTypes: [Variant]
+  - name: ADDR
+    dir: inout
+    required: true
+    note: ''
+    dataTypes: [Variant]
+  - name: COM_RST
+    dir: inout
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    . TCP/ISO-on-TCP receive FB with integrated connection setup.
+  source: "official instruction documentation (paraphrased)"
+  result:
+    kind: none
+TMAIL_C:
+  family: communication
+  callShape: instance-dot
+  instanceType: TMAIL_C
+  pins:
+  - name: REQ
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: TO_S
+    dir: in
+    required: false
+    note: ''
+  - name: CC
+    dir: in
+    required: false
+    note: ''
+  - name: SUBJECT
+    dir: in
+    required: false
+    note: ''
+  - name: TEXT
+    dir: in
+    required: false
+    note: ''
+  - name: ATTACHMENT
+    dir: in
+    required: false
+    note: ''
+  - name: ATTACHMENT_NAME
+    dir: in
+    required: false
+    note: ''
+  - name: MAIL_ADDR_PARAM
+    dir: in
+    required: false
+    note: ''
+  - name: DONE
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: BUSY
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: ERROR
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: STATUS
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Word]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: shape-only
+  notes: >-
+    . Send-email FB.
+  source: "anonymized reference fixture (signature only)"
+  result:
+    kind: none
+CommConfig:
+  family: communication
+  callShape: instance-dot
+  instanceType: CommConfig
+  pins:
+  - name: REQ
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: HW_ID
+    dir: in
+    required: false
+    note: ''
+  - name: MODE
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [USInt]
+  - name: DONE
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: BUSY
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: ERROR
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: STATUS
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Word]
+  - name: DATA
+    dir: inout
+    required: true
+    note: ''
+    dataTypes: [Variant]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    . Runtime communication-interface configuration FB.
+  source: "official instruction documentation (paraphrased)"
+  result:
+    kind: none
+TCONSettings:
+  family: communication
+  callShape: instance-dot
+  instanceType: TCONSettings
+  pins:
+  - name: REQ
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: MODE
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [USInt]
+  - name: DONE
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: BUSY
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: ERROR
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: STATUS
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Word]
+  - name: ID
+    dir: inout
+    required: true
+    note: ''
+    dataTypes: [CONN_OUC]
+  - name: OPTION
+    dir: inout
+    required: true
+    note: ''
+    dataTypes: [Variant]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    . Runtime TCON connection-settings FB.
+  source: "official instruction documentation (paraphrased)"
+  result:
+    kind: none
+TCON:
+  family: communication
+  callShape: instance-dot
+  instanceType: TCON
+  pins:
+  - name: REQ
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: ID
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [CONN_OUC]
+  - name: DONE
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: BUSY
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: ERROR
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: STATUS
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Word]
+  - name: CONNECT
+    dir: inout
+    required: true
+    note: ''
+    dataTypes: [Variant]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    . Establish a TCP/ISO-on-TCP/UDP connection.
+  source: "official instruction documentation (paraphrased)"
+  result:
+    kind: none
+TDISCON:
+  family: communication
+  callShape: instance-dot
+  instanceType: TDISCON
+  pins:
+  - name: REQ
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: ID
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [CONN_OUC]
+  - name: DONE
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: BUSY
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: ERROR
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: STATUS
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Word]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    . Terminate a TCON connection.
+  source: "official instruction documentation (paraphrased)"
+  result:
+    kind: none
+TSEND:
+  family: communication
+  callShape: instance-dot
+  instanceType: TSEND
+  pins:
+  - name: REQ
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: ID
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [CONN_OUC]
+  - name: LEN
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [UDInt]
+  - name: DONE
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: BUSY
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: ERROR
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: STATUS
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Word]
+  - name: DATA
+    dir: inout
+    required: true
+    note: ''
+    dataTypes: [Variant]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    . Send via an already-established TCON connection (see TCON above).
+  source: "official instruction documentation (paraphrased)"
+  result:
+    kind: none
+TRCV:
+  family: communication
+  callShape: instance-dot
+  instanceType: TRCV
+  pins:
+  - name: EN_R
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: ID
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [CONN_OUC]
+  - name: LEN
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [UDInt]
+  - name: ADHOC
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: NDR
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: BUSY
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: ERROR
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: STATUS
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Word]
+  - name: RCVD_LEN
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [UDInt]
+  - name: DATA
+    dir: inout
+    required: true
+    note: ''
+    dataTypes: [Variant]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    . Receive via an already-established TCON connection.
+  source: "official instruction documentation (paraphrased)"
+  result:
+    kind: none
+TUSEND:
+  family: communication
+  callShape: instance-dot
+  instanceType: TUSEND
+  pins:
+  - name: REQ
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: ID
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [CONN_OUC]
+  - name: LEN
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [UDInt]
+  - name: DONE
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: BUSY
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: ERROR
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: STATUS
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Word]
+  - name: DATA
+    dir: inout
+    required: true
+    note: ''
+    dataTypes: [Variant]
+  - name: ADDR
+    dir: inout
+    required: true
+    note: ''
+    dataTypes: [Variant]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    . Connectionless (UDP-style) send FB.
+  source: "official instruction documentation (paraphrased)"
+  result:
+    kind: none
+TURCV:
+  family: communication
+  callShape: instance-dot
+  instanceType: TURCV
+  pins:
+  - name: EN_R
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: ID
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [CONN_OUC]
+  - name: LEN
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [UDInt]
+  - name: NDR
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: BUSY
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: ERROR
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: STATUS
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Word]
+  - name: RCVD_LEN
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [UDInt]
+  - name: DATA
+    dir: inout
+    required: true
+    note: ''
+    dataTypes: [Variant]
+  - name: ADDR
+    dir: inout
+    required: true
+    note: ''
+    dataTypes: [Variant]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    . Connectionless (UDP-style) receive FB.
+  source: "official instruction documentation (paraphrased)"
+  result:
+    kind: none
+T_RESET:
+  family: communication
+  callShape: instance-dot
+  instanceType: T_RESET
+  pins:
+  - name: REQ
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: ID
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [CONN_OUC]
+  - name: DONE
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: BUSY
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: ERROR
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: STATUS
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Word]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    . Reset/re-establish an open connection.
+  source: "official instruction documentation (paraphrased)"
+  result:
+    kind: none
+T_DIAG:
+  family: communication
+  callShape: instance-dot
+  instanceType: T_DIAG
+  pins:
+  - name: REQ
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: ID
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [CONN_OUC]
+  - name: DONE
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: BUSY
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: ERROR
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: STATUS
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Word]
+  - name: RESULT
+    dir: inout
+    required: true
+    note: ''
+    dataTypes: [Variant]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    . Query connection diagnostic status.
+  source: "official instruction documentation (paraphrased)"
+  result:
+    kind: none
+T_CONFIG:
+  family: communication
+  callShape: instance-dot
+  instanceType: T_CONFIG
+  pins:
+  - name: Req
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: Interface
+    dir: in
+    required: false
+    note: ''
+  - name: Conf_Data
+    dir: in
+    required: false
+    note: ''
+  - name: Done
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: Busy
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: Error
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: Status
+    dir: out
+    required: false
+    note: ''
+  - name: Err_Loc
+    dir: out
+    required: false
+    note: ''
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: shape-only
+  notes: >-
+    . Runtime IP interface configuration FB — note CamelCase pin names (Req/Done/Busy/Error/Status)
+    unlike every other entry in this file's all-caps (REQ/DONE/BUSY/ERROR/STATUS) convention,
+    transcribed exactly as the real export spells it.
+  source: "anonymized reference fixture (signature only)"
+  result:
+    kind: none

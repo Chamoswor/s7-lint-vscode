@@ -1,0 +1,170 @@
+﻿{
+    S7_Optimized := "TRUE";
+    S7_PreferredLanguage := "FBD";
+    S7_Version := "0.1"
+}
+FUNCTION_BLOCK "CLAUDE_REF_MATH-FUNCTIONS"
+    { S7_Language := "FBD" }
+    NETWORK
+        RUNG
+            Calculate(
+                in1 :=  ,
+                in2 :=  ,
+                out =>  
+            )
+        END_RUNG
+        RUNG
+            Add(
+                in1 :=  ,
+                in2 :=  ,
+                out =>  
+            )
+        END_RUNG
+        RUNG
+            Sub(
+                in1 :=  ,
+                in2 :=  ,
+                out =>  
+            )
+        END_RUNG
+        RUNG
+            Mul(
+                in1 :=  ,
+                in2 :=  ,
+                out =>  
+            )
+        END_RUNG
+        RUNG
+            Div(
+                in1 :=  ,
+                in2 :=  ,
+                out =>  
+            )
+        END_RUNG
+        RUNG
+            Mod(
+                in1 :=  ,
+                in2 :=  ,
+                out =>  
+            )
+        END_RUNG
+        RUNG
+            Neg(
+                in :=  ,
+                out =>  
+            )
+        END_RUNG
+        RUNG
+            Inc( )
+        END_RUNG
+        RUNG
+            Dec( )
+        END_RUNG
+        RUNG
+            Abs(
+                in :=  ,
+                out =>  
+            )
+        END_RUNG
+        RUNG
+            MIN(
+                in1 :=  ,
+                in2 :=  ,
+                out =>  
+            )
+        END_RUNG
+        RUNG
+            MAX(
+                in1 :=  ,
+                in2 :=  ,
+                out =>  
+            )
+        END_RUNG
+        RUNG
+            Limit(
+                min :=  ,
+                in :=  ,
+                max :=  ,
+                out =>  
+            )
+        END_RUNG
+        RUNG
+            Sqr(
+                in :=  ,
+                out =>  
+            )
+        END_RUNG
+        RUNG
+            Sqrt(
+                in :=  ,
+                out =>  
+            )
+        END_RUNG
+        RUNG
+            Ln(
+                in :=  ,
+                out =>  
+            )
+        END_RUNG
+        RUNG
+            Exp(
+                in :=  ,
+                out =>  
+            )
+        END_RUNG
+        RUNG
+            Sin(
+                in :=  ,
+                out =>  
+            )
+        END_RUNG
+        RUNG
+            Cos(
+                in :=  ,
+                out =>  
+            )
+        END_RUNG
+        RUNG
+            Tan(
+                in :=  ,
+                out =>  
+            )
+        END_RUNG
+        RUNG
+            Asin(
+                in :=  ,
+                out =>  
+            )
+        END_RUNG
+        RUNG
+            Acos(
+                in :=  ,
+                out =>  
+            )
+        END_RUNG
+        RUNG
+            Atan(
+                in :=  ,
+                out =>  
+            )
+        END_RUNG
+        RUNG
+            Frac(
+                in :=  ,
+                out =>  
+            )
+        END_RUNG
+        RUNG
+            Expt(
+                in1 :=  ,
+                in2 :=  ,
+                out =>  
+            )
+        END_RUNG
+    END_NETWORK
+    { S7_Language := "FBD" }
+    NETWORK
+        RUNG
+        END_RUNG
+    END_NETWORK
+END_FUNCTION_BLOCK

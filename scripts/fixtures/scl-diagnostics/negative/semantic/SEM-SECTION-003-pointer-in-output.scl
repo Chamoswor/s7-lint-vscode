@@ -1,0 +1,11 @@
+FUNCTION_BLOCK "Semantic_PointerInOutput"
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+
+VAR_OUTPUT
+    badPointer : Pointer;
+    // EXPECT: error[type.illegal-section] SEM-SECTION-003
+END_VAR
+
+BEGIN
+END_FUNCTION_BLOCK

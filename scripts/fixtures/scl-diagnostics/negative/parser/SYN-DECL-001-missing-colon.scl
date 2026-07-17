@@ -1,0 +1,11 @@
+FUNCTION_BLOCK "Syntax_DeclarationMissingColon"
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+
+VAR
+    value Int;
+    // EXPECT: error[syntax.declaration-missing-colon] SYN-DECL-001
+END_VAR
+
+BEGIN
+END_FUNCTION_BLOCK

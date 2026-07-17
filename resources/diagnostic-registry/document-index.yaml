@@ -1,0 +1,110 @@
+# Codes emitted by analysis/documentIndex.ts's buildDocumentIndex -- the one
+# pass shared by the semantic-tokens/hover/definition providers AND the
+# diagnostics list, so these run on every keystroke, not just on save.
+# unknown-pin/pin-case-mismatch's 'fb-instance' variant and
+# resolve-symbols-bounds-mismatch also come from here -- see shared.yaml.
+
+reference-illegal-context:
+  severity: error
+  message: "REF_TO cannot be a STRUCT/PLC data type member -- references.yaml's declaration.illegal."
+
+reference-illegal-section:
+  severity: error
+  message: "REF_TO is not legal in {blockType}'s {section} section here -- references.yaml's declaration.legalSections only allows {legal} for this block type."
+
+dynamic-array-illegal-context:
+  severity: error
+  message: "ARRAY[*] cannot be a STRUCT/PLC data type member -- only a fixed-bounds array can."
+
+dynamic-array-illegal-section:
+  severity: error
+  message: "ARRAY[*] is not legal in {blockType}'s {section} section -- composition-rules.yaml's array.dynamicBounds.declarationSections only allows {legal} for this block type."
+
+array-dimensions:
+  severity: error
+  message: "Array has {count} dimension(s), outside the legal [{min}, {max}] range -- composition-rules.yaml's array.dimensions."
+
+array-bounds:
+  severity: error
+  variants:
+    lo-gt-hi: "Array bound lo ({lo}) > hi ({hi}) -- lo must be <= hi."
+    out-of-range: "Array bound [{lo}..{hi}] outside the legal index-value range [{min}..{max}] (applies regardless of the declared index type)."
+
+literal-type-mismatch:
+  severity: error
+  message: "{context}: literal `{rawText}` looks like {looksLike}, but expected {allowed}."
+  notes: "Severity is passed in by the caller (reportLiteralMismatch) -- confirmed-compiled instructions error, shape-only warn, same confidence-based rule instructionChecks.ts uses."
+
+operand-type-mismatch:
+  severity: error
+  message: "{context}: '{display}' is declared as '{resolved}', but expected {allowed}."
+  notes: "Severity passed in by the caller (reportOperandTypeMismatch), same confidence-based rule as literal-type-mismatch."
+
+slice-access-invalid-size:
+  severity: error
+  variants:
+    non-8-16-32: "'.{slice}' slice access isn't valid on a {sizeBits}-bit '{baseTypeName}' tag -- slice-access.md only documents it for 8/16/32-bit tags."
+    word-on-8bit: "'.{slice}' word slice isn't valid on an 8-bit '{baseTypeName}' tag -- too small for a word slice (slice-access.md)."
+
+slice-access-out-of-range:
+  severity: error
+  message: "'.{slice}' index {index} exceeds the max index {maxIndex} for a {sizeBits}-bit tag (slice-access.md)."
+
+array-index-out-of-range:
+  severity: error
+  message: "Index {num} is outside '{arrayName}'s declared bound [{lo}..{hi}] for dimension {dim}."
+
+array-index-expression:
+  severity: error
+  message: "Array index on '{arrayName}' looks like an expression, not a bare constant or variable -- composition-rules.yaml's array.index.actualParameterRule says a variable EXPRESSION (e.g. '#i + 1') isn't a legal index, only either of those two bare forms is."
+  notes: "Confirmed as a real compile error (not just a style warning) via scripts/fixtures/scl-diagnostics/manifest.yaml's SEM-ARRAY-005 -- was 'warning' before that was cross-checked."
+
+array-nested-illegal:
+  severity: error
+  message: "An ARRAY cannot directly contain another ARRAY as its element type -- composition-rules.yaml's array.elementType.nestedArraysForbidden."
+
+array-of-reference-illegal:
+  severity: error
+  message: "An ARRAY whose element type is REF_TO is illegal -- references.yaml's referenceableTargets.array.disallowed (an array OF references, the reverse direction from a reference TO an array)."
+
+reference-illegal-target-type:
+  severity: error
+  variants:
+    not-referenceable: "REF_TO {targetType} is illegal -- references.yaml's referenceableTargets lists {targetType} as a disallowed reference target."
+    sized-string: "REF_TO {targetType}[...] is illegal -- a string reference is declared REF_TO {targetType} with no explicit length (references.yaml's referenceableTargets.characterStrings)."
+
+reference-manual-initial-value:
+  severity: error
+  message: "A reference cannot be manually initialized in the interface -- references.yaml's initialization.manualInitialValue says to use the REF() instruction instead."
+
+type-illegal-section:
+  severity: error
+  message: "'{typeName}' is not legal in a {section} section -- section-legality.yaml's per-section additionalDatatypes list doesn't include it there."
+
+for-loop-variable-modified:
+  severity: error
+  message: "'#{name}' is this FOR loop's own run variable -- it cannot be modified from inside the loop body (Siemens' SCL FOR reference)."
+
+for-mixed-signed-unsigned:
+  severity: error
+  message: "FOR header mixes a signed ({signedType}) and an unsigned ({unsignedType}) integer type -- Siemens' SCL FOR reference requires the run variable/start/end/BY values to all be the same signedness."
+
+reference-dereference-non-reference:
+  severity: error
+  message: "'^' requires a Reference operand, not '{typeName}' -- references.yaml's dereferencing section."
+
+reference-assignment-attempt-chained:
+  severity: error
+  message: "Assignment attempts ('?=') cannot be chained -- references.yaml's assignmentAttempt.sclRestriction."
+
+pin-direction-mismatch:
+  severity: error
+  variants:
+    output-wired-in: "Pin '{pinName}' on '{callName}' is an output (declared VAR_OUTPUT on '{ownerBlock}'), but was wired with ':=' instead of '=>'."
+    input-wired-out: "Pin '{pinName}' on '{callName}' is an input (declared VAR_INPUT on '{ownerBlock}'), but was wired with '=>' instead of ':='."
+
+unexpected-token:
+  severity: error
+  variants:
+    call-args: "Unexpected '{tokenText}' in '{callName}''s argument list -- expected a '#tag' operand or a literal value."
+    rung: "Unexpected '{tokenText}' in RUNG -- not a recognized call, operand, or literal."

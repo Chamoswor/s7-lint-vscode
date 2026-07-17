@@ -1,0 +1,902 @@
+# HSC, PID and signal-processing technology instructions — SCL registry.
+#
+# SCL instruction keys use canonical Siemens capitalization. Pin spelling is
+# retained from the exported interface except for documented casing corrections:
+# ErrorId -> ErrorID, DiagId -> DiagID and TIO_SYNC_DATA -> TIO_SYNC_Data.
+#
+# These are FB/technology-object instance calls, not functions. The instance is
+# called directly in SCL; `result.kind` is therefore `none`. `instance-dot` is
+# retained as the existing registry category for instance calls.
+#
+# Missing dataTypes are intentional: no type is fabricated where the export and
+# a Siemens parameter table did not establish it.
+
+$fileLanguage: [SCL]
+CTRL_HSC_EXT:
+  family: technology
+  callShape: instance-dot
+  instanceType: CTRL_HSC_EXT
+  pins:
+  - name: HSC
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [HW_HSC]
+  - name: DONE
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: BUSY
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: ERROR
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: STATUS
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Word]
+  - name: CTRL
+    dir: inout
+    required: true
+    note: ''
+    dataTypes: [Variant]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    High-speed counter extended control FB.
+  source: "official instruction documentation (paraphrased)"
+  result:
+    kind: none
+PID_Compact:
+  family: technology
+  callShape: instance-dot
+  instanceType: PID_Compact
+  pins:
+  - name: Setpoint
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [Real]
+  - name: Input
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [Real]
+  - name: Input_PER
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [Int]
+  - name: Disturbance
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [Real]
+  - name: ManualEnable
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: ManualValue
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [Real]
+  - name: ErrorAck
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: Reset
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: ModeActivate
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: ScaledInput
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Real]
+  - name: Output
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Real]
+  - name: Output_PER
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Int]
+  - name: Output_PWM
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: SetpointLimit_H
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: SetpointLimit_L
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: InputWarning_H
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: InputWarning_L
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: State
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Int]
+  - name: Error
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: ErrorBits
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [DWord]
+  - name: Mode
+    dir: inout
+    required: true
+    note: ''
+    dataTypes: [Int]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    PID Compact control FB.
+  source: "official instruction documentation (paraphrased)"
+  result:
+    kind: none
+PID_3Step:
+  family: technology
+  callShape: instance-dot
+  instanceType: PID_3Step
+  pins:
+  - name: Setpoint
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [Real]
+  - name: Input
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [Real]
+  - name: Input_PER
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [Int]
+  - name: Actuator_H
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: Actuator_L
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: Feedback
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [Real]
+  - name: Feedback_PER
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [Int]
+  - name: Disturbance
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [Real]
+  - name: ManualEnable
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: ManualValue
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [Real]
+  - name: Manual_UP
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: Manual_DN
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: ErrorAck
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: Reset
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: ModeActivate
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: ScaledInput
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Real]
+  - name: ScaledFeedback
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Real]
+  - name: Output_UP
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: Output_DN
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: Output_PER
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Int]
+  - name: SetpointLimit_H
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: SetpointLimit_L
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: InputWarning_H
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: InputWarning_L
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: State
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Int]
+  - name: Error
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: ErrorBits
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [DWord]
+  - name: Mode
+    dir: inout
+    required: true
+    note: ''
+    dataTypes: [Int]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    PID 3-step (valve-actuator) control FB.
+  source: "official instruction documentation (paraphrased)"
+  result:
+    kind: none
+PID_Temp:
+  family: technology
+  callShape: instance-dot
+  instanceType: PID_Temp
+  pins:
+  - name: Setpoint
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [Real]
+  - name: Input
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [Real]
+  - name: Input_PER
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [Int]
+  - name: Disturbance
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [Real]
+  - name: ManualEnable
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: ManualValue
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [Real]
+  - name: ErrorAck
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: Reset
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: ModeActivate
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: ScaledInput
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Real]
+  - name: OutputHeat
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Real]
+  - name: OutputCool
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Real]
+  - name: OutputHeat_PER
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Int]
+  - name: OutputCool_PER
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Int]
+  - name: OutputHeat_PWM
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: OutputCool_PWM
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: SetpointLimit_H
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: SetpointLimit_L
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: InputWarning_H
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: InputWarning_L
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: State
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Int]
+  - name: Error
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: ErrorBits
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [DWord]
+  - name: Mode
+    dir: inout
+    required: true
+    note: ''
+    dataTypes: [Int]
+  - name: Master
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [DWord]
+  - name: Slave
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [DWord]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    PID temperature control FB (heat/cool, master/slave cascading).
+  source: "official instruction documentation (paraphrased)"
+  result:
+    kind: none
+Polyline:
+  family: technology
+  callShape: instance-dot
+  instanceType: Polyline
+  pins:
+  - name: Input
+    dir: in
+    required: false
+    note: ''
+  - name: SubstituteOutput
+    dir: in
+    required: false
+    note: ''
+  - name: Validate
+    dir: in
+    required: false
+    note: ''
+  - name: ErrorAck
+    dir: in
+    required: false
+    note: ''
+  - name: Reset
+    dir: in
+    required: false
+    note: ''
+  - name: Output
+    dir: out
+    required: false
+    note: ''
+  - name: ErrorBits
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [DWord]
+  - name: Error
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: shape-only
+  notes: >-
+    Signal-processing FB (piecewise-linear characteristic curve).
+  source: "anonymized reference fixture (signature only)"
+  result:
+    kind: none
+SplitRange:
+  family: technology
+  callShape: instance-dot
+  instanceType: SplitRange
+  pins:
+  - name: Input
+    dir: in
+    required: false
+    note: ''
+  - name: SubstituteOutput
+    dir: in
+    required: false
+    note: ''
+  - name: ErrorAck
+    dir: in
+    required: false
+    note: ''
+  - name: Reset
+    dir: in
+    required: false
+    note: ''
+  - name: Output
+    dir: out
+    required: false
+    note: ''
+  - name: ErrorBits
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [DWord]
+  - name: Error
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: shape-only
+  notes: >-
+    Signal-processing FB (split-range output).
+  source: "anonymized reference fixture (signature only)"
+  result:
+    kind: none
+RampFunction:
+  family: technology
+  callShape: instance-dot
+  instanceType: RampFunction
+  pins:
+  - name: Input
+    dir: in
+    required: false
+    note: ''
+  - name: SubstituteOutput
+    dir: in
+    required: false
+    note: ''
+  - name: ErrorAck
+    dir: in
+    required: false
+    note: ''
+  - name: Reset
+    dir: in
+    required: false
+    note: ''
+  - name: Output
+    dir: out
+    required: false
+    note: ''
+  - name: PositiveRisingSlewRate_Active
+    dir: out
+    required: false
+    note: ''
+  - name: PositiveFallingSlewRate_Active
+    dir: out
+    required: false
+    note: ''
+  - name: NegativeRisingSlewRate_Active
+    dir: out
+    required: false
+    note: ''
+  - name: NegativeFallingSlewRate_Active
+    dir: out
+    required: false
+    note: ''
+  - name: UpperLimit_Active
+    dir: out
+    required: false
+    note: ''
+  - name: LowerLimit_Active
+    dir: out
+    required: false
+    note: ''
+  - name: ErrorBits
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [DWord]
+  - name: Error
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: shape-only
+  notes: >-
+    Signal-processing FB (slew-rate-limited ramp).
+  source: "anonymized reference fixture (signature only)"
+  result:
+    kind: none
+RampSoak:
+  family: technology
+  callShape: instance-dot
+  instanceType: RampSoak
+  pins:
+  - name: Enable
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: Hold
+    dir: in
+    required: false
+    note: ''
+  - name: Next
+    dir: in
+    required: false
+    note: ''
+  - name: SubstituteOutput
+    dir: in
+    required: false
+    note: ''
+  - name: Validate
+    dir: in
+    required: false
+    note: ''
+  - name: ErrorAck
+    dir: in
+    required: false
+    note: ''
+  - name: Reset
+    dir: in
+    required: false
+    note: ''
+  - name: Output
+    dir: out
+    required: false
+    note: ''
+  - name: CurrentPoint
+    dir: out
+    required: false
+    note: ''
+  - name: TotalTime
+    dir: out
+    required: false
+    note: ''
+  - name: RemainingTime_Total
+    dir: out
+    required: false
+    note: ''
+  - name: RemainingTime_Point
+    dir: out
+    required: false
+    note: ''
+  - name: ErrorBits
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [DWord]
+  - name: Error
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: NextPoint
+    dir: in
+    required: false
+    note: ''
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: shape-only
+  notes: >-
+    Signal-processing FB (ramp/soak profile sequencer).
+  source: "anonymized reference fixture (signature only)"
+  result:
+    kind: none
+Filter_PT1:
+  family: technology
+  callShape: instance-dot
+  instanceType: Filter_PT1
+  pins:
+  - name: Input
+    dir: in
+    required: false
+    note: ''
+  - name: SubstituteOutput
+    dir: in
+    required: false
+    note: ''
+  - name: ErrorAck
+    dir: in
+    required: false
+    note: ''
+  - name: Reset
+    dir: in
+    required: false
+    note: ''
+  - name: Output
+    dir: out
+    required: false
+    note: ''
+  - name: ErrorBits
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [DWord]
+  - name: Error
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: shape-only
+  notes: >-
+    Signal-processing FB (1st-order/PT1 low-pass filter). Same pin shape as
+    Filter_PT2/Filter_DT1/Filter_Universal below — not assumed identical semantics, only identical
+    shape.
+  source: "anonymized reference fixture (signature only)"
+  result:
+    kind: none
+Filter_PT2:
+  family: technology
+  callShape: instance-dot
+  instanceType: Filter_PT2
+  pins:
+  - name: Input
+    dir: in
+    required: false
+    note: ''
+  - name: SubstituteOutput
+    dir: in
+    required: false
+    note: ''
+  - name: ErrorAck
+    dir: in
+    required: false
+    note: ''
+  - name: Reset
+    dir: in
+    required: false
+    note: ''
+  - name: Output
+    dir: out
+    required: false
+    note: ''
+  - name: ErrorBits
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [DWord]
+  - name: Error
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: shape-only
+  notes: >-
+    Signal-processing FB (2nd-order/PT2 low-pass filter).
+  source: "anonymized reference fixture (signature only)"
+  result:
+    kind: none
+Filter_DT1:
+  family: technology
+  callShape: instance-dot
+  instanceType: Filter_DT1
+  pins:
+  - name: Input
+    dir: in
+    required: false
+    note: ''
+  - name: SubstituteOutput
+    dir: in
+    required: false
+    note: ''
+  - name: ErrorAck
+    dir: in
+    required: false
+    note: ''
+  - name: Reset
+    dir: in
+    required: false
+    note: ''
+  - name: Output
+    dir: out
+    required: false
+    note: ''
+  - name: ErrorBits
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [DWord]
+  - name: Error
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: shape-only
+  notes: >-
+    Signal-processing FB (derivative-action/DT1 filter).
+  source: "anonymized reference fixture (signature only)"
+  result:
+    kind: none
+Filter_Universal:
+  family: technology
+  callShape: instance-dot
+  instanceType: Filter_Universal
+  pins:
+  - name: Input
+    dir: in
+    required: false
+    note: ''
+  - name: SubstituteOutput
+    dir: in
+    required: false
+    note: ''
+  - name: ErrorAck
+    dir: in
+    required: false
+    note: ''
+  - name: Reset
+    dir: in
+    required: false
+    note: ''
+  - name: Output
+    dir: out
+    required: false
+    note: ''
+  - name: ErrorBits
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [DWord]
+  - name: Error
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: shape-only
+  notes: >-
+    Signal-processing FB (configurable/universal filter).
+  source: "anonymized reference fixture (signature only)"
+  result:
+    kind: none

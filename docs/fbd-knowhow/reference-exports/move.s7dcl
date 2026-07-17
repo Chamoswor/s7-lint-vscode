@@ -1,0 +1,147 @@
+﻿{
+    S7_Optimized := "TRUE";
+    S7_PreferredLanguage := "FBD";
+    S7_Version := "0.1"
+}
+FUNCTION_BLOCK "CLAUDE_REF_MOVE-OPERATIONS"
+    { S7_Language := "FBD" }
+    NETWORK
+        RUNG
+            Move(
+                in :=  ,
+                out1 =>  
+            )
+        END_RUNG
+        RUNG
+            Deserialize(
+                srcArray :=  ,
+                ret_val =>  ,
+                dstVariable =>  ,
+                pos :=  
+            )
+        END_RUNG
+        RUNG
+            Serialize(
+                srcVariable :=  ,
+                ret_val =>  ,
+                dstArray =>  ,
+                pos :=  
+            )
+        END_RUNG
+        RUNG
+            MoveBlockI(
+                IN :=  ,
+                COUNT :=  ,
+                OUT =>  
+            )
+        END_RUNG
+        RUNG
+            MoveBlockVariant(
+                src :=  ,
+                count :=  ,
+                srcIndex :=  ,
+                dstIndex :=  ,
+                ret_val =>  ,
+                dst =>  
+            )
+        END_RUNG
+        RUNG
+            MoveBlockU(
+                IN :=  ,
+                COUNT :=  ,
+                OUT =>  
+            )
+        END_RUNG
+        RUNG
+            AssignAttempt(
+                in :=  ,
+                out =>  
+            )
+        END_RUNG
+        RUNG
+            FillBlockI(
+                IN :=  ,
+                COUNT :=  ,
+                OUT =>  
+            )
+        END_RUNG
+        RUNG
+            FillBlockU(
+                IN :=  ,
+                COUNT :=  ,
+                OUT =>  
+            )
+        END_RUNG
+        RUNG
+            SCATTER(
+                in :=  ,
+                out =>  
+            )
+        END_RUNG
+        RUNG
+            ScatterBlock(
+                in :=  ,
+                countIn :=  ,
+                out =>  
+            )
+        END_RUNG
+        RUNG
+            GATHER(
+                in :=  ,
+                out =>  
+            )
+        END_RUNG
+        RUNG
+            GatherBlock(
+                in :=  ,
+                countOut :=  ,
+                out =>  
+            )
+        END_RUNG
+        RUNG
+            Swap(
+                in :=  ,
+                out =>  
+            )
+        END_RUNG
+        RUNG
+            VariantGet(
+                src :=  ,
+                dst =>  
+            )
+        END_RUNG
+        RUNG
+            VariantPut(
+                src :=  ,
+                dst :=  
+            )
+        END_RUNG
+        RUNG
+            CountOfElements(
+                in :=  ,
+                ret_val =>  
+            )
+        END_RUNG
+        RUNG
+            { S7_GenerateENO := "TRUE" }
+            Lower_Bound(
+                arr :=  ,
+                dim :=  ,
+                out =>  
+            )
+        END_RUNG
+        RUNG
+            { S7_GenerateENO := "TRUE" }
+            Upper_Bound(
+                arr :=  ,
+                dim :=  ,
+                out =>  
+            )
+        END_RUNG
+    END_NETWORK
+    { S7_Language := "FBD" }
+    NETWORK
+        RUNG
+        END_RUNG
+    END_NETWORK
+END_FUNCTION_BLOCK

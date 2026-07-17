@@ -1,0 +1,144 @@
+{
+    S7_BlockComment := "Fixture";
+    S7_BlockTitle := "Fixture";
+    S7_Optimized := "TRUE";
+    S7_PreferredLanguage := "FBD";
+    S7_Version := "0.1"
+}
+FUNCTION_BLOCK "FB_FlowMonitor"
+    VAR_INPUT
+        { S7_MLC := "Fixture" }
+        i_xFlowRaw : Bool;
+        { S7_MLC := "Fixture" }
+        i_xPumpRunning : Bool;
+        { S7_MLC := "Fixture" }
+        i_tStartDelay : Time := T#10S;
+        { S7_MLC := "Fixture" }
+        i_tDebounce : Time := T#1S;
+        { S7_MLC := "Fixture" }
+        i_xAckAlarm : Bool;
+    END_VAR
+    VAR_OUTPUT
+        { S7_MLC := "Fixture" }
+        q_xFlowOk : Bool;
+        { S7_MLC := "Fixture" }
+        q_xMonitoring : Bool;
+        { S7_MLC := "Fixture" }
+        q_xLowFlow : Bool;
+        { S7_MLC := "Fixture" }
+        q_xAlarmFlow : Bool;
+        { S7_MLC := "Fixture" }
+        q_xStandbyTrig : Bool;
+        { S7_MLC := "Fixture" }
+        q_xAlarmGroup : Bool;
+    END_VAR
+    VAR
+        statFlowOk : Bool;
+        statAlmFlow : Bool;
+        tonDebOn : TON_TIME;
+        tonDebOff : TON_TIME;
+        tonStart : TON_TIME;
+        trigLowFlow : R_TRIG;
+    END_VAR
+    VAR_TEMP
+        tLowFlow : Bool;
+    END_VAR
+
+    {
+        S7_Language := "FBD";
+        S7_NetworkTitle := "Fixture"
+    }
+    NETWORK
+        RUNG #i_xFlowRaw
+            { S7_Templates := "time_type := Time" }
+            #tonDebOn.TON(
+                pt := #i_tDebounce,
+                et =>
+            )
+            S_Coil( #statFlowOk )
+        END_RUNG
+        RUNG #i_xFlowRaw
+            { S7_Templates := "time_type := Time" }
+            NOT #tonDebOff.TON(
+                pt := #i_tDebounce,
+                et =>
+            )
+            R_Coil( #statFlowOk )
+        END_RUNG
+    END_NETWORK
+    {
+        S7_Language := "FBD";
+        S7_NetworkTitle := "Fixture"
+    }
+    NETWORK
+        RUNG #i_xPumpRunning
+            { S7_Templates := "time_type := Time" }
+            #tonStart.TON(
+                pt := #i_tStartDelay,
+                et =>
+            )
+        END_RUNG
+    END_NETWORK
+    {
+        S7_Language := "FBD";
+        S7_NetworkTitle := "Fixture"
+    }
+    NETWORK
+        RUNG #tonStart.Q
+            A( in2 := NOT #statFlowOk )
+            Coil( #tLowFlow )
+        END_RUNG
+    END_NETWORK
+    {
+        S7_Language := "FBD";
+        S7_NetworkTitle := "Fixture"
+    }
+    NETWORK
+        RUNG
+            #trigLowFlow.R_TRIG(
+                clk := #tLowFlow,
+                q =>
+            )
+        END_RUNG
+    END_NETWORK
+    {
+        S7_Language := "FBD";
+        S7_NetworkTitle := "Fixture"
+    }
+    NETWORK
+        RUNG #tLowFlow
+            S_Coil( #statAlmFlow )
+        END_RUNG
+        RUNG #i_xAckAlarm
+            A( in2 := #statFlowOk )
+            R_Coil( #statAlmFlow )
+        END_RUNG
+    END_NETWORK
+    {
+        S7_Language := "FBD";
+        S7_NetworkTitle := "Fixture"
+    }
+    NETWORK
+        RUNG #statFlowOk
+            Coil( #q_xFlowOk )
+        END_RUNG
+        RUNG #tonStart.Q
+            Coil( #q_xMonitoring )
+        END_RUNG
+        RUNG #tLowFlow
+            Coil( #q_xLowFlow )
+        END_RUNG
+        RUNG #statAlmFlow
+            Coil( #q_xAlarmFlow )
+            Coil( #q_xAlarmGroup )
+        END_RUNG
+        RUNG #trigLowFlow.Q
+            Coil( #q_xStandbyTrig )
+        END_RUNG
+    END_NETWORK
+    { S7_Language := "FBD" }
+    NETWORK
+        RUNG
+        END_RUNG
+    END_NETWORK
+END_FUNCTION_BLOCK

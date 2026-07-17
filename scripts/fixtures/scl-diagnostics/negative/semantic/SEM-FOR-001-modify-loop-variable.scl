@@ -1,0 +1,16 @@
+FUNCTION_BLOCK "Semantic_ModifyForLoopVariable"
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+
+VAR
+    i      : Int := 0;
+    result : Int := 0;
+END_VAR
+
+BEGIN
+    FOR #i := 0 TO 10 DO
+        #i := #i + 1;
+        // EXPECT: error[for.loop-variable-modified] SEM-FOR-001
+        #result := #result + 1;
+    END_FOR;
+END_FUNCTION_BLOCK

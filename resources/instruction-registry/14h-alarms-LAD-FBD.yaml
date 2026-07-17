@@ -1,0 +1,287 @@
+# Program alarms and alarm management — LAD/FBD registry.
+#
+# Graphical instruction aliases and pin casing are retained from anonymized
+# reference fixtures and apply to both LAD and FBD.
+#
+# Exported `:=` connections cannot distinguish INPUT from IN_OUT. Independently
+# documented IN_OUT parameters are corrected explicitly.
+#
+# Graphical instructions use pins and therefore have `result: { kind: none }`.
+# Missing dataTypes are intentional; unresolved types are never guessed.
+
+$fileLanguage: [LAD, FBD]
+Program_Alarm:
+  family: extended
+  callShape: instance-dot
+  instanceType: Program_Alarm
+  pins:
+  - name: SIG
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: TIMESTAMP
+    dir: in
+    required: false
+    note: Optional alarm timestamp.
+    dataTypes: [LDT]
+  - name: SD_1
+    dir: in
+    required: true
+    note: First associated value.
+    dataTypes: [Variant]
+  - name: SD_2
+    dir: in
+    required: false
+    note: Optional associated value 2.
+    dataTypes: [Variant]
+  - name: SD_3
+    dir: in
+    required: false
+    note: Optional associated value 3.
+    dataTypes: [Variant]
+  - name: SD_4
+    dir: in
+    required: false
+    note: Optional associated value 4.
+    dataTypes: [Variant]
+  - name: SD_5
+    dir: in
+    required: false
+    note: Optional associated value 5.
+    dataTypes: [Variant]
+  - name: SD_6
+    dir: in
+    required: false
+    note: Optional associated value 6.
+    dataTypes: [Variant]
+  - name: SD_7
+    dir: in
+    required: false
+    note: Optional associated value 7.
+    dataTypes: [Variant]
+  - name: SD_8
+    dir: in
+    required: false
+    note: Optional associated value 8.
+    dataTypes: [Variant]
+  - name: SD_9
+    dir: in
+    required: false
+    note: Optional associated value 9.
+    dataTypes: [Variant]
+  - name: SD_10
+    dir: in
+    required: false
+    note: Optional associated value 10.
+    dataTypes: [Variant]
+  - name: Error
+    dir: out
+    required: false
+    note: Optional error flag.
+    dataTypes: [Bool]
+  - name: Status
+    dir: out
+    required: false
+    note: Optional status word.
+    dataTypes: [Word]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Program-alarm FB with up to ten associated values. Pin shape remains signature-only; required
+    parameters are based on anonymized compiling SCL fixture evidence.
+  source: "official instruction documentation (paraphrased)"
+  result:
+    kind: none
+Get_AlarmState:
+  family: extended
+  callShape: box
+  instanceType: null
+  pins:
+  - name: Alarm
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [Variant]
+  - name: AlarmState
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [UInt]
+  - name: Error
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: STATUS
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Word]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Query the current state of a program alarm.
+  source: "official instruction documentation (paraphrased)"
+  result:
+    kind: none
+Gen_UsrMsg:
+  family: extended
+  callShape: box
+  instanceType: null
+  pins:
+  - name: Mode
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [UInt]
+  - name: TextID
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [UInt]
+  - name: TextListID
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [UInt]
+  - name: Ret_Val
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Int]
+  - name: AssocValues
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [AssocValues]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Generates a user-defined diagnostics message with optional associated values.
+  source: "official instruction documentation (paraphrased)"
+  result:
+    kind: none
+Get_Alarm:
+  family: extended
+  callShape: instance-dot
+  instanceType: Get_Alarm
+  pins:
+  - name: OperateMode
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [UInt]
+  - name: DataMode
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [UInt]
+  - name: DispClassNr
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [UInt]
+  - name: Lcid
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [DWord]
+  - name: DataReady
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: Busy
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: Error
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: Init
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: Status
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Word]
+  - name: Data
+    dir: inout
+    required: true
+    note: ''
+    dataTypes: [Variant]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Query alarm data from the CPU's alarm buffer.
+  source: "official instruction documentation (paraphrased)"
+  result:
+    kind: none
+Ack_Alarms:
+  family: extended
+  callShape: box
+  instanceType: null
+  pins:
+  - name: MODE
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [UInt]
+  - name: ERROR
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: STATUS
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Word]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Acknowledge one or more pending alarms.
+  source: "official instruction documentation (paraphrased)"
+  result:
+    kind: none
+Get_AlarmResources:
+  family: extended
+  callShape: box
+  instanceType: null
+  pins:
+  - name: Ret_Val
+    dir: out
+    required: true
+    note: ''
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Query alarm-system resource usage/limits.
+  source: "official instruction documentation (paraphrased)"
+  result:
+    kind: none

@@ -1,0 +1,11 @@
+FUNCTION_BLOCK "Semantic_RefToBool"
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+
+VAR_TEMP
+    badReference : REF_TO Bool;
+    // EXPECT: error[reference.illegal-target-type] SEM-REF-001
+END_VAR
+
+BEGIN
+END_FUNCTION_BLOCK

@@ -1,0 +1,51 @@
+# Codes emitted by linter/sclInstructionChecks.ts -- see that file's own
+# header for the "uniform adaptations" SCL calls get on top of the shared
+# checkCall pass (which emits its own instructionChecks.yaml/shared.yaml
+# codes too, e.g. missing-required-pin, unknown-pin's 'catalog' variant).
+
+pin-declaration-not-allowed:
+  severity: error
+  message: "'{callName}' requires {pinRef} to be declared {allowed}, but '#{segment}' is declared {section}."
+  notes: "checkPinMemoryArea overrides severity per-call: error when confidence:confirmed-compiled, warning when confidence:shape-only."
+
+pin-memory-area-mismatch:
+  severity: error
+  message: "'{callName}' expects {pinRef} in memory area [{memoryAreas}], but '#{segment}' (declared {section}) resolves to '{area}'."
+  notes: "Severity overridden per-call, same confidence-based rule as pin-declaration-not-allowed."
+
+result-assigned-from-no-result:
+  severity: error
+  variants:
+    assignment: "'{name}' has no return result (result.kind: none) -- its effects are exposed through OUT/IN_OUT pins or instance state, not an assignable value."
+    nested: "'{name}' has no return result (result.kind: none) -- it can't be used as another call's argument."
+  notes: "'assignment' -- checkResultUsage, a `:=` assignment target. 'nested' -- checkNestedResultUsable, a call nested inside another call's own pin argument."
+
+result-not-storable:
+  severity: error
+  variants:
+    assignment: "'{name}''s result (kind: {kind}) can't be assigned to a variable -- only legal in {contexts} context."
+    nested: "'{name}''s result (kind: {kind}) can't be used as another call's argument -- only legal in {contexts} context."
+  notes: "Same assignment/nested split as result-assigned-from-no-result."
+
+result-type-mismatch:
+  severity: error
+  variants:
+    value-assignment: "'{name}' returns [{types}], but '#{lhs}' is declared '{lhsType}'."
+    same-source-assignment: "'{name}' returns the same type as '#{source}' ({sourceType}), but '#{lhs}' is declared '{lhsType}'."
+    value-pin: "'{name}' returns [{types}], but {pinRef} expects [{pinTypes}]."
+    same-source-pin: "'{name}' returns the same type as '#{source}' ({sourceType}), but {pinRef} expects [{pinTypes}]."
+  notes: "'*-assignment' -- checkResultTypeMatch, a `#lhs := Call(...)` target. '*-pin' -- checkNestedResultAgainstPin, a nested call's result checked against its containing pin's expected dataTypes. 'value-*' vs 'same-source-*' mirror result.kind:value vs. result.kind:inferred+rule:same-as-source. Severity overridden per-call, same confidence-based rule as pin-declaration-not-allowed."
+
+scl-instance-not-declared:
+  severity: error
+  message: "'#{instancePrefix}(...)' doesn't match any VAR declaration in this block -- can't resolve which instruction this instance call invokes."
+
+call-needs-instance:
+  severity: error
+  message: "\"{name}\" is a {blockType}'s own type name, not an instance -- calling it directly by its bare type name isn't valid; reference a declared instance (a local STATIC var, or its own external instance DB) instead."
+  notes: "resolveCallEntry's `externalName` branch -- mirrors analysis/symbolTable.ts's `illegal-external-block-type` (confirmed against TIA Portal refusing to dot a bare FUNCTION_BLOCK's type name) applied to the CALL-target shape instead of dot-access: a FUNCTION_BLOCK/ORGANIZATION_BLOCK is never itself callable, only an actual instance (local STATIC var or external instance DB -- both distinct from the FB's own type name) is. A FUNCTION needs no instance at all, and a DATA_BLOCK target is left unflagged -- it may genuinely be a real external instance DB (which TIA always exports AS a DATA_BLOCK), and this registry can't tell that apart from a plain global DB, so it doesn't guess."
+
+instruction-needs-instance:
+  severity: error
+  message: "'{name}' (callShape: instance-dot) is an instance-based instruction -- it can't be called directly by its bare name; declare a local instance of '{instanceType}' and call through it instead (`myInstance : {instanceType}; ... #myInstance(...)` locally, or `\"ExternalInstanceDB\"(...)` for an external instance DB)."
+  notes: "resolveCallEntry's plain-name (non-#instance, non-external) lookup branch -- the SAME 'needs a real instance' rule call-needs-instance already applies to a workspace FUNCTION_BLOCK, extended to a catalog instruction whose OWN registry entry declares callShape: instance-dot (e.g. MC_Power, TON, R_TRIG -- confirmed instance-based: they store persistent state across calls, same as a FUNCTION_BLOCK's own instance data). A `callShape: box` instruction (ABS, RUNTIME, ...) is stateless and directly callable, unaffected. A `callShape: coil-ref` instruction (e.g. TON_Coil) takes an instance as one of its OWN pin arguments rather than being instance-based itself, also unaffected. `instanceType` is the registry entry's own `instanceType` field (e.g. MC_POWER for MC_Power) -- falls back to the instruction name itself if the entry has none, so the message is never left with an empty type."

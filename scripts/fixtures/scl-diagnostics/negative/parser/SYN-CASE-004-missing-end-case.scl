@@ -1,0 +1,21 @@
+FUNCTION_BLOCK "Syntax_CaseMissingEndCase"
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+
+VAR
+    a        : Int := 1;
+    b        : Int := 2;
+    result   : Int := 0;
+    flag     : Bool := TRUE;
+    i        : Int := 0;
+    values   : Array[0..9] of Int;
+END_VAR
+BEGIN
+    CASE #a OF
+        0:
+            #result := 0;
+        ELSE
+            #result := 1;
+    // EXPECT: error[syntax.expected-end-case] SYN-CASE-004
+
+END_FUNCTION_BLOCK

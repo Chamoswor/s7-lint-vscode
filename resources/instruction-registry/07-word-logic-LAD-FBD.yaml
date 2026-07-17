@@ -1,0 +1,247 @@
+# LAD/FBD word-logic instruction registry.
+#
+# AND, OR, XOR and INVERT operate on complete bit strings rather than on a
+# single BOOL/RLO value. DECO and ENCO convert between a bit position and a bit
+# string. SEL, MUX and DEMUX select or distribute values.
+#
+# All entries expose their calculated value through explicit OUT pins.
+# Consequently, they do not have a separate function result:
+#
+#   result:
+#     kind: none
+#
+# Memory-area conventions:
+# - Ordinary value inputs: I, Q, M, D, L, P or constant.
+# - Explicit outputs: I, Q, M, D, L or P.
+# - SEL.G:
+#     S7-1200: I, Q, M, D, L or constant.
+#     S7-1500: I, Q, M, D, L, T, C or constant.
+#
+# EN and ENO remain represented by the existing `enEno` metadata.
+#
+$fileLanguage: [LAD, FBD]
+
+And:
+  family: word-logic
+  callShape: box
+  instanceType:
+  pins:
+  - {name: in1, dir: in, required: true, dataTypes: ["Bit strings"], note: "First bit-string operand.", memoryAreas: [
+      I, Q, M, D, L, P, constant]}
+  - {name: in2, dir: in, required: true, dataTypes: ["Bit strings"], note: "Second bit-string operand.", memoryAreas: [
+      I, Q, M, D, L, P, constant]}
+  - {name: inN, dir: in, required: false, dataTypes: ["Bit strings"], note: "Optional consecutively numbered additional
+      bit-string operands.", memoryAreas: [I, Q, M, D, L, P, constant]}
+  - {name: out, dir: out, required: true, dataTypes: ["Bit strings"], note: "Bit-string result with the selected BYTE,
+      WORD, DWORD or LWORD width.", memoryAreas: [I, Q, M, D, L, P]}
+  result:
+    kind: none
+  enEno:
+    en: {present: true, dataTypes: [Bool], memoryArea: {"S7-1200": [I, Q, M, D, L, constant], "S7-1500": [I, Q, M, D, L, T, C, constant]}}
+    eno: {present: true, dataTypes: [Bool], memoryArea: {"S7-1200": [I, Q, M, D, L], "S7-1500": [I, Q, M, D, L]}}
+  template: {shape: none, keys: [], extra: {}}
+  confidence: shape-only
+  notes: >-
+    Performs a bitwise AND across IN1, IN2 and all consecutively inserted INn operands. Each output bit
+    is set only when the corresponding bit is set in every connected input.
+  source: "docs/fbd-knowhow/07-Word-Logic.md"
+Or:
+  family: word-logic
+  callShape: box
+  instanceType:
+  pins:
+  - {name: in1, dir: in, required: true, dataTypes: ["Bit strings"], note: "First bit-string operand.", memoryAreas: [
+      I, Q, M, D, L, P, constant]}
+  - {name: in2, dir: in, required: true, dataTypes: ["Bit strings"], note: "Second bit-string operand.", memoryAreas: [
+      I, Q, M, D, L, P, constant]}
+  - {name: inN, dir: in, required: false, dataTypes: ["Bit strings"], note: "Optional consecutively numbered additional
+      bit-string operands.", memoryAreas: [I, Q, M, D, L, P, constant]}
+  - {name: out, dir: out, required: true, dataTypes: ["Bit strings"], note: "Bit-string result with the selected BYTE,
+      WORD, DWORD or LWORD width.", memoryAreas: [I, Q, M, D, L, P]}
+  result:
+    kind: none
+  enEno:
+    en: {present: true, dataTypes: [Bool], memoryArea: {"S7-1200": [I, Q, M, D, L, constant], "S7-1500": [I, Q, M, D, L, T, C, constant]}}
+    eno: {present: true, dataTypes: [Bool], memoryArea: {"S7-1200": [I, Q, M, D, L], "S7-1500": [I, Q, M, D, L]}}
+  template: {shape: none, keys: [], extra: {}}
+  confidence: shape-only
+  notes: >-
+    Performs a bitwise OR across IN1, IN2 and all consecutively inserted INn operands. Each output bit
+    is set when the corresponding bit is set in at least one connected input.
+  source: "docs/fbd-knowhow/07-Word-Logic.md"
+Xor:
+  family: word-logic
+  callShape: box
+  instanceType:
+  pins:
+  - {name: in1, dir: in, required: true, dataTypes: ["Bit strings"], note: "First bit-string operand.", memoryAreas: [
+      I, Q, M, D, L, P, constant]}
+  - {name: in2, dir: in, required: true, dataTypes: ["Bit strings"], note: "Second bit-string operand.", memoryAreas: [
+      I, Q, M, D, L, P, constant]}
+  - {name: inN, dir: in, required: false, dataTypes: ["Bit strings"], note: "Optional consecutively numbered additional
+      bit-string operands.", memoryAreas: [I, Q, M, D, L, P, constant]}
+  - {name: out, dir: out, required: true, dataTypes: ["Bit strings"], note: "Bit-string result with the selected BYTE,
+      WORD, DWORD or LWORD width.", memoryAreas: [I, Q, M, D, L, P]}
+  result:
+    kind: none
+  enEno:
+    en: {present: true, dataTypes: [Bool], memoryArea: {"S7-1200": [I, Q, M, D, L, constant], "S7-1500": [I, Q, M, D, L, T, C, constant]}}
+    eno: {present: true, dataTypes: [Bool], memoryArea: {"S7-1200": [I, Q, M, D, L], "S7-1500": [I, Q, M, D, L]}}
+  template: {shape: none, keys: [], extra: {}}
+  confidence: shape-only
+  notes: >-
+    Performs a bitwise exclusive OR across all connected inputs. With more than two inputs, each output
+    bit follows odd parity across the corresponding input bits.
+  source: "docs/fbd-knowhow/07-Word-Logic.md"
+Inv:
+  family: word-logic
+  callShape: box
+  instanceType:
+  pins:
+  - {name: in, dir: in, required: true, dataTypes: ["Bit strings", "Integers"], note: "Bit string or integer whose bits
+      are inverted.", memoryAreas: [I, Q, M, D, L, P, constant]}
+  - {name: out, dir: out, required: true, dataTypes: ["Bit strings", "Integers"], note: "One's-complement result with
+      the same selected width as IN.", memoryAreas: [I, Q, M, D, L, P]}
+  result:
+    kind: none
+  enEno:
+    en: {present: true, dataTypes: [Bool], memoryArea: {"S7-1200": [I, Q, M, D, L, constant], "S7-1500": [I, Q, M, D, L, T, C, constant]}}
+    eno: {present: true, dataTypes: [Bool], memoryArea: {"S7-1200": [I, Q, M, D, L], "S7-1500": [I, Q, M, D, L]}}
+  template: {shape: none, keys: [], extra: {}}
+  confidence: shape-only
+  notes: >-
+    Creates the one's complement of IN by inverting every bit. The selected instruction datatype
+    determines the operand width and output width.
+  source: "docs/fbd-knowhow/07-Word-Logic.md"
+DECO:
+  family: word-logic
+  callShape: box
+  instanceType:
+  pins:
+  - {name: in, dir: in, required: true, dataTypes: [UInt], note: "UINT bit position to set. Values greater than 31 are
+      reduced modulo 32.", memoryAreas: [I, Q, M, D, L, P, constant]}
+  - {name: out, dir: out, required: true, dataTypes: ["Bit strings"], note: "Bit string with exactly one selected bit
+      set; all other bits are zero.", memoryAreas: [I, Q, M, D, L, P]}
+  result:
+    kind: none
+  enEno:
+    en: {present: true, dataTypes: [Bool], memoryArea: {"S7-1200": [I, Q, M, D, L, constant], "S7-1500": [I, Q, M, D, L, T, C, constant]}}
+    eno: {present: true, dataTypes: [Bool], memoryArea: {"S7-1200": [I, Q, M, D, L], "S7-1500": [I, Q, M, D, L]}}
+  template: {shape: none, keys: [], extra: {}}
+  confidence: shape-only
+  notes: >-
+    Decodes a bit position into a BYTE, WORD, DWORD or LWORD value selected on the instruction box.
+  source: "docs/fbd-knowhow/07-Word-Logic.md"
+ENCO:
+  family: word-logic
+  callShape: box
+  instanceType:
+  pins:
+  - {name: in, dir: in, required: true, dataTypes: ["Bit strings"], note: "Bit string whose least-significant set bit
+      is located.", memoryAreas: [I, Q, M, D, L, P, constant]}
+  - {name: out, dir: out, required: true, dataTypes: [Int], note: "INT bit position of the least-significant set bit.",
+    memoryAreas: [I, Q, M, D, L, P]}
+  result:
+    kind: none
+  enEno:
+    en: {present: true, dataTypes: [Bool], memoryArea: {"S7-1200": [I, Q, M, D, L, constant], "S7-1500": [I, Q, M, D, L, T, C, constant]}}
+    eno: {present: true, dataTypes: [Bool], memoryArea: {"S7-1200": [I, Q, M, D, L], "S7-1500": [I, Q, M, D, L]}}
+  template: {shape: none, keys: [], extra: {}}
+  confidence: shape-only
+  notes: >-
+    Encodes the position of the least-significant set bit. An input of zero, or a value with only bit 0
+    set, produces OUT = 0.
+  source: "docs/fbd-knowhow/07-Word-Logic.md"
+SEL:
+  family: word-logic
+  callShape: box
+  instanceType:
+  pins:
+  - {name: g, dir: in, required: true, dataTypes: [Bool], note: "BOOL selector. G = FALSE selects IN0; G = TRUE selects
+      IN1. T and C are S7-1500-only.", memoryAreas: [I, Q, M, D, L, T, C, constant]}
+  - {name: in0, dir: in, required: true, dataTypes: ["Bit strings", "Integers", "Floating-point numbers", "Timers", 
+        Time_Of_Day, LTime_Of_Day, Date, "TDT", Char, WChar], note: "Value selected when G is FALSE.", memoryAreas: [
+      I, Q, M, D, L, P, constant]}
+  - {name: in1, dir: in, required: true, dataTypes: ["Bit strings", "Integers", "Floating-point numbers", "Timers", 
+        Time_Of_Day, LTime_Of_Day, Date, "TDT", Char, WChar], note: "Value selected when G is TRUE.", memoryAreas: [
+        I, Q, M, D, L, P, constant]}
+  - {name: out, dir: out, required: true, dataTypes: ["Bit strings", "Integers", "Floating-point numbers", "Timers", 
+        Time_Of_Day, LTime_Of_Day, Date, "TDT", Char, WChar], note: "Selected value. IN0, IN1 and OUT must use one compatible
+      datatype class.", memoryAreas: [I, Q, M, D, L, P]}
+  result:
+    kind: none
+  enEno:
+    en: {present: true, dataTypes: [Bool], memoryArea: {"S7-1200": [I, Q, M, D, L, constant], "S7-1500": [I, Q, M, D, L, constant]}}
+    eno: {present: true, dataTypes: [Bool], memoryArea: {"S7-1200": [I, Q, M, D, L], "S7-1500": [I, Q, M, D, L]}}
+  template: {shape: none, keys: [], extra: {}}
+  confidence: shape-only
+  notes: >-
+    Selects IN0 when G is FALSE and IN1 when G is TRUE. The two inputs and OUT must use the same
+    datatype class.
+  source: "docs/fbd-knowhow/07-Word-Logic.md"
+Mux:
+  family: word-logic
+  callShape: box
+  instanceType:
+  pins:
+  - {name: k, dir: in, required: true, dataTypes: ["Integers"], note: "Integer selector. K = 0 selects IN0, K = 1 selects
+      IN1, and so on.", memoryAreas: [I, Q, M, D, L, P, constant]}
+  - {name: in0, dir: in, required: true, dataTypes: ["Bit strings", "Integers", "Floating-point numbers", "Timers", 
+        Char, WChar, Time_Of_Day, LTime_Of_Day, Date, LDT], note: "First selectable value.", memoryAreas: [I, Q, M, 
+        D, L, P, constant]}
+  - {name: in1, dir: in, required: true, dataTypes: ["Bit strings", "Integers", "Floating-point numbers", "Timers", 
+        Char, WChar, Time_Of_Day, LTime_Of_Day, Date, LDT], note: "Second selectable value.", memoryAreas: [I, Q, M, 
+        D, L, P, constant]}
+  - {name: inN, dir: in, required: false, dataTypes: ["Bit strings", "Integers", "Floating-point numbers", "Timers", 
+        Char, WChar, Time_Of_Day, LTime_Of_Day, Date, LDT], note: "Optional consecutively numbered selectable values,
+      up to 32 inputs in total.", memoryAreas: [I, Q, M, D, L, P, constant]}
+  - {name: else, dir: in, required: true, dataTypes: ["Bit strings", "Integers", "Floating-point numbers", "Timers", 
+        Char, WChar, Time_Of_Day, LTime_Of_Day, Date, LDT], note: "Fallback value copied to OUT when K does not select
+      an available input.", memoryAreas: [I, Q, M, D, L, P, constant]}
+  - {name: out, dir: out, required: true, dataTypes: ["Bit strings", "Integers", "Floating-point numbers", "Timers", 
+        Char, WChar, Time_Of_Day, LTime_Of_Day, Date, LDT], note: "Selected input value, or ELSE when K is outside the
+      available input range.", memoryAreas: [I, Q, M, D, L, P]}
+  result:
+    kind: none
+  enEno:
+    en: {present: true, dataTypes: [Bool], memoryArea: {"S7-1200": [I, Q, M, D, L, constant], "S7-1500": [I, Q, M, D, L, T, C, constant]}}
+    eno: {present: true, dataTypes: [Bool], memoryArea: {"S7-1200": [I, Q, M, D, L], "S7-1500": [I, Q, M, D, L]}}
+  template: {shape: none, keys: [], extra: {}}
+  confidence: shape-only
+  notes: >-
+    Selects one of up to 32 inputs using K. All value inputs, ELSE and OUT must use a compatible
+    datatype. When K is outside the available range, ELSE is copied to OUT and ENO is reset.
+  source: "docs/fbd-knowhow/07-Word-Logic.md"
+Demux:
+  family: word-logic
+  callShape: box
+  instanceType:
+  pins:
+  - {name: k, dir: in, required: true, dataTypes: ["Integers"], note: "Integer selector. K = 0 selects OUT0, K = 1 selects
+      OUT1, and so on.", memoryAreas: [I, Q, M, D, L, P, constant]}
+  - {name: in, dir: in, required: true, dataTypes: ["Bit strings", "Integers", "Floating-point numbers", "Timers", 
+        Char, WChar, Time_Of_Day, LTime_Of_Day, Date, LDT], note: "Value copied to the selected output.", 
+      memoryAreas: [I, Q, M, D, L, P, constant]}
+  - {name: out0, dir: out, required: true, dataTypes: ["Bit strings", "Integers", "Floating-point numbers", "Timers",
+      Char, WChar, Time_Of_Day, LTime_Of_Day, Date, LDT], note: "First selectable output.", memoryAreas: [I, Q, M, D,
+      L, P]}
+  - {name: out1, dir: out, required: true, dataTypes: ["Bit strings", "Integers", "Floating-point numbers", "Timers",
+      Char, WChar, Time_Of_Day, LTime_Of_Day, Date, LDT], note: "Second selectable output.", memoryAreas: [I, Q, M, 
+        D, L, P]}
+  - {name: outN, dir: out, required: false, dataTypes: ["Bit strings", "Integers", "Floating-point numbers", "Timers",
+      Char, WChar, Time_Of_Day, LTime_Of_Day, Date, LDT], note: "Optional consecutively numbered outputs, up to 32 outputs
+      in total.", memoryAreas: [I, Q, M, D, L, P]}
+  - {name: else, dir: out, required: true, dataTypes: ["Bit strings", "Integers", "Floating-point numbers", "Timers",
+      Char, WChar, Time_Of_Day, LTime_Of_Day, Date, LDT], note: "Fallback output receiving IN when K is outside the available
+      output range.", memoryAreas: [I, Q, M, D, L, P]}
+  result:
+    kind: none
+  enEno:
+    en: {present: true, dataTypes: [Bool], memoryArea: {"S7-1200": [I, Q, M, D, L, constant], "S7-1500": [I, Q, M, D, L, T, C, constant]}}
+    eno: {present: true, dataTypes: [Bool], memoryArea: {"S7-1200": [I, Q, M, D, L], "S7-1500": [I, Q, M, D, L]}}
+  template: {shape: none, keys: [], extra: {}}
+  confidence: shape-only
+  notes: >-
+    Copies IN to one of up to 32 outputs selected by K. Non-selected outputs remain unchanged. When K is
+    outside the available range, IN is copied to ELSE and ENO is reset.
+  source: "docs/fbd-knowhow/07-Word-Logic.md"

@@ -1,0 +1,1120 @@
+# Synchronous-axis and cam technology instructions — SCL registry.
+#
+# SCL instruction keys use canonical Siemens capitalization. Pin spelling is
+# retained from the exported interface except for documented casing corrections:
+# ErrorId -> ErrorID, DiagId -> DiagID and TIO_SYNC_DATA -> TIO_SYNC_Data.
+#
+# These are FB/technology-object instance calls, not functions. The instance is
+# called directly in SCL; `result.kind` is therefore `none`. `instance-dot` is
+# retained as the existing registry category for instance calls.
+#
+# Missing dataTypes are intentional: no type is fabricated where the export and
+# a Siemens parameter table did not establish it.
+
+$fileLanguage: [SCL]
+MC_GetCamFollowingValueCyclic:
+  family: technology
+  callShape: instance-dot
+  instanceType: MC_GETCAMFOLLOWINGVALUECYCLIC
+  pins:
+  - name: Cam
+    dir: in
+    required: false
+    note: ''
+  - name: Enable
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: LeadingValue
+    dir: in
+    required: false
+    note: ''
+  - name: MasterOffset
+    dir: in
+    required: false
+    note: ''
+  - name: SlaveOffset
+    dir: in
+    required: false
+    note: ''
+  - name: MasterScaling
+    dir: in
+    required: false
+    note: ''
+  - name: SlaveScaling
+    dir: in
+    required: false
+    note: ''
+  - name: ApplicationMode
+    dir: in
+    required: false
+    note: ''
+  - name: Valid
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: Busy
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: Error
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: ErrorID
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Word]
+  - name: Value
+    dir: out
+    required: false
+    note: ''
+  - name: FirstDerivative
+    dir: out
+    required: false
+    note: ''
+  - name: SecondDerivative
+    dir: out
+    required: false
+    note: ''
+  - name: ThirdDerivative
+    dir: out
+    required: false
+    note: ''
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: shape-only
+  notes: >-
+    Motion Control cam FB (cyclic following-value query).
+  source: "anonymized reference fixture (signature only)"
+  result:
+    kind: none
+MC_GearIn:
+  family: technology
+  callShape: instance-dot
+  instanceType: MC_GEARIN
+  pins:
+  - name: Master
+    dir: in
+    required: false
+    note: ''
+  - name: Slave
+    dir: in
+    required: false
+    note: ''
+  - name: Execute
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: RatioNumerator
+    dir: in
+    required: false
+    note: ''
+  - name: RatioDenominator
+    dir: in
+    required: false
+    note: ''
+  - name: Acceleration
+    dir: in
+    required: false
+    note: ''
+  - name: Deceleration
+    dir: in
+    required: false
+    note: ''
+  - name: Jerk
+    dir: in
+    required: false
+    note: ''
+  - name: InGear
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: Busy
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: CommandAborted
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: Error
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: ErrorID
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Word]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: shape-only
+  notes: >-
+    Motion Control FB (electronic gearing, master/slave).
+  source: "anonymized reference fixture (signature only)"
+  result:
+    kind: none
+MC_GearInVelocity:
+  family: technology
+  callShape: instance-dot
+  instanceType: MC_GEARINVELOCITY
+  pins:
+  - name: Master
+    dir: in
+    required: false
+    note: ''
+  - name: Slave
+    dir: in
+    required: false
+    note: ''
+  - name: Execute
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: ContinuousUpdate
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: RatioNumerator
+    dir: in
+    required: false
+    note: ''
+  - name: RatioDenominator
+    dir: in
+    required: false
+    note: ''
+  - name: Acceleration
+    dir: in
+    required: false
+    note: ''
+  - name: Deceleration
+    dir: in
+    required: false
+    note: ''
+  - name: Jerk
+    dir: in
+    required: false
+    note: ''
+  - name: PositionControlled
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: StartSync
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: InSync
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: ContinuousUpdateActive
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: Busy
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: CommandAborted
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: Error
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: ErrorID
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Word]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: shape-only
+  notes: >-
+    Motion Control FB (velocity-based electronic gearing).
+  source: "anonymized reference fixture (signature only)"
+  result:
+    kind: none
+MC_GearInPos:
+  family: technology
+  callShape: instance-dot
+  instanceType: MC_GEARINPOS
+  pins:
+  - name: Master
+    dir: in
+    required: false
+    note: ''
+  - name: Slave
+    dir: in
+    required: false
+    note: ''
+  - name: Execute
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: RatioNumerator
+    dir: in
+    required: false
+    note: ''
+  - name: RatioDenominator
+    dir: in
+    required: false
+    note: ''
+  - name: MasterSyncPosition
+    dir: in
+    required: false
+    note: ''
+  - name: SlaveSyncPosition
+    dir: in
+    required: false
+    note: ''
+  - name: SyncProfileReference
+    dir: in
+    required: false
+    note: ''
+  - name: MasterStartDistance
+    dir: in
+    required: false
+    note: ''
+  - name: Velocity
+    dir: in
+    required: false
+    note: ''
+  - name: Acceleration
+    dir: in
+    required: false
+    note: ''
+  - name: Deceleration
+    dir: in
+    required: false
+    note: ''
+  - name: Jerk
+    dir: in
+    required: false
+    note: ''
+  - name: SyncDirection
+    dir: in
+    required: false
+    note: ''
+  - name: StartSync
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: InSync
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: Busy
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: CommandAborted
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: Error
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: ErrorID
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Word]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: shape-only
+  notes: >-
+    Motion Control FB (position-synchronized electronic gearing).
+  source: "anonymized reference fixture (signature only)"
+  result:
+    kind: none
+MC_PhasingRelative:
+  family: technology
+  callShape: instance-dot
+  instanceType: MC_PHASINGRELATIVE
+  pins:
+  - name: Master
+    dir: in
+    required: false
+    note: ''
+  - name: Slave
+    dir: in
+    required: false
+    note: ''
+  - name: Execute
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: PhaseShift
+    dir: in
+    required: false
+    note: ''
+  - name: Velocity
+    dir: in
+    required: false
+    note: ''
+  - name: Acceleration
+    dir: in
+    required: false
+    note: ''
+  - name: Deceleration
+    dir: in
+    required: false
+    note: ''
+  - name: Jerk
+    dir: in
+    required: false
+    note: ''
+  - name: ProfileReference
+    dir: in
+    required: false
+    note: ''
+  - name: PhasingDistance
+    dir: in
+    required: false
+    note: ''
+  - name: StartPosition
+    dir: in
+    required: false
+    note: ''
+  - name: Direction
+    dir: in
+    required: false
+    note: ''
+  - name: Done
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: Busy
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: CommandAborted
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: Error
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: ErrorID
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Word]
+  - name: CoveredPhaseShift
+    dir: out
+    required: false
+    note: ''
+  - name: StartPhasing
+    dir: out
+    required: false
+    note: ''
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: shape-only
+  notes: >-
+    Motion Control FB (relative phase shift of a synchronized slave).
+  source: "anonymized reference fixture (signature only)"
+  result:
+    kind: none
+MC_PhasingAbsolute:
+  family: technology
+  callShape: instance-dot
+  instanceType: MC_PHASINGABSOLUTE
+  pins:
+  - name: Master
+    dir: in
+    required: false
+    note: ''
+  - name: Slave
+    dir: in
+    required: false
+    note: ''
+  - name: Execute
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: PhaseShift
+    dir: in
+    required: false
+    note: ''
+  - name: Velocity
+    dir: in
+    required: false
+    note: ''
+  - name: Acceleration
+    dir: in
+    required: false
+    note: ''
+  - name: Deceleration
+    dir: in
+    required: false
+    note: ''
+  - name: Jerk
+    dir: in
+    required: false
+    note: ''
+  - name: ProfileReference
+    dir: in
+    required: false
+    note: ''
+  - name: PhasingDistance
+    dir: in
+    required: false
+    note: ''
+  - name: StartPosition
+    dir: in
+    required: false
+    note: ''
+  - name: Direction
+    dir: in
+    required: false
+    note: ''
+  - name: Done
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: Busy
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: CommandAborted
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: Error
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: ErrorID
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Word]
+  - name: AbsolutePhaseShift
+    dir: out
+    required: false
+    note: ''
+  - name: StartPhasing
+    dir: out
+    required: false
+    note: ''
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: shape-only
+  notes: >-
+    Motion Control FB (absolute phase shift of a synchronized slave).
+  source: "anonymized reference fixture (signature only)"
+  result:
+    kind: none
+MC_CamIn:
+  family: technology
+  callShape: instance-dot
+  instanceType: MC_CAMIN
+  pins:
+  - name: Master
+    dir: in
+    required: false
+    note: ''
+  - name: Slave
+    dir: in
+    required: false
+    note: ''
+  - name: Cam
+    dir: in
+    required: false
+    note: ''
+  - name: Execute
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: MasterOffset
+    dir: in
+    required: false
+    note: ''
+  - name: SlaveOffset
+    dir: in
+    required: false
+    note: ''
+  - name: MasterScaling
+    dir: in
+    required: false
+    note: ''
+  - name: SlaveScaling
+    dir: in
+    required: false
+    note: ''
+  - name: MasterSyncPosition
+    dir: in
+    required: false
+    note: ''
+  - name: SyncProfileReference
+    dir: in
+    required: false
+    note: ''
+  - name: MasterStartDistance
+    dir: in
+    required: false
+    note: ''
+  - name: Velocity
+    dir: in
+    required: false
+    note: ''
+  - name: Acceleration
+    dir: in
+    required: false
+    note: ''
+  - name: Deceleration
+    dir: in
+    required: false
+    note: ''
+  - name: Jerk
+    dir: in
+    required: false
+    note: ''
+  - name: ApplicationMode
+    dir: in
+    required: false
+    note: ''
+  - name: SyncDirection
+    dir: in
+    required: false
+    note: ''
+  - name: StartSync
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: InSync
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: Busy
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: CommandAborted
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: Error
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: ErrorID
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Word]
+  - name: EndOfProfile
+    dir: out
+    required: false
+    note: ''
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: shape-only
+  notes: >-
+    Motion Control FB (cam-based synchronization).
+  source: "anonymized reference fixture (signature only)"
+  result:
+    kind: none
+MC_GearOut:
+  family: technology
+  callShape: instance-dot
+  instanceType: MC_GEAROUT
+  pins:
+  - name: Slave
+    dir: in
+    required: false
+    note: ''
+  - name: Execute
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: SlavePosition
+    dir: in
+    required: false
+    note: ''
+  - name: SyncProfileReference
+    dir: in
+    required: false
+    note: ''
+  - name: MasterStopDistance
+    dir: in
+    required: false
+    note: ''
+  - name: Deceleration
+    dir: in
+    required: false
+    note: ''
+  - name: Jerk
+    dir: in
+    required: false
+    note: ''
+  - name: SyncOutDirection
+    dir: in
+    required: false
+    note: ''
+  - name: StartSyncOut
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: Done
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: Busy
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: CommandAborted
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: Error
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: ErrorID
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Word]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: shape-only
+  notes: >-
+    Motion Control FB (end electronic gearing synchronization).
+  source: "anonymized reference fixture (signature only)"
+  result:
+    kind: none
+MC_CamOut:
+  family: technology
+  callShape: instance-dot
+  instanceType: MC_CAMOUT
+  pins:
+  - name: Slave
+    dir: in
+    required: false
+    note: ''
+  - name: Execute
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: SlavePosition
+    dir: in
+    required: false
+    note: ''
+  - name: SyncProfileReference
+    dir: in
+    required: false
+    note: ''
+  - name: MasterStopDistance
+    dir: in
+    required: false
+    note: ''
+  - name: Deceleration
+    dir: in
+    required: false
+    note: ''
+  - name: Jerk
+    dir: in
+    required: false
+    note: ''
+  - name: SyncOutDirection
+    dir: in
+    required: false
+    note: ''
+  - name: StartSyncOut
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: Done
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: Busy
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: CommandAborted
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: Error
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: ErrorID
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Word]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: shape-only
+  notes: >-
+    Motion Control FB (end cam synchronization) — identical pin shape to MC_GEAROUT, not assumed
+    identical semantics.
+  source: "anonymized reference fixture (signature only)"
+  result:
+    kind: none
+MC_InterpolateCam:
+  family: technology
+  callShape: instance-dot
+  instanceType: MC_INTERPOLATECAM
+  pins:
+  - name: Cam
+    dir: in
+    required: false
+    note: ''
+  - name: Execute
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: Done
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: Busy
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: Error
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: ErrorID
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Word]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: shape-only
+  notes: >-
+    Motion Control FB (interpolate cam table).
+  source: "anonymized reference fixture (signature only)"
+  result:
+    kind: none
+MC_GetCamLeadingValue:
+  family: technology
+  callShape: instance-dot
+  instanceType: MC_GETCAMLEADINGVALUE
+  pins:
+  - name: Cam
+    dir: in
+    required: false
+    note: ''
+  - name: Execute
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: FollowingValue
+    dir: in
+    required: false
+    note: ''
+  - name: ApproachLeadingValue
+    dir: in
+    required: false
+    note: ''
+  - name: ApproachDirection
+    dir: in
+    required: false
+    note: ''
+  - name: MasterOffset
+    dir: in
+    required: false
+    note: ''
+  - name: SlaveOffset
+    dir: in
+    required: false
+    note: ''
+  - name: MasterScaling
+    dir: in
+    required: false
+    note: ''
+  - name: SlaveScaling
+    dir: in
+    required: false
+    note: ''
+  - name: Done
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: Busy
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: Error
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: ErrorID
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Word]
+  - name: Value
+    dir: out
+    required: false
+    note: ''
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: shape-only
+  notes: >-
+    Motion Control FB (query cam leading value from a following value).
+  source: "anonymized reference fixture (signature only)"
+  result:
+    kind: none
+MC_GetCamFollowingValue:
+  family: technology
+  callShape: instance-dot
+  instanceType: MC_GETCAMFOLLOWINGVALUE
+  pins:
+  - name: Cam
+    dir: in
+    required: false
+    note: ''
+  - name: Execute
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: LeadingValue
+    dir: in
+    required: false
+    note: ''
+  - name: MasterOffset
+    dir: in
+    required: false
+    note: ''
+  - name: SlaveOffset
+    dir: in
+    required: false
+    note: ''
+  - name: MasterScaling
+    dir: in
+    required: false
+    note: ''
+  - name: SlaveScaling
+    dir: in
+    required: false
+    note: ''
+  - name: ApplicationMode
+    dir: in
+    required: false
+    note: ''
+  - name: Done
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: Busy
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: Error
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: ErrorID
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Word]
+  - name: Value
+    dir: out
+    required: false
+    note: ''
+  - name: FirstDerivative
+    dir: out
+    required: false
+    note: ''
+  - name: SecondDerivative
+    dir: out
+    required: false
+    note: ''
+  - name: ThirdDerivative
+    dir: out
+    required: false
+    note: ''
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: shape-only
+  notes: >-
+    Motion Control FB (single-shot cam following-value query — see MC_GETCAMFOLLOWINGVALUECYCLIC for the
+    cyclic variant, has Done/Execute instead of Enable/Valid).
+  source: "anonymized reference fixture (signature only)"
+  result:
+    kind: none
+MC_CopyCamData:
+  family: technology
+  callShape: instance-dot
+  instanceType: MC_COPYCAMDATA
+  pins:
+  - name: Cam
+    dir: in
+    required: false
+    note: ''
+  - name: Execute
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: Mode
+    dir: in
+    required: false
+    note: ''
+  - name: StartPointCam
+    dir: in
+    required: false
+    note: ''
+  - name: StartSegmentCam
+    dir: in
+    required: false
+    note: ''
+  - name: StartPointArray
+    dir: in
+    required: false
+    note: ''
+  - name: StartSegmentArray
+    dir: in
+    required: false
+    note: ''
+  - name: NumberOfPoints
+    dir: in
+    required: false
+    note: ''
+  - name: NumberOfSegments
+    dir: in
+    required: false
+    note: ''
+  - name: Done
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: Busy
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: Error
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: ErrorID
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Word]
+  - name: ArrayOfPoints
+    dir: in
+    required: false
+    note: ''
+  - name: ArrayOfSegments
+    dir: in
+    required: false
+    note: ''
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: shape-only
+  notes: >-
+    Motion Control FB (copy cam table data to/from an array).
+  source: "anonymized reference fixture (signature only)"
+  result:
+    kind: none

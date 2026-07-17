@@ -1,0 +1,14 @@
+FUNCTION_BLOCK "Semantic_MixedSignedUnsignedFor"
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+
+VAR
+    i          : Int := 0;
+    unsignedHi : UInt := 10;
+END_VAR
+
+BEGIN
+    FOR #i := 0 TO #unsignedHi DO
+        // EXPECT: error[for.mixed-signed-unsigned] SEM-FOR-002
+    END_FOR;
+END_FUNCTION_BLOCK

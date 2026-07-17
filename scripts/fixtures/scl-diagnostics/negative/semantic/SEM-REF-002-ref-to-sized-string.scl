@@ -1,0 +1,11 @@
+FUNCTION_BLOCK "Semantic_RefToSizedString"
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+
+VAR_TEMP
+    badReference : REF_TO String[10];
+    // EXPECT: error[reference.string-length-not-allowed] SEM-REF-002
+END_VAR
+
+BEGIN
+END_FUNCTION_BLOCK

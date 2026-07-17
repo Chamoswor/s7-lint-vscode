@@ -1,0 +1,25 @@
+﻿DATA_BLOCK "MC_POWER_DB"
+{InstructionName := 'MC_POWER';
+ S7_Optimized_Access := 'TRUE' }
+MC_POWER
+
+BEGIN
+
+END_DATA_BLOCK
+
+FUNCTION "Test2" : Void
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+
+BEGIN
+	"MC_POWER_DB"(Axis:=_param_fb_in_,
+	              Enable:=_bool_in_,
+	              StartMode:=_dint_in_,
+	              StopMode:=_int_in_,
+	              Status=>_bool_out_,
+	              Busy=>_bool_out_,
+	              Error=>_bool_out_,
+	              ErrorId=>_word_out_);
+	
+END_FUNCTION
+

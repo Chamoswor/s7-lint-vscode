@@ -1,0 +1,688 @@
+# PTO Motion Control technology instructions — SCL registry.
+#
+# SCL instruction keys use canonical Siemens capitalization. Pin spelling is
+# retained from the exported interface except for documented casing corrections:
+# ErrorId -> ErrorID, DiagId -> DiagID and TIO_SYNC_DATA -> TIO_SYNC_Data.
+#
+# These are FB/technology-object instance calls, not functions. The instance is
+# called directly in SCL; `result.kind` is therefore `none`. `instance-dot` is
+# retained as the existing registry category for instance calls.
+#
+# Missing dataTypes are intentional: no type is fabricated where the export and
+# a Siemens parameter table did not establish it.
+
+$fileLanguage: [SCL]
+MC_Power_PTO:
+  family: technology
+  callShape: instance-dot
+  instanceType: MC_Power_PTO
+  pins:
+  - name: Axis
+    dir: in
+    required: false
+    note: ''
+  - name: Enable
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: StopMode
+    dir: in
+    required: false
+    note: ''
+  - name: Status
+    dir: out
+    required: false
+    note: ''
+  - name: Busy
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: Error
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: ErrorID
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Word]
+  - name: ErrorInfo
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Word]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: shape-only
+  notes: >-
+    Pulse-Train-Output (PTO, no TO-instance/no encoder feedback) Motion Control FB (axis enable/power).
+    Note ErrorID/ErrorInfo casing here vs. the TO-based MC_* FBs' ErrorId — a real family split between
+    PTO axes and TO-based axes, transcribed as each export actually spells it.
+  source: "anonymized reference fixture (signature only)"
+  result:
+    kind: none
+MC_Reset_PTO:
+  family: technology
+  callShape: instance-dot
+  instanceType: MC_Reset_PTO
+  pins:
+  - name: Axis
+    dir: in
+    required: false
+    note: ''
+  - name: Execute
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: Restart
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: Done
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: Busy
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: Error
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: ErrorID
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Word]
+  - name: ErrorInfo
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Word]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: shape-only
+  notes: >-
+    PTO Motion Control FB (acknowledge axis error / restart).
+  source: "anonymized reference fixture (signature only)"
+  result:
+    kind: none
+MC_MoveAbsolute_PTO:
+  family: technology
+  callShape: instance-dot
+  instanceType: MC_MoveAbsolute_PTO
+  pins:
+  - name: Axis
+    dir: in
+    required: false
+    note: ''
+  - name: Execute
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: Position
+    dir: in
+    required: false
+    note: ''
+  - name: Velocity
+    dir: in
+    required: false
+    note: ''
+  - name: Done
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: Busy
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: CommandAborted
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: Error
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: ErrorID
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Word]
+  - name: ErrorInfo
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Word]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: shape-only
+  notes: >-
+    PTO Motion Control FB (absolute positioning, no Acceleration/Deceleration/Jerk/Direction/BufferMode
+    pins — much simpler than the TO-based MC_MOVEABSOLUTE).
+  source: "anonymized reference fixture (signature only)"
+  result:
+    kind: none
+MC_MoveRelative_PTO:
+  family: technology
+  callShape: instance-dot
+  instanceType: MC_MoveRelative_PTO
+  pins:
+  - name: Axis
+    dir: in
+    required: false
+    note: ''
+  - name: Execute
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: Distance
+    dir: in
+    required: false
+    note: ''
+  - name: Velocity
+    dir: in
+    required: false
+    note: ''
+  - name: Done
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: Busy
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: CommandAborted
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: Error
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: ErrorID
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Word]
+  - name: ErrorInfo
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Word]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: shape-only
+  notes: >-
+    PTO Motion Control FB (relative positioning).
+  source: "anonymized reference fixture (signature only)"
+  result:
+    kind: none
+MC_MoveVelocity_PTO:
+  family: technology
+  callShape: instance-dot
+  instanceType: MC_MoveVelocity_PTO
+  pins:
+  - name: Axis
+    dir: in
+    required: false
+    note: ''
+  - name: Execute
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: Velocity
+    dir: in
+    required: false
+    note: ''
+  - name: Direction
+    dir: in
+    required: false
+    note: ''
+  - name: Current
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: InVelocity
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: Busy
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: CommandAborted
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: Error
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: ErrorID
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Word]
+  - name: ErrorInfo
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Word]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: shape-only
+  notes: >-
+    PTO Motion Control FB (velocity motion).
+  source: "anonymized reference fixture (signature only)"
+  result:
+    kind: none
+MC_MoveJog_PTO:
+  family: technology
+  callShape: instance-dot
+  instanceType: MC_MoveJog_PTO
+  pins:
+  - name: Axis
+    dir: in
+    required: false
+    note: ''
+  - name: JogForward
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: JogBackward
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: Velocity
+    dir: in
+    required: false
+    note: ''
+  - name: InVelocity
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: Busy
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: CommandAborted
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: Error
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: ErrorID
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Word]
+  - name: ErrorInfo
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Word]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: shape-only
+  notes: >-
+    PTO Motion Control FB (jog motion).
+  source: "anonymized reference fixture (signature only)"
+  result:
+    kind: none
+MC_Halt_PTO:
+  family: technology
+  callShape: instance-dot
+  instanceType: MC_Halt_PTO
+  pins:
+  - name: Axis
+    dir: in
+    required: false
+    note: ''
+  - name: Execute
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: Done
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: Busy
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: CommandAborted
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: Error
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: ErrorID
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Word]
+  - name: ErrorInfo
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Word]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: shape-only
+  notes: >-
+    PTO Motion Control FB (halt axis motion, no Deceleration/Jerk/AbortAcceleration pins unlike the
+    TO-based MC_HALT).
+  source: "anonymized reference fixture (signature only)"
+  result:
+    kind: none
+MC_Home_PTO:
+  family: technology
+  callShape: instance-dot
+  instanceType: MC_Home_PTO
+  pins:
+  - name: Axis
+    dir: in
+    required: false
+    note: ''
+  - name: Execute
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: Position
+    dir: in
+    required: false
+    note: ''
+  - name: Mode
+    dir: in
+    required: false
+    note: ''
+  - name: Done
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: Busy
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: CommandAborted
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: Error
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: ErrorID
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Word]
+  - name: ErrorInfo
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Word]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: shape-only
+  notes: >-
+    PTO Motion Control FB (homing, no Sensor/ReferenceMarkPosition pins unlike the TO-based MC_HOME).
+  source: "anonymized reference fixture (signature only)"
+  result:
+    kind: none
+MC_ChangeDynamic_PTO:
+  family: technology
+  callShape: instance-dot
+  instanceType: MC_ChangeDynamic_PTO
+  pins:
+  - name: Axis
+    dir: in
+    required: false
+    note: ''
+  - name: Execute
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: ChangeRampUp
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: RampUpTime
+    dir: in
+    required: false
+    note: ''
+  - name: ChangeRampDown
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: RampDownTime
+    dir: in
+    required: false
+    note: ''
+  - name: ChangeEmergency
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: EmergencyRampTime
+    dir: in
+    required: false
+    note: ''
+  - name: ChangeJerkTime
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: JerkTime
+    dir: in
+    required: false
+    note: ''
+  - name: Done
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: Error
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: ErrorID
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Word]
+  - name: ErrorInfo
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Word]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: shape-only
+  notes: >-
+    PTO Motion Control FB (change ramp-up/down/emergency/jerk dynamics at runtime) — no Busy pin, unlike
+    every other MC_*_PTO FB in this file, a real shape difference transcribed as-is.
+  source: "anonymized reference fixture (signature only)"
+  result:
+    kind: none
+MC_ReadParam_PTO:
+  family: technology
+  callShape: instance-dot
+  instanceType: MC_ReadParam_PTO
+  pins:
+  - name: Enable
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: Parameter
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [Variant]
+  - name: Valid
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: Busy
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: Error
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: ErrorID
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Word]
+  - name: ErrorInfo
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Word]
+  - name: Value
+    dir: inout
+    required: true
+    note: 'CONFIRMED shape-only: uses `:=` (in-direction) in the real export despite reading like a result — same
+      in-direction-despite-name caution also used by VariantPut in 06-move-SCL.yaml.
+      Not normalized to `=>` without independent confirmation.'
+    dataTypes: [Variant]
+  template:
+    shape: single
+    keys: [value_type]
+    extra: {}
+  confidence: shape-only
+  notes: >-
+    PTO Motion Control FB for reading a drive or axis parameter.
+  source: "anonymized reference fixture (signature only)"
+  result:
+    kind: none
+MC_WriteParam_PTO:
+  family: technology
+  callShape: instance-dot
+  instanceType: MC_WriteParam_PTO
+  pins:
+  - name: Execute
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: Parameter
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [Variant]
+  - name: Value
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [Variant]
+  - name: Done
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: Busy
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: Error
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: ErrorID
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Word]
+  - name: ErrorInfo
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Word]
+  template:
+    shape: single
+    keys: [value_type]
+    extra: {}
+  confidence: shape-only
+  notes: >-
+    PTO Motion Control FB (write a drive/axis parameter) — same confirmed `value_type` single-key
+    template pragma as MC_ReadParam_PTO, see that entry's notes.
+  source: "anonymized reference fixture (signature only)"
+  result:
+    kind: none

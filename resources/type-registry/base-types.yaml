@@ -1,0 +1,564 @@
+# Siemens/IEC 61131-3 elementary data types, as used in .s7dcl VAR
+# sections, PLC data type (UDT) STRUCT members, and Datatype attributes.
+# See README.md for schema and how this feeds the UDT dependency cache.
+#
+# Ruleset upgraded against Siemens' own S7-1200 manual, "PLC concepts >
+# Data types" (docs.tia.siemens.cloud/r/simatic_s7_1200_manual_collection_enus_20/
+# plc-concepts/data-types). confidence: official-doc means every field
+# on that entry is transcribed from that manual page, not inferred —
+# strictly higher confidence than instruction-registry's TIA-export
+# verification (which only proves shape, not documented semantics).
+# confidence: verify-platform still flags types the S7-1200 manual
+# doesn't cover (S7-1500-only widened types) — check the target CPU.
+#
+# See also:
+#   composition-rules.yaml — Array/Struct/PLC-data-type/Variant composition rules
+#   slice-access.md        — "tag".xn / .bn / .wn slice-access grammar
+#   bcd-formats.yaml       — BCD16/BCD32 (not real types, conversion-only formats)
+
+Bool:
+  category: bit
+  sizeBits: 1
+  signed: null
+  numberRepresentations:
+    - { form: boolean, range: "FALSE or TRUE", example: "TRUE" }
+    - { form: binary, range: "2#0 or 2#1", example: "2#0" }
+    - { form: unsigned-integer, range: "0 or 1", example: "1" }
+    - { form: octal, range: "8#0 or 8#1", example: "8#1" }
+    - { form: hexadecimal, range: "16#0 or 16#1", example: "16#1" }
+  addressExamples: ["I1.0", "Q0.1", "M50.7", "DB1.DBX2.3", "Tag_name"]
+  availableInPlcTagsEditor: true
+  validArrayElement: true
+  comparable: true
+  comparisonCaution: null
+  confidence: official-doc
+  source: "Siemens S7-1200 manual — Data types"
+  notes: ""
+
+Byte:
+  category: bit-string
+  sizeBits: 8
+  signed: null
+  numberRepresentations:
+    - { form: binary, range: "2#0 to 2#1111_1111", example: "2#1000_1001" }
+    - { form: unsigned-integer, min: 0, max: 255, example: "15" }
+    - { form: signed-integer, min: -128, max: 127, example: "-63" }
+    - { form: octal, range: "8#0 to 8#377", example: "8#17" }
+    - { form: hexadecimal, range: "B#16#0 to B#16#FF, 16#0 to 16#FF", example: "B#16#F, 16#F" }
+  addressExamples: ["IB2", "MB10", "DB1.DBB4", "Tag_name"]
+  availableInPlcTagsEditor: true
+  validArrayElement: true
+  comparable: true
+  comparisonCaution: null
+  confidence: official-doc
+  source: "Siemens S7-1200 manual — Data types"
+  notes: ""
+
+Word:
+  category: bit-string
+  sizeBits: 16
+  signed: null
+  numberRepresentations:
+    - { form: binary, range: "2#0 to 2#1111_1111_1111_1111", example: "2#1101_0010_1001_0110" }
+    - { form: unsigned-integer, min: 0, max: 65535, example: "61680" }
+    - { form: signed-integer, min: -32768, max: 32767, example: "72" }
+    - { form: octal, range: "8#0 to 8#177_777", example: "8#170_362" }
+    - { form: hexadecimal, range: "W#16#0 to W#16#FFFF, 16#0 to 16#FFFF", example: "W#16#F1C0, 16#A67B" }
+  addressExamples: ["MW10", "DB1.DBW2", "Tag_name"]
+  availableInPlcTagsEditor: true
+  validArrayElement: true
+  comparable: true
+  comparisonCaution: null
+  confidence: official-doc
+  source: "Siemens S7-1200 manual — Data types"
+  notes: ""
+
+DWord:
+  category: bit-string
+  sizeBits: 32
+  signed: null
+  numberRepresentations:
+    - { form: binary, range: "2#0 to 2#1111...(32 bits)", example: "2#1101_0100_1111_1110_1000_1100" }
+    - { form: unsigned-integer, min: 0, max: 4294967295, example: "15_793_935" }
+    - { form: signed-integer, min: -2147483648, max: 2147483647, example: "-400000" }
+    - { form: octal, range: "8#0 to 8#37_777_777_777", example: "8#74_177_417" }
+    - { form: hexadecimal, range: "DW#16#0000_0000 to DW#16#FFFF_FFFF, 16#0000_0000 to 16#FFFF_FFFF", example: "DW#16#20_F30A, 16#B_01F6" }
+  addressExamples: ["MD10", "DB1.DBD8", "Tag_name"]
+  availableInPlcTagsEditor: true
+  validArrayElement: true
+  comparable: true
+  comparisonCaution: null
+  confidence: official-doc
+  source: "Siemens S7-1200 manual — Data types"
+  notes: "'_' is a thousands separator for readability on numbers > 8 digits, not a semantic character — a linter should strip it before parsing a numeric literal."
+
+LWord:
+  category: bit-string
+  sizeBits: 64
+  signed: null
+  numberRepresentations:
+    - { form: hexadecimal, range: "16#0 to 16#FFFF_FFFF_FFFF_FFFF", example: "16#xxxxxxxxxxxxxxxx" }
+  addressExamples: []
+  availableInPlcTagsEditor: true
+  validArrayElement: true
+  comparable: true
+  comparisonCaution: null
+  confidence: verify-platform
+  source: "Not in the S7-1200 manual data-types page — S7-1500 family; not confirmed available on plain S7-1200 (non-G2)."
+  notes: "Check target CPU before assuming it compiles."
+
+Char:
+  category: character
+  sizeBits: 8
+  signed: null
+  numberRepresentations:
+    - { form: character, range: "16#00 to 16#FF", example: "'A', 't', '@', 'ä', '∑'" }
+  addressExamples: []
+  availableInPlcTagsEditor: true
+  validArrayElement: true
+  comparable: true
+  comparisonCaution: null
+  confidence: official-doc
+  source: "Siemens S7-1200 manual — Data types"
+  notes: "One byte, single quotes. Supports extended ASCII and $-escaped control characters ($L/$N/$P/$R/$T/$$/$')."
+
+WChar:
+  category: character
+  sizeBits: 16
+  signed: null
+  numberRepresentations:
+    - { form: character, range: "16#0000 to 16#FFFF", example: "'A', 't', '@', 'ä', '∑', Asian/Cyrillic characters" }
+  addressExamples: []
+  availableInPlcTagsEditor: true
+  validArrayElement: true
+  comparable: true
+  comparisonCaution: null
+  confidence: official-doc
+  source: "Siemens S7-1200 manual — Data types"
+  notes: "One word (double-byte), same single-quote literal syntax as Char despite the name — verified against the manual's own constant-entry examples (they still show single quotes for WChar)."
+
+SInt:
+  category: integer-signed
+  sizeBits: 8
+  signed: true
+  numberRepresentations:
+    - { form: signed-integer, min: -128, max: 127, example: "+50, 16#50" }
+  addressExamples: ["MB0", "DB1.DBB4", "Tag_name"]
+  availableInPlcTagsEditor: true
+  validArrayElement: true
+  comparable: true
+  comparisonCaution: null
+  confidence: official-doc
+  source: "Siemens S7-1200 manual — Data types"
+  notes: "Shares its address range with USInt/Byte (same 8-bit storage) — the manual documents SInt/USInt address examples jointly."
+
+USInt:
+  category: integer-unsigned
+  sizeBits: 8
+  signed: false
+  numberRepresentations:
+    - { form: unsigned-integer, min: 0, max: 255, example: "78, 2#01001110" }
+  addressExamples: ["MB0", "DB1.DBB4", "Tag_name"]
+  availableInPlcTagsEditor: true
+  validArrayElement: true
+  comparable: true
+  comparisonCaution: null
+  confidence: official-doc
+  source: "Siemens S7-1200 manual — Data types"
+  notes: ""
+
+Int:
+  category: integer-signed
+  sizeBits: 16
+  signed: true
+  numberRepresentations:
+    - { form: signed-integer, min: -32768, max: 32767, example: "30000, +30000" }
+  addressExamples: ["MW2", "DB1.DBW2", "Tag_name"]
+  availableInPlcTagsEditor: true
+  validArrayElement: true
+  comparable: true
+  comparisonCaution: null
+  confidence: official-doc
+  source: "Siemens S7-1200 manual — Data types"
+  notes: "Most common integer type in FBD-Knowhow examples (SrcType/value_type := Int)."
+
+UInt:
+  category: integer-unsigned
+  sizeBits: 16
+  signed: false
+  numberRepresentations:
+    - { form: unsigned-integer, min: 0, max: 65535, example: "65295, 0" }
+  addressExamples: ["MW2", "DB1.DBW2", "Tag_name"]
+  availableInPlcTagsEditor: true
+  validArrayElement: true
+  comparable: true
+  comparisonCaution: null
+  confidence: official-doc
+  source: "Siemens S7-1200 manual — Data types"
+  notes: ""
+
+DInt:
+  category: integer-signed
+  sizeBits: 32
+  signed: true
+  numberRepresentations:
+    - { form: signed-integer, min: -2147483648, max: 2147483647, example: "-2131754992" }
+  addressExamples: ["MD6", "DB1.DBD8", "Tag_name"]
+  availableInPlcTagsEditor: true
+  validArrayElement: true
+  comparable: true
+  comparisonCaution: null
+  confidence: official-doc
+  source: "Siemens S7-1200 manual — Data types"
+  notes: ""
+
+UDInt:
+  category: integer-unsigned
+  sizeBits: 32
+  signed: false
+  numberRepresentations:
+    - { form: unsigned-integer, min: 0, max: 4294967295, example: "4042322160" }
+  addressExamples: ["MD6", "DB1.DBD8", "Tag_name"]
+  availableInPlcTagsEditor: true
+  validArrayElement: true
+  comparable: true
+  comparisonCaution: null
+  confidence: official-doc
+  source: "Siemens S7-1200 manual — Data types"
+  notes: ""
+
+LInt:
+  category: integer-signed
+  sizeBits: 64
+  signed: true
+  numberRepresentations:
+    - { form: signed-integer, min: -9223372036854775808, max: 9223372036854775807, example: "plain decimal" }
+  addressExamples: []
+  availableInPlcTagsEditor: true
+  validArrayElement: true
+  comparable: true
+  comparisonCaution: null
+  confidence: verify-platform
+  source: "Not in the S7-1200 manual data-types page — S7-1500 family; not confirmed available on plain S7-1200 (non-G2)."
+  notes: ""
+
+ULInt:
+  category: integer-unsigned
+  sizeBits: 64
+  signed: false
+  numberRepresentations:
+    - { form: unsigned-integer, min: 0, max: 18446744073709551615, example: "plain decimal" }
+  addressExamples: []
+  availableInPlcTagsEditor: true
+  validArrayElement: true
+  comparable: true
+  comparisonCaution: null
+  confidence: verify-platform
+  source: "Not in the S7-1200 manual data-types page — S7-1500 family; not confirmed available on plain S7-1200 (non-G2)."
+  notes: ""
+
+Real:
+  category: float
+  sizeBits: 32
+  signed: true
+  numberRepresentations:
+    - { form: floating-point, range: "-3.402823e+38 to -1.175495e-38, ±0, +1.175495e-38 to +3.402823e+38", example: "123.456, -3.4, 1.0e-5" }
+  addressExamples: ["MD100", "DB1.DBD8", "Tag_name"]
+  availableInPlcTagsEditor: true
+  validArrayElement: true
+  comparable: true
+  comparisonCaution: "6 significant digits of precision. Avoid comparing to an exact value (EQ_Contact/NE_Contact) — calculations mixing very large and very small values (differ by 10^x, x>6) can silently lose the smaller value entirely (100000000 + 1 = 100000000). Use a tolerance/range comparison (InRange/OutRange, or OK/NOK for NaN/inf validity) instead of exact equality."
+  confidence: official-doc
+  source: "Siemens S7-1200 manual — Data types"
+  notes: "ANSI/IEEE 754-1985 single precision."
+
+LReal:
+  category: float
+  sizeBits: 64
+  signed: true
+  numberRepresentations:
+    - { form: floating-point, range: "-1.7976931348623158e+308 to -2.2250738585072014e-308, ±0, +2.2250738585072014e-308 to +1.7976931348623158e+308", example: "12345.123456789e40, 1.2E+40" }
+  addressExamples: []
+  availableInPlcTagsEditor: true
+  validArrayElement: true
+  comparable: true
+  comparisonCaution: "15 significant digits of precision. No direct (absolute) addressing support — can only be assigned in an OB/FB/FC block interface table, not via %MD-style direct address. Same float-tolerance caution as Real applies (differ-by-10^15 loses precision)."
+  confidence: official-doc
+  source: "Siemens S7-1200 manual — Data types"
+  notes: "ANSI/IEEE 754-1985 double precision. Used for Runtime's persistent mem/ret_val pins (instruction-registry/10-runtime-control.yaml) — needs the full double precision to avoid drift across scans."
+
+S5Time:
+  category: duration
+  sizeBits: 16
+  signed: null
+  numberRepresentations:
+    - { form: duration, range: null, example: "S5T#10s" }
+  addressExamples: []
+  availableInPlcTagsEditor: true
+  validArrayElement: true
+  comparable: true
+  comparisonCaution: null
+  confidence: standard
+  source: "Not in the S7-1200 manual data-types page excerpt — legacy S5-style duration, still selectable in TIA."
+  notes: "Prefer Time/LTime in new code."
+
+Time:
+  category: duration
+  sizeBits: 32
+  signed: true
+  numberRepresentations:
+    - { form: duration, range: "T#-24d_20h_31m_23s_648ms to T#24d_20h_31m_23s_647ms (stored as -2,147,483,648 ms to +2,147,483,647 ms)", example: "T#5m_30s, T#1d_2h_15m_30s_45ms, TIME#10d20h30m20s630ms, 500h10000ms, 10d20h30m20s630ms" }
+  addressExamples: []
+  availableInPlcTagsEditor: true
+  validArrayElement: true
+  comparable: true
+  comparisonCaution: null
+  confidence: official-doc
+  source: "Siemens S7-1200 manual — Data types"
+  notes: "Stored as a signed DInt interpreted as milliseconds. Units (d/h/m/s/ms) are all optional — T#5h10s and 500h are both valid — but the combined value must not exceed the ms range above. TIME# and bare (no T#) forms are also accepted per the manual's own examples."
+
+LTime:
+  category: duration
+  sizeBits: 64
+  signed: true
+  numberRepresentations:
+    - { form: duration, range: null, example: "LT#10s (nanosecond resolution)" }
+  addressExamples: []
+  availableInPlcTagsEditor: true
+  validArrayElement: true
+  comparable: true
+  comparisonCaution: null
+  confidence: verify-platform
+  source: "Not in the S7-1200 manual data-types page — S7-1500 family; not confirmed available on plain S7-1200 (non-G2)."
+  notes: ""
+
+Date:
+  category: date-time
+  sizeBits: 16
+  signed: false
+  numberRepresentations:
+    - { form: date, range: "D#1990-1-1 to D#2168-12-31", example: "D#2009-12-31, DATE#2009-12-31, 2009-12-31" }
+  addressExamples: []
+  availableInPlcTagsEditor: true
+  validArrayElement: true
+  comparable: true
+  comparisonCaution: null
+  confidence: official-doc
+  source: "Siemens S7-1200 manual — Data types"
+  notes: "Stored as an unsigned integer = days since base date 1990-01-01. Editor format requires year-month-day."
+
+Time_Of_Day:
+  aliases: [TOD, TIME_OF_DAY]
+  category: date-time
+  sizeBits: 32
+  signed: false
+  numberRepresentations:
+    - { form: time-of-day, range: "TOD#0:0:0.0 to TOD#23:59:59.999", example: "TOD#10:20:30.400, TIME_OF_DAY#10:20:30.400, 23:10:1" }
+  addressExamples: []
+  availableInPlcTagsEditor: true
+  validArrayElement: true
+  comparable: true
+  comparisonCaution: null
+  confidence: official-doc
+  source: "Siemens S7-1200 manual — Data types"
+  notes: "Stored as an unsigned DInt = milliseconds since midnight. Hour/minute/second required, fractional second optional. TOD is the manual's own name for this type — treat as the primary name, not just an alias, contradicting the earlier draft of this file."
+
+LTime_Of_Day:
+  aliases: [LTOD]
+  category: date-time
+  sizeBits: 64
+  signed: false
+  numberRepresentations:
+    - { form: time-of-day, range: null, example: "LTOD#10:20:30.123456789" }
+  addressExamples: []
+  availableInPlcTagsEditor: true
+  validArrayElement: true
+  comparable: true
+  comparisonCaution: null
+  confidence: verify-platform
+  source: "Not in the S7-1200 manual data-types page — S7-1500 family; not confirmed available on plain S7-1200 (non-G2)."
+  notes: ""
+
+LDT:
+  category: date-time
+  sizeBits: null
+  signed: null
+  numberRepresentations: []
+  addressExamples: []
+  availableInPlcTagsEditor: null
+  validArrayElement: null
+  comparable: null
+  comparisonCaution: null
+  confidence: verify-platform
+  source: "Not in the S7-1200 manual data-types page. Existence + S7-1500/S7-1200 G2-only availability confirmed via type-registry/platform-availability.NOTLOADED.yaml's 'Overview of the valid data types' table (2026-07-13) — a DISTINCT type from DTL, not a typo for LTOD as earlier suspected."
+  notes: "sizeBits, literal syntax, range, and every other field below are unknown — the source table only confirms the name and platform availability, not the type's shape. Fill in from the manual's data-types page (or a real TIA export) the same way DTL was fully specified, before trusting this entry for anything beyond 'is LDT a real type on this CPU'."
+
+Date_And_Time:
+  aliases: [DT]
+  category: date-time
+  sizeBits: 64
+  signed: null
+  numberRepresentations:
+    - { form: date-time, range: null, example: "DT#2026-07-10-10:20:30" }
+  addressExamples: []
+  availableInPlcTagsEditor: true
+  validArrayElement: true
+  comparable: true
+  comparisonCaution: null
+  confidence: standard
+  source: "Not in the S7-1200 manual data-types page excerpt — BCD-encoded, superseded by DTL for new designs per general Siemens guidance, but still valid."
+  notes: ""
+
+DTL:
+  category: date-time
+  sizeBits: 96
+  signed: null
+  numberRepresentations:
+    - { form: date-time, range: "Min. DTL#1970-01-01-00:00:00.0 to Max. DTL#2262-04-11-23:47:16.854775807", example: "DTL#2008-12-16-20:30:20.250" }
+  addressExamples: []
+  availableInPlcTagsEditor: false
+  validArrayElement: true
+  comparable: true
+  comparisonCaution: null
+  confidence: official-doc
+  source: "Siemens S7-1200 manual — Data types"
+  notes: "NOT available in the PLC tags editor — only in block Interface editors or a DB (same restriction as String/Struct/Array). 12-byte fixed structure; a Start value must be entered for every component in the DB editor. STEP 7 allows values beyond the documented max, but the manual recommends staying at/under it to avoid conversion/calculation errors."
+  structureLayout:
+    - { byte: 0-1, component: Year, type: UInt, range: "1970 to 2262" }
+    - { byte: 2, component: Month, type: USInt, range: "1 to 12" }
+    - { byte: 3, component: Day, type: USInt, range: "1 to 31" }
+    - { byte: 4, component: Weekday, type: USInt, range: "1 (Sunday) to 7 (Saturday)", note: "Not part of the DTL# literal syntax (Year-Month-Day:Hour:Minute:Second.Nanosecond has no weekday field) even though it's a stored component — TIA computes/stores it, don't expect a user-supplied weekday in a literal." }
+    - { byte: 5, component: Hour, type: USInt, range: "0 to 23" }
+    - { byte: 6, component: Minute, type: USInt, range: "0 to 59" }
+    - { byte: 7, component: Second, type: USInt, range: "0 to 59" }
+    - { byte: 8-11, component: Nanosecond, type: UDInt, range: "0 to 999999999" }
+
+String:
+  category: string
+  sizeBits: null
+  signed: null
+  numberRepresentations:
+    - { form: string-literal, range: "n = 0 to 254 bytes (default max 254 if [n] omitted)", example: "'ABC'" }
+  addressExamples: []
+  availableInPlcTagsEditor: false
+  validArrayElement: true
+  comparable: true
+  comparisonCaution: null
+  confidence: official-doc
+  source: "Siemens S7-1200 manual — Data types"
+  notes: "NOT available in the PLC tags editor — only in block Interface editors (OB/FC/FB/DB). Storage = maxCharCount byte + currentCharCount byte + up to 254 chars. Declare max length with String[n] (e.g. String[10]); omitted [n] defaults to 254. Single-quoted literals only. Supports $-escaped ASCII control chars: $L/$l (line feed), $N/$n (line break, CR+LF), $P/$p (form feed), $R/$r (CR), $T/$t (tab), $$ (literal $), $' (literal single quote)."
+
+WString:
+  category: string
+  sizeBits: null
+  signed: null
+  numberRepresentations:
+    - { form: string-literal, range: "n = 0 to 65534 words (default max 65534 if [n] omitted)", example: "\"ä123@XYZ.COM\"" }
+  addressExamples: []
+  availableInPlcTagsEditor: false
+  validArrayElement: true
+  comparable: true
+  comparisonCaution: null
+  confidence: official-doc
+  source: "Siemens S7-1200 manual — Data types"
+  notes: "NOT available in the PLC tags editor. Storage = maxCharCount word + currentCharCount word + up to 65534 double-byte (UTF-16-ish) chars. Declare max length with WString[n]. Double-quoted literals (not single quotes, unlike String/Char)."
+
+Variant:
+  category: system
+  sizeBits: 0
+  signed: null
+  numberRepresentations: []
+  addressExamples: ["MyTag", "DB_name.Struct_name.element_name (symbolic)", "%MW10 (absolute)", "P#DB10.DBX10.0 INT 12 (absolute, pointer form)"]
+  availableInPlcTagsEditor: false
+  validArrayElement: false
+  comparable: false
+  comparisonCaution: "RESOLVED 2026-07-13 — this `comparable: false` means a Variant POINTER itself has no defined equality (comparing two Variants as references isn't a thing). It does NOT contradict instruction-registry/02-comparators.yaml's EQ/NE/GE/LE/GT/LT_Contact family supporting `VARIANT` as a SrcType selection: that mode dereferences the Variant(s) and compares the STRUCTURED VALUE(S) they point to (subject to the STRUCT/ARRAY/PLC-data-type comparison rules in that file — same UDT, or one side genuinely VARIANT/ANY, firmware-version-gated), not the pointers. Two different operations sharing the word 'Variant': comparing the reference (not supported, hence false here) vs. comparing what it references (supported, via the comparator instructions' own rules)."
+  confidence: official-doc
+  source: "Siemens S7-1200 manual — Data types"
+  notes: "Points to variables of different data types or parameters, including structures and individual structure members. Occupies 0 bytes itself (it's a reference, not storage). Used e.g. by VariantGet/VariantPut in instruction-registry/06-move.yaml."
+
+Void:
+  category: system
+  sizeBits: 0
+  signed: null
+  numberRepresentations: []
+  addressExamples: []
+  availableInPlcTagsEditor: false
+  validArrayElement: false
+  comparable: false
+  comparisonCaution: null
+  confidence: standard
+  source: "Not in the S7-1200 manual data-types page excerpt."
+  notes: "Placeholder type — only legal for unused FB/FC parameters (e.g. a Return value slot of an FC with no return). Not a real storage type."
+
+Any:
+  category: system
+  sizeBits: 80
+  signed: null
+  numberRepresentations:
+    - { form: pointer-literal, range: null, example: "P#DB11.DBX20.0 INT 10, P#M20.0 BYTE 10, P#I1.0 BOOL 8, P#P0.0 VOID 0, NULL" }
+  addressExamples: ["\"MyDB\".StructTag.InitialComponents (symbolic, DB-scoped)", "\"MyMarkerTag\" (symbolic, memory-scoped)", "P#DB11.DBX20.0 INT 10 (absolute)", "P#M20.0 BYTE 10 (absolute)", "P#Zero value / NULL (LAD/FBD only)"]
+  availableInPlcTagsEditor: false
+  validArrayElement: false
+  comparable: false
+  comparisonCaution: null
+  confidence: official-doc
+  source: "Siemens TIA Portal Information System — ANY pointer reference page, pasted by user 2026-07-13"
+  notes: "10-byte (80-bit) legacy S7 pointer to a data area + its length, distinct from Variant (0 bytes, no fixed binary layout) despite similar purpose. Legacy per platform-availability.NOTLOADED.yaml: NOT available on plain S7-1200 (S7-300/400 and S7-1500 only). Full binary encoding (data-type byte, repetition-factor, DB number, memory-area byte, start address), the P# literal grammar, and the two coding tables (data type / memory area) are documented in type-registry/any-pointer.yaml rather than duplicated here — see that file before linting any P#-literal or ANY-typed operand. Key semantic limits: cannot identify structures (a UDT-typed operand becomes an opaque ARRAY of BYTE through an ANY pointer — the UDT's own shape is invisible on the other side); can only be assigned to LOCAL tags (not e.g. a global DB tag directly, per the source's own wording); S7-1500 additionally restricts it to 'Standard' (non-optimized) access-mode memory areas only. ANY-pointer-to-STRING behaves differently depending on origin: an ANY generated from a String in LAD/FBD/STL becomes a plain BYTE pointer with repetition factor = the string's max length (losing the 'this was a String' information), while one generated inside SCL keeps a real STRING-typed ANY — don't assume symmetric round-tripping across languages."
+
+Pointer:
+  category: system
+  sizeBits: 48
+  signed: null
+  numberRepresentations:
+    - { form: pointer-literal, range: null, example: "P#M20.0, P#DB10.DBX20.0, P#0.0, ZERO" }
+  addressExamples: ["\"MyTag\" (symbolic, area-internal)", "\"MyDB\".\"MyTag\" (symbolic, DB pointer)", "P#20.0 (absolute, area-internal)", "P#M20.0 (absolute, cross-area)", "P#DB10.DBX20.0 (absolute, DB pointer)", "P#0.0 / ZERO (zero pointer)"]
+  availableInPlcTagsEditor: false
+  validArrayElement: false
+  comparable: false
+  comparisonCaution: null
+  confidence: official-doc
+  source: "Siemens TIA Portal Information System — POINTER reference page, pasted by user 2026-07-13"
+  notes: "6-byte (48-bit) legacy S7 pointer to a single tag (DB number-or-0, memory area, byte.bit address) — NOT the same encoding as Any (10 bytes, data-type + repetition factor + DB number + memory area + start address) despite both being P#-literal-addressed legacy pointers; don't conflate the two. Full structure, the four pointer kinds (area-internal/cross-area/DB/zero), the P# literal grammar (different patterns from Any's — see notes below), and the memory-area coding table are in type-registry/pointer-type.yaml. Zero-value literal is spelled 'ZERO' for Pointer, NOT 'NULL' like Any's LAD/FBD zero literal — easy to mix up, don't assume they share a spelling. Entering a value WITHOUT the P# prefix in a block call auto-converts to POINTER format; WITH the P# prefix, can only target 'Standard' (non-optimized) access-mode memory — same access-mode restriction Any has on S7-1500, but here it's unconditional (any platform) whenever the literal P# prefix is used. STL-specific legality of a P#-prefixed tag reference additionally depends on block type (FC/FB), access mode (Optimized/Standard), and the tag's declaration section — see pointer-type.yaml's `stlPrefixLegality` table before assuming a P# reference compiles."
+
+Array:
+  category: complex
+  sizeBits: null
+  signed: null
+  numberRepresentations: []
+  addressExamples: ["ARRAY1[0]", "ARRAY2[1,2]", "ARRAY3[i,j]"]
+  availableInPlcTagsEditor: false
+  validArrayElement: false
+  comparable: false
+  comparisonCaution: null
+  confidence: official-doc
+  source: "Siemens S7-1200 manual — Data types"
+  notes: "Not a leaf type — always `Array[lo..hi] of <ElementType>` (1 to 6 dimensions, comma-separated per dimension). Full composition rules (index type/value limits, no nested arrays, memory-size formula) are in composition-rules.yaml, not duplicated here."
+
+Struct:
+  category: complex
+  sizeBits: null
+  signed: null
+  numberRepresentations: []
+  addressExamples: []
+  availableInPlcTagsEditor: false
+  validArrayElement: true
+  comparable: false
+  comparisonCaution: null
+  confidence: official-doc
+  source: "Siemens S7-1200 manual — Data types"
+  notes: "Not a leaf type — inline `Struct ... END_STRUCT;` nests further Member declarations. A named PLC data type (UDT) is a reusable top-level Struct — see type-registry/udt-dependency-cache.md. Nesting-depth limit is in composition-rules.yaml — NOT a flat 8, see that file's `maxNestingDepthNote` (8 default / 9 in InOut / 26 on newer firmware, with Array-of-Struct/UDT costing 3 levels each)."
+
+Reference:
+  category: complex
+  sizeBits: null
+  signed: null
+  numberRepresentations: []
+  addressExamples: ["#myRef^ (dereference)", "REF(#someTag)", "REF(\"my_ArrayDB_UDT\".\"THIS\"[i])"]
+  availableInPlcTagsEditor: false
+  validArrayElement: false
+  comparable: false
+  comparisonCaution: "Comparable ONLY against NULL (to check whether the reference has been assigned) — no other comparison is legal. See type-registry/references.yaml's `comparison` section; do not add Reference to instruction-registry/02-comparators.yaml's general dataTypes lists the way Struct/Variant/Any were."
+  confidence: official-doc
+  source: "Siemens TIA Portal Information System — References reference page, pasted by user 2026-07-13"
+  notes: "Not a leaf type — always `REF_TO <Datatype>`, IEC-style typed and type-safe (unlike Any/Pointer/Variant, which are untyped-at-declaration or runtime-typed). S7-1500-ONLY, firmware >= V2.5 — doesn't exist on S7-1200 at all, no split to speak of. Full legal-target list, declaration-section rules (which additionally depend on block type — FC/FB/OB — a dimension section-legality.yaml doesn't otherwise model), REF()/dereferencing (^)/assignment/assignment-attempt (?=) rules are all in type-registry/references.yaml, not duplicated here. References can never be retentive themselves (though they may point to retentive data), and are auto-initialized to NULL (dereferencing before assignment is a runtime programming error)."

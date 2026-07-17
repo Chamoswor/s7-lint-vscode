@@ -1,0 +1,448 @@
+# String conversion, array conversion and structured string processing — LAD/FBD registry.
+#
+# Graphical instruction aliases and pin casing are retained from anonymized
+# reference fixtures and apply to both LAD and FBD.
+#
+# Exported `:=` connections cannot distinguish INPUT from IN_OUT. Independently
+# documented IN_OUT parameters are corrected explicitly.
+#
+# Graphical instructions use pins and therefore have `result: { kind: none }`.
+# Missing dataTypes are intentional; unresolved types are never guessed.
+
+$fileLanguage: [LAD, FBD]
+S_Move:
+  family: extended
+  callShape: box
+  instanceType: null
+  pins:
+  - name: in
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [Character strings]
+  - name: out
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Character strings]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Moves a String or WString value.
+  source: "official instruction documentation (paraphrased)"
+  result:
+    kind: none
+S_COMP:
+  family: extended
+  callShape: box
+  instanceType: null
+  pins:
+  - name: in1
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [String, WString]
+  - name: in2
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [String, WString]
+  - name: out
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    STRING/WSTRING comparison. Same confirmed `{ S7_Relation := "EQ" }` pragma shape as T_COMP above —
+    see that entry's note.
+  source: "official instruction documentation (paraphrased)"
+  result:
+    kind: none
+S_CONV:
+  family: extended
+  callShape: box
+  instanceType: null
+  pins:
+  - name: in
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [Integers, Floating-point numbers, Character strings]
+  - name: out
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Integers, Floating-point numbers, Character strings]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    STRING/WSTRING/numeric-type conversion.
+  source: "official instruction documentation (paraphrased)"
+  result:
+    kind: none
+StringToValue:
+  family: extended
+  callShape: box
+  instanceType: null
+  pins:
+  - name: in
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [String, WString]
+  - name: format
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [UInt]
+  - name: P
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [UInt]
+  - name: out
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Integers, Floating-point numbers]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Parse a numeric value out of a string.
+  source: "official instruction documentation (paraphrased)"
+  result:
+    kind: none
+ValueToString:
+  family: extended
+  callShape: box
+  instanceType: null
+  pins:
+  - name: in
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [Integers, Floating-point numbers]
+  - name: size
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [UInt]
+  - name: prec
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [UInt]
+  - name: format
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [UInt]
+  - name: P
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [UInt]
+  - name: out
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [String, WString]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Format a numeric value into a string.
+  source: "official instruction documentation (paraphrased)"
+  result:
+    kind: none
+Strg_TO_Chars:
+  family: extended
+  callShape: box
+  instanceType: null
+  pins:
+  - name: Strg
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [String, WString]
+  - name: pChars
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [UInt]
+  - name: Cnt
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Int]
+  - name: Chars
+    dir: inout
+    required: true
+    note: ''
+    dataTypes: [Array, Struct, PLC data type]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Copy a STRING into an ARRAY of CHAR.
+  source: "official instruction documentation (paraphrased)"
+  result:
+    kind: none
+Chars_TO_Strg:
+  family: extended
+  callShape: box
+  instanceType: null
+  pins:
+  - name: Chars
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [Array, Struct, PLC data type]
+  - name: pChars
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [UInt]
+  - name: Cnt
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [UInt]
+  - name: Strg
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [String, WString]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Copy an ARRAY of CHAR into a STRING, inverse of Strg_TO_Chars.
+  source: "official instruction documentation (paraphrased)"
+  result:
+    kind: none
+MaxLen:
+  family: extended
+  callShape: box
+  instanceType: null
+  pins:
+  - name: in
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [String, WString]
+  - name: out
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [DInt]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Query a STRING/WSTRING tag's declared maximum length.
+  source: "official instruction documentation (paraphrased)"
+  result:
+    kind: none
+Join:
+  family: extended
+  callShape: box
+  instanceType: null
+  pins:
+  - name: mode
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [UInt]
+  - name: recSeparator
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [String, WString]
+  - name: endSeparator
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [String, WString]
+  - name: srcStruct
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [Struct, PLC data type]
+  - name: count
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [UInt]
+  - name: ret_val
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Int]
+  - name: dstArray
+    dir: inout
+    required: true
+    note: ''
+    dataTypes: [Array]
+  - name: position
+    dir: inout
+    required: true
+    note: ''
+    dataTypes: [DInt]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: shape-only
+  notes: >-
+    Join a struct's members into a delimited character array, inverse of Split below.
+  source: "anonymized reference fixture (signature only)"
+  result:
+    kind: none
+Split:
+  family: extended
+  callShape: box
+  instanceType: null
+  pins:
+  - name: mode
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [UInt]
+  - name: recSeparator
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [String, WString]
+  - name: endSeparator
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [String, WString]
+  - name: srcArray
+    dir: inout
+    required: true
+    note: ''
+    dataTypes: [Array]
+  - name: ret_val
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Int]
+  - name: count
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [UInt]
+  - name: dstStruct
+    dir: inout
+    required: true
+    note: ''
+    dataTypes: [Struct, PLC data type]
+  - name: position
+    dir: inout
+    required: true
+    note: ''
+    dataTypes: [DInt]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: shape-only
+  notes: >-
+    Split a delimited character array into a struct's members, inverse of Join above.
+  source: "anonymized reference fixture (signature only)"
+  result:
+    kind: none
+AsciiToHex:
+  family: extended
+  callShape: box
+  instanceType: null
+  pins:
+  - name: in
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [String]
+  - name: n
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [UInt]
+  - name: ret_val
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Int]
+  - name: out
+    dir: inout
+    required: true
+    note: ''
+    dataTypes: [Array, Struct, PLC data type]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Convert ASCII characters to packed hex/BCD.
+  source: "official instruction documentation (paraphrased)"
+  result:
+    kind: none
+HexToAscii:
+  family: extended
+  callShape: box
+  instanceType: null
+  pins:
+  - name: in
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [Array, Struct, PLC data type]
+  - name: n
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [UInt]
+  - name: ret_val
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Int]
+  - name: out
+    dir: inout
+    required: true
+    note: ''
+    dataTypes: [String]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Convert packed hex/BCD to ASCII characters, inverse of AsciiToHex.
+  source: "official instruction documentation (paraphrased)"
+  result:
+    kind: none

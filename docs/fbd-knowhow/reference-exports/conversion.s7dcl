@@ -1,0 +1,61 @@
+﻿{
+    S7_Optimized := "TRUE";
+    S7_PreferredLanguage := "FBD";
+    S7_Version := "0.1"
+}
+FUNCTION_BLOCK "CLAUDE_REF_CONVERT-OPERATIONS"
+    { S7_Language := "FBD" }
+    NETWORK
+        RUNG
+            Convert(
+                in :=  ,
+                out =>  
+            )
+        END_RUNG
+        RUNG
+            Round(
+                in :=  ,
+                out =>  
+            )
+        END_RUNG
+        RUNG
+            Ceil(
+                in :=  ,
+                out =>  
+            )
+        END_RUNG
+        RUNG
+            Floor(
+                in :=  ,
+                out =>  
+            )
+        END_RUNG
+        RUNG
+            Trunc(
+                in :=  ,
+                out =>  
+            )
+        END_RUNG
+        RUNG
+            Scale(
+                min :=  ,
+                value :=  ,
+                max :=  ,
+                out =>  
+            )
+        END_RUNG
+        RUNG
+            Normalize(
+                min :=  ,
+                value :=  ,
+                max :=  ,
+                out =>  
+            )
+        END_RUNG
+    END_NETWORK
+    { S7_Language := "FBD" }
+    NETWORK
+        RUNG
+        END_RUNG
+    END_NETWORK
+END_FUNCTION_BLOCK

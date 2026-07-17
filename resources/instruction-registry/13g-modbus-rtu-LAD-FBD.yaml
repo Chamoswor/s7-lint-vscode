@@ -1,0 +1,197 @@
+# Modbus RTU communication — LAD/FBD registry.
+#
+# Graphical instruction aliases and pin casing follow anonymized reference
+# fixture evidence and apply to both LAD and FBD.
+#
+# Exported `:=` connections cannot distinguish Input from InOut. Parameters
+# independently documented as InOut have therefore been corrected explicitly.
+# Every entry has `result: { kind: none }`.
+#
+# Missing dataTypes are intentional: unknown types are not guessed.
+
+$fileLanguage: [LAD, FBD]
+Modbus_Comm_Load:
+  family: communication
+  callShape: instance-dot
+  instanceType: Modbus_Comm_Load
+  pins:
+  - name: REQ
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: PORT
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [PORT]
+  - name: BAUD
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [UDInt]
+  - name: PARITY
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [UInt]
+  - name: FLOW_CTRL
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [UInt]
+  - name: RTS_ON_DLY
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [UInt]
+  - name: RTS_OFF_DLY
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [UInt]
+  - name: RESP_TO
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [UInt]
+  - name: DONE
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: ERROR
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: STATUS
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Word]
+  - name: MB_DB
+    dir: inout
+    required: true
+    note: ''
+    dataTypes: [PLC data type]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    . Modbus RTU (serial) communication load/configuration FB.
+  source: "official instruction documentation (paraphrased)"
+  result:
+    kind: none
+Modbus_Master:
+  family: communication
+  callShape: instance-dot
+  instanceType: Modbus_Master
+  pins:
+  - name: REQ
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: MB_ADDR
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [UInt]
+  - name: MODE
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [UInt]
+  - name: DATA_ADDR
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [UDInt]
+  - name: DATA_LEN
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [UInt]
+  - name: DONE
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: BUSY
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: ERROR
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: STATUS
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Word]
+  - name: DATA_PTR
+    dir: inout
+    required: true
+    note: ''
+    dataTypes: [Variant]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    . Modbus RTU master FB.
+  source: "official instruction documentation (paraphrased)"
+  result:
+    kind: none
+Modbus_Slave:
+  family: communication
+  callShape: instance-dot
+  instanceType: Modbus_Slave
+  pins:
+  - name: MB_ADDR
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [UInt]
+  - name: NDR
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: DR
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: ERROR
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: STATUS
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Word]
+  - name: MB_HOLD_REG
+    dir: inout
+    required: true
+    note: ''
+    dataTypes: [Variant]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    . Modbus RTU slave FB.
+  source: "official instruction documentation (paraphrased)"
+  result:
+    kind: none

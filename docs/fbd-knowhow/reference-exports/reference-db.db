@@ -1,0 +1,13 @@
+﻿DATA_BLOCK "CLAUDE_DB_REF"
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+NON_RETAIN
+   VAR 
+      array_bool { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Array[0..10] of Bool;
+   END_VAR
+
+
+BEGIN
+
+END_DATA_BLOCK
+

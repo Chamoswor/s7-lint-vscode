@@ -1,0 +1,453 @@
+# Interrupt and fault-event control — SCL registry.
+#
+# SCL callable names and parameter casing use Siemens' canonical spelling.
+# Function returns are represented by `result`, not by graphical OUT/RET_VAL pins.
+#
+# S_Move and generic S_CONV are intentionally not emitted as callable SCL
+# entries. Their SCL forms are assignment and typed <source>_TO_<destination>
+# conversion respectively. T_COMBINE expands to CONCAT_DATE_TOD or
+# CONCAT_DATE_LTOD.
+#
+# Missing dataTypes are intentional; unresolved types are never guessed.
+
+$fileLanguage: [SCL]
+ATTACH:
+  family: extended
+  callShape: box
+  instanceType: null
+  pins:
+  - name: OB_NR
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [OB_ANY]
+  - name: EVENT
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [EVENT_ANY]
+  - name: ADD
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Attach an OB to a hardware-interrupt event.
+  source: "official instruction documentation (paraphrased)"
+  result:
+    kind: value
+    dataTypes: [Int]
+    notes: SCL function return value.
+DETACH:
+  family: extended
+  callShape: box
+  instanceType: null
+  pins:
+  - name: OB_NR
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [OB_ANY]
+  - name: EVENT
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [EVENT_ANY]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Detach an OB from a hardware-interrupt event, inverse of ATTACH.
+  source: "official instruction documentation (paraphrased)"
+  result:
+    kind: value
+    dataTypes: [Int]
+    notes: SCL function return value.
+SET_CINT:
+  family: extended
+  callShape: box
+  instanceType: null
+  pins:
+  - name: OB_NR
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [OB_CYCLIC]
+  - name: CYCLE
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [Time]
+  - name: PHASE
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [Time]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Set a cyclic-interrupt OB's cycle time/phase offset.
+  source: "official instruction documentation (paraphrased)"
+  result:
+    kind: value
+    dataTypes: [Int]
+    notes: SCL function return value.
+QRY_CINT:
+  family: extended
+  callShape: box
+  instanceType: null
+  pins:
+  - name: OB_NR
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [OB_CYCLIC]
+  - name: CYCLE
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Time]
+  - name: PHASE
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Time]
+  - name: STATUS
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Word]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Query a cyclic-interrupt OB's current cycle time/phase/status, read-side counterpart of SET_CINT.
+  source: "official instruction documentation (paraphrased)"
+  result:
+    kind: value
+    dataTypes: [Int]
+    notes: SCL function return value.
+SET_TINTL:
+  family: extended
+  callShape: box
+  instanceType: null
+  pins:
+  - name: OB_NR
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [OB_TOD]
+  - name: SDT
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [LDT]
+  - name: LOCAL
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: PERIOD
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [UInt]
+  - name: ACTIVATE
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Set a time-of-day interrupt OB's start date/time and period.
+  source: "official instruction documentation (paraphrased)"
+  result:
+    kind: value
+    dataTypes: [Int]
+    notes: SCL function return value.
+CAN_TINT:
+  family: extended
+  callShape: box
+  instanceType: null
+  pins:
+  - name: OB_NR
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [OB_TOD]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Cancel a time-of-day interrupt.
+  source: "official instruction documentation (paraphrased)"
+  result:
+    kind: value
+    dataTypes: [Int]
+    notes: SCL function return value.
+ACT_TINT:
+  family: extended
+  callShape: box
+  instanceType: null
+  pins:
+  - name: OB_NR
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [OB_TOD]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    (Re-)activate a time-of-day interrupt configured via SET_TINTL.
+  source: "official instruction documentation (paraphrased)"
+  result:
+    kind: value
+    dataTypes: [Int]
+    notes: SCL function return value.
+QRY_TINT:
+  family: extended
+  callShape: box
+  instanceType: null
+  pins:
+  - name: OB_NR
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [OB_TOD]
+  - name: STATUS
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Word]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Query a time-of-day interrupt's current status.
+  source: "official instruction documentation (paraphrased)"
+  result:
+    kind: value
+    dataTypes: [Int]
+    notes: SCL function return value.
+MSK_FLT:
+  family: extended
+  callShape: box
+  instanceType: null
+  pins:
+  - name: PRGFLT_SET_MASK
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [DWord]
+  - name: ACCFLT_SET_MASK
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [DWord]
+  - name: PRGFLT_MASKED
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [DWord]
+  - name: ACCFLT_MASKED
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [DWord]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Mask (suppress) synchronous programming/access faults.
+  source: "official instruction documentation (paraphrased)"
+  result:
+    kind: value
+    dataTypes: [Int]
+    notes: SCL function return value.
+DMSK_FLT:
+  family: extended
+  callShape: box
+  instanceType: null
+  pins:
+  - name: PRGFLT_RESET_MASK
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [DWord]
+  - name: ACCFLT_RESET_MASK
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [DWord]
+  - name: PRGFLT_MASKED
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [DWord]
+  - name: ACCFLT_MASKED
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [DWord]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Demask (re-enable) synchronous programming/access faults, inverse of MSK_FLT.
+  source: "official instruction documentation (paraphrased)"
+  result:
+    kind: value
+    dataTypes: [Int]
+    notes: SCL function return value.
+READ_ERR:
+  family: extended
+  callShape: box
+  instanceType: null
+  pins:
+  - name: PRGFLT_QUERY
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [DWord]
+  - name: ACCFLT_QUERY
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [DWord]
+  - name: PRGFLT_CLR
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [DWord]
+  - name: ACCFLT_CLR
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [DWord]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Read pending masked programming/access faults.
+  source: "official instruction documentation (paraphrased)"
+  result:
+    kind: value
+    dataTypes: [Int]
+    notes: SCL function return value.
+DIS_IRT:
+  family: extended
+  callShape: box
+  instanceType: null
+  pins:
+  - name: MODE
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [UInt]
+  - name: OB_NR
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [OB_ANY]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Disable interrupt processing (specific OB or globally, per MODE).
+  source: "official instruction documentation (paraphrased)"
+  result:
+    kind: value
+    dataTypes: [Int]
+    notes: SCL function return value.
+EN_IRT:
+  family: extended
+  callShape: box
+  instanceType: null
+  pins:
+  - name: MODE
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [UInt]
+  - name: OB_NR
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [OB_ANY]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Enable interrupt processing, inverse of DIS_IRT.
+  source: "official instruction documentation (paraphrased)"
+  result:
+    kind: value
+    dataTypes: [Int]
+    notes: SCL function return value.
+DIS_AIRT:
+  family: extended
+  callShape: box
+  instanceType: null
+  pins: []
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Disable ALL interrupts and asynchronous fault processing (delay them).
+  source: "official instruction documentation (paraphrased)"
+  result:
+    kind: value
+    dataTypes: [Int]
+    notes: SCL function return value.
+EN_AIRT:
+  family: extended
+  callShape: box
+  instanceType: null
+  pins: []
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Re-enable all interrupts/asynchronous fault processing, inverse of DIS_AIRT.
+  source: "official instruction documentation (paraphrased)"
+  result:
+    kind: value
+    dataTypes: [Int]
+    notes: SCL function return value.

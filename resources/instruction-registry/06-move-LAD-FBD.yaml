@@ -1,0 +1,547 @@
+# LAD/FBD move-instruction registry.
+#
+# This file models graphical move boxes. Values written through explicit OUT,
+# IN_OUT or status pins remain represented under `pins`; they are not separate
+# function results. Consequently, most entries use:
+#
+#   result:
+#     kind: none
+#
+# AssignmentAttempt is the exception: its success state is the BOOL RLO/ENO
+# result of the graphical `?=` operation.
+#
+# Platform unions are used in `memoryAreas`. Where an area is CPU-specific,
+# the pin note identifies the restriction. Section-only operands are represented
+# as L and narrowed further in the note because Siemens documents declaration
+# sections rather than an ordinary I/Q/M/D/L address set.
+#
+# S7-1500 symbolic-move instructions use C on selected index/mode parameters;
+# C is the legacy counter operand area, not an IEC counter instance datatype.
+#
+$fileLanguage: [LAD, FBD]
+
+Move:
+  family: move
+  callShape: box
+  instanceType:
+  pins:
+  - {name: in, dir: in, required: true, dataTypes: ["Bit strings", "Integers", "Floating-point numbers", "Timers", "Date
+        and time", Char, WChar, Struct, Array, IEC_TIMER, IEC_LTIMER, IEC_SCOUNTER, IEC_USCOUNTER, IEC_COUNTER, 
+        IEC_UCOUNTER, IEC_DCOUNTER, IEC_UDCOUNTER, IEC_LCOUNTER, IEC_ULCOUNTER, "PLC data type"], note: "Source value. CPU-specific
+      datatype compatibility with OUT1 still applies.", memoryAreas: [I, Q, M, D, L, constant]}
+  - {name: out1, dir: out, required: true, dataTypes: ["Bit strings", "Integers", "Floating-point numbers", "Timers", "Date
+        and time", Char, WChar, Struct, Array, IEC_TIMER, IEC_LTIMER, IEC_SCOUNTER, IEC_USCOUNTER, IEC_COUNTER, 
+        IEC_UCOUNTER, IEC_DCOUNTER, IEC_UDCOUNTER, IEC_LCOUNTER, IEC_ULCOUNTER, "PLC data type"], note: "Destination value.
+      Additional OUT2, OUT3, ... outputs may be inserted where Siemens permits.", memoryAreas: [I, Q, M, D, L]}
+  result:
+    kind: none
+  enEno:
+    en: {present: true, dataTypes: [Bool], memoryArea: {"S7-1200": [I, Q, M, D, L, constant], "S7-1500": [I, Q, M, D, L, T, C, constant]}}
+    eno: {present: true, dataTypes: [Bool], memoryArea: {"S7-1200": [I, Q, M, D, L], "S7-1500": [I, Q, M, D, L]}}
+  template: {shape: none, keys: [], extra: {}}
+  confidence: confirmed-compiled
+  notes: >-
+    Moves IN to OUT1 and any additional outputs. ENO is cleared when EN is FALSE or the source and
+    destination datatypes are incompatible. Structured values and indexed string characters restrict
+    whether the box can be extended with additional outputs.
+  source: "docs/fbd-knowhow/06-Move.md"
+Deserialize:
+  family: move
+  callShape: box
+  instanceType:
+  pins:
+  - {name: srcArray, dir: in, required: true, dataTypes: [Array], note: "ARRAY of BYTE or CHAR containing the serialized
+      stream. L is limited to an FB block-interface Temp; other FB interface sections are represented by D. Peripheral I/O
+      is not allowed.", memoryAreas: [I, Q, D, L]}
+  - {name: pos, dir: in, required: true, dataTypes: [DInt], note: "Zero-based byte position, updated in place after conversion.",
+    memoryAreas: [I, Q, M, D, L]}
+  - {name: ret_val, dir: out, required: true, dataTypes: [Int], note: "INT error code returned by the graphical box.", 
+      memoryAreas: [I, Q, M, D, L]}
+  - {name: dstVariable, dir: out, required: true, dataTypes: ["*"], note: "Destination variable written by deserialization.
+      All datatypes are permitted subject to documented exceptions.", memoryAreas: [I, Q, D, L]}
+  result:
+    kind: none
+  enEno:
+    en: {present: true, dataTypes: [Bool], memoryArea: {"S7-1200": [I, Q, M, D, L, constant], "S7-1500": [I, Q, M, D, L, constant]}}
+    eno: {present: true, dataTypes: [Bool], memoryArea: {"S7-1200": [I, Q, M, D, L], "S7-1500": [I, Q, M, D, L]}}
+  template: {shape: none, keys: [], extra: {}}
+  confidence: shape-only
+  notes: >-
+    Converts a sequential BYTE/CHAR representation back to its original PLC datatype, STRUCT or ARRAY.
+    POS is an accumulator across repeated calls. Optimized buffers require the documented firmware
+    versions; alignment bytes are ignored automatically.
+  source: "docs/fbd-knowhow/06-Move.md"
+Serialize:
+  family: move
+  callShape: box
+  instanceType:
+  pins:
+  - {name: srcVariable, dir: in, required: true, dataTypes: ["*"], note: "Source value to serialize. Peripheral I/O is not
+      allowed; technology-object element restrictions apply.", memoryAreas: [I, Q, D, L]}
+  - {name: pos, dir: in, required: true, dataTypes: [DInt], note: "Zero-based byte position, updated in place after serialization.",
+    memoryAreas: [I, Q, M, D, L]}
+  - {name: ret_val, dir: out, required: true, dataTypes: [Int], note: "INT error code returned by the graphical box.", 
+      memoryAreas: [I, Q, M, D, L]}
+  - {name: dstArray, dir: out, required: true, dataTypes: [Array], note: "ARRAY of BYTE or CHAR receiving the serialized
+      stream. Peripheral I/O is not allowed.", memoryAreas: [I, Q, D, L]}
+  result:
+    kind: none
+  enEno:
+    en: {present: true, dataTypes: [Bool], memoryArea: {"S7-1200": [I, Q, M, D, L, constant], "S7-1500": [I, Q, M, D, L, constant]}}
+    eno: {present: true, dataTypes: [Bool], memoryArea: {"S7-1200": [I, Q, M, D, L], "S7-1500": [I, Q, M, D, L]}}
+  template: {shape: none, keys: [], extra: {}}
+  confidence: shape-only
+  notes: >-
+    Serializes a PLC datatype, STRUCT or ARRAY into a sequential BYTE/CHAR buffer. POS is updated to the
+    next free byte. Padding content is not defined and must not be interpreted as application data.
+  source: "docs/fbd-knowhow/06-Move.md"
+MoveBlockI:
+  family: move
+  callShape: box
+  instanceType:
+  pins:
+  - {name: IN, dir: in, required: true, dataTypes: ["Bit strings", "Integers", "Floating-point numbers", "Timers", 
+        Date, Char, WChar, Time_Of_Day, LTime_Of_Day], containerKinds: [Array], note: "First source ARRAY element. Source
+      and destination element datatypes must match.", memoryAreas: [D, L]}
+  - {name: COUNT, dir: in, required: true, dataTypes: [USInt, UInt, UDInt, ULInt], note: "Number of consecutive elements
+      to copy; ULINT is available only on S7-1500-class targets.", memoryAreas: [I, Q, M, D, L, P, constant]}
+  - {name: OUT, dir: out, required: true, dataTypes: ["Bit strings", "Integers", "Floating-point numbers", "Timers", 
+        Date, Char, WChar, Time_Of_Day, LTime_Of_Day], containerKinds: [Array], note: "First destination ARRAY element.",
+    memoryAreas: [D, L]}
+  result:
+    kind: none
+  enEno:
+    en: {present: true, dataTypes: [Bool], memoryArea: {"S7-1200": [I, Q, M, D, L, constant], "S7-1500": [I, Q, M, D, L, T, C, constant]}}
+    eno: {present: true, dataTypes: [Bool], memoryArea: {"S7-1200": [I, Q, M, D, L], "S7-1500": [I, Q, M, D, L]}}
+  template: {shape: none, keys: [], extra: {}}
+  confidence: shape-only
+  notes: >-
+    MOVE_BLK copies COUNT consecutive ARRAY elements from IN to OUT. ENO is cleared when the requested
+    range exceeds the available source or destination range. The operation is interruptible.
+  source: "docs/fbd-knowhow/06-Move.md"
+MoveBlockVariant:
+  family: move
+  callShape: box
+  instanceType:
+  pins:
+  - {name: src, dir: in, required: true, dataTypes: [Variant, Array], note: "VARIANT or ARRAY source. Declaration is limited
+      to Input, InOut or Temp; BOOL sources are not permitted.", memoryAreas: [L]}
+  - {name: count, dir: in, required: true, dataTypes: [UDInt], note: "Number of elements to copy. Use 1 when either side
+      is a single non-ARRAY value.", memoryAreas: [I, Q, M, D, L]}
+  - {name: srcIndex, dir: in, required: true, dataTypes: [DInt], note: "Zero-based source index, independent of the ARRAY's
+      declared low bound.", memoryAreas: [I, Q, M, D, L]}
+  - {name: dstIndex, dir: in, required: true, dataTypes: [DInt], note: "Zero-based destination index, independent of the
+      ARRAY's declared low bound.", memoryAreas: [I, Q, M, D, L]}
+  - {name: ret_val, dir: out, required: true, dataTypes: [Int], note: "INT error code.", memoryAreas: [I, Q, M, D, L]}
+  - {name: dst, dir: out, required: true, dataTypes: [Variant], note: "VARIANT destination. The actual destination tag must
+      be declared InOut even though the instruction pin is Output.", memoryAreas: [L]}
+  result:
+    kind: none
+  enEno:
+    en: {present: true, dataTypes: [Bool], memoryArea: {"S7-1200": [I, Q, M, D, L, constant], "S7-1500": [I, Q, M, D, L, constant]}}
+    eno: {present: true, dataTypes: [Bool], memoryArea: {"S7-1200": [I, Q, M, D, L], "S7-1500": [I, Q, M, D, L]}}
+  template: {shape: none, keys: [], extra: {}}
+  confidence: shape-only
+  notes: >-
+    Copies complete ARRAYs or selected ARRAY ranges through VARIANT operands. COUNT and both zero-based
+    indexes must describe ranges that fit within the resolved source and destination.
+  source: "docs/fbd-knowhow/06-Move.md"
+MoveBlockU:
+  family: move
+  callShape: box
+  instanceType:
+  pins:
+  - {name: IN, dir: in, required: true, dataTypes: ["Bit strings", "Integers", "Floating-point numbers", "Timers", 
+        Date, Char, WChar, Time_Of_Day, LTime_Of_Day], containerKinds: [Array], note: "First source ARRAY element. Source
+      and destination element datatypes must match.", memoryAreas: [D, L]}
+  - {name: COUNT, dir: in, required: true, dataTypes: [USInt, UInt, UDInt, ULInt], note: "Number of consecutive elements
+      to copy; ULINT is available only on S7-1500-class targets.", memoryAreas: [I, Q, M, D, L, P, constant]}
+  - {name: OUT, dir: out, required: true, dataTypes: ["Bit strings", "Integers", "Floating-point numbers", "Timers", 
+        Date, Char, WChar, Time_Of_Day, LTime_Of_Day], containerKinds: [Array], note: "First destination ARRAY element.",
+    memoryAreas: [D, L]}
+  result:
+    kind: none
+  enEno:
+    en: {present: true, dataTypes: [Bool], memoryArea: {"S7-1200": [I, Q, M, D, L, constant], "S7-1500": [I, Q, M, D, L, T, C, constant]}}
+    eno: {present: true, dataTypes: [Bool], memoryArea: {"S7-1200": [I, Q, M, D, L], "S7-1500": [I, Q, M, D, L]}}
+  template: {shape: none, keys: [], extra: {}}
+  confidence: shape-only
+  notes: >-
+    UMOVE_BLK copies COUNT consecutive ARRAY elements from IN to OUT. ENO is cleared when the requested
+    range exceeds the available source or destination range. The operation is uninterruptible and is
+    limited to the documented maximum transfer size.
+  source: "docs/fbd-knowhow/06-Move.md"
+AssignAttempt:
+  family: move
+  callShape: box
+  instanceType:
+  pins:
+  - {name: in, dir: in, required: true, dataTypes: [Variant, DB_ANY], note: "VARIANT or DB_ANY source. Legal declaration
+      sections depend on FC/FB context.", memoryAreas: [L]}
+  - {name: out, dir: out, required: true, dataTypes: [Reference], note: "Reference destination. The exact REF_TO compatibility
+      rules depend on the resolved source type.", memoryAreas: [L]}
+  result:
+    kind: value
+    dataTypes:
+    - Bool
+    notes: Success/RLO result of the graphical ?= assignment attempt.
+  enEno:
+    en: {present: true, dataTypes: [Bool], memoryArea: {"S7-1200": [], "S7-1500": []}}
+    eno: {present: true, dataTypes: [Bool], memoryArea: {"S7-1200": [], "S7-1500": []}}
+  template: {shape: none, keys: [], extra: {}}
+  confidence: shape-only
+  notes: >-
+    Attempts a runtime-checked assignment to a reference. On success the destination receives a valid
+    reference and the BOOL result is TRUE; on failure the destination becomes NULL and the result is
+    FALSE.
+  source: "docs/fbd-knowhow/06-Move.md"
+FillBlockI:
+  family: move
+  callShape: box
+  instanceType:
+  pins:
+  - {name: IN, dir: in, required: true, dataTypes: ["Bit strings", "Integers", "Floating-point numbers", "Timers", 
+        Date, Char, WChar, Time_Of_Day, LTime_Of_Day], note: "Value repeated into the destination range.", memoryAreas: [
+      I, Q, M, D, L, P, constant]}
+  - {name: COUNT, dir: in, required: true, dataTypes: [USInt, UInt, UDInt, ULInt], note: "Number of destination elements
+      to fill; ULINT is S7-1500-only.", memoryAreas: [I, Q, M, D, L, P, constant]}
+  - {name: OUT, dir: out, required: true, dataTypes: ["Bit strings", "Integers", "Floating-point numbers", "Timers", 
+        Date, Char, WChar, Time_Of_Day, LTime_Of_Day], containerKinds: [Array, Struct], note: "First destination ARRAY or
+      homogeneous STRUCT/PLC-datatype member.", memoryAreas: [D, L]}
+  result:
+    kind: none
+  enEno:
+    en: {present: true, dataTypes: [Bool], memoryArea: {"S7-1200": [I, Q, M, D, L, constant], "S7-1500": [I, Q, M, D, L, T, C, constant]}}
+    eno: {present: true, dataTypes: [Bool], memoryArea: {"S7-1200": [I, Q, M, D, L], "S7-1500": [I, Q, M, D, L]}}
+  template: {shape: none, keys: [], extra: {}}
+  confidence: shape-only
+  notes: >-
+    FILL_BLK writes IN to COUNT consecutive target elements beginning at OUT. STRUCT/UDT filling
+    requires the affected members to share one elementary datatype. The operation is interruptible.
+  source: "docs/fbd-knowhow/06-Move.md"
+FillBlockU:
+  family: move
+  callShape: box
+  instanceType:
+  pins:
+  - {name: IN, dir: in, required: true, dataTypes: ["Bit strings", "Integers", "Floating-point numbers", "Timers", 
+        Date, Char, WChar, Time_Of_Day, LTime_Of_Day], note: "Value repeated into the destination range.", memoryAreas: [
+      I, Q, M, D, L, P, constant]}
+  - {name: COUNT, dir: in, required: true, dataTypes: [USInt, UInt, UDInt, ULInt], note: "Number of destination elements
+      to fill; ULINT is S7-1500-only.", memoryAreas: [I, Q, M, D, L, P, constant]}
+  - {name: OUT, dir: out, required: true, dataTypes: ["Bit strings", "Integers", "Floating-point numbers", "Timers", 
+        Date, Char, WChar, Time_Of_Day, LTime_Of_Day], containerKinds: [Array, Struct], note: "First destination ARRAY or
+      homogeneous STRUCT/PLC-datatype member.", memoryAreas: [D, L]}
+  result:
+    kind: none
+  enEno:
+    en: {present: true, dataTypes: [Bool], memoryArea: {"S7-1200": [I, Q, M, D, L, constant], "S7-1500": [I, Q, M, D, L, T, C, constant]}}
+    eno: {present: true, dataTypes: [Bool], memoryArea: {"S7-1200": [I, Q, M, D, L], "S7-1500": [I, Q, M, D, L]}}
+  template: {shape: none, keys: [], extra: {}}
+  confidence: shape-only
+  notes: >-
+    UFILL_BLK writes IN to COUNT consecutive target elements beginning at OUT. STRUCT/UDT filling
+    requires the affected members to share one elementary datatype. The operation is uninterruptible and
+    subject to the documented transfer-size limit.
+  source: "docs/fbd-knowhow/06-Move.md"
+SCATTER:
+  family: move
+  callShape: box
+  instanceType:
+  pins:
+  - {name: in, dir: in, required: true, dataTypes: [Byte, Word, DWord, LWord], note: "Bit-sequence operand or BOOL container.
+      Peripheral I/O and technology-object DB data are excluded where documented.", memoryAreas: [I, Q, M, D, L]}
+  - {name: out, dir: out, required: true, dataTypes: [Array, Struct, "PLC data type"], note: "Bit-sequence operand or BOOL
+      container. Peripheral I/O and technology-object DB data are excluded where documented.", memoryAreas: [I, Q, M, 
+        D, L]}
+  result:
+    kind: none
+  enEno:
+    en: {present: true, dataTypes: [Bool], memoryArea: {"S7-1200": [I, Q, M, D, L, constant], "S7-1500": [I, Q, M, D, L, constant]}}
+    eno: {present: true, dataTypes: [Bool], memoryArea: {"S7-1200": [I, Q, M, D, L], "S7-1500": [I, Q, M, D, L]}}
+  template: {shape: none, keys: [], extra: {}}
+  confidence: shape-only
+  notes: >-
+    Parses BYTE/WORD/DWORD/LWORD into an equally sized ARRAY, STRUCT or PLC datatype containing only
+    BOOL members. Multidimensional BOOL ARRAYs are not permitted.
+  source: "docs/fbd-knowhow/06-Move.md"
+ScatterBlock:
+  family: move
+  callShape: box
+  instanceType:
+  pins:
+  - {name: in, dir: in, required: true, dataTypes: [Byte, Word, DWord, LWord], containerKinds: [Array], note: "ARRAY element/count
+      operand. Peripheral I/O and technology-object DB data are excluded.", memoryAreas: [I, Q, M, D, L]}
+  - {name: countIn, dir: in, required: true, dataTypes: [USInt, UInt, UDInt, ULInt], note: "ARRAY element/count operand.
+      Peripheral I/O and technology-object DB data are excluded.", memoryAreas: [I, Q, M, D, L]}
+  - {name: out, dir: out, required: true, dataTypes: [Bool, Struct, "PLC data type"], containerKinds: [Array], note: "ARRAY
+      element/count operand. Peripheral I/O and technology-object DB data are excluded.", memoryAreas: [I, Q, M, D, L]}
+  result:
+    kind: none
+  enEno:
+    en: {present: true, dataTypes: [Bool], memoryArea: {"S7-1200": [I, Q, M, D, L, constant], "S7-1500": [I, Q, M, D, L, constant]}}
+    eno: {present: true, dataTypes: [Bool], memoryArea: {"S7-1200": [I, Q, M, D, L], "S7-1500": [I, Q, M, D, L]}}
+  template: {shape: none, keys: [], extra: {}}
+  confidence: shape-only
+  notes: >-
+    Parses COUNT_IN consecutive ARRAY elements of BYTE/WORD/DWORD/LWORD into BOOL elements beginning at
+    OUT. The destination start index must satisfy the documented bit-width alignment rule.
+  source: "docs/fbd-knowhow/06-Move.md"
+GATHER:
+  family: move
+  callShape: box
+  instanceType:
+  pins:
+  - {name: in, dir: in, required: true, dataTypes: [Bool, Struct, "PLC data type"], note: "Bit-sequence operand or BOOL
+      container. Peripheral I/O and technology-object DB data are excluded where documented.", memoryAreas: [I, Q, M, 
+        D, L]}
+  - {name: out, dir: out, required: true, dataTypes: [Byte, Word, DWord, LWord], note: "Bit-sequence operand or BOOL container.
+      Peripheral I/O and technology-object DB data are excluded where documented.", memoryAreas: [I, Q, M, D, L]}
+  result:
+    kind: none
+  enEno:
+    en: {present: true, dataTypes: [Bool], memoryArea: {"S7-1200": [I, Q, M, D, L, constant], "S7-1500": [I, Q, M, D, L, constant]}}
+    eno: {present: true, dataTypes: [Bool], memoryArea: {"S7-1200": [I, Q, M, D, L], "S7-1500": [I, Q, M, D, L]}}
+  template: {shape: none, keys: [], extra: {}}
+  confidence: shape-only
+  notes: >-
+    Merges an equally sized ARRAY, STRUCT or PLC datatype containing only BOOL members into
+    BYTE/WORD/DWORD/LWORD. Multidimensional BOOL ARRAYs are not permitted.
+  source: "docs/fbd-knowhow/06-Move.md"
+GatherBlock:
+  family: move
+  callShape: box
+  instanceType:
+  pins:
+  - {name: in, dir: in, required: true, dataTypes: [Bool, Struct, "PLC data type"], containerKinds: [Array], note: "ARRAY
+      element/count operand. Peripheral I/O and technology-object DB data are excluded.", memoryAreas: [I, Q, M, D, L]}
+  - {name: countOut, dir: in, required: true, dataTypes: [USInt, UInt, UDInt, ULInt], note: "ARRAY element/count operand.
+      Peripheral I/O and technology-object DB data are excluded.", memoryAreas: [I, Q, M, D, L]}
+  - {name: out, dir: out, required: true, dataTypes: [Byte, Word, DWord, LWord], containerKinds: [Array], note: "ARRAY element/count
+      operand. Peripheral I/O and technology-object DB data are excluded.", memoryAreas: [I, Q, M, D, L]}
+  result:
+    kind: none
+  enEno:
+    en: {present: true, dataTypes: [Bool], memoryArea: {"S7-1200": [I, Q, M, D, L, constant], "S7-1500": [I, Q, M, D, L, constant]}}
+    eno: {present: true, dataTypes: [Bool], memoryArea: {"S7-1200": [I, Q, M, D, L], "S7-1500": [I, Q, M, D, L]}}
+  template: {shape: none, keys: [], extra: {}}
+  confidence: shape-only
+  notes: >-
+    Merges BOOL elements beginning at IN into COUNT_OUT consecutive BYTE/WORD/DWORD/LWORD ARRAY elements
+    at OUT. The source start index must satisfy the documented bit-width alignment rule.
+  source: "docs/fbd-knowhow/06-Move.md"
+Swap:
+  family: move
+  callShape: box
+  instanceType:
+  pins:
+  - {name: in, dir: in, required: true, dataTypes: [Word, DWord, LWord], note: "WORD, DWORD or S7-1500 LWORD value whose
+      byte order is reversed.", memoryAreas: [I, Q, M, D, L, P, constant]}
+  - {name: out, dir: out, required: true, dataTypes: [Word, DWord, LWord], note: "Same-width destination value.", 
+      memoryAreas: [I, Q, M, D, L, P]}
+  result:
+    kind: none
+  enEno:
+    en: {present: true, dataTypes: [Bool], memoryArea: {"S7-1200": [I, Q, M, D, L, constant], "S7-1500": [I, Q, M, D, L, T, C, constant]}}
+    eno: {present: true, dataTypes: [Bool], memoryArea: {"S7-1200": [I, Q, M, D, L], "S7-1500": [I, Q, M, D, L]}}
+  template: {shape: none, keys: [], extra: {}}
+  confidence: shape-only
+  notes: >-
+    Reverses the order of bytes within a WORD, DWORD or LWORD value.
+  source: "docs/fbd-knowhow/06-Move.md"
+VariantGet:
+  family: move
+  callShape: box
+  instanceType:
+  pins:
+  - {name: src, dir: in, required: true, dataTypes: [Variant], note: "VARIANT source declared in Input, InOut or Temp.",
+    memoryAreas: [L]}
+  - {name: dst, dir: out, required: true, dataTypes: ["Bit strings", "Integers", "Floating-point numbers", "Timers", "Date
+        and time", "Character strings", "PLC data type"], note: "Typed destination. P is available only on S7-1500-class
+      targets.", memoryAreas: [I, Q, M, D, L, P]}
+  result:
+    kind: none
+  enEno:
+    en: {present: true, dataTypes: [Bool], memoryArea: {"S7-1200": [I, Q, M, D, L, constant], "S7-1500": [I, Q, M, D, L, constant]}}
+    eno: {present: true, dataTypes: [Bool], memoryArea: {"S7-1200": [I, Q, M, D, L], "S7-1500": [I, Q, M, D, L]}}
+  template: {shape: none, keys: [], extra: {}}
+  confidence: confirmed-compiled
+  notes: >-
+    Reads the value referenced by SRC into DST. The destination datatype must match the datatype
+    referenced by the VARIANT.
+  source: "docs/fbd-knowhow/06-Move.md"
+VariantPut:
+  family: move
+  callShape: box
+  instanceType:
+  pins:
+  - {name: src, dir: in, required: true, dataTypes: ["Bit strings", "Integers", "Floating-point numbers", "Timers", "Date
+        and time", "Character strings", "PLC data type"], note: "Typed source value. P is available only on S7-1500-class
+      targets.", memoryAreas: [I, Q, M, D, L, P]}
+  - {name: dst, dir: in, required: true, dataTypes: [Variant], note: "VARIANT destination declared in Input, InOut or Temp;
+      the referenced storage is modified.", memoryAreas: [L]}
+  result:
+    kind: none
+  enEno:
+    en: {present: true, dataTypes: [Bool], memoryArea: {"S7-1200": [I, Q, M, D, L, constant], "S7-1500": [I, Q, M, D, L, constant]}}
+    eno: {present: true, dataTypes: [Bool], memoryArea: {"S7-1200": [I, Q, M, D, L], "S7-1500": [I, Q, M, D, L]}}
+  template: {shape: none, keys: [], extra: {}}
+  confidence: confirmed-compiled
+  notes: >-
+    Writes SRC into the storage referenced by DST. The source datatype must match the datatype
+    referenced by the VARIANT.
+  source: "docs/fbd-knowhow/06-Move.md"
+CountOfElements:
+  family: move
+  callShape: box
+  instanceType:
+  pins:
+  - {name: in, dir: in, required: true, dataTypes: [Variant, ResolvedSymbol], note: "VARIANT or ResolvedSymbol operand declared
+      in Input, InOut or Temp.", memoryAreas: [L]}
+  - {name: ret_val, dir: out, required: true, dataTypes: [UDInt], note: "UDINT result: element count for a one-dimensional
+      ARRAY, or number of dimensions for a multidimensional ARRAY.", memoryAreas: [I, Q, M, D, L]}
+  result:
+    kind: none
+  enEno:
+    en: {present: true, dataTypes: [Bool], memoryArea: {"S7-1200": [I, Q, M, D, L, constant], "S7-1500": [I, Q, M, D, L, constant]}}
+    eno: {present: true, dataTypes: [Bool], memoryArea: {"S7-1200": [I, Q, M, D, L], "S7-1500": [I, Q, M, D, L]}}
+  template: {shape: none, keys: [], extra: {}}
+  confidence: confirmed-compiled
+  notes: >-
+    Returns ARRAY metadata through RET_VAL. The result is zero when the operand does not reference an
+    ARRAY; BOOL ARRAY padding elements are included in the documented count.
+  source: "docs/fbd-knowhow/06-Move.md"
+Lower_Bound:
+  family: move
+  callShape: box
+  instanceType:
+  pins:
+  - {name: arr, dir: in, required: true, dataTypes: [Array], note: "ARRAY[*] interface operand. FB permits InOut; FC permits
+      Input or InOut.", memoryAreas: [L]}
+  - {name: dim, dir: in, required: true, dataTypes: [UDInt], note: "One-based ARRAY dimension number.", memoryAreas: [
+        I, Q, M, D, L, P, constant]}
+  - {name: out, dir: out, required: true, dataTypes: [DInt], note: "DINT low bound of the selected dimension.", 
+      memoryAreas: [I, Q, M, D, L, P]}
+  result:
+    kind: none
+  enEno:
+    en: {present: true, dataTypes: [Bool], memoryArea: {"S7-1200": [I, Q, M, D, L, constant], "S7-1500": [I, Q, M, D, L, constant]}}
+    eno: {present: true, dataTypes: [Bool], memoryArea: {"S7-1200": [I, Q, M, D, L], "S7-1500": [I, Q, M, D, L]}}
+  template: {shape: none, keys: [], extra: {S7_GenerateENO: "TRUE"}}
+  confidence: confirmed-compiled
+  notes: >-
+    Reads the variable low bound of one dimension of an ARRAY[*] interface operand.
+  source: "docs/fbd-knowhow/06-Move.md"
+Upper_Bound:
+  family: move
+  callShape: box
+  instanceType:
+  pins:
+  - {name: arr, dir: in, required: true, dataTypes: [Array], note: "ARRAY[*] interface operand. FB permits InOut; FC permits
+      Input or InOut.", memoryAreas: [L]}
+  - {name: dim, dir: in, required: true, dataTypes: [UDInt], note: "One-based ARRAY dimension number.", memoryAreas: [
+        I, Q, M, D, L, P, constant]}
+  - {name: out, dir: out, required: true, dataTypes: [DInt], note: "DINT high bound of the selected dimension.", 
+      memoryAreas: [I, Q, M, D, L, P]}
+  result:
+    kind: none
+  enEno:
+    en: {present: true, dataTypes: [Bool], memoryArea: {"S7-1200": [I, Q, M, D, L, constant], "S7-1500": [I, Q, M, D, L, constant]}}
+    eno: {present: true, dataTypes: [Bool], memoryArea: {"S7-1200": [I, Q, M, D, L], "S7-1500": [I, Q, M, D, L]}}
+  template: {shape: none, keys: [], extra: {S7_GenerateENO: "TRUE"}}
+  confidence: confirmed-compiled
+  notes: >-
+    Reads the variable high bound of one dimension of an ARRAY[*] interface operand.
+  source: "docs/fbd-knowhow/06-Move.md"
+ResolveSymbols:
+  family: move
+  callShape: instance-dot
+  instanceType: ResolveSymbols
+  pins:
+  - {name: execute, dir: in, required: true, dataTypes: [Bool], note: "Rising edge starts the asynchronous resolution job.",
+    memoryAreas: [I, Q, M, D, L]}
+  - {name: firstIndex, dir: in, required: true, dataTypes: [DInt], note: "First ARRAY index to resolve; C is the S7-1500
+      legacy counter area.", memoryAreas: [I, Q, M, D, L, C]}
+  - {name: lastIndex, dir: in, required: true, dataTypes: [DInt], note: "Last ARRAY index to resolve; C is the S7-1500 legacy
+      counter area.", memoryAreas: [I, Q, M, D, L, C]}
+  - {name: done, dir: out, required: true, dataTypes: [Bool], note: "TRUE for one cycle when the asynchronous job completes.",
+    memoryAreas: [I, Q, M, D, L]}
+  - {name: busy, dir: out, required: true, dataTypes: [Bool], note: "TRUE while the asynchronous job is active.", 
+      memoryAreas: [I, Q, M, D, L]}
+  - {name: error, dir: out, required: true, dataTypes: [Bool], note: "TRUE when processing reports an error.", 
+      memoryAreas: [I, Q, M, D, L]}
+  - {name: status, dir: out, required: true, dataTypes: [Int], note: "INT job status or error code.", memoryAreas: [I, 
+        Q, M, D, L]}
+  - {name: nameList, dir: in, required: true, dataTypes: [Array], note: "ARRAY of WSTRING containing fully qualified symbolic
+      names.", memoryAreas: [D]}
+  - {name: referenceList, dir: in, required: true, dataTypes: [Array], note: "Optimized ARRAY of ResolvedSymbol receiving
+      the resolved references.", memoryAreas: [D]}
+  result:
+    kind: none
+  enEno:
+    en: {present: false, dataTypes: [], memoryArea: {"S7-1200": [], "S7-1500": []}}
+    eno: {present: false, dataTypes: [], memoryArea: {"S7-1200": [], "S7-1500": []}}
+  template: {shape: none, keys: [], extra: {}}
+  confidence: confirmed-compiled
+  notes: >-
+    S7-1500 asynchronous instance instruction. nameList and referenceList must have identical ARRAY
+    limits; referenceList must reside in an optimized global DB. A maximum of ten jobs and 2,000 symbols
+    may be active in total.
+  source: "docs/fbd-knowhow/06-Move.md"
+MoveResolvedSymbolsToBuffer:
+  family: move
+  callShape: box
+  instanceType:
+  pins:
+  - {name: firstIndex, dir: in, required: true, dataTypes: [DInt], note: "First resolved-symbol index to copy.", 
+      memoryAreas: [I, Q, M, D, L, C]}
+  - {name: lastIndex, dir: in, required: true, dataTypes: [DInt], note: "Last resolved-symbol index to copy.", 
+      memoryAreas: [I, Q, M, D, L, C]}
+  - {name: src, dir: in, required: true, dataTypes: [Array], note: "ARRAY of ResolvedSymbol references.", memoryAreas: [
+      D, L]}
+  - {name: dstOffsets, dir: in, required: true, dataTypes: [Array], note: "ARRAY of DINT destination bit offsets.", 
+      memoryAreas: [I, Q, M, D, L]}
+  - {name: mode, dir: in, required: true, dataTypes: [DWord], note: "DWORD byte order: 0 = big-endian, 1 = little-endian.",
+    memoryAreas: [I, Q, M, D, L, C]}
+  - {name: Ret_Val, dir: out, required: true, dataTypes: [Int], note: "INT function/error value exposed as a graphical output.",
+    memoryAreas: [I, Q, M, D, L]}
+  - {name: dst, dir: in, required: true, dataTypes: [Array], note: "ARRAY of BYTE destination buffer.", memoryAreas: [
+        D, L]}
+  - {name: status, dir: in, required: true, dataTypes: [Array], note: "ARRAY of INT per-symbol status values.", 
+      memoryAreas: [D, L]}
+  result:
+    kind: none
+  template: {shape: none, keys: [], extra: {}}
+  confidence: confirmed-compiled
+  notes: >-
+    S7-1500 instruction that reads values through ResolvedSymbol references and packs them into a BYTE
+    buffer. src, dstOffsets and status must use matching ARRAY limits.
+  source: "docs/fbd-knowhow/06-Move.md"
+MoveResolvedSymbolsFromBuffer:
+  family: move
+  callShape: box
+  instanceType:
+  pins:
+  - {name: firstIndex, dir: in, required: true, dataTypes: [DInt], note: "First resolved-symbol index to write.", 
+      memoryAreas: [I, Q, M, D, L, C]}
+  - {name: lastIndex, dir: in, required: true, dataTypes: [DInt], note: "Last resolved-symbol index to write.", 
+      memoryAreas: [I, Q, M, D, L, C]}
+  - {name: mode, dir: in, required: true, dataTypes: [DWord], note: "DWORD byte order: 0 = big-endian, 1 = little-endian.",
+    memoryAreas: [I, Q, M, D, L, C]}
+  - {name: src, dir: in, required: true, dataTypes: [Array], note: "ARRAY of BYTE source buffer.", memoryAreas: [D, L]}
+  - {name: srcOffsets, dir: in, required: true, dataTypes: [Array], note: "ARRAY of DINT source bit offsets.", 
+      memoryAreas: [D, L]}
+  - {name: Ret_Val, dir: out, required: true, dataTypes: [Int], note: "INT function/error value exposed as a graphical output.",
+    memoryAreas: [I, Q, M, D, L]}
+  - {name: dst, dir: in, required: true, dataTypes: [Array], note: "ARRAY of ResolvedSymbol target references.", 
+      memoryAreas: [D, L]}
+  - {name: status, dir: in, required: true, dataTypes: [Array], note: "ARRAY of INT per-symbol status values.", 
+      memoryAreas: [D, L]}
+  result:
+    kind: none
+  template: {shape: none, keys: [], extra: {}}
+  confidence: confirmed-compiled
+  notes: >-
+    S7-1500 instruction that unpacks values from a BYTE buffer and writes them through ResolvedSymbol
+    references. dst, srcOffsets and status must use matching ARRAY limits.
+  source: "docs/fbd-knowhow/06-Move.md"

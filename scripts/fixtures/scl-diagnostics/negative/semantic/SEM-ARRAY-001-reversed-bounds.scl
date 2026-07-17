@@ -1,0 +1,11 @@
+FUNCTION_BLOCK "Semantic_ArrayReversedBounds"
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+
+VAR
+    values : Array[10..0] of Int;
+    // EXPECT: error[array.lower-bound-greater-than-upper] SEM-ARRAY-001
+END_VAR
+
+BEGIN
+END_FUNCTION_BLOCK

@@ -1,0 +1,312 @@
+﻿{
+    S7_BlockComment := "Fixture";
+    S7_BlockTitle := "Fixture";
+    S7_Optimized := "TRUE";
+    S7_PreferredLanguage := "FBD";
+    S7_Version := "0.1"
+}
+FUNCTION_BLOCK "FB_ControlValve"
+    VAR_INPUT
+        { S7_MLC := "Fixture" }
+        i_rAutoCmd : Real;
+        { S7_MLC := "Fixture" }
+        i_xManualMode : Bool;
+        { S7_MLC := "Fixture" }
+        i_rManualCmd : Real;
+        { S7_MLC := "Fixture" }
+        i_iFbRaw : Int;
+        { S7_MLC := "Fixture" }
+        i_xFbEnable : Bool;
+        { S7_MLC := "Fixture" }
+        i_rDevLimit : Real := 10.0;
+        { S7_MLC := "Fixture" }
+        i_tDevDelay : Time := T#10S;
+        { S7_MLC := "Fixture" }
+        i_rRateLimit : Real := 0.0;
+        { S7_MLC := "Fixture" }
+        i_xAckAlarm : Bool;
+    END_VAR
+    VAR_OUTPUT
+        { S7_MLC := "Fixture" }
+        q_iOutRaw : Int;
+        { S7_MLC := "Fixture" }
+        q_rCmd : Real;
+        { S7_MLC := "Fixture" }
+        q_rFbPos : Real;
+        { S7_MLC := "Fixture" }
+        q_xManual : Bool;
+        { S7_MLC := "Fixture" }
+        q_xDevAlarm : Bool;
+        { S7_MLC := "Fixture" }
+        q_xAlarmGroup : Bool;
+    END_VAR
+    VAR
+        statCmd : Real;
+        statAlmDev : Bool;
+        statRtMem : LReal;
+        tonDev : TON_TIME;
+    END_VAR
+    VAR_TEMP
+        tTarget : Real;
+        tDeltaT : LReal;
+        tDeltaTReal : Real;
+        tMaxStep : Real;
+        tNegMaxStep : Real;
+        tDelta : Real;
+        tScaled : Real;
+        tNormalized : Real;
+        tFbReal : Real;
+        tDev : Real;
+    END_VAR
+
+    {
+        S7_Language := "FBD";
+        S7_NetworkTitle := "Fixture"
+    }
+    NETWORK
+        RUNG TRUE
+            Move(
+                in := 0.0,
+                out1 => #tDev
+            )
+        END_RUNG
+    END_NETWORK
+    {
+        S7_Language := "FBD";
+        S7_NetworkTitle := "Fixture"
+    }
+    NETWORK
+        RUNG #i_xManualMode
+            A()
+            Move(
+                in := #i_rManualCmd,
+                out1 => #tTarget
+            )
+        END_RUNG
+        RUNG #i_xManualMode
+            NOT A()
+            Move(
+                in := #i_rAutoCmd,
+                out1 => #tTarget
+            )
+        END_RUNG
+        RUNG
+            {
+                S7_Templates := "value_type := Real"; 
+                S7_GenerateENO := "TRUE"
+            }
+            Limit(
+                min := 0.0,
+                in := #tTarget,
+                max := 100.0,
+                out => #tTarget
+            )
+        END_RUNG
+    END_NETWORK
+    {
+        S7_Language := "FBD";
+        S7_NetworkTitle := "Fixture"
+    }
+    NETWORK
+        RUNG
+            Runtime(
+                ret_val => #tDeltaT,
+                mem := #statRtMem
+            )
+            { S7_Templates := "[SrcType := LReal, DestType := Real]" }
+            Convert(
+                in := #tDeltaT,
+                out => #tDeltaTReal
+            )
+            Mul(
+                in1 := #i_rRateLimit,
+                in2 := #tDeltaTReal,
+                out => #tMaxStep
+            )
+        END_RUNG
+        RUNG
+            Sub(
+                in1 := #tTarget,
+                in2 := #statCmd,
+                out => #tDelta
+            )
+            { S7_Templates := "SrcType := Real" }
+            Neg(
+                in := #tMaxStep,
+                out => #tNegMaxStep
+            )
+            {
+                S7_Templates := "value_type := Real"; 
+                S7_GenerateENO := "TRUE"
+            }
+            Limit(
+                min := #tNegMaxStep,
+                in := #tDelta,
+                max := #tMaxStep,
+                out => #tDelta
+            )
+        END_RUNG
+        RUNG
+            { S7_Templates := "SrcType := Real" }
+            GT_Contact(
+                in1 := #i_rRateLimit,
+                in2 := 0.0
+            )
+            Add(
+                in1 := #statCmd,
+                in2 := #tDelta,
+                out => #statCmd
+            )
+        END_RUNG
+        RUNG
+            { S7_Templates := "SrcType := Real" }
+            LE_Contact(
+                in1 := #i_rRateLimit,
+                in2 := 0.0
+            )
+            Move(
+                in := #tTarget,
+                out1 => #statCmd
+            )
+        END_RUNG
+    END_NETWORK
+    {
+        S7_Language := "FBD";
+        S7_NetworkTitle := "Fixture"
+    }
+    NETWORK
+        RUNG
+            { S7_Templates := "[SrcType := Real, DestType := Real]" }
+            Normalize(
+                min := 0.0,
+                value := #statCmd,
+                max := 100.0,
+                out => #tNormalized
+            )
+            { S7_Templates := "[SrcType := Real, DestType := Int]" }
+            Scale(
+                min := 0,
+                value := #tNormalized,
+                max := 27648,
+                out => #q_iOutRaw
+            )
+        END_RUNG
+    END_NETWORK
+    {
+        S7_Language := "FBD";
+        S7_NetworkTitle := "Fixture"
+    }
+    NETWORK
+        RUNG
+            { S7_Templates := "[SrcType := Int, DestType := Real]" }
+            Normalize(
+                min := 0,
+                value := #i_iFbRaw,
+                max := 27648,
+                out => #tNormalized
+            )
+            { S7_Templates := "[SrcType := Real, DestType := Real]" }
+            Scale(
+                min := 0.0,
+                value := #tNormalized,
+                max := 100.0,
+                out => #tFbReal
+            )
+        END_RUNG
+        RUNG #i_xFbEnable
+            A()
+            Move(
+                in := #tFbReal,
+                out1 => #q_rFbPos
+            )
+        END_RUNG
+        RUNG #i_xFbEnable
+            NOT A()
+            Move(
+                in := #statCmd,
+                out1 => #q_rFbPos
+            )
+        END_RUNG
+    END_NETWORK
+    {
+        S7_Language := "FBD";
+        S7_NetworkTitle := "Fixture"
+    }
+    NETWORK
+        RUNG
+            Sub(
+                in1 := #statCmd,
+                in2 := #q_rFbPos,
+                out => #tDev
+            )
+            { S7_Templates := "SrcType := Real" }
+            Abs(
+                in := #tDev,
+                out => #tDev
+            )
+        END_RUNG
+        RUNG #i_xFbEnable
+            A( in2 := wire#w1 )
+            { S7_Templates := "time_type := Time" }
+            #tonDev.TON(
+                pt := #i_tDevDelay,
+                et =>  
+            )
+            S_Coil( #statAlmDev )
+        END_RUNG
+        RUNG
+            { S7_Templates := "SrcType := Real" }
+            GT_Contact(
+                in1 := #tDev,
+                in2 := #i_rDevLimit
+            )
+        END_RUNG wire#w1
+        RUNG #i_xFbEnable
+            NOT A()
+            { S7_Templates := "time_type := Time" }
+            #tonDev.TON(
+                pt := #i_tDevDelay,
+                et =>  
+            )
+        END_RUNG
+        RUNG #i_xAckAlarm
+            A( in2 := wire#w3 )
+            R_Coil( #statAlmDev )
+        END_RUNG
+        RUNG #i_xFbEnable
+            NOT A()
+            O( in2 := wire#w2 )
+        END_RUNG wire#w3
+        RUNG
+            { S7_Templates := "SrcType := Real" }
+            LE_Contact(
+                in1 := #tDev,
+                in2 := #i_rDevLimit
+            )
+        END_RUNG wire#w2
+    END_NETWORK
+    {
+        S7_Language := "FBD";
+        S7_NetworkTitle := "Fixture"
+    }
+    NETWORK
+        RUNG
+            Move(
+                in := #statCmd,
+                out1 => #q_rCmd
+            )
+        END_RUNG
+        RUNG #i_xManualMode
+            Coil( #q_xManual )
+        END_RUNG
+        RUNG #statAlmDev
+            Coil( #q_xDevAlarm )
+            Coil( #q_xAlarmGroup )
+        END_RUNG
+    END_NETWORK
+    { S7_Language := "FBD" }
+    NETWORK
+        RUNG
+        END_RUNG
+    END_NETWORK
+END_FUNCTION_BLOCK

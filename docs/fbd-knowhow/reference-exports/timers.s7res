@@ -1,0 +1,19 @@
+﻿MultiLingualTexts:
+  - id: MLC_33t
+    en-US: 'TP: Generate pulse'
+  - id: MLC_4fs
+    en-US: 'TON: Generate on-delay'
+  - id: MLC_34H
+    en-US: 'TOF: Generate off-delay'
+  - id: MLC_tG
+    en-US: 'TONR: Time accumulator'
+  - id: MLC_az
+    en-US: 'TON: Start on-delay timer'
+  - id: MLC_TG
+    en-US: 'TOF: Start off-delay timer'
+  - id: MLC_3Aj
+    en-US: 'TONR: Time accumulator'
+  - id: MLC_3mM
+    en-US: Reset timer
+  - id: MLC_3Zh
+    en-US: 'PT: Load time duration'

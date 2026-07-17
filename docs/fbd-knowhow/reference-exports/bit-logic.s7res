@@ -1,0 +1,50 @@
+﻿MultiLingualTexts:
+  - id: MLC_3xn
+    en-US: '&: AND logic operation'
+  - id: MLC_56t
+    en-US: '>=1: OR logic operation'
+  - id: MLC_UZ
+    en-US: 'X: EXCLUSIVE OR logic operation'
+  - id: MLC_3KL
+    en-US: Normal/Invert RLO
+  - id: MLC_4Sa
+    en-US: Assignment
+  - id: MLC_hY
+    en-US: Negate assignment
+  - id: MLC_4ja
+    en-US: Reset output
+  - id: MLC_3Hd
+    en-US: Set output
+  - id: MLC_Uq
+    en-US: 'SET_BF: Set bit field'
+  - id: MLC_4Cx
+    en-US: |-
+      With structures of the type PLC data type, STRUCT or ARRAY, the number of bits contained in the structure represents the maximum number of bits that can be reset:
+
+      If you specify the value "20" at the N input, for example, and the structure only contains 10 bits, then only these 10 bits are set.
+
+      If you specify the value "5" at the N input, for example, and the structure contains 10 bits, then exactly 5 bits are set.
+
+      If the operands "TagIn_1" and "TagIn_2" have the signal state "1", 5 bits are set starting at the address of the operand "MyDB".MyBoolArray[4].
+  - id: MLC_42t
+    en-US: 'RESET_BF: Reset bit field'
+  - id: MLC_bZ
+    en-US: 'SR: Set/reset flip-flop'
+  - id: MLC_38G
+    en-US: 'RS: Reset/set flip-flop'
+  - id: MLC_42P
+    en-US: 'P: Scan operand for positive signal edge'
+  - id: MLC_NX
+    en-US: 'N: Scan operand for negative signal edge'
+  - id: MLC_xc
+    en-US: 'P=: Set operand on positive signal edge'
+  - id: MLC_4EE
+    en-US: 'N=: Set operand on negative signal edge	'
+  - id: MLC_4P6
+    en-US: 'P_TRIG: Scan RLO for positive signal edge'
+  - id: MLC_3Zn
+    en-US: 'N_TRIG: Scan RLO for negative signal edge'
+  - id: MLC_3ma
+    en-US: 'R_TRIG: Detect positive signal edge'
+  - id: MLC_Na
+    en-US: 'F_TRIG: Detect negative signal edge'

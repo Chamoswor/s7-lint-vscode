@@ -1,0 +1,229 @@
+﻿{
+    S7_BlockTitle := "Fixture";
+    S7_Optimized := "TRUE";
+    S7_PreferredLanguage := "FBD";
+    S7_Version := "0.1"
+}
+FUNCTION_BLOCK "FB_SecondaryLoop"
+    VAR_INPUT
+        { S7_MLC := "Fixture" }
+        i_xCmdStart : Bool;
+        { S7_MLC := "Fixture" }
+        i_xCmdStop : Bool;
+        { S7_MLC := "Fixture" }
+        i_iPumpSelect : Int;
+        { S7_MLC := "Fixture" }
+        i_xProcessFlowOk : Bool;
+        { S7_MLC := "Fixture" }
+        i_xMotorTripA : Bool;
+        { S7_MLC := "Fixture" }
+        i_xMotorTripB : Bool;
+        { S7_MLC := "Fixture" }
+        i_xPrimaryPumpRunning : Bool;
+        { S7_MLC := "Fixture" }
+        i_xEStop : Bool;
+        { S7_MLC := "Fixture" }
+        i_xHighTemperature : Bool;
+        { S7_MLC := "Fixture" }
+        i_rPrimaryTemperature : Real;
+        { S7_MLC := "Fixture" }
+        i_rSecondaryTemperature : Real;
+        { S7_MLC := "Fixture" }
+        i_rReturnTemperature : Real;
+        { S7_MLC := "Fixture" }
+        i_xLevelOk : Bool;
+        { S7_MLC := "Fixture" }
+        i_iValveFeedbackRaw : Int;
+        { S7_MLC := "Fixture" }
+        i_xValveFeedbackEnabled : Bool;
+        { S7_MLC := "Fixture" }
+        i_xValveManual : Bool;
+        { S7_MLC := "Fixture" }
+        i_rValveManualCmd : Real;
+        { S7_MLC := "Fixture" }
+        i_xAckAlarm : Bool;
+    END_VAR
+    VAR_OUTPUT
+        { S7_MLC := "Fixture" }
+        q_xRunA : Bool;
+        { S7_MLC := "Fixture" }
+        q_xRunB : Bool;
+        { S7_MLC := "Fixture" }
+        q_iValveOutputRaw : Int;
+        { S7_MLC := "Fixture" }
+        q_xLowLevel : Bool;
+        { S7_MLC := "Fixture" }
+        q_iTICMode : Int;
+        { S7_MLC := "Fixture" }
+        q_iActivePump : Int;
+        { S7_MLC := "Fixture" }
+        q_rValvePos : Real;
+        { S7_MLC := "Fixture" }
+        q_xAlarmHighTemp : Bool;
+        { S7_MLC := "Fixture" }
+        q_xAlarmLowLevel : Bool;
+        { S7_MLC := "Fixture" }
+        q_xAlarmLowWaterTemp : Bool;
+        { S7_MLC := "Fixture" }
+        q_xAlarmPump : Bool;
+        { S7_MLC := "Fixture" }
+        q_xAlarmGroup : Bool;
+        { S7_MLC := "Fixture" }
+        q_xAlarmValve : Bool;
+    END_VAR
+    VAR
+        fbPump : _.FB_DualPump;
+        fbTemperatureController : _.FB_TemperatureController;
+        fbValve : _.FB_ControlValve;
+    END_VAR
+    VAR_TEMP
+        tInterlock : Bool;
+        tLowLevel : Bool;
+        tLowWaterTemp : Bool;
+    END_VAR
+
+    {
+        S7_Language := "FBD";
+        S7_NetworkTitle := "Fixture"
+    }
+    NETWORK
+        RUNG #i_xHighTemperature
+            O( in2 := #i_xEStop )
+            Coil( #tInterlock )
+        END_RUNG
+    END_NETWORK
+    {
+        S7_Language := "FBD";
+        S7_NetworkTitle := "Fixture"
+    }
+    NETWORK
+        RUNG TRUE
+            #fbPump(
+                i_xCmdStart := #i_xCmdStart,
+                i_xCmdStop := #i_xCmdStop,
+                i_iCmdSelect := #i_iPumpSelect,
+                i_xFlowOk := #i_xProcessFlowOk,
+                i_xMotorProtectionSignalA :=  ,
+                i_xMotorProtectionSignalB :=  ,
+                i_xMotorProtectionNormallyClosed :=  ,
+                i_xInterlock := #tInterlock,
+                i_xAckAlarm := #i_xAckAlarm,
+                i_tFlowDelay := T#10s,
+                i_tFlowDebounce :=  ,
+                q_xRunA => #q_xRunA,
+                q_xRunB => #q_xRunB,
+                q_xRunning =>  ,
+                q_iActivePump => #q_iActivePump,
+                q_xBlocked =>  ,
+                q_xFlowMonitoring =>  ,
+                q_xAlarmFlow =>  ,
+                q_xAlarmMotorProtectionA =>  ,
+                q_xAlarmMotorProtectionB =>  ,
+                q_xFault =>  ,
+                q_xAlarmGroup => #q_xAlarmPump,
+                q_diRunSecA =>  ,
+                q_diRunSecB =>  
+            )
+        END_RUNG
+    END_NETWORK
+    {
+        S7_Language := "FBD";
+        S7_NetworkComment := "Fixture";
+        S7_NetworkTitle := "Fixture"
+    }
+    NETWORK
+        RUNG TRUE
+            #fbTemperatureController(
+                i_xPumpRunning := #i_xPrimaryPumpRunning,
+                i_rPrimaryTemperature := #i_rPrimaryTemperature,
+                i_rSecondaryTemperature := #i_rSecondaryTemperature,
+                i_rReturnTemperature := #i_rReturnTemperature,
+                i_rSP_Primary := 60.0,
+                i_rSP_Secondary := 10.0,
+                i_rSwitchLevel := 10.0,
+                i_xOperManual := FALSE,
+                i_rOperManualVal := 0.0,
+                i_xReset := #i_xEStop,
+                q_rValvePos =>  ,
+                q_iMode => #q_iTICMode,
+                q_rActSP =>  ,
+                q_rActPV =>  ,
+                q_xInAuto =>  ,
+                q_iPidState =>  ,
+                q_xError =>  
+            )
+        END_RUNG
+    END_NETWORK
+    {
+        S7_Language := "FBD";
+        S7_NetworkTitle := "Fixture"
+    }
+    NETWORK
+        RUNG TRUE
+            #fbValve(
+                i_rAutoCmd := #fbTemperatureController.q_rValvePos,
+                i_xManualMode := #i_xValveManual,
+                i_rManualCmd := #i_rValveManualCmd,
+                i_iFbRaw := #i_iValveFeedbackRaw,
+                i_xFbEnable := #i_xValveFeedbackEnabled,
+                i_rDevLimit := 10.0,
+                i_tDevDelay := T#10s,
+                i_rRateLimit := 0.0,
+                i_xAckAlarm := #i_xAckAlarm,
+                q_iOutRaw => #q_iValveOutputRaw,
+                q_rCmd => #q_rValvePos,
+                q_rFbPos =>  ,
+                q_xManual =>  ,
+                q_xDevAlarm =>  ,
+                q_xAlarmGroup => #q_xAlarmValve
+            )
+        END_RUNG
+    END_NETWORK
+    { S7_Language := "FBD" }
+    NETWORK
+        RUNG #i_xLevelOk
+            NOT Coil( #tLowLevel )
+        END_RUNG
+        RUNG
+            { S7_Templates := "SrcType := Real" }
+            LT_Contact(
+                in1 := #i_rSecondaryTemperature,
+                in2 := -5.0
+            )
+            Coil( #tLowWaterTemp )
+        END_RUNG
+    END_NETWORK
+    {
+        S7_Language := "FBD";
+        S7_NetworkTitle := "Fixture"
+    }
+    NETWORK
+        RUNG #tLowLevel
+            Coil( #q_xLowLevel )
+        END_RUNG
+        RUNG #i_xHighTemperature
+            Coil( #q_xAlarmHighTemp )
+        END_RUNG
+        RUNG #tLowLevel
+            Coil( #q_xAlarmLowLevel )
+        END_RUNG
+        RUNG #tLowWaterTemp
+            Coil( #q_xAlarmLowWaterTemp )
+        END_RUNG
+        RUNG #q_xAlarmHighTemp
+            O(
+                in2 := #q_xAlarmLowLevel,
+                in3 := #q_xAlarmLowWaterTemp,
+                in4 := #q_xAlarmPump,
+                in5 := #q_xAlarmValve,
+                in6 := #fbTemperatureController.q_xError
+            )
+            Coil( #q_xAlarmGroup )
+        END_RUNG
+    END_NETWORK
+    { S7_Language := "FBD" }
+    NETWORK
+        RUNG
+        END_RUNG
+    END_NETWORK
+END_FUNCTION_BLOCK

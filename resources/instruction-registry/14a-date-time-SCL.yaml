@@ -1,0 +1,397 @@
+# Date, time-of-day and runtime-meter instructions — SCL registry.
+#
+# SCL callable names and parameter casing use Siemens' canonical spelling.
+# Function returns are represented by `result`, not by graphical OUT/RET_VAL pins.
+#
+# S_Move and generic S_CONV are intentionally not emitted as callable SCL
+# entries. Their SCL forms are assignment and typed <source>_TO_<destination>
+# conversion respectively. T_COMBINE expands to CONCAT_DATE_TOD or
+# CONCAT_DATE_LTOD.
+#
+# Missing dataTypes are intentional; unresolved types are never guessed.
+
+$fileLanguage: [SCL]
+T_COMP:
+  family: extended
+  callShape: box
+  instanceType: null
+  pins:
+  - name: in1
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [Timers, Date and time]
+  - name: in2
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [Timers, Date and time]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Compares time values using a preceding `S7_Relation` pragma such as `EQ`. The `template` field models
+    only `S7_Templates`, so the relation pragma is not represented there.
+  source: "official instruction documentation (paraphrased)"
+  result:
+    kind: value
+    dataTypes: [Bool]
+    notes: SCL function return value.
+T_CONV:
+  family: extended
+  callShape: box
+  instanceType: null
+  pins:
+  - name: in
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [Timers, Date and time]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Time-value type conversion.
+  source: "official instruction documentation (paraphrased)"
+  result:
+    kind: inferred
+    rule: instruction-specific
+    notes: SCL function return datatype depends on the selected source/destination datatype or instruction variant.
+T_ADD:
+  family: extended
+  callShape: box
+  instanceType: null
+  pins:
+  - name: in1
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [Integers, Bit strings, Timers, Date and time]
+  - name: in2
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [Integers, Bit strings, Timers, Date and time]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Time-value addition.
+  source: "official instruction documentation (paraphrased)"
+  result:
+    kind: inferred
+    rule: instruction-specific
+    notes: SCL function return datatype depends on the selected source/destination datatype or instruction variant.
+T_SUB:
+  family: extended
+  callShape: box
+  instanceType: null
+  pins:
+  - name: in1
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [Integers, Bit strings, Timers, Date and time]
+  - name: in2
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [Integers, Bit strings, Timers, Date and time]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Time-value subtraction.
+  source: "official instruction documentation (paraphrased)"
+  result:
+    kind: inferred
+    rule: instruction-specific
+    notes: SCL function return datatype depends on the selected source/destination datatype or instruction variant.
+T_DIFF:
+  family: extended
+  callShape: box
+  instanceType: null
+  pins:
+  - name: in1
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [Date and time]
+  - name: in2
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [Date and time]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Time-value difference.
+  source: "official instruction documentation (paraphrased)"
+  result:
+    kind: value
+    dataTypes: [Time, LTime, Int]
+    notes: SCL function return value.
+CONCAT_DATE_TOD:
+  family: extended
+  callShape: box
+  instanceType: null
+  pins:
+  - name: IN1
+    dir: in
+    required: true
+    dataTypes: [Date]
+    note: Calendar date.
+  - name: IN2
+    dir: in
+    required: true
+    dataTypes: [Time_Of_Day]
+    note: Time of day.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Canonical internal SCL function generated from graphical T_COMBINE: CONCAT_DATE_TOD. Siemens
+    displays one of these two names when T_COMBINE is inserted into an SCL block.
+  source: "official instruction documentation (paraphrased)"
+  result:
+    kind: value
+    dataTypes: [Date_And_Time]
+    notes: Combined DATE and TOD value.
+CONCAT_DATE_LTOD:
+  family: extended
+  callShape: box
+  instanceType: null
+  pins:
+  - name: IN1
+    dir: in
+    required: true
+    dataTypes: [Date]
+    note: Calendar date.
+  - name: IN2
+    dir: in
+    required: true
+    dataTypes: [LTime_Of_Day]
+    note: Long time of day.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Canonical internal SCL function generated from graphical T_COMBINE: CONCAT_DATE_LTOD. Siemens
+    displays one of these two names when T_COMBINE is inserted into an SCL block.
+  source: "official instruction documentation (paraphrased)"
+  result:
+    kind: value
+    dataTypes: [LDT]
+    notes: Combined DATE and LTOD value.
+WR_SYS_T:
+  family: extended
+  callShape: box
+  instanceType: null
+  pins:
+  - name: IN
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [Date_And_Time, DTL, LDT]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Write the CPU's system (UTC) time.
+  source: "official instruction documentation (paraphrased)"
+  result:
+    kind: value
+    dataTypes: [Int]
+    notes: SCL function return value.
+RD_SYS_T:
+  family: extended
+  callShape: box
+  instanceType: null
+  pins:
+  - name: OUT
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Date_And_Time, DTL, LDT]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Read the CPU's system (UTC) time.
+  source: "official instruction documentation (paraphrased)"
+  result:
+    kind: value
+    dataTypes: [Int]
+    notes: SCL function return value.
+RD_LOC_T:
+  family: extended
+  callShape: box
+  instanceType: null
+  pins:
+  - name: OUT
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [DTL, LDT]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Read the CPU's local (timezone-adjusted) time.
+  source: "official instruction documentation (paraphrased)"
+  result:
+    kind: value
+    dataTypes: [Int]
+    notes: SCL function return value.
+WR_LOC_T:
+  family: extended
+  callShape: box
+  instanceType: null
+  pins:
+  - name: LOCTIME
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [DTL, LDT]
+  - name: DST
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Write the CPU's local time (with daylight-saving flag).
+  source: "official instruction documentation (paraphrased)"
+  result:
+    kind: value
+    dataTypes: [Int]
+    notes: SCL function return value.
+SET_TIMEZONE:
+  family: extended
+  callShape: instance-dot
+  instanceType: SET_TIMEZONE
+  pins:
+  - name: REQ
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: TimeZone
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [Int]
+  - name: DONE
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: BUSY
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: ERROR
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: STATUS
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Word]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Set the CPU's timezone.
+  source: "official instruction documentation (paraphrased)"
+  result:
+    kind: none
+TIME_TCK:
+  family: extended
+  callShape: box
+  instanceType: null
+  pins: []
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Read the CPU's millisecond tick counter.
+  source: "official instruction documentation (paraphrased)"
+  result:
+    kind: value
+    dataTypes: [UDInt]
+    notes: SCL function return value.
+RTM:
+  family: extended
+  callShape: box
+  instanceType: null
+  pins:
+  - name: NR
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [UInt]
+  - name: MODE
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [USInt]
+  - name: PV
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [UInt]
+  - name: CQ
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: CV
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [UInt]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Runtime meter FB for tracking operating hours.
+  source: "official instruction documentation (paraphrased)"
+  result:
+    kind: value
+    dataTypes: [Int]
+    notes: SCL function return value.

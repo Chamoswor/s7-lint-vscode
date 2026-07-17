@@ -1,0 +1,90 @@
+# SCL-specific bit-logic instruction registry.
+#
+# Siemens' SCL instruction palette contains only R_TRIG and F_TRIG in the
+# "Bit logic operations" category. LAD/FBD contacts, coils, set/reset boxes,
+# edge contacts/coils and RLO operations are represented by native SCL
+# expressions/statements rather than callable instructions.
+#
+# `callShape: instance-dot` is retained as the registry's existing category
+# for an instruction requiring an instance. The actual SCL call syntax is a
+# bare instance call and contains no `.R_TRIG` or `.F_TRIG` suffix:
+#
+#   #LocalInstance(CLK := #Signal, Q => #Pulse);
+#   "GlobalInstanceDB"(CLK := "Signal", Q => "Pulse");
+#
+# Canonical SCL parameter names use Siemens' uppercase spelling: CLK and Q.
+$fileLanguage: [SCL]
+
+R_TRIG:
+  family: bit-logic
+  callShape: instance-dot
+  instanceType: R_TRIG
+
+  pins:
+    - name: CLK
+      dir: in
+      required: false
+      dataTypes: [Bool]
+      memoryAreas: [I, Q, M, D, L]
+      note: >-
+        Incoming signal whose positive edge is evaluated. Optional at the
+        SCL call site; a zero-argument instance call is compile-valid.
+
+    - name: Q
+      dir: out
+      required: false
+      dataTypes: [Bool]
+      memoryAreas: [I, Q, M, D, L]
+      note: >-
+        TRUE for exactly one program cycle when CLK changes from FALSE to
+        TRUE. The output assignment may be omitted at the SCL call site.
+  result:
+    kind: none
+  template:
+    shape: none
+    keys: []
+    extra: {}
+
+  confidence: confirmed-compiled
+  notes: >-
+    Call the instance directly as #instanceName(...) or "GlobalInstanceDB"(...); SCL does not use the
+    LAD/FBD #instanceName.R_TRIG(...) suffix. The instance stores the previous CLK state used for edge
+    detection.
+  source: "anonymized compiling fixture evidence"
+F_TRIG:
+  family: bit-logic
+  callShape: instance-dot
+  instanceType: F_TRIG
+
+  pins:
+    - name: CLK
+      dir: in
+      required: false
+      dataTypes: [Bool]
+      memoryAreas: [I, Q, M, D, L]
+      note: >-
+        Incoming signal whose negative edge is evaluated. Optional at the
+        SCL call site; a zero-argument instance call is compile-valid.
+
+    - name: Q
+      dir: out
+      required: false
+      dataTypes: [Bool]
+      memoryAreas: [I, Q, M, D, L]
+      note: >-
+        TRUE for exactly one program cycle when CLK changes from TRUE to
+        FALSE. The output assignment may be omitted at the SCL call site.
+  result:
+    kind: none
+  template:
+    shape: none
+    keys: []
+    extra: {}
+
+  confidence: confirmed-compiled
+  notes: >-
+    Call the instance directly as #instanceName(...) or "GlobalInstanceDB"(...); SCL does not use the
+    LAD/FBD #instanceName.F_TRIG(...) suffix. IEC 61131 describes Q as TRUE for one cycle when CLK is
+    FALSE at CPU startup. Siemens states that this startup behavior requires the instance member
+    Stat_Bit to be initialized to TRUE.
+  source: "anonymized compiling fixture evidence"

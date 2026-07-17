@@ -1,0 +1,1214 @@
+# SCL move-instruction registry.
+#
+# Native SCL assignment (`:=`) represents ordinary MOVE semantics and is not a
+# callable instruction entry. AssignmentAttempt is likewise the native `?=`
+# operator and is intentionally omitted from this call registry.
+#
+# Procedures with explicit OUT/IN_OUT parameters use `result.kind: none`.
+# Functions return their RET_VAL or calculated value through `result`:
+# MOVE_BLK_VARIANT, Deserialize, Serialize, SWAP, CountOfElements,
+# LOWER_BOUND, UPPER_BOUND and the two resolved-symbol buffer functions.
+#
+# ResolveSymbols is an instance call. The retained `instance-dot` callShape is
+# the registry's existing instance category; actual SCL syntax calls the
+# instance directly, for example `"ResolveSymbols_DB"(...);`.
+#
+$fileLanguage:
+- SCL
+MOVE_BLK:
+  family: move
+  callShape: box
+  instanceType: null
+  pins:
+  - name: IN
+    dir: in
+    required: true
+    dataTypes:
+    - Bit strings
+    - Integers
+    - Floating-point numbers
+    - Timers
+    - Date
+    - Char
+    - WChar
+    - Time_Of_Day
+    - LTime_Of_Day
+    memoryAreas:
+    - D
+    - L
+    note: First source ARRAY element.
+  - name: COUNT
+    dir: in
+    required: true
+    dataTypes:
+    - USInt
+    - UInt
+    - UDInt
+    - ULInt
+    memoryAreas:
+    - I
+    - Q
+    - M
+    - D
+    - L
+    - P
+    note: Number of consecutive elements to copy; ULINT is S7-1500-only.
+  - name: OUT
+    dir: out
+    required: true
+    dataTypes:
+    - Bit strings
+    - Integers
+    - Floating-point numbers
+    - Timers
+    - Date
+    - Char
+    - WChar
+    - Time_Of_Day
+    - LTime_Of_Day
+    memoryAreas:
+    - D
+    - L
+    note: First destination ARRAY element.
+  result:
+    kind: none
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Copies COUNT consecutive ARRAY elements from IN to OUT. Source and destination element datatypes
+    must match.
+  source: "official instruction documentation (paraphrased)"
+MOVE_BLK_VARIANT:
+  family: move
+  callShape: box
+  instanceType: null
+  pins:
+  - name: SRC
+    dir: in
+    required: true
+    dataTypes:
+    - Variant
+    - Array
+    memoryAreas:
+    - L
+    note: VARIANT or ARRAY source; declaration is limited to Input, InOut or Temp.
+  - name: COUNT
+    dir: in
+    required: true
+    dataTypes:
+    - UDInt
+    memoryAreas:
+    - I
+    - Q
+    - M
+    - D
+    - L
+    note: Number of elements to copy; use 1 for a single non-ARRAY value.
+  - name: SRC_INDEX
+    dir: in
+    required: true
+    dataTypes:
+    - DInt
+    memoryAreas:
+    - I
+    - Q
+    - M
+    - D
+    - L
+    note: Zero-based source index independent of the declared ARRAY limits.
+  - name: DEST_INDEX
+    dir: in
+    required: true
+    dataTypes:
+    - DInt
+    memoryAreas:
+    - I
+    - Q
+    - M
+    - D
+    - L
+    note: Zero-based destination index independent of the declared ARRAY limits.
+  - name: DEST
+    dir: out
+    required: true
+    dataTypes:
+    - Variant
+    memoryAreas:
+    - L
+    note: Destination VARIANT. The actual destination tag must be declared InOut.
+  result:
+    kind: value
+    dataTypes:
+    - Int
+    notes: RET_VAL error information; function value may be assigned to I, Q, M, D or L.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Copies a complete ARRAY or selected ARRAY range through VARIANT operands. BOOL and ARRAY of BOOL are
+    not valid SRC values.
+  source: "official instruction documentation (paraphrased)"
+UMOVE_BLK:
+  family: move
+  callShape: box
+  instanceType: null
+  pins:
+  - name: IN
+    dir: in
+    required: true
+    dataTypes:
+    - Bit strings
+    - Integers
+    - Floating-point numbers
+    - Timers
+    - Date
+    - Char
+    - WChar
+    - Time_Of_Day
+    - LTime_Of_Day
+    memoryAreas:
+    - D
+    - L
+    note: First source ARRAY element.
+  - name: COUNT
+    dir: in
+    required: true
+    dataTypes:
+    - USInt
+    - UInt
+    - UDInt
+    - ULInt
+    memoryAreas:
+    - I
+    - Q
+    - M
+    - D
+    - L
+    - P
+    note: Number of consecutive elements to copy; ULINT is S7-1500-only.
+  - name: OUT
+    dir: out
+    required: true
+    dataTypes:
+    - Bit strings
+    - Integers
+    - Floating-point numbers
+    - Timers
+    - Date
+    - Char
+    - WChar
+    - Time_Of_Day
+    - LTime_Of_Day
+    memoryAreas:
+    - D
+    - L
+    note: First destination ARRAY element.
+  result:
+    kind: none
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Uninterruptible MOVE_BLK variant. It increases interrupt reaction time during execution and is
+    limited to the documented maximum transfer size.
+  source: "official instruction documentation (paraphrased)"
+FILL_BLK:
+  family: move
+  callShape: box
+  instanceType: null
+  pins:
+  - name: IN
+    dir: in
+    required: true
+    dataTypes:
+    - Bit strings
+    - Integers
+    - Floating-point numbers
+    - Timers
+    - Date
+    - Char
+    - WChar
+    - Time_Of_Day
+    - LTime_Of_Day
+    memoryAreas:
+    - I
+    - Q
+    - M
+    - D
+    - L
+    - P
+    note: Value repeated into the target range.
+  - name: COUNT
+    dir: in
+    required: true
+    dataTypes:
+    - USInt
+    - UInt
+    - UDInt
+    - ULInt
+    memoryAreas:
+    - I
+    - Q
+    - M
+    - D
+    - L
+    - P
+    note: Number of repeated writes; ULINT is S7-1500-only.
+  - name: OUT
+    dir: out
+    required: true
+    dataTypes:
+    - Bit strings
+    - Integers
+    - Floating-point numbers
+    - Timers
+    - Date
+    - Char
+    - WChar
+    - Time_Of_Day
+    - LTime_Of_Day
+    memoryAreas:
+    - D
+    - L
+    note: First destination ARRAY element or homogeneous STRUCT/UDT member.
+  result:
+    kind: none
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Writes IN to COUNT consecutive target elements. Homogeneous STRUCT/UDT members may also be filled.
+  source: "official instruction documentation (paraphrased)"
+UFILL_BLK:
+  family: move
+  callShape: box
+  instanceType: null
+  pins:
+  - name: IN
+    dir: in
+    required: true
+    dataTypes:
+    - Bit strings
+    - Integers
+    - Floating-point numbers
+    - Timers
+    - Date
+    - Char
+    - WChar
+    - Time_Of_Day
+    - LTime_Of_Day
+    memoryAreas:
+    - I
+    - Q
+    - M
+    - D
+    - L
+    - P
+    note: Value repeated into the target range.
+  - name: COUNT
+    dir: in
+    required: true
+    dataTypes:
+    - USInt
+    - UInt
+    - UDInt
+    - ULInt
+    memoryAreas:
+    - I
+    - Q
+    - M
+    - D
+    - L
+    - P
+    note: Number of repeated writes; ULINT is S7-1500-only.
+  - name: OUT
+    dir: out
+    required: true
+    dataTypes:
+    - Bit strings
+    - Integers
+    - Floating-point numbers
+    - Timers
+    - Date
+    - Char
+    - WChar
+    - Time_Of_Day
+    - LTime_Of_Day
+    memoryAreas:
+    - D
+    - L
+    note: First destination ARRAY element or homogeneous STRUCT/UDT member.
+  result:
+    kind: none
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Writes IN to COUNT consecutive target elements. The operation is uninterruptible and subject to the
+    documented transfer-size limit.
+  source: "official instruction documentation (paraphrased)"
+SCATTER:
+  family: move
+  callShape: box
+  instanceType: null
+  pins:
+  - name: IN
+    dir: in
+    required: true
+    dataTypes:
+    - Byte
+    - Word
+    - DWord
+    - LWord
+    memoryAreas:
+    - I
+    - Q
+    - M
+    - D
+    - L
+    note: Bit sequence to split; LWORD is S7-1500-only.
+  - name: OUT
+    dir: out
+    required: true
+    dataTypes:
+    - Array
+    - Struct
+    - PLC data type
+    memoryAreas:
+    - I
+    - Q
+    - M
+    - D
+    - L
+    note: Equally sized BOOL ARRAY, anonymous STRUCT or PLC datatype.
+  result:
+    kind: none
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Splits one bit sequence into BOOL members. The destination must contain exactly 8, 16, 32 or 64 BOOL
+    elements and may not be a multidimensional ARRAY.
+  source: "official instruction documentation (paraphrased)"
+SCATTER_BLK:
+  family: move
+  callShape: box
+  instanceType: null
+  pins:
+  - name: IN
+    dir: in
+    required: true
+    dataTypes:
+    - Byte
+    - Word
+    - DWord
+    - LWord
+    memoryAreas:
+    - I
+    - Q
+    - M
+    - D
+    - L
+    note: Element of an ARRAY[*] of bit sequences; LWORD is S7-1500-only.
+  - name: COUNT_IN
+    dir: in
+    required: true
+    dataTypes:
+    - USInt
+    - UInt
+    - UDInt
+    - ULInt
+    memoryAreas:
+    - I
+    - Q
+    - M
+    - D
+    - L
+    note: Number of source ARRAY elements to parse.
+  - name: OUT
+    dir: out
+    required: true
+    dataTypes:
+    - Bool
+    - Struct
+    - PLC data type
+    memoryAreas:
+    - I
+    - Q
+    - M
+    - D
+    - L
+    note: Starting element of the destination ARRAY[*] of BOOL/STRUCT/PLC datatype.
+  result:
+    kind: none
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Splits COUNT_IN consecutive bit-sequence ARRAY elements into BOOL storage. The destination index
+    must satisfy the documented bit-width alignment rule.
+  source: "official instruction documentation (paraphrased)"
+GATHER:
+  family: move
+  callShape: box
+  instanceType: null
+  pins:
+  - name: IN
+    dir: in
+    required: true
+    dataTypes:
+    - Bool
+    - Struct
+    - PLC data type
+    memoryAreas:
+    - I
+    - Q
+    - M
+    - D
+    - L
+    note: Equally sized BOOL ARRAY, anonymous STRUCT or PLC datatype.
+  - name: OUT
+    dir: out
+    required: true
+    dataTypes:
+    - Byte
+    - Word
+    - DWord
+    - LWord
+    memoryAreas:
+    - I
+    - Q
+    - M
+    - D
+    - L
+    note: Merged bit sequence; LWORD is S7-1500-only.
+  result:
+    kind: none
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Merges BOOL members into one bit sequence. The source must contain exactly 8, 16, 32 or 64 BOOL
+    elements and may not be a multidimensional ARRAY.
+  source: "official instruction documentation (paraphrased)"
+GATHER_BLK:
+  family: move
+  callShape: box
+  instanceType: null
+  pins:
+  - name: IN
+    dir: in
+    required: true
+    dataTypes:
+    - Bool
+    - Struct
+    - PLC data type
+    memoryAreas:
+    - I
+    - Q
+    - M
+    - D
+    - L
+    note: Starting element of the source ARRAY[*] of BOOL/STRUCT/PLC datatype.
+  - name: COUNT_OUT
+    dir: in
+    required: true
+    dataTypes:
+    - USInt
+    - UInt
+    - UDInt
+    - ULInt
+    memoryAreas:
+    - I
+    - Q
+    - M
+    - D
+    - L
+    note: Number of destination bit-sequence elements to write.
+  - name: OUT
+    dir: out
+    required: true
+    dataTypes:
+    - Byte
+    - Word
+    - DWord
+    - LWord
+    memoryAreas:
+    - I
+    - Q
+    - M
+    - D
+    - L
+    note: Starting element of the destination ARRAY[*] of bit sequences.
+  result:
+    kind: none
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Merges BOOL storage into COUNT_OUT consecutive bit-sequence ARRAY elements. The source index must
+    satisfy the documented alignment rule.
+  source: "official instruction documentation (paraphrased)"
+SWAP:
+  family: move
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes:
+    - Word
+    - DWord
+    - LWord
+    memoryAreas:
+    - I
+    - Q
+    - M
+    - D
+    - L
+    - P
+    note: Positional WORD/DWORD/LWORD expression; LWORD is S7-1500-only.
+  result:
+    kind: inferred
+    rule: same-as-source
+    sourcePins:
+    - 0
+    notes: Byte-reversed value with the same datatype as the operand; assignable to I, Q, M, D, L or P.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Reverses the byte order of the positional expression. Example: #Result := SWAP(#Value);
+  source: "official instruction documentation (paraphrased)"
+Deserialize:
+  family: move
+  callShape: box
+  instanceType: null
+  pins:
+  - name: SRC_ARRAY
+    dir: in
+    required: true
+    dataTypes:
+    - Array
+    memoryAreas:
+    - I
+    - Q
+    - D
+    - L
+    note: ARRAY of BYTE or CHAR containing the serialized stream; peripheral I/O is not allowed.
+  - name: DEST_VARIABLE
+    dir: inout
+    required: true
+    dataTypes:
+    - '*'
+    memoryAreas:
+    - I
+    - Q
+    - D
+    - L
+    note: Destination value written by deserialization.
+  - name: POS
+    dir: inout
+    required: true
+    dataTypes:
+    - DInt
+    memoryAreas:
+    - I
+    - Q
+    - M
+    - D
+    - L
+    note: Zero-based byte position, updated to the next unread position.
+  result:
+    kind: value
+    dataTypes:
+    - Int
+    notes: RET_VAL error information; function value may be assigned to I, Q, M, D or L.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Deserializes one PLC datatype, STRUCT or ARRAY from a BYTE/CHAR stream. Optimized buffers require
+    the documented firmware versions.
+  source: "official instruction documentation (paraphrased)"
+Serialize:
+  family: move
+  callShape: box
+  instanceType: null
+  pins:
+  - name: SRC_VARIABLE
+    dir: in
+    required: true
+    dataTypes:
+    - '*'
+    memoryAreas:
+    - I
+    - Q
+    - D
+    - L
+    note: Value to serialize; peripheral I/O is not allowed.
+  - name: DEST_ARRAY
+    dir: inout
+    required: true
+    dataTypes:
+    - Array
+    memoryAreas:
+    - I
+    - Q
+    - D
+    - L
+    note: ARRAY of BYTE or CHAR receiving the serialized stream.
+  - name: POS
+    dir: inout
+    required: true
+    dataTypes:
+    - DInt
+    memoryAreas:
+    - I
+    - Q
+    - M
+    - D
+    - L
+    note: Zero-based byte position, updated to the next free position.
+  result:
+    kind: value
+    dataTypes:
+    - Int
+    notes: RET_VAL error information; function value may be assigned to I, Q, M, D or L.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Serializes one PLC datatype, STRUCT or ARRAY into a BYTE/CHAR stream. Padding content is not
+    application data.
+  source: "official instruction documentation (paraphrased)"
+VariantGet:
+  family: move
+  callShape: box
+  instanceType: null
+  pins:
+  - name: SRC
+    dir: in
+    required: true
+    dataTypes:
+    - Variant
+    memoryAreas:
+    - L
+    note: VARIANT source declared in Input, InOut or Temp.
+  - name: DST
+    dir: out
+    required: true
+    dataTypes:
+    - Bit strings
+    - Integers
+    - Floating-point numbers
+    - Timers
+    - Date and time
+    - Character strings
+    - PLC data type
+    memoryAreas:
+    - I
+    - Q
+    - M
+    - D
+    - L
+    - P
+    note: Typed destination; P is available only on S7-1500-class targets.
+  result:
+    kind: none
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Reads the value referenced by SRC into DST. The destination datatype must match the referenced
+    datatype.
+  source: "official instruction documentation (paraphrased)"
+VariantPut:
+  family: move
+  callShape: box
+  instanceType: null
+  pins:
+  - name: SRC
+    dir: in
+    required: true
+    dataTypes:
+    - Bit strings
+    - Integers
+    - Floating-point numbers
+    - Timers
+    - Date and time
+    - Character strings
+    - PLC data type
+    memoryAreas:
+    - I
+    - Q
+    - M
+    - D
+    - L
+    - P
+    note: Typed source; P is available only on S7-1500-class targets.
+  - name: DST
+    dir: in
+    required: true
+    dataTypes:
+    - Variant
+    memoryAreas:
+    - L
+    note: VARIANT destination declared in Input, InOut or Temp.
+  result:
+    kind: none
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Writes SRC into the storage referenced by DST. The source datatype must match the referenced
+    datatype.
+  source: "official instruction documentation (paraphrased)"
+CountOfElements:
+  family: move
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes:
+    - Variant
+    - ResolvedSymbol
+    memoryAreas:
+    - L
+    note: Positional VARIANT or ResolvedSymbol operand declared in Input, InOut or Temp.
+  result:
+    kind: value
+    dataTypes:
+    - UDInt
+    notes: ARRAY element count, or number of dimensions for a multidimensional ARRAY; assignable to I, Q, M, D or
+      L.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Returns zero when the operand does not reference an ARRAY. BOOL ARRAY padding elements are included
+    in the documented count.
+  source: "official instruction documentation (paraphrased)"
+LOWER_BOUND:
+  family: move
+  callShape: box
+  instanceType: null
+  pins:
+  - name: ARR
+    dir: in
+    required: true
+    dataTypes:
+    - Array
+    memoryAreas:
+    - L
+    note: ARRAY[*] operand. FB permits InOut; FC permits Input or InOut.
+  - name: DIM
+    dir: in
+    required: true
+    dataTypes:
+    - UDInt
+    memoryAreas:
+    - I
+    - Q
+    - M
+    - D
+    - L
+    - P
+    - constant
+    note: One-based dimension number.
+  result:
+    kind: value
+    dataTypes:
+    - DInt
+    notes: Variable low bound of the selected ARRAY dimension; assignable to I, Q, M, D, L or P.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Reads the variable low bound of one dimension of an ARRAY[*] interface operand.
+  source: "official instruction documentation (paraphrased)"
+UPPER_BOUND:
+  family: move
+  callShape: box
+  instanceType: null
+  pins:
+  - name: ARR
+    dir: in
+    required: true
+    dataTypes:
+    - Array
+    memoryAreas:
+    - L
+    note: ARRAY[*] operand. FB permits InOut; FC permits Input or InOut.
+  - name: DIM
+    dir: in
+    required: true
+    dataTypes:
+    - UDInt
+    memoryAreas:
+    - I
+    - Q
+    - M
+    - D
+    - L
+    - P
+    - constant
+    note: One-based dimension number.
+  result:
+    kind: value
+    dataTypes:
+    - DInt
+    notes: Variable high bound of the selected ARRAY dimension; assignable to I, Q, M, D, L or P.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Reads the variable high bound of one dimension of an ARRAY[*] interface operand.
+  source: "official instruction documentation (paraphrased)"
+ResolveSymbols:
+  family: move
+  callShape: instance-dot
+  instanceType: ResolveSymbols
+  pins:
+  - name: execute
+    dir: in
+    required: false
+    dataTypes:
+    - Bool
+    memoryAreas:
+    - I
+    - Q
+    - M
+    - D
+    - L
+    note: Rising edge starts the asynchronous job.
+  - name: firstIndex
+    dir: in
+    required: false
+    dataTypes:
+    - DInt
+    memoryAreas:
+    - I
+    - Q
+    - M
+    - D
+    - L
+    - C
+    note: First ARRAY index to resolve.
+  - name: lastIndex
+    dir: in
+    required: false
+    dataTypes:
+    - DInt
+    memoryAreas:
+    - I
+    - Q
+    - M
+    - D
+    - L
+    - C
+    note: Last ARRAY index to resolve.
+  - name: done
+    dir: out
+    required: false
+    dataTypes:
+    - Bool
+    memoryAreas:
+    - I
+    - Q
+    - M
+    - D
+    - L
+    note: TRUE for one cycle when the job completes.
+  - name: busy
+    dir: out
+    required: false
+    dataTypes:
+    - Bool
+    memoryAreas:
+    - I
+    - Q
+    - M
+    - D
+    - L
+    note: TRUE while the job is active.
+  - name: error
+    dir: out
+    required: false
+    dataTypes:
+    - Bool
+    memoryAreas:
+    - I
+    - Q
+    - M
+    - D
+    - L
+    note: TRUE when an error occurred.
+  - name: status
+    dir: out
+    required: false
+    dataTypes:
+    - Int
+    memoryAreas:
+    - I
+    - Q
+    - M
+    - D
+    - L
+    note: Job status or error code.
+  - name: nameList
+    dir: inout
+    required: true
+    dataTypes:
+    - Array
+    memoryAreas:
+    - D
+    note: ARRAY of WSTRING containing fully qualified symbolic names.
+  - name: referenceList
+    dir: inout
+    required: true
+    dataTypes:
+    - Array
+    memoryAreas:
+    - D
+    note: Optimized ARRAY of ResolvedSymbol receiving references.
+  result:
+    kind: none
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    S7-1500 asynchronous instance call. nameList and referenceList must have identical ARRAY limits;
+    referenceList must be in an optimized global DB.
+  source: "official instruction documentation (paraphrased)"
+MoveResolvedSymbolsToBuffer:
+  family: move
+  callShape: box
+  instanceType: null
+  pins:
+  - name: firstIndex
+    dir: in
+    required: true
+    dataTypes:
+    - DInt
+    memoryAreas:
+    - I
+    - Q
+    - M
+    - D
+    - L
+    - C
+    note: First source index.
+  - name: lastIndex
+    dir: in
+    required: true
+    dataTypes:
+    - DInt
+    memoryAreas:
+    - I
+    - Q
+    - M
+    - D
+    - L
+    - C
+    note: Last source index.
+  - name: src
+    dir: in
+    required: true
+    dataTypes:
+    - Array
+    memoryAreas:
+    - D
+    - L
+    note: ARRAY of ResolvedSymbol references.
+  - name: dstOffsets
+    dir: in
+    required: true
+    dataTypes:
+    - Array
+    memoryAreas:
+    - I
+    - Q
+    - M
+    - D
+    - L
+    note: ARRAY of DINT destination bit offsets.
+  - name: mode
+    dir: in
+    required: true
+    dataTypes:
+    - DWord
+    memoryAreas:
+    - I
+    - Q
+    - M
+    - D
+    - L
+    - C
+    note: 0 = big-endian; 1 = little-endian.
+  - name: dst
+    dir: inout
+    required: true
+    dataTypes:
+    - Array
+    memoryAreas:
+    - D
+    - L
+    note: ARRAY of BYTE destination buffer.
+  - name: status
+    dir: inout
+    required: true
+    dataTypes:
+    - Array
+    memoryAreas:
+    - D
+    - L
+    note: ARRAY of INT per-symbol status values.
+  result:
+    kind: value
+    dataTypes:
+    - Int
+    notes: RET_VAL error information; assignable to I, Q, M, D or L.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    S7-1500 function that reads values through ResolvedSymbol references and packs them into a BYTE
+    buffer. src, dstOffsets and status require matching ARRAY limits.
+  source: "official instruction documentation (paraphrased)"
+MoveResolvedSymbolsFromBuffer:
+  family: move
+  callShape: box
+  instanceType: null
+  pins:
+  - name: firstIndex
+    dir: in
+    required: true
+    dataTypes:
+    - DInt
+    memoryAreas:
+    - I
+    - Q
+    - M
+    - D
+    - L
+    - C
+    note: First destination index.
+  - name: lastIndex
+    dir: in
+    required: true
+    dataTypes:
+    - DInt
+    memoryAreas:
+    - I
+    - Q
+    - M
+    - D
+    - L
+    - C
+    note: Last destination index.
+  - name: mode
+    dir: in
+    required: true
+    dataTypes:
+    - DWord
+    memoryAreas:
+    - I
+    - Q
+    - M
+    - D
+    - L
+    - C
+    note: 0 = big-endian; 1 = little-endian.
+  - name: src
+    dir: in
+    required: true
+    dataTypes:
+    - Array
+    memoryAreas:
+    - D
+    - L
+    note: ARRAY of BYTE source buffer.
+  - name: srcOffsets
+    dir: in
+    required: true
+    dataTypes:
+    - Array
+    memoryAreas:
+    - D
+    - L
+    note: ARRAY of DINT source bit offsets.
+  - name: dst
+    dir: inout
+    required: true
+    dataTypes:
+    - Array
+    memoryAreas:
+    - D
+    - L
+    note: ARRAY of ResolvedSymbol target references.
+  - name: status
+    dir: inout
+    required: true
+    dataTypes:
+    - Array
+    memoryAreas:
+    - D
+    - L
+    note: ARRAY of INT per-symbol status values.
+  result:
+    kind: value
+    dataTypes:
+    - Int
+    notes: RET_VAL error information; assignable to I, Q, M, D or L.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    S7-1500 function that unpacks values from a BYTE buffer and writes them through ResolvedSymbol
+    references. dst, srcOffsets and status require matching ARRAY limits.
+  source: "official instruction documentation (paraphrased)"

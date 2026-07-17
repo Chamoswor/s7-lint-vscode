@@ -1,0 +1,12 @@
+FUNCTION_BLOCK "Syntax_UnterminatedBlockComment"
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+
+VAR
+    value : Int;
+END_VAR
+
+BEGIN
+    (* This comment is never terminated.
+    // EXPECT: error[syntax.unterminated-comment] SYN-LEX-002
+END_FUNCTION_BLOCK

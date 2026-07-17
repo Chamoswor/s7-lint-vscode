@@ -1,0 +1,302 @@
+# String functions — LAD/FBD registry.
+#
+# Graphical instruction aliases and pin casing are retained from anonymized
+# reference fixtures and apply to both LAD and FBD.
+#
+# Exported `:=` connections cannot distinguish INPUT from IN_OUT. Independently
+# documented IN_OUT parameters are corrected explicitly.
+#
+# Graphical instructions use pins and therefore have `result: { kind: none }`.
+# Missing dataTypes are intentional; unresolved types are never guessed.
+
+$fileLanguage: [LAD, FBD]
+LEN:
+  family: extended
+  callShape: box
+  instanceType: null
+  pins:
+  - name: in
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [String, WString]
+  - name: out
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Int]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    String length.
+  source: "official instruction documentation (paraphrased)"
+  result:
+    kind: none
+CONCAT:
+  family: extended
+  callShape: box
+  instanceType: null
+  pins:
+  - name: in1
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [String, WString]
+  - name: in2
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [String, WString]
+  - name: out
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [String, WString]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    String concatenation.
+  source: "official instruction documentation (paraphrased)"
+  result:
+    kind: none
+LEFT:
+  family: extended
+  callShape: box
+  instanceType: null
+  pins:
+  - name: in
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [String, WString]
+  - name: l
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [Int]
+  - name: out
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [String, WString]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Leftmost L characters of a string.
+  source: "official instruction documentation (paraphrased)"
+  result:
+    kind: none
+RIGHT:
+  family: extended
+  callShape: box
+  instanceType: null
+  pins:
+  - name: in
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [String, WString]
+  - name: l
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [Int]
+  - name: out
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [String, WString]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Rightmost L characters of a string.
+  source: "official instruction documentation (paraphrased)"
+  result:
+    kind: none
+MID:
+  family: extended
+  callShape: box
+  instanceType: null
+  pins:
+  - name: in
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [String, WString]
+  - name: l
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [Int]
+  - name: p
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [Int]
+  - name: out
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [String, WString]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Substring of length L starting at position P.
+  source: "official instruction documentation (paraphrased)"
+  result:
+    kind: none
+DELETE:
+  family: extended
+  callShape: box
+  instanceType: null
+  pins:
+  - name: in
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [String, WString]
+  - name: l
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [Int]
+  - name: p
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [Int]
+  - name: out
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [String, WString]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Delete L characters starting at position P.
+  source: "official instruction documentation (paraphrased)"
+  result:
+    kind: none
+INSERT:
+  family: extended
+  callShape: box
+  instanceType: null
+  pins:
+  - name: in1
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [String, WString]
+  - name: in2
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [String, WString]
+  - name: p
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [Int]
+  - name: out
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [String, WString]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Insert IN2 into IN1 at position P.
+  source: "official instruction documentation (paraphrased)"
+  result:
+    kind: none
+REPLACE:
+  family: extended
+  callShape: box
+  instanceType: null
+  pins:
+  - name: in1
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [String, WString]
+  - name: in2
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [String, WString]
+  - name: l
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [Int]
+  - name: p
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [Int]
+  - name: out
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [String, WString]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Replace L characters of IN1 starting at P with IN2.
+  source: "official instruction documentation (paraphrased)"
+  result:
+    kind: none
+FIND:
+  family: extended
+  callShape: box
+  instanceType: null
+  pins:
+  - name: in1
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [String, WString]
+  - name: in2
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [String, WString]
+  - name: out
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Int]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Find the position of IN2 within IN1.
+  source: "official instruction documentation (paraphrased)"
+  result:
+    kind: none

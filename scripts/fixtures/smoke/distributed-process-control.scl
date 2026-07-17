@@ -1,0 +1,3870 @@
+﻿TYPE "FlowControllerAlarmData"
+VERSION : 0.1
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   STRUCT
+      FaultBits : Word;
+      ValveNotOpening : Bool;
+      ValveNotClosing : Bool;
+      SetpointMismatch : Bool;
+      NamurFailure : Bool;
+      NamurOutOfSpec : Bool;
+      NamurMaintenance : Bool;
+      NamurFunctionCheck : Bool;
+      CommFault : Bool;
+      STATUS : Word;
+   END_STRUCT;
+
+END_TYPE
+
+TYPE "SensorSlotConfig"
+VERSION : 0.1
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   STRUCT
+      DeviceTag : String;
+      SensorNumber : Byte;
+      SensorModel : Word;
+   END_STRUCT;
+
+END_TYPE
+
+TYPE "SensorData"
+VERSION : 0.1
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   STRUCT
+      SensorNumber : Byte;
+      SensorStatus : Byte;
+      SensorModel : Word;
+      StatusInfo : Word;
+      MeasuringMode : Byte;
+      ValueStatus : Byte;
+      MainValue : Real;
+      SecondaryValue : Real;
+      STATUS : Word;
+   END_STRUCT;
+
+END_TYPE
+
+TYPE "Drive_AlarmData"
+VERSION : 0.1
+
+
+
+   STRUCT
+      VFDtripped { ExternalWritable := 'False'} : Bool;
+      VFDcomLoss { ExternalWritable := 'False'} : Bool;
+      OverrideActiveTooLong { ExternalWritable := 'False'} : Bool;
+      VFDnotReady { ExternalWritable := 'False'} : Bool;
+   END_STRUCT;
+
+END_TYPE
+
+TYPE "PLC_Watchdog_UDT"
+VERSION : 0.1
+
+
+
+
+
+   STRUCT
+      HeartbeatCounter : UDInt;
+      WatchdogActive : Bool;
+   END_STRUCT;
+
+END_TYPE
+
+TYPE "GasAlarmData"
+VERSION : 0.1
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   STRUCT
+      SaturationLow { ExternalWritable := 'False'} : Bool;
+      SaturationHigh { ExternalWritable := 'False'} : Bool;
+      FlowControllerAlarms { ExternalWritable := 'False'; S7_SetPoint := 'False'} : "FlowControllerAlarmData";
+      PressureLow { ExternalWritable := 'False'} : Bool;
+      PressureHigh { ExternalWritable := 'False'} : Bool;
+      CalibrationOverdue { ExternalWritable := 'False'} : Bool;
+      PumpTrip { ExternalWritable := 'False'} : Bool;
+      PumpFeedbackFault { ExternalWritable := 'False'} : Bool;
+   END_STRUCT;
+
+END_TYPE
+
+TYPE "FlowControllerPIDTune"
+VERSION : 0.1
+
+
+
+
+
+
+
+
+
+
+   STRUCT
+      CONFIG : Struct
+         NewKp : Real := 1.0;
+         NewTi : Real := 1.0;
+         NewPVFilterFreq : Real := 50.0;
+      END_STRUCT;
+      CMD : Struct
+         ApplyTune : Bool;
+         Autotune : Bool;
+      END_STRUCT;
+      STATUS { ExternalWritable := 'False'} : Struct
+         ActiveKp { ExternalWritable := 'False'} : Real;
+         ActiveTi { ExternalWritable := 'False'} : Real;
+         ActivePVFilterFreq { ExternalWritable := 'False'} : Real;
+         State { ExternalWritable := 'False'} : USInt;
+         LastErrorParam { ExternalWritable := 'False'} : USInt;
+         LastErrorStatus { ExternalWritable := 'False'} : DWord;
+         Busy { ExternalWritable := 'False'} : Bool;
+         Mismatch { ExternalWritable := 'False'} : Bool;
+         AutotuneActive { ExternalWritable := 'False'} : Bool;
+         AutotuneRejected { ExternalWritable := 'False'} : Bool;
+      END_STRUCT;
+   END_STRUCT;
+
+END_TYPE
+
+TYPE "PIDInterface"
+VERSION : 0.1
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   STRUCT
+      CONFIG : Struct
+         SetpointUpperLimit : Real;
+         SetpointLowerLimit : Real;
+         PVUpperWarning : Real;
+         PVLowerWarning : Real;
+      END_STRUCT;
+      CMD : Struct
+         ToInactive : Bool;
+         ToManual : Bool;
+         ToAuto : Bool;
+         Pretune : Bool;
+         Finetune : Bool;
+         Reset : Bool;
+         AckError : Bool;
+         ApplyPID : Bool;
+         LoadBackup : Bool;
+      END_STRUCT;
+      Setpoint : Real;
+      ManualValue : Real;
+      Disturbance : Real;
+      NewGain : Real;
+      NewTi : Real;
+      NewTd : Real;
+      STATUS : Struct
+         PV : Real;
+         Output : Real;
+         SP : Real;
+         State : Int;
+         Mode : Int;
+         Error : Bool;
+         ErrorBits : DWord;
+         Warning : DWord;
+         Progress : Real;
+         SPLim_H : Bool;
+         SPLim_L : Bool;
+         PVWarn_H : Bool;
+         PVWarn_L : Bool;
+         ActiveGain : Real;
+         ActiveTi : Real;
+         ActiveTd : Real;
+         ParamLocked : Bool;
+         ApplyRejected : Bool;
+         SUTState : Int;
+         TIRState : Int;
+      END_STRUCT;
+   END_STRUCT;
+
+END_TYPE
+
+TYPE "FlowControllerDiagConfig"
+VERSION : 0.1
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   STRUCT
+      NominalFlow : Real;
+      SetpointMismatchLimit : Real := 3.0;
+      FlowLeakThreshold_Pct : Real := 5.0;
+      ValveCmd_MinThreshold : Real := 10.0;
+      ValveCmd_OpenThreshold : Real := 20.0;
+      MinExpectedFlow_Pct : Real := 5.0;
+      FlowErrorDelay : Time := T#5S;
+      SetpointDelay : Time := T#2S;
+   END_STRUCT;
+
+END_TYPE
+
+TYPE "SensorArrayData"
+VERSION : 0.1
+
+
+
+
+
+
+
+
+
+   STRUCT
+      Config { S7_SetPoint := 'False'} : "SensorSlotConfig";
+      Data { S7_SetPoint := 'False'} : "SensorData";
+   END_STRUCT;
+
+END_TYPE
+
+TYPE "GasProcessData"
+VERSION : 0.1
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   STRUCT
+      OperatingMode : Byte := 16#01;
+      Reset : Bool;
+      Gas_Avg { ExternalWritable := 'False'} : Real;
+      CONFIG : Struct
+         Calibrate : Bool;
+         CalibrationAlarmThreshold : Time := T#7D;
+         LowGasSatAlarmLimit : Real := 5.0;
+         HighGasSatAlarmLimit : Real := 10.0;
+         ForceLocalGasSensor : Bool;
+         ForceBackup flow meter : Bool;
+         FlowControllerDiag { S7_SetPoint := 'False'} : "FlowControllerDiagConfig";
+      END_STRUCT;
+      PID { S7_SetPoint := 'False'} : "PIDInterface";
+      Pressure : Struct
+         ActVal { ExternalWritable := 'False'} : Real;
+         LowAlarmLimit : Real := 4.0;
+         HighAlarmLimit : Real := 8.0;
+      END_STRUCT;
+      Pump : Struct
+         cmd : Bool;
+         Reset : Bool;
+         STATUS { ExternalWritable := 'False'} : Word;
+      END_STRUCT;
+      FlowController : Struct
+         actFlow { ExternalWritable := 'False'} : Real;
+         mediumTemp { ExternalWritable := 'False'} : Real;
+         currentSetpoint { ExternalWritable := 'False'} : Real;
+         totalizer { ExternalWritable := 'False'} : Real;
+         ResetTotalizer : Bool;
+         PIDTune : "FlowControllerPIDTune";
+      END_STRUCT;
+      SensorNetwork { ExternalWritable := 'False'; S7_SetPoint := 'False'} : "SensorArrayData";
+      SolenoidValves { ExternalWritable := 'False'} : Struct
+         FlowControllerValve_Open { ExternalWritable := 'False'} : Bool;
+         Backup flow meter_Closed { ExternalWritable := 'False'} : Bool;
+      END_STRUCT;
+      Alarms { ExternalWritable := 'False'; S7_SetPoint := 'False'} : "GasAlarmData";
+      STATUS { ExternalWritable := 'False'} : Word;
+   END_STRUCT;
+
+END_TYPE
+
+FUNCTION_BLOCK "ProcessSensorAlarms"
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.2
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   VAR_INPUT
+      DeviceTag : String;
+      STATUS : Word;
+   END_VAR
+
+   VAR
+      SensorNetwork_IDMismatch {InstructionName := 'Program_Alarm'; LibVersion := '1.0'} : Program_Alarm;
+      SensorNetwork_SensorRemoved {InstructionName := 'Program_Alarm'; LibVersion := '1.0'} : Program_Alarm;
+      SensorNetwork_WrongType {InstructionName := 'Program_Alarm'; LibVersion := '1.0'} : Program_Alarm;
+      SensorNetwork_HardwareFault {InstructionName := 'Program_Alarm'; LibVersion := '1.0'} : Program_Alarm;
+      SensorNetwork_InterfaceError {InstructionName := 'Program_Alarm'; LibVersion := '1.0'} : Program_Alarm;
+      SensorNetwork_Calibrating {InstructionName := 'Program_Alarm'; LibVersion := '1.0'} : Program_Alarm;
+      SensorNetwork_Maintenance {InstructionName := 'Program_Alarm'; LibVersion := '1.0'} : Program_Alarm;
+      SensorNetwork_UnknownStatus {InstructionName := 'Program_Alarm'; LibVersion := '1.0'} : Program_Alarm;
+   END_VAR
+
+   VAR_TEMP
+      sig_idMismatch : Bool;
+      sig_sensorRemoved : Bool;
+      sig_wrongType : Bool;
+      sig_hwFault : Bool;
+      sig_interfaceErr : Bool;
+      sig_calibrating : Bool;
+      sig_maintenance : Bool;
+      sig_unknown : Bool;
+   END_VAR
+
+   VAR CONSTANT
+      STATUS_OK : Word := 16#0000;
+      STATUS_ID_MISMATCH : Word := 16#8A02;
+      STATUS_SENSOR_REMOVED : Word := 16#3961;
+      STATUS_WRONG_TYPE : Word := 16#3863;
+      STATUS_HW_FAULT : Word := 16#3942;
+      STATUS_INTERFACE_ERR : Word := 16#6981;
+      STATUS_CALIBRATING : Word := 16#7301;
+      STATUS_MAINTENANCE : Word := 16#7302;
+   END_VAR
+
+
+BEGIN
+
+
+
+
+
+
+
+	    #sig_idMismatch    := #STATUS = #STATUS_ID_MISMATCH;
+	    #sig_sensorRemoved := #STATUS = #STATUS_SENSOR_REMOVED;
+	    #sig_wrongType     := #STATUS = #STATUS_WRONG_TYPE;
+	    #sig_hwFault       := #STATUS = #STATUS_HW_FAULT;
+	    #sig_interfaceErr  := #STATUS = #STATUS_INTERFACE_ERR;
+	    #sig_calibrating   := #STATUS = #STATUS_CALIBRATING;
+	    #sig_maintenance   := #STATUS = #STATUS_MAINTENANCE;
+
+	    #sig_unknown := (#STATUS <> #STATUS_OK)
+	                    AND NOT #sig_idMismatch
+	                    AND NOT #sig_sensorRemoved
+	                    AND NOT #sig_wrongType
+	                    AND NOT #sig_hwFault
+	                    AND NOT #sig_interfaceErr
+	                    AND NOT #sig_calibrating
+	                    AND NOT #sig_maintenance;
+
+	    #SensorNetwork_IDMismatch(SIG := #sig_idMismatch,
+	                            SD_1 := #DeviceTag);
+
+	    #SensorNetwork_SensorRemoved(SIG := #sig_sensorRemoved,
+	                               SD_1 := #DeviceTag);
+
+	    #SensorNetwork_WrongType(SIG := #sig_wrongType,
+	                           SD_1 := #DeviceTag);
+
+	    #SensorNetwork_HardwareFault(SIG := #sig_hwFault,
+	                               SD_1 := #DeviceTag);
+
+	    #SensorNetwork_InterfaceError(SIG := #sig_interfaceErr,
+	                                SD_1 := #DeviceTag);
+
+	    #SensorNetwork_Calibrating(SIG := #sig_calibrating,
+	                             SD_1 := #DeviceTag);
+
+	    #SensorNetwork_Maintenance(SIG := #sig_maintenance,
+	                             SD_1 := #DeviceTag);
+
+	    #SensorNetwork_UnknownStatus(SIG := #sig_unknown,
+	                               SD_1 := #DeviceTag,
+	                               SD_2 := #STATUS);
+
+
+END_FUNCTION_BLOCK
+
+TYPE "Drive_Data"
+VERSION : 0.1
+
+
+
+   STRUCT
+      OperatingMode : Byte := 16#01;
+      VFD : Struct
+         CMD : Struct
+            enable : Bool;
+            reset : Bool;
+            start_stop : Bool;
+            request { S7_SetPoint := 'True'} : Real := 80.0;
+         END_STRUCT;
+         DATA { ExternalWritable := 'False'} : Struct
+            actSpeedRPM { ExternalWritable := 'False'} : Real;
+            OutputFreq { ExternalWritable := 'False'} : Real;
+            MotorCurrent { ExternalWritable := 'False'} : Real;
+            OutputVoltage { ExternalWritable := 'False'} : Real;
+            MotorShaftPwr { ExternalWritable := 'False'} : Real;
+            OutputPower { ExternalWritable := 'False'} : Real;
+            InverterTemperature { ExternalWritable := 'False'} : Real;
+         END_STRUCT;
+         CONFIG : Struct
+            requestOffset : Real := 20.0;
+            OverrideAlarmDelay : Time := T#1M;
+            mbConfig_mode_write : Bool;
+            mbConfig_trig_scale : Bool;
+            VfdOverheadPower : Real := 0.8;
+         END_STRUCT;
+         STATUS { ExternalWritable := 'False'} : Word;
+      END_STRUCT;
+      WaterFlow { ExternalWritable := 'False'} : Real;
+      Energy : Struct
+         LivePower : Real;
+         Accumulated : LReal;
+         ResetCmd : Bool;
+      END_STRUCT;
+      Alarms { ExternalWritable := 'False'; S7_SetPoint := 'False'} : "Drive_AlarmData";
+      STATUS : Word;
+   END_STRUCT;
+
+END_TYPE
+
+TYPE "PLC_WatchdogPair_UDT"
+VERSION : 0.1
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   STRUCT
+      Local { S7_SetPoint := 'False'} : "PLC_Watchdog_UDT";
+      Remote { S7_SetPoint := 'False'} : "PLC_Watchdog_UDT";
+   END_STRUCT;
+
+END_TYPE
+
+TYPE "ProcessUnit_Data"
+VERSION : 0.1
+
+
+
+
+
+
+   STRUCT
+      OperatingMode : Byte := 16#01;
+      GlobalOperatingMode { ExternalWritable := 'False'} : Byte := 16#01;
+      Reset : Bool;
+      CONFIG : Struct
+         "Name" : String[64] := 'ProcessUnit-1';
+         EnvironmentalStation : Bool;
+         TiltDepthSensors : Bool;
+      END_STRUCT;
+      Gas { S7_SetPoint := 'False'} : "GasProcessData";
+      Drive { S7_SetPoint := 'False'} : "Drive_Data";
+      Sensors : Struct
+         Depth { ExternalWritable := 'False'} : Real;
+         CtrlTemperature { ExternalWritable := 'False'} : Real;
+      END_STRUCT;
+      Watchdog { S7_SetPoint := 'False'} : "PLC_WatchdogPair_UDT";
+      STATUS { ExternalWritable := 'False'} : Word;
+      HMI_Connection { ExternalWritable := 'False'} : Bool;
+   END_STRUCT;
+
+END_TYPE
+
+FUNCTION_BLOCK "HMI_Alarms"
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+
+
+
+
+   VAR_INPUT
+      "Name" : String;
+      Disconnected : Bool;
+   END_VAR
+
+   VAR
+      HMIConnectionLost {InstructionName := 'Program_Alarm'; LibVersion := '1.0'} : Program_Alarm;
+   END_VAR
+
+
+BEGIN
+
+	    #HMIConnectionLost(SIG := #Disconnected,
+	                       SD_1 := #Name);
+
+
+END_FUNCTION_BLOCK
+
+FUNCTION_BLOCK "Drive_Alarms"
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.3
+
+
+
+
+
+
+
+
+
+   VAR_INPUT
+      DeviceTag : String;
+   END_VAR
+
+   VAR_IN_OUT
+      AlarmData : "Drive_AlarmData";
+   END_VAR
+
+   VAR
+      VFDTrip {InstructionName := 'Program_Alarm'; LibVersion := '1.0'; ExternalWritable := 'False'} : Program_Alarm;
+      VFDConnectionLost {InstructionName := 'Program_Alarm'; LibVersion := '1.0'; ExternalWritable := 'False'} : Program_Alarm;
+      OverrideActive {InstructionName := 'Program_Alarm'; LibVersion := '1.0'; ExternalWritable := 'False'} : Program_Alarm;
+      VFDNotReady {InstructionName := 'Program_Alarm'; LibVersion := '1.0'; ExternalWritable := 'False'} : Program_Alarm;
+   END_VAR
+
+
+BEGIN
+
+	    #VFDTrip(SIG := #AlarmData.VFDtripped,
+	             SD_1 := #DeviceTag);
+
+	    #VFDConnectionLost(SIG := #AlarmData.VFDcomLoss,
+	                       SD_1 := #DeviceTag);
+
+	    #OverrideActive(SIG := #AlarmData.OverrideActiveTooLong,
+	                    SD_1 := #DeviceTag);
+
+	    #VFDNotReady(SIG := #AlarmData.VFDnotReady,
+	                 SD_1 := #DeviceTag);
+END_FUNCTION_BLOCK
+
+FUNCTION_BLOCK "GasAlarms"
+TITLE = 'Gas FlowController Alarm Handler'
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.6
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   VAR_INPUT
+      DeviceTag : String;
+   END_VAR
+
+   VAR_IN_OUT
+      Data : "GasProcessData";
+   END_VAR
+
+   VAR
+      FlowControllerValveNotOpening {InstructionName := 'Program_Alarm'; LibVersion := '1.0'} : Program_Alarm;
+      FlowControllerValveNotClosing {InstructionName := 'Program_Alarm'; LibVersion := '1.0'} : Program_Alarm;
+      FlowControllerSetpointMismatch {InstructionName := 'Program_Alarm'; LibVersion := '1.0'} : Program_Alarm;
+      FlowControllerNamurRed {InstructionName := 'Program_Alarm'; LibVersion := '1.0'} : Program_Alarm;
+      FlowControllerNamurYellow {InstructionName := 'Program_Alarm'; LibVersion := '1.0'} : Program_Alarm;
+      FlowControllerNamurBlue {InstructionName := 'Program_Alarm'; LibVersion := '1.0'} : Program_Alarm;
+      FlowControllerNamurOrange {InstructionName := 'Program_Alarm'; LibVersion := '1.0'} : Program_Alarm;
+      FlowControllerCommFault {InstructionName := 'Program_Alarm'; LibVersion := '1.0'} : Program_Alarm;
+      GasPressureLow {InstructionName := 'Program_Alarm'; LibVersion := '1.0'} : Program_Alarm;
+      GasPressureHigh {InstructionName := 'Program_Alarm'; LibVersion := '1.0'} : Program_Alarm;
+      GasSaturationLow {InstructionName := 'Program_Alarm'; LibVersion := '1.0'} : Program_Alarm;
+      GasSaturationHigh {InstructionName := 'Program_Alarm'; LibVersion := '1.0'} : Program_Alarm;
+      GasCalibrationOverdue {InstructionName := 'Program_Alarm'; LibVersion := '1.0'} : Program_Alarm;
+      GasPumpFeedbackError {InstructionName := 'Program_Alarm'; LibVersion := '1.0'} : Program_Alarm;
+      GasPumpTrip {InstructionName := 'Program_Alarm'; LibVersion := '1.0'} : Program_Alarm;
+      _ProcessSensorAlarms { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : "ProcessSensorAlarms";
+   END_VAR
+
+
+BEGIN
+
+
+	    #FlowControllerValveNotOpening(SIG := #Data.Alarms.FlowControllerAlarms.ValveNotOpening,
+	                        SD_1 := #DeviceTag,
+	                        SD_2 := #Data.FlowController.actFlow,
+	                        SD_3 := #Data.Pressure.ActVal);
+
+	    #FlowControllerValveNotClosing(SIG := #Data.Alarms.FlowControllerAlarms.ValveNotClosing,
+	                        SD_1 := #DeviceTag,
+	                        SD_2 := #Data.FlowController.actFlow);
+
+	    #FlowControllerSetpointMismatch(SIG := #Data.Alarms.FlowControllerAlarms.SetpointMismatch,
+	                         SD_1 := #DeviceTag);
+
+
+
+
+
+
+
+
+
+
+
+	    #FlowControllerNamurRed(SIG := #Data.Alarms.FlowControllerAlarms.NamurFailure,
+	                 SD_1 := #DeviceTag);
+
+	    #FlowControllerNamurYellow(SIG := #Data.Alarms.FlowControllerAlarms.NamurOutOfSpec,
+	                    SD_1 := #DeviceTag);
+
+	    #FlowControllerNamurBlue(SIG := #Data.Alarms.FlowControllerAlarms.NamurMaintenance,
+	                  SD_1 := #DeviceTag);
+
+	    #FlowControllerNamurOrange(SIG := #Data.Alarms.FlowControllerAlarms.NamurFunctionCheck,
+	                    SD_1 := #DeviceTag);
+
+	    #FlowControllerCommFault(SIG := #Data.Alarms.FlowControllerAlarms.CommFault,
+	                  SD_1 := #DeviceTag);
+
+	    #GasPressureLow(SIG := #Data.Alarms.PressureLow,
+	                   SD_1 := #DeviceTag,
+	                   SD_2 := #Data.Pressure.ActVal);
+
+	    #GasPressureHigh(SIG := #Data.Alarms.PressureHigh,
+	                    SD_1 := #DeviceTag,
+	                    SD_2 := #Data.Pressure.ActVal);
+
+	    #GasSaturationLow(SIG := #Data.Alarms.SaturationLow,
+	                     SD_1 := #DeviceTag,
+	                     SD_2 := #Data.PID.STATUS.PV);
+
+	    #GasSaturationHigh(SIG := #Data.Alarms.SaturationHigh,
+	                      SD_1 := #DeviceTag,
+	                      SD_2 := #Data.PID.STATUS.PV);
+
+	    #GasCalibrationOverdue(SIG := #Data.Alarms.CalibrationOverdue,
+	                          SD_1 := #DeviceTag);
+
+	    #GasPumpFeedbackError(SIG := #Data.Alarms.PumpFeedbackFault,
+	                         SD_1 := #DeviceTag);
+
+	    #GasPumpTrip(SIG := #Data.Alarms.PumpTrip,
+	                SD_1 := #DeviceTag);
+
+	    #_ProcessSensorAlarms(DeviceTag := #DeviceTag,
+	                      STATUS := #Data.SensorNetwork.Data.STATUS);
+
+
+END_FUNCTION_BLOCK
+
+FUNCTION_BLOCK "ProcessUnitAlarms"
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.3
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   VAR_INPUT
+      ProcessUnit_CommLoss : Bool;
+   END_VAR
+
+   VAR_IN_OUT
+      ProcessUnitData : "ProcessUnit_Data";
+   END_VAR
+
+   VAR
+      ProcessUnit_ConnectionLost {InstructionName := 'Program_Alarm'; LibVersion := '1.0'} : Program_Alarm;
+      GasAlarms_ProcessUnit : "GasAlarms";
+      Drive_Alarms_ProcessUnit : "Drive_Alarms";
+      HMI_Alarms : "HMI_Alarms";
+   END_VAR
+
+
+BEGIN
+
+
+	    #ProcessUnit_ConnectionLost(SIG := #ProcessUnit_CommLoss,
+	                           SD_1 := #ProcessUnitData.CONFIG.Name);
+
+	    IF NOT #ProcessUnit_CommLoss THEN
+
+	        #HMI_Alarms(Name := #ProcessUnitData.CONFIG.Name,
+	                    Disconnected := NOT #ProcessUnitData.HMI_Connection);
+
+	        #GasAlarms_ProcessUnit(DeviceTag := #ProcessUnitData.CONFIG.Name,
+	                          Data := #ProcessUnitData.Gas);
+
+	        #Drive_Alarms_ProcessUnit(DeviceTag := #ProcessUnitData.CONFIG.Name,
+	                             AlarmData := #ProcessUnitData.Drive.Alarms);
+	    END_IF;
+
+
+END_FUNCTION_BLOCK
+
+TYPE "PlantCoordinator_Data"
+VERSION : 0.1
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   STRUCT
+      OperatingMode : Byte := 16#01;
+      Reset : Bool;
+      ResetGasTotalizer : Bool;
+      ResetDriveEnergy : Bool;
+      CONFIG : Struct
+         DeviceTag : String[64] := 'PlantCoordinator';
+         UnitCount : USInt := 4;
+         CalibrationAlarmThreshold : Time := T#7D;
+         DriveFlowOffset : Real := 20.0;
+         DriveMinFlow : Real := 52.0;
+         DriveMaxFlow : Real := 138.0;
+         SensorAvgTolerance : Real := 1.5;
+         OverrideAlarmDelay : Time := T#1M;
+         WatchdogSendInterval : Time := T#500MS;
+         ForceBackup flow meter : Bool;
+         PumpStagingDelay : Time := T#10s;
+      END_STRUCT;
+      ReqGas : Struct
+         AvgSaturation { S7_SetPoint := 'True'} : Real;
+         MinLimit : Real;
+         MaxLimit : Real;
+      END_STRUCT;
+      ActGas : Struct
+         AvgSaturation { ExternalWritable := 'False'} : Real;
+         LowGasSatAlarmLimit : Real := 5.0;
+         HighGasSatAlarmLimit : Real := 10.0;
+      END_STRUCT;
+      ActGasPressure : Struct
+         InletPressure { ExternalWritable := 'False'} : Real;
+         Pressure_ProcessUnit { ExternalWritable := 'False'} : Array[1..4] of Real;
+         LowAlarmLimit : Real;
+         HighAlarmLimit : Real;
+      END_STRUCT;
+      reqTotWaterFlow { S7_SetPoint := 'True'} : Real;
+      actTotWaterFlow { ExternalWritable := 'False'} : Real;
+      actTotDrivePower { ExternalWritable := 'False'} : Real;
+      SysDriveEnergy { ExternalWritable := 'False'} : LReal;
+      actTotGasFlow { ExternalWritable := 'False'} : Real;
+      SysGasTotalizer { ExternalWritable := 'False'} : LReal;
+      GasSupply : Struct
+         GeneratorFlowOK { ExternalWritable := 'False'} : Bool;
+         BackupSupplyFlowOK { ExternalWritable := 'False'} : Bool;
+         BatterySOCLow { ExternalWritable := 'False'} : Bool;
+         DieselOn { ExternalWritable := 'False'} : Bool;
+         GridOn { ExternalWritable := 'False'} : Bool;
+         GeneratorCmd : Bool;
+         AllUnitsPressureLow { ExternalWritable := 'False'} : Bool;
+         MaxDriveOverride : Bool;
+      END_STRUCT;
+      SensorRollup { ExternalWritable := 'False'} : Struct
+         PV_is_reduced { ExternalWritable := 'False'} : Bool;
+         NoValidPV { ExternalWritable := 'False'} : Bool;
+         AvgToleranceExceeded { ExternalWritable := 'False'} : Bool;
+         ConfigInvalid { ExternalWritable := 'False'} : Bool;
+         ValidSensorCount { ExternalWritable := 'False'} : USInt;
+         Excluded { ExternalWritable := 'False'} : Array[1..4] of Bool;
+         ExclusionReason { ExternalWritable := 'False'} : Array[1..4] of USInt;
+      END_STRUCT;
+      SystemHealth { ExternalWritable := 'False'} : Word;
+      STATUS { ExternalWritable := 'False'} : Word;
+   END_STRUCT;
+
+END_TYPE
+
+FUNCTION_BLOCK "PLC_Watchdog"
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   VAR_INPUT
+      Enable : Bool := FALSE;
+      RecvTimeout : Time := T#3S;
+      LocalWD { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : "PLC_Watchdog_UDT";
+      RemoteWD { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : "PLC_Watchdog_UDT";
+   END_VAR
+
+   VAR_OUTPUT
+      RemoteAlive : Bool := FALSE;
+      Fault : Bool := FALSE;
+      CommEstablished : Bool := FALSE;
+      RemoteWdActive : Bool := FALSE;
+   END_VAR
+
+   VAR
+      TonSendPulse {InstructionName := 'TON_TIME'; LibVersion := '1.0'} : TON_TIME;
+      TonRecvTimeout {InstructionName := 'TON_TIME'; LibVersion := '1.0'} : TON_TIME;
+      RemoteCounterPrev : UDInt;
+      RemoteCounterChanged : Bool;
+      FirstHeartbeatSeen : Bool;
+      Q_TON : Bool;
+   END_VAR
+
+
+BEGIN
+
+
+
+
+
+	    IF NOT #Enable THEN
+
+	        #RemoteAlive       := FALSE;
+	        #Fault             := FALSE;
+	        #CommEstablished   := FALSE;
+	        #RemoteWdActive    := FALSE;
+
+	        #FirstHeartbeatSeen    := FALSE;
+	        #RemoteCounterChanged  := FALSE;
+	        #RemoteCounterPrev   := 0;
+
+	        #TonRecvTimeout(IN := FALSE, PT := #RecvTimeout);
+	        RETURN;
+	    END_IF;
+
+
+
+
+
+	    #RemoteWdActive := #RemoteWD.WatchdogActive;
+
+	    #RemoteCounterChanged := (#RemoteWD.HeartbeatCounter <> #RemoteCounterPrev);
+
+	    IF #RemoteCounterChanged THEN
+	        #RemoteCounterPrev := #RemoteWD.HeartbeatCounter;
+	        #FirstHeartbeatSeen := TRUE;
+	    END_IF;
+
+
+
+
+	    IF #FirstHeartbeatSeen THEN
+	        #CommEstablished := TRUE;
+
+	        #TonRecvTimeout(IN := NOT #RemoteCounterChanged,
+	                        PT := #RecvTimeout);
+
+	        #RemoteAlive := NOT #TonRecvTimeout.Q;
+	        #Fault       := #TonRecvTimeout.Q;
+	    ELSE
+	        #CommEstablished   := FALSE;
+	        #RemoteAlive       := FALSE;
+	        #Fault             := FALSE;
+
+	        #TonRecvTimeout(IN := FALSE, PT := #RecvTimeout);
+	    END_IF;
+
+
+END_FUNCTION_BLOCK
+
+FUNCTION_BLOCK "SensorFusionHandler"
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.4
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   VAR_INPUT
+      AVG_PV_Err_Tolerance : Real;
+   END_VAR
+
+   VAR_OUTPUT
+      PV_Avg : Real;
+      PV_is_reduced : Bool := FALSE;
+      NoValidPV : Bool := FALSE;
+      AvgToleranceExceeded : Bool := FALSE;
+      ConfigInvalid : Bool := FALSE;
+      ValidSensorCount : USInt;
+      Excluded : Array[1..4] of Bool;
+      ExclusionReason : Array[1..4] of USInt;
+   END_VAR
+
+   VAR_IN_OUT
+      SensorData : Array[*] of "SensorData";
+   END_VAR
+
+   VAR
+      _Initialized { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Bool;
+      _ConfigInvalid { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Bool;
+      _arrLowerBound { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : DInt;
+      _arrUpperBound { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : DInt;
+      _sensorCount { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : DInt;
+      _lastValidPV { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Real;
+      _lastValidPV_Initialized { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Bool;
+   END_VAR
+
+   VAR_TEMP
+      Gas_PV_Readings : Array[1..4] of Real;
+      validReadingCount : UInt;
+      i : DInt;
+      i_data : DInt;
+      sourceSlot : Array[1..4] of DInt;
+      sum : Real;
+      avg : Real;
+      diff : Real;
+      worstDev : Real;
+      worstIdx : DInt;
+   END_VAR
+
+   VAR CONSTANT
+      EXCLUSION_USED : USInt := 0;
+      EXCLUSION_NOT_CONFIGURED : USInt := 1;
+      EXCLUSION_STATUS_ERROR : USInt := 2;
+      EXCLUSION_DEVIATION : USInt := 3;
+      STATUS_OK : Word := 16#0000;
+      WORKING_BUFFER_SIZE : DInt := 4;
+   END_VAR
+
+
+BEGIN
+
+
+	    REGION INIT
+	        IF NOT #_Initialized THEN
+	            #_arrLowerBound := LOWER_BOUND(ARR := #SensorData, DIM := 1);
+	            #_arrUpperBound := UPPER_BOUND(ARR := #SensorData, DIM := 1);
+	            #_sensorCount := #_arrUpperBound - #_arrLowerBound + 1;
+	            #_ConfigInvalid := #_sensorCount > #WORKING_BUFFER_SIZE;
+	            #_Initialized := TRUE;
+	        END_IF;
+
+	        IF #_ConfigInvalid THEN
+
+
+
+
+
+
+
+	            #NoValidPV := TRUE;
+	            #ConfigInvalid := TRUE;
+	            #PV_Avg := 0.0;
+	            #ValidSensorCount := 0;
+	            #PV_is_reduced := FALSE;
+	            #AvgToleranceExceeded := FALSE;
+	            FOR #i := 1 TO 4 DO
+	                #Excluded[#i] := TRUE;
+	                #ExclusionReason[#i] := #EXCLUSION_STATUS_ERROR;
+	            END_FOR;
+	            RETURN;
+	        END_IF;
+	    END_REGION
+
+	    REGION RESET_OUTPUTS
+	        #PV_is_reduced := FALSE;
+	        #NoValidPV := FALSE;
+	        #AvgToleranceExceeded := FALSE;
+	        #ConfigInvalid := FALSE;
+	        #validReadingCount := 0;
+
+	        FOR #i := 1 TO 4 DO
+	            #Excluded[#i] := FALSE;
+	            #ExclusionReason[#i] := #EXCLUSION_USED;
+	            #Gas_PV_Readings[#i] := 0.0;
+	            #sourceSlot[#i] := 0;
+	        END_FOR;
+	    END_REGION
+
+	    REGION FILTER_BY_STATUS
+	        FOR #i := 1 TO #_sensorCount DO
+	            #i_data := #i + #_arrLowerBound - 1;
+
+	            IF #SensorData[#i_data].STATUS = #STATUS_OK THEN
+	                #validReadingCount := #validReadingCount + 1;
+	                #Gas_PV_Readings[#validReadingCount] := #SensorData[#i_data].MainValue;
+	                #sourceSlot[#validReadingCount] := #i;
+	            ELSE
+	                #Excluded[#i] := TRUE;
+	                #ExclusionReason[#i] := #EXCLUSION_STATUS_ERROR;
+	            END_IF;
+	        END_FOR;
+
+	        FOR #i := #_sensorCount + 1 TO 4 DO
+	            #Excluded[#i] := TRUE;
+	            #ExclusionReason[#i] := #EXCLUSION_NOT_CONFIGURED;
+	        END_FOR;
+	    END_REGION
+
+	    REGION ITERATIVE_OUTLIER_REMOVAL
+	        WHILE #validReadingCount >= 3 DO
+	            #sum := 0.0;
+	            FOR #i := 1 TO UINT_TO_DINT(#validReadingCount) DO
+	                #sum := #sum + #Gas_PV_Readings[#i];
+	            END_FOR;
+	            #avg := #sum / UINT_TO_REAL(#validReadingCount);
+
+	            #worstDev := 0.0;
+	            #worstIdx := 0;
+	            FOR #i := 1 TO UINT_TO_DINT(#validReadingCount) DO
+	                #diff := ABS(#Gas_PV_Readings[#i] - #avg);
+	                IF #diff > #worstDev THEN
+	                    #worstDev := #diff;
+	                    #worstIdx := #i;
+	                END_IF;
+	            END_FOR;
+
+	            IF #worstDev <= #AVG_PV_Err_Tolerance THEN
+	                EXIT;
+	            END_IF;
+
+	            #Excluded[#sourceSlot[#worstIdx]] := TRUE;
+	            #ExclusionReason[#sourceSlot[#worstIdx]] := #EXCLUSION_DEVIATION;
+	            #AvgToleranceExceeded := TRUE;
+
+	            #Gas_PV_Readings[#worstIdx] := #Gas_PV_Readings[#validReadingCount];
+	            #sourceSlot[#worstIdx] := #sourceSlot[#validReadingCount];
+	            #validReadingCount := #validReadingCount - 1;
+	        END_WHILE;
+	    END_REGION
+
+	    REGION TWO_SENSOR_DISAGREEMENT
+	        IF #validReadingCount = 2 THEN
+	            #diff := ABS(#Gas_PV_Readings[1] - #Gas_PV_Readings[2]);
+
+	            IF #diff > 2.0 * #AVG_PV_Err_Tolerance THEN
+	                #AvgToleranceExceeded := TRUE;
+
+	                IF #Gas_PV_Readings[1] <= #Gas_PV_Readings[2] THEN
+	                    #Excluded[#sourceSlot[2]] := TRUE;
+	                    #ExclusionReason[#sourceSlot[2]] := #EXCLUSION_DEVIATION;
+	                    #Gas_PV_Readings[2] := 0.0;
+	                    #sourceSlot[2] := 0;
+	                ELSE
+	                    #Excluded[#sourceSlot[1]] := TRUE;
+	                    #ExclusionReason[#sourceSlot[1]] := #EXCLUSION_DEVIATION;
+	                    #Gas_PV_Readings[1] := #Gas_PV_Readings[2];
+	                    #sourceSlot[1] := #sourceSlot[2];
+	                    #Gas_PV_Readings[2] := 0.0;
+	                    #sourceSlot[2] := 0;
+	                END_IF;
+
+	                #validReadingCount := 1;
+	            END_IF;
+	        END_IF;
+	    END_REGION
+
+	    REGION FINAL_AVERAGE
+	        IF #validReadingCount = 0 THEN
+	            #NoValidPV := TRUE;
+	            IF #_lastValidPV_Initialized THEN
+	                #PV_Avg := #_lastValidPV;
+	            ELSE
+	                #PV_Avg := 0.0;
+	            END_IF;
+	        ELSE
+	            #sum := 0.0;
+	            FOR #i := 1 TO UINT_TO_DINT(#validReadingCount) DO
+	                #sum := #sum + #Gas_PV_Readings[#i];
+	            END_FOR;
+	            #PV_Avg := #sum / UINT_TO_REAL(#validReadingCount);
+	            #_lastValidPV := #PV_Avg;
+	            #_lastValidPV_Initialized := TRUE;
+	        END_IF;
+
+	        IF UINT_TO_DINT(#validReadingCount) < #_sensorCount THEN
+	            #PV_is_reduced := TRUE;
+	        END_IF;
+
+	        #ValidSensorCount := UINT_TO_USINT(#validReadingCount);
+	    END_REGION
+
+
+END_FUNCTION_BLOCK
+
+FUNCTION_BLOCK "Global_values"
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.5
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   VAR_INPUT
+      CommLoss : Array[1..4] of Bool;
+   END_VAR
+
+   VAR_IN_OUT
+      PlantCoordinatorData : "PlantCoordinator_Data";
+      ProcessUnitData : Array[1..4] of "ProcessUnit_Data";
+   END_VAR
+
+   VAR
+      _IQHandler { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : "SensorFusionHandler";
+      _NoValidPVEngageDebounce {InstructionName := 'TON_TIME'; LibVersion := '1.0'; ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : TON_TIME;
+      _NoValidPVClearDebounce {InstructionName := 'TON_TIME'; LibVersion := '1.0'; ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : TON_TIME;
+   END_VAR
+
+   VAR_TEMP
+      GasSensors : Array[1..4] of "SensorData";
+      AvgGas : Real;
+      pv_is_reduced : Bool;
+      no_valid_pv : Bool;
+      avg_tol_exceeded : Bool;
+      config_invalid : Bool;
+      valid_count : USInt;
+      excluded : Array[1..4] of Bool;
+      exclusion_reason : Array[1..4] of USInt;
+      i : USInt;
+      flowSum : Real;
+      gasFlowSum : Real;
+      gasTotSum : LReal;
+      drivePowerSum : Real;
+      energySum : LReal;
+   END_VAR
+
+   VAR CONSTANT
+      MAX_UNITS : USInt := 4;
+      STATUS_SENSOR_REMOVED : Word := 16#3961;
+      NOVALID_ENGAGE_TIME : Time := T#30S;
+      NOVALID_CLEAR_TIME : Time := T#1M;
+   END_VAR
+
+
+BEGIN
+
+	    REGION SENSOR_PRE_MASK
+	        FOR #i := 1 TO #MAX_UNITS DO
+	            #GasSensors[#i] := #ProcessUnitData[#i].Gas.SensorNetwork.Data;
+
+	            IF (#i > #PlantCoordinatorData.CONFIG.UnitCount) OR #CommLoss[#i] THEN
+	                #GasSensors[#i].STATUS := #STATUS_SENSOR_REMOVED;
+	            END_IF;
+	        END_FOR;
+	    END_REGION
+
+	    REGION AVERAGE_COMPUTATION
+	        #_IQHandler(AVG_PV_Err_Tolerance := #PlantCoordinatorData.CONFIG.SensorAvgTolerance,
+	                    PV_Avg => #AvgGas,
+	                    PV_is_reduced => #pv_is_reduced,
+	                    NoValidPV => #no_valid_pv,
+	                    AvgToleranceExceeded => #avg_tol_exceeded,
+	                    ConfigInvalid => #config_invalid,
+	                    ValidSensorCount => #valid_count,
+	                    Excluded => #excluded,
+	                    ExclusionReason => #exclusion_reason,
+	                    SensorData := #GasSensors);
+
+	        #PlantCoordinatorData.ActGas.AvgSaturation := #AvgGas;
+	        #PlantCoordinatorData.SensorRollup.PV_is_reduced := #pv_is_reduced;
+	        #PlantCoordinatorData.SensorRollup.NoValidPV := #no_valid_pv;
+	        #PlantCoordinatorData.SensorRollup.AvgToleranceExceeded := #avg_tol_exceeded;
+	        #PlantCoordinatorData.SensorRollup.ConfigInvalid := #config_invalid;
+	        #PlantCoordinatorData.SensorRollup.ValidSensorCount := #valid_count;
+	        FOR #i := 1 TO #MAX_UNITS DO
+	            #PlantCoordinatorData.SensorRollup.Excluded[#i] := #excluded[#i];
+	            #PlantCoordinatorData.SensorRollup.ExclusionReason[#i] := #exclusion_reason[#i];
+	        END_FOR;
+	    END_REGION
+
+	    REGION FORCE_ROTAMETER
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	        #_NoValidPVEngageDebounce(IN := #no_valid_pv AND NOT #config_invalid,
+	                                  PT := #NOVALID_ENGAGE_TIME);
+	        #_NoValidPVClearDebounce(IN := NOT (#no_valid_pv AND NOT #config_invalid),
+	                                 PT := #NOVALID_CLEAR_TIME);
+
+	        IF #_NoValidPVEngageDebounce.Q THEN
+	            #PlantCoordinatorData.CONFIG.ForceBackup flow meter := TRUE;
+	        ELSIF #_NoValidPVClearDebounce.Q THEN
+	            #PlantCoordinatorData.CONFIG.ForceBackup flow meter := FALSE;
+	        END_IF;
+
+	    END_REGION
+
+	    REGION BROADCAST_PV
+	        IF NOT #no_valid_pv THEN
+	            FOR #i := 1 TO #PlantCoordinatorData.CONFIG.UnitCount DO
+	                IF NOT #CommLoss[#i] THEN
+	                    #ProcessUnitData[#i].Gas.Gas_Avg := #AvgGas;
+	                END_IF;
+	            END_FOR;
+	        END_IF;
+	    END_REGION
+
+	    REGION FLOW_ENERGY_ROLLUPS
+	        #flowSum := 0.0;
+	        #gasFlowSum := 0.0;
+	        #gasTotSum := 0.0;
+	        #drivePowerSum := 0.0;
+	        #energySum := 0.0;
+
+	        FOR #i := 1 TO #PlantCoordinatorData.CONFIG.UnitCount DO
+
+
+	            #gasTotSum := #gasTotSum + #ProcessUnitData[#i].Gas.FlowController.totalizer;
+	            #energySum := #energySum + #ProcessUnitData[#i].Drive.Energy.Accumulated;
+
+	            IF NOT #CommLoss[#i] THEN
+	                #flowSum := #flowSum + #ProcessUnitData[#i].Drive.WaterFlow;
+	                #gasFlowSum := #gasFlowSum + #ProcessUnitData[#i].Gas.FlowController.actFlow;
+	                #drivePowerSum := #drivePowerSum + #ProcessUnitData[#i].Drive.Energy.LivePower;
+	                #PlantCoordinatorData.ActGasPressure.Pressure_ProcessUnit[#i] := #ProcessUnitData[#i].Gas.Pressure.ActVal;
+	            END_IF;
+	        END_FOR;
+
+	        #PlantCoordinatorData.actTotWaterFlow := #flowSum;
+	        #PlantCoordinatorData.actTotGasFlow := #gasFlowSum;
+	        #PlantCoordinatorData.SysGasTotalizer := #gasTotSum;
+	        #PlantCoordinatorData.actTotDrivePower := #drivePowerSum;
+	        #PlantCoordinatorData.SysDriveEnergy := #energySum;
+	    END_REGION
+
+
+END_FUNCTION_BLOCK
+
+FUNCTION_BLOCK "Watchdogs"
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.4
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   VAR_INPUT
+      UnitCount : USInt;
+      SendInterval : Time;
+   END_VAR
+
+   VAR_OUTPUT
+      GasController_CommLoss : Bool;
+      GasController_CommEstablished : Bool;
+      ProcessUnit_CommLoss : Array[2..4] of Bool;
+      ProcessUnit_CommEstablished : Array[2..4] of Bool;
+   END_VAR
+
+   VAR_IN_OUT
+      GasController : "PLC_WatchdogPair_UDT";
+      ProcessUnit : Array[2..4] of "PLC_WatchdogPair_UDT";
+   END_VAR
+
+   VAR
+      GasController_WD : "PLC_Watchdog";
+      ProcessUnit_WD : Array[2..4] of "PLC_Watchdog";
+   END_VAR
+
+   VAR_TEMP
+      i : USInt;
+      recvTimeout : Time;
+   END_VAR
+
+   VAR CONSTANT
+      MAX_UNITS : USInt := 4;
+      RECV_TIMEOUT_MULTIPLIER : Int := 6;
+   END_VAR
+
+
+BEGIN
+	    #recvTimeout := DINT_TO_TIME(TIME_TO_DINT(#SendInterval) * #RECV_TIMEOUT_MULTIPLIER);
+
+	    REGION GasController_WATCHDOG
+	        #GasController_WD(Enable := TRUE,
+	                   RecvTimeout := #recvTimeout,
+	                   Fault => #GasController_CommLoss,
+	                   CommEstablished => #GasController_CommEstablished,
+	                   LocalWD := #GasController.Local,
+	                   RemoteWD := #GasController."Remote");
+
+	    END_REGION
+
+	    REGION HYDRGas_PEER_WATCHDOGS
+	        FOR #i := 2 TO #MAX_UNITS DO
+	            #ProcessUnit_WD[#i](Enable := (#i <= #UnitCount),
+	                           RecvTimeout := #recvTimeout,
+	                           Fault => #ProcessUnit_CommLoss[#i],
+	                           CommEstablished => #ProcessUnit_CommEstablished[#i],
+	                           LocalWD := #ProcessUnit[#i].Local,
+	                           RemoteWD := #ProcessUnit[#i]."Remote");
+
+
+
+
+
+
+
+
+	            IF #i > #UnitCount THEN
+	                #ProcessUnit_CommLoss[#i] := TRUE;
+	                #ProcessUnit_CommEstablished[#i] := FALSE;
+	            END_IF;
+	        END_FOR;
+	    END_REGION
+
+
+END_FUNCTION_BLOCK
+
+FUNCTION_BLOCK "Global_Reset"
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.2
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   VAR_INPUT
+      SendInterval : Time;
+   END_VAR
+
+   VAR_IN_OUT
+      MasterReset : Bool;
+      MasterResetTotalizer : Bool;
+      MasterResetEnergy : Bool;
+      ProcessUnitData : Array[1..4] of "ProcessUnit_Data";
+   END_VAR
+
+   VAR
+      ResetEdge {InstructionName := 'R_TRIG'; LibVersion := '1.0'} : R_TRIG;
+      ResetTP {InstructionName := 'TP_TIME'; LibVersion := '1.0'} : TP_TIME;
+      ResetTotalizerEdge {InstructionName := 'R_TRIG'; LibVersion := '1.0'} : R_TRIG;
+      ResetTotalizerTP {InstructionName := 'TP_TIME'; LibVersion := '1.0'} : TP_TIME;
+      ResetEnergyEdge {InstructionName := 'R_TRIG'; LibVersion := '1.0'} : R_TRIG;
+      ResetEnergyTP {InstructionName := 'TP_TIME'; LibVersion := '1.0'} : TP_TIME;
+   END_VAR
+
+   VAR_TEMP
+      resetActive : Bool;
+      resetTotalizerActive : Bool;
+      resetEnergyActive : Bool;
+      holdTime : Time;
+      i : USInt;
+   END_VAR
+
+   VAR CONSTANT
+      MAX_UNITS : USInt := 4;
+      HOLD_TIME_MULTIPLIER : Int := 2;
+   END_VAR
+
+
+BEGIN
+
+
+
+
+	     #holdTime := DINT_TO_TIME(TIME_TO_DINT(#SendInterval) * #HOLD_TIME_MULTIPLIER);
+
+	     REGION RESET_CHANNEL
+	         #ResetEdge(CLK := #MasterReset);
+	         #ResetTP(IN := #ResetEdge.Q, PT := #holdTime);
+
+
+	         #resetActive := #ResetTP.Q;
+
+	         FOR #i := 1 TO #MAX_UNITS DO
+	             #ProcessUnitData[#i].Reset := #resetActive;
+	         END_FOR;
+
+
+
+	         #MasterReset := FALSE;
+	     END_REGION
+
+	     REGION RESET_TOTALIZER_CHANNEL
+	         #ResetTotalizerEdge(CLK := #MasterResetTotalizer);
+	         #ResetTotalizerTP(IN := #ResetTotalizerEdge.Q, PT := #holdTime);
+
+	         #resetTotalizerActive := #ResetTotalizerTP.Q;
+
+	         FOR #i := 1 TO #MAX_UNITS DO
+	             #ProcessUnitData[#i].Gas.FlowController.ResetTotalizer := #resetTotalizerActive;
+	         END_FOR;
+
+	         #MasterResetTotalizer := FALSE;
+	     END_REGION
+
+	     REGION RESET_ENERGY_CHANNEL
+	         #ResetEnergyEdge(CLK := #MasterResetEnergy);
+	         #ResetEnergyTP(IN := #ResetEnergyEdge.Q,
+	                        PT := #holdTime);
+
+	         #resetEnergyActive := #ResetEnergyTP.Q;
+
+	         FOR #i := 1 TO #MAX_UNITS DO
+	             #ProcessUnitData[#i].Drive.Energy.ResetCmd := #resetEnergyActive;
+	         END_FOR;
+
+	         #MasterResetEnergy := FALSE;
+	     END_REGION
+
+
+
+END_FUNCTION_BLOCK
+
+FUNCTION "PlantDiagnostics" : Void
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.4
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   VAR_INPUT
+      Global_operating_mode : Byte;
+      UnitCount : USInt;
+      StagingActive : Bool;
+   END_VAR
+
+   VAR_OUTPUT
+      Global_STATUS : Word;
+      SystemHealth : Word;
+      no_of_drives_running : Int;
+      no_of_online_units : Int;
+   END_VAR
+
+   VAR_IN_OUT
+      CommLoss : Array[1..4] of Bool;
+      ProcessUnitData : Array[1..4] of "ProcessUnit_Data";
+   END_VAR
+
+   VAR_TEMP
+      no_of_Gas_active : Int;
+      faultRollup : Bool;
+      interlockRollup : Bool;
+      i : USInt;
+   END_VAR
+
+   VAR CONSTANT
+      OFF : Byte := 16#00;
+      AUTO : Byte := 16#01;
+      MAN : Byte := 16#02;
+      MAX_UNITS : USInt := 4;
+      HEALTH_OFF : Word := 16#0000;
+      HEALTH_ON : Word := 16#0001;
+      HEALTH_WARNING : Word := 16#0002;
+      HEALTH_ALARM : Word := 16#0003;
+      HEALTH_STARTUP : Word := 16#0004;
+      AtSetpoint : Word := 16#1337;
+      Ramping : Word := 16#13B7;
+      AboveLimit : Word := 16#1737;
+      PUMP_STATUS_OFF : Word := 16#0000;
+      PUMP_STATUS_ON : Word := 16#0001;
+      PUMP_STATUS_FBK_ERR : Word := 16#0002;
+      PUMP_STATUS_TRIP : Word := 16#0003;
+      PUMP_STATUS_RDY_ACK : Word := 16#0004;
+      PUMP_STATUS_UNRECOGNIZED : Word := 16#8090;
+   END_VAR
+
+
+BEGIN
+
+
+	    #no_of_online_units := 0;
+	    #no_of_Gas_active := 0;
+	    #no_of_drives_running := 0;
+	    #faultRollup := FALSE;
+	    #interlockRollup := FALSE;
+
+	    FOR #i := 1 TO #UnitCount DO
+	        IF NOT #CommLoss[#i] THEN
+	            #no_of_online_units := #no_of_online_units + 1;
+	            #faultRollup := #faultRollup OR #ProcessUnitData[#i].STATUS.%X0;
+	            #interlockRollup := #interlockRollup OR #ProcessUnitData[#i].STATUS.%X1;
+
+	            IF (#ProcessUnitData[#i].Gas.Pump.STATUS = #PUMP_STATUS_ON)
+	                    AND NOT #ProcessUnitData[#i].Gas.Alarms.PressureLow THEN
+	                #no_of_Gas_active := #no_of_Gas_active + 1;
+	            END_IF;
+
+	            IF (#ProcessUnitData[#i].Drive.VFD.STATUS = #AtSetpoint)
+	                OR (#ProcessUnitData[#i].Drive.VFD.STATUS = #Ramping) OR (#ProcessUnitData[#i].Drive.VFD.STATUS = #AboveLimit) THEN
+	                #no_of_drives_running := #no_of_drives_running + 1;
+	            END_IF;
+	        END_IF;
+	    END_FOR;
+
+	    #Global_STATUS.%X0 := #faultRollup;
+	    #Global_STATUS.%X1 := #interlockRollup;
+
+	    IF #Global_operating_mode = #OFF THEN
+	        #SystemHealth := #HEALTH_OFF;
+
+	    ELSIF (#no_of_online_units <= 1) OR #interlockRollup THEN
+
+
+	        #SystemHealth := #HEALTH_ALARM;
+
+	    ELSIF #StagingActive THEN
+
+
+
+
+	        #SystemHealth := #HEALTH_STARTUP;
+
+	    ELSIF (#no_of_online_units < USINT_TO_INT(#UnitCount))
+	            OR (#no_of_drives_running < USINT_TO_INT(#UnitCount))
+	            OR (#no_of_Gas_active < USINT_TO_INT(#UnitCount))
+	            OR #faultRollup THEN
+	        #SystemHealth := #HEALTH_WARNING;
+
+	    ELSE
+	        #SystemHealth := #HEALTH_ON;
+	    END_IF;
+
+
+END_FUNCTION
+
+FUNCTION_BLOCK "OperatingModeLogic"
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.4
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   VAR_INPUT
+      SubsystemCount : USInt;
+      In_SubSystem1_OperatingMode : Byte;
+      In_SubSystem2_OperatingMode : Byte;
+      In_SubSystem3_OperatingMode : Byte;
+      In_SubSystem4_OperatingMode : Byte;
+   END_VAR
+
+   VAR_OUTPUT
+      Out_SubSystem1_OperatingMode : Byte;
+      Out_SubSystem2_OperatingMode : Byte;
+      Out_SubSystem3_OperatingMode : Byte;
+      Out_SubSystem4_OperatingMode : Byte;
+   END_VAR
+
+   VAR_IN_OUT
+      SystemOperatingMode : Byte;
+   END_VAR
+
+   VAR
+      LastSystemOperatingMode : Byte;
+      _firstCycle { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Bool := TRUE;
+   END_VAR
+
+   VAR_TEMP
+      sub : Array[1..4] of Byte;
+      anyNonOff : Bool;
+      allOff : Bool;
+      i : USInt;
+   END_VAR
+
+   VAR CONSTANT
+      OFF : Byte := 16#00;
+      AUTO : Byte := 16#01;
+      MAN : Byte := 16#02;
+   END_VAR
+
+
+BEGIN
+
+	    #sub[1] := #In_SubSystem1_OperatingMode;
+	    #sub[2] := #In_SubSystem2_OperatingMode;
+	    #sub[3] := #In_SubSystem3_OperatingMode;
+	    #sub[4] := #In_SubSystem4_OperatingMode;
+
+	    IF #_firstCycle THEN
+	        #LastSystemOperatingMode := #SystemOperatingMode;
+	        #_firstCycle := FALSE;
+	    END_IF;
+
+
+	    IF #SystemOperatingMode = #AUTO THEN
+	        FOR #i := 1 TO #SubsystemCount DO
+	            #sub[#i] := #AUTO;
+	        END_FOR;
+
+	    ELSIF #SystemOperatingMode = #OFF AND #LastSystemOperatingMode <> #OFF THEN
+	        FOR #i := 1 TO #SubsystemCount DO
+	            #sub[#i] := #OFF;
+	        END_FOR;
+
+	    ELSIF #SystemOperatingMode = #MAN AND #LastSystemOperatingMode = #OFF THEN
+	        FOR #i := 1 TO #SubsystemCount DO
+	            #sub[#i] := #MAN;
+	        END_FOR;
+
+	    END_IF;
+
+
+	    #anyNonOff := FALSE;
+	    FOR #i := 1 TO #SubsystemCount DO
+	        IF #sub[#i] <> #OFF THEN
+	            #anyNonOff := TRUE;
+	        END_IF;
+	    END_FOR;
+	    IF #SystemOperatingMode = #OFF AND #anyNonOff THEN
+	        #SystemOperatingMode := #MAN;
+	    END_IF;
+
+
+	    #allOff := TRUE;
+	    FOR #i := 1 TO #SubsystemCount DO
+	        IF #sub[#i] <> #OFF THEN
+	            #allOff := FALSE;
+	        END_IF;
+	    END_FOR;
+
+	    IF #SystemOperatingMode = #MAN AND #allOff THEN
+	        #SystemOperatingMode := #OFF;
+	    END_IF;
+
+
+
+
+	    #Out_SubSystem1_OperatingMode := #sub[1];
+	    #Out_SubSystem2_OperatingMode := #sub[2];
+	    #Out_SubSystem3_OperatingMode := #sub[3];
+	    #Out_SubSystem4_OperatingMode := #sub[4];
+
+
+
+	    #LastSystemOperatingMode := #SystemOperatingMode;
+
+
+END_FUNCTION_BLOCK
+
+TYPE "SlaveToMaster_Data"
+VERSION : 0.1
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   STRUCT
+      OperatingMode : Byte;
+      Gas : Struct
+         SensorNetwork : "SensorArrayData";
+         FlowController : Struct
+            actFlow : Real;
+            mediumTemp : Real;
+            currentSetpoint : Real;
+            totalizer : Real;
+         END_STRUCT;
+         Pressure : Struct
+            ActVal : Real;
+         END_STRUCT;
+         Pump : Struct
+            STATUS : Word;
+         END_STRUCT;
+         SolenoidValves : Struct
+            FlowControllerValve_Open : Bool;
+            Backup flow meter_Closed : Bool;
+         END_STRUCT;
+         Alarms : "GasAlarmData";
+         STATUS : Word;
+         CONFIG : Struct
+            ForceLocalGasSensor : Bool;
+            Calibrate : Bool;
+         END_STRUCT;
+      END_STRUCT;
+      Drive : Struct
+         VFD : Struct
+            DATA : Struct
+               actSpeedRPM : Real;
+               OutputFreq : Real;
+               MotorCurrent : Real;
+               OutputVoltage : Real;
+               MotorShaftPwr : Real;
+               OutputPower : Real;
+               InverterTemperature : Real;
+            END_STRUCT;
+            STATUS : Word;
+         END_STRUCT;
+         WaterFlow : Real;
+         Energy : Struct
+            LivePower : Real;
+            Accumulated : LReal;
+         END_STRUCT;
+         Alarms : "Drive_AlarmData";
+         STATUS : Word;
+      END_STRUCT;
+      Depth : Struct
+         ActVal : Real;
+      END_STRUCT;
+      STATUS : Word;
+      HMI_Connection : Bool;
+      Watchdog : "PLC_Watchdog_UDT";
+   END_STRUCT;
+
+END_TYPE
+
+FUNCTION_BLOCK "Global_Alarms"
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.5
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   VAR_INPUT
+      no_of_online_units : Int;
+      StartupDebounceActive : Bool;
+   END_VAR
+
+   VAR_IN_OUT
+      PlantCoordinatorData : "PlantCoordinator_Data";
+      CommLoss : Array[1..4] of Bool;
+      ProcessUnitData : Array[1..4] of "ProcessUnit_Data";
+   END_VAR
+
+   VAR
+      SlaveAlarms : Array[2..4] of "ProcessUnitAlarms";
+      SystemLowGasAverage {InstructionName := 'Program_Alarm'; LibVersion := '1.0'} : Program_Alarm;
+      SystemHighGasAverage {InstructionName := 'Program_Alarm'; LibVersion := '1.0'} : Program_Alarm;
+      SystemHealthAlarm {InstructionName := 'Program_Alarm'; LibVersion := '1.0'} : Program_Alarm;
+      MasterSensorNoValidPV {InstructionName := 'Program_Alarm'; LibVersion := '1.0'} : Program_Alarm;
+      MasterSensorAvgToleranceExceeded {InstructionName := 'Program_Alarm'; LibVersion := '1.0'} : Program_Alarm;
+      MasterSensorReduced {InstructionName := 'Program_Alarm'; LibVersion := '1.0'} : Program_Alarm;
+      MasterConfigInvalidAlarm {InstructionName := 'Program_Alarm'; LibVersion := '1.0'} : Program_Alarm;
+      ReducedRedundancyMode {InstructionName := 'Program_Alarm'; LibVersion := '1.0'} : Program_Alarm;
+      BatterySOCLowAlarm {InstructionName := 'Program_Alarm'; LibVersion := '1.0'} : Program_Alarm;
+      GridLossAlarm {InstructionName := 'Program_Alarm'; LibVersion := '1.0'} : Program_Alarm;
+      NoMainPowerAlarm {InstructionName := 'Program_Alarm'; LibVersion := '1.0'} : Program_Alarm;
+      GasSupplyTotalLoss {InstructionName := 'Program_Alarm'; LibVersion := '1.0'} : Program_Alarm;
+      AllUnitsPressureLowAlarm {InstructionName := 'Program_Alarm'; LibVersion := '1.0'} : Program_Alarm;
+      DistributionLeak {InstructionName := 'Program_Alarm'; LibVersion := '1.0'} : Program_Alarm;
+      BottleBackupActive {InstructionName := 'Program_Alarm'; LibVersion := '1.0'} : Program_Alarm;
+      GridLost_DieselNotStarted {InstructionName := 'Program_Alarm'; LibVersion := '1.0'} : Program_Alarm;
+      BatteryOnly_Prolonged {InstructionName := 'Program_Alarm'; LibVersion := '1.0'} : Program_Alarm;
+      AllSensorsFallback {InstructionName := 'Program_Alarm'; LibVersion := '1.0'} : Program_Alarm;
+      _GridLossDebounce {InstructionName := 'TON_TIME'; LibVersion := '1.0'; ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : TON_TIME;
+      _NoMainPowerDebounce {InstructionName := 'TON_TIME'; LibVersion := '1.0'; ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : TON_TIME;
+      _GasSupplyTotalLossDebounce {InstructionName := 'TON_TIME'; LibVersion := '1.0'; ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : TON_TIME;
+      _AllUnitsPressureLowDebounce {InstructionName := 'TON_TIME'; LibVersion := '1.0'; ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : TON_TIME;
+      _DistributionLeakDebounce {InstructionName := 'TON_TIME'; LibVersion := '1.0'; ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : TON_TIME;
+      _BottleBackupDebounce {InstructionName := 'TON_TIME'; LibVersion := '1.0'; ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : TON_TIME;
+      _GridLostDieselGrace {InstructionName := 'TON_TIME'; LibVersion := '1.0'; ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : TON_TIME;
+      _GridLostDieselDebounce {InstructionName := 'TON_TIME'; LibVersion := '1.0'; ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : TON_TIME;
+      _BatteryOnlyProlongedTimer {InstructionName := 'TON_TIME'; LibVersion := '1.0'; ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : TON_TIME;
+   END_VAR
+
+   VAR_TEMP
+      lowGasActive : Bool;
+      highGasActive : Bool;
+      i : USInt;
+      noMainPower : Bool;
+      gasTotalLoss : Bool;
+      anyDistLeak : Bool;
+   END_VAR
+
+   VAR CONSTANT
+      MAX_UNITS : USInt := 4;
+      HEALTH_OFF : Word := 16#0000;
+      HEALTH_ON : Word := 16#0001;
+      HEALTH_WARNING : Word := 16#0002;
+      HEALTH_ALARM : Word := 16#0003;
+      HEALTH_STARTUP : Word := 16#0004;
+      GRID_LOSS_DEBOUNCE : Time := T#5S;
+      NO_MAIN_POWER_DEBOUNCE : Time := T#10S;
+      Gas_TOTAL_LOSS_DEBOUNCE : Time := T#10S;
+      ALL_UNITS_PRESSURE_LOW_DEBOUNCE : Time := T#5S;
+      DIST_LEAK_DEBOUNCE : Time := T#15S;
+      BOTTLE_BACKUP_DEBOUNCE : Time := T#10S;
+      GRID_LOST_DIESEL_GRACE : Time := T#30S;
+      GRID_LOST_DIESEL_DEBOUNCE : Time := T#5S;
+      BATTERY_ONLY_PROLONGED : Time := T#1H;
+   END_VAR
+
+
+BEGIN
+
+
+	     REGION PER_SLAVE_DISPATCH
+
+
+	         FOR #i := 2 TO #MAX_UNITS DO
+	             IF #i <= #PlantCoordinatorData.CONFIG.UnitCount THEN
+	                 #SlaveAlarms[#i](ProcessUnit_CommLoss := #CommLoss[#i],
+	                                  ProcessUnitData := #ProcessUnitData[#i]);
+	             END_IF;
+	         END_FOR;
+	     END_REGION
+
+	     REGION SYSTEM_Gas_THRESHOLDS
+
+
+
+	         #lowGasActive := NOT #PlantCoordinatorData.SensorRollup.NoValidPV
+	         AND (#PlantCoordinatorData.ActGas.AvgSaturation < #PlantCoordinatorData.ReqGas.AvgSaturation - #PlantCoordinatorData.ActGas.LowGasSatAlarmLimit);
+	         #highGasActive := NOT #PlantCoordinatorData.SensorRollup.NoValidPV
+	         AND (#PlantCoordinatorData.ActGas.AvgSaturation > #PlantCoordinatorData.ReqGas.AvgSaturation + #PlantCoordinatorData.ActGas.HighGasSatAlarmLimit);
+
+	         #SystemLowGasAverage(SIG := #lowGasActive,
+	                             SD_1 := #PlantCoordinatorData.CONFIG.DeviceTag,
+	                             SD_2 := #PlantCoordinatorData.ActGas.AvgSaturation);
+
+	         #SystemHighGasAverage(SIG := #highGasActive,
+	                              SD_1 := #PlantCoordinatorData.CONFIG.DeviceTag,
+	                              SD_2 := #PlantCoordinatorData.ActGas.AvgSaturation);
+	     END_REGION
+
+	     REGION SYSTEM_HEALTH
+
+	         #SystemHealthAlarm(SIG := (NOT #StartupDebounceActive)
+	                                   AND (#PlantCoordinatorData.SystemHealth = #HEALTH_ALARM),
+	                            SD_1 := #PlantCoordinatorData.CONFIG.DeviceTag);
+	     END_REGION
+
+	     REGION SENSOR_ROLLUP_ALARMS
+
+	         #MasterSensorNoValidPV(SIG := (NOT #StartupDebounceActive)
+	                                       AND #PlantCoordinatorData.SensorRollup.NoValidPV,
+	                                SD_1 := #PlantCoordinatorData.CONFIG.DeviceTag);
+
+	         #MasterSensorAvgToleranceExceeded(SIG := #PlantCoordinatorData.SensorRollup.AvgToleranceExceeded,
+	                                           SD_1 := #PlantCoordinatorData.CONFIG.DeviceTag);
+
+	         #MasterSensorReduced(SIG := #PlantCoordinatorData.SensorRollup.PV_is_reduced,
+	                              SD_1 := #PlantCoordinatorData.CONFIG.DeviceTag);
+
+	         #MasterConfigInvalidAlarm(SIG := #PlantCoordinatorData.SensorRollup.ConfigInvalid,
+	                                   SD_1 := #PlantCoordinatorData.CONFIG.DeviceTag);
+	     END_REGION
+
+	     REGION REDUNDANCY
+
+	         #ReducedRedundancyMode(SIG := (NOT #StartupDebounceActive)
+	                                       AND (#no_of_online_units < USINT_TO_INT(#PlantCoordinatorData.CONFIG.UnitCount)),
+	                                SD_1 := #PlantCoordinatorData.CONFIG.DeviceTag);
+	     END_REGION
+
+	     REGION GasController_ALARMS
+
+
+
+
+
+
+
+
+
+	         #BatterySOCLowAlarm(SIG := NOT #PlantCoordinatorData.GasSupply.BatterySOCLow,
+	                             SD_1 := #PlantCoordinatorData.CONFIG.DeviceTag);
+
+
+	         #_GridLossDebounce(IN := NOT #PlantCoordinatorData.GasSupply.GridOn,
+	                            PT := #GRID_LOSS_DEBOUNCE);
+	         #GridLossAlarm(SIG := #_GridLossDebounce.Q,
+	                        SD_1 := #PlantCoordinatorData.CONFIG.DeviceTag);
+
+
+	         #noMainPower := NOT #PlantCoordinatorData.GasSupply.GridOn
+	                         AND NOT #PlantCoordinatorData.GasSupply.DieselOn;
+	         #_NoMainPowerDebounce(IN := #noMainPower,
+	                               PT := #NO_MAIN_POWER_DEBOUNCE);
+	         #NoMainPowerAlarm(SIG := #_NoMainPowerDebounce.Q,
+	                           SD_1 := #PlantCoordinatorData.CONFIG.DeviceTag);
+
+
+
+
+
+
+	         #gasTotalLoss := #PlantCoordinatorData.GasSupply.AllUnitsPressureLow AND NOT #PlantCoordinatorData.GasSupply.BackupSupplyFlowOK;
+	         #_GasSupplyTotalLossDebounce(IN := #gasTotalLoss AND NOT #StartupDebounceActive,
+	                                     PT := #Gas_TOTAL_LOSS_DEBOUNCE);
+	         #GasSupplyTotalLoss(SIG := #_GasSupplyTotalLossDebounce.Q,
+	                            SD_1 := #PlantCoordinatorData.CONFIG.DeviceTag);
+
+
+
+	         #_AllUnitsPressureLowDebounce(IN := #PlantCoordinatorData.GasSupply.AllUnitsPressureLow
+	                                             AND NOT #StartupDebounceActive,
+	                                       PT := #ALL_UNITS_PRESSURE_LOW_DEBOUNCE);
+	         #AllUnitsPressureLowAlarm(SIG := #_AllUnitsPressureLowDebounce.Q,
+	                                   SD_1 := #PlantCoordinatorData.CONFIG.DeviceTag);
+
+
+
+
+	         #anyDistLeak := #PlantCoordinatorData.GasSupply.BackupSupplyFlowOK AND #PlantCoordinatorData.GasSupply.AllUnitsPressureLow;
+	         #_DistributionLeakDebounce(IN := #anyDistLeak AND NOT #StartupDebounceActive,
+	                                    PT := #DIST_LEAK_DEBOUNCE);
+	         #DistributionLeak(SIG := #_DistributionLeakDebounce.Q,
+	                           SD_1 := #PlantCoordinatorData.CONFIG.DeviceTag);
+
+
+
+
+
+	         #_BottleBackupDebounce(IN := #PlantCoordinatorData.GasSupply.BackupSupplyFlowOK,
+	                                PT := #BOTTLE_BACKUP_DEBOUNCE);
+	         #BottleBackupActive(SIG := #_BottleBackupDebounce.Q,
+	                             SD_1 := #PlantCoordinatorData.CONFIG.DeviceTag);
+
+
+
+	         #_GridLostDieselGrace(IN := NOT #PlantCoordinatorData.GasSupply.GridOn,
+	                               PT := #GRID_LOST_DIESEL_GRACE);
+	         #_GridLostDieselDebounce(IN := #_GridLostDieselGrace.Q
+	                                        AND NOT #PlantCoordinatorData.GasSupply.DieselOn,
+	                                  PT := #GRID_LOST_DIESEL_DEBOUNCE);
+	         #GridLost_DieselNotStarted(SIG := #_GridLostDieselDebounce.Q,
+	                                    SD_1 := #PlantCoordinatorData.CONFIG.DeviceTag);
+
+
+
+	         #_BatteryOnlyProlongedTimer(IN := #noMainPower,
+	                                     PT := #BATTERY_ONLY_PROLONGED);
+	         #BatteryOnly_Prolonged(SIG := #_BatteryOnlyProlongedTimer.Q,
+	                                SD_1 := #PlantCoordinatorData.CONFIG.DeviceTag);
+
+
+
+
+
+
+
+	         #AllSensorsFallback(SIG := #PlantCoordinatorData.CONFIG.ForceBackup flow meter,
+	                             SD_1 := #PlantCoordinatorData.CONFIG.DeviceTag);
+	     END_REGION
+
+
+
+END_FUNCTION_BLOCK
+
+FUNCTION_BLOCK "UnitStartSequencer"
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.2
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   VAR_INPUT
+      SystemOperatingMode : Byte;
+      UnitCount : USInt;
+      StageTimeout : Time;
+   END_VAR
+
+   VAR_OUTPUT
+      StagingActive : Bool;
+   END_VAR
+
+   VAR_IN_OUT
+      CmdMode : Array[1..4] of Byte;
+   END_VAR
+
+   VAR
+      _currentStage { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : USInt;
+      _stageTimer {InstructionName := 'TON_TIME'; LibVersion := '1.0'; ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : TON_TIME;
+   END_VAR
+
+   VAR_TEMP
+      i : USInt;
+   END_VAR
+
+   VAR CONSTANT
+      OFF : Byte := 16#00;
+      AUTO : Byte := 16#01;
+      MAX_UNITS : USInt := 4;
+   END_VAR
+
+
+BEGIN
+	    IF #SystemOperatingMode <> #AUTO THEN
+
+
+	        #_currentStage := 0;
+	        #_stageTimer(IN := FALSE, PT := #StageTimeout);
+	        FOR #i := 1 TO #MAX_UNITS DO
+	            #CmdMode[#i] := #SystemOperatingMode;
+	        END_FOR;
+	        #StagingActive := FALSE;
+
+	    ELSE
+
+	        IF #_currentStage < 1 THEN
+	            #_currentStage := 1;
+	        END_IF;
+
+
+
+	        #_stageTimer(IN := (#_currentStage < #UnitCount), PT := #StageTimeout);
+	        IF #_currentStage < #UnitCount THEN
+	            IF #_stageTimer.Q THEN
+	                #_currentStage := #_currentStage + 1;
+	                #_stageTimer(IN := FALSE, PT := #StageTimeout);
+	            END_IF;
+	        END_IF;
+
+
+	        FOR #i := 1 TO #MAX_UNITS DO
+	            IF #i <= #_currentStage THEN
+	                #CmdMode[#i] := #AUTO;
+	            ELSE
+	                #CmdMode[#i] := #OFF;
+	            END_IF;
+	        END_FOR;
+
+	        #StagingActive := (#_currentStage < #UnitCount);
+	    END_IF;
+
+END_FUNCTION_BLOCK
+
+FUNCTION "AI_2_REAL" : Void
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.2
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   VAR_INPUT
+      MIN : Real;
+      VALUE : Int;
+      MAX : Real;
+   END_VAR
+
+   VAR_OUTPUT
+      OUT : Real;
+   END_VAR
+
+   VAR_TEMP
+      norm : Real;
+   END_VAR
+
+
+BEGIN
+
+
+	    #norm := NORM_X(MIN := 0, VALUE := #VALUE, MAX := 27648);
+	    #OUT := SCALE_X(MIN := #MIN, VALUE := #norm, MAX := #MAX);
+
+
+END_FUNCTION
+
+FUNCTION "Global_config" : Void
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.4
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   VAR_IN_OUT
+      PlantCoordinatorData : "PlantCoordinator_Data";
+      ProcessUnitData : Array[1..4] of "ProcessUnit_Data";
+   END_VAR
+
+   VAR_TEMP
+      i : USInt;
+   END_VAR
+
+   VAR CONSTANT
+      MAX_UNITS : USInt := 4;
+   END_VAR
+
+
+BEGIN
+
+
+
+
+
+	     FOR #i := 1 TO #MAX_UNITS DO
+	         #ProcessUnitData[#i].GlobalOperatingMode := #PlantCoordinatorData.OperatingMode;
+	         #ProcessUnitData[#i].Gas.CONFIG.CalibrationAlarmThreshold := #PlantCoordinatorData.CONFIG.CalibrationAlarmThreshold;
+	         #ProcessUnitData[#i].Gas.CONFIG.LowGasSatAlarmLimit := #PlantCoordinatorData.ActGas.LowGasSatAlarmLimit;
+	         #ProcessUnitData[#i].Gas.CONFIG.HighGasSatAlarmLimit := #PlantCoordinatorData.ActGas.HighGasSatAlarmLimit;
+	         #ProcessUnitData[#i].Gas.CONFIG.ForceBackup flow meter := #PlantCoordinatorData.CONFIG.ForceBackup flow meter;
+	         #ProcessUnitData[#i].Gas.PID.CONFIG.SetpointLowerLimit := #PlantCoordinatorData.ReqGas.MinLimit;
+	         #ProcessUnitData[#i].Gas.PID.CONFIG.SetpointUpperLimit := #PlantCoordinatorData.ReqGas.MaxLimit;
+	         #ProcessUnitData[#i].Gas.Pressure.LowAlarmLimit := #PlantCoordinatorData.ActGasPressure.LowAlarmLimit;
+	         #ProcessUnitData[#i].Gas.Pressure.HighAlarmLimit := #PlantCoordinatorData.ActGasPressure.HighAlarmLimit;
+	         #ProcessUnitData[#i].Drive.VFD.CONFIG.requestOffset := #PlantCoordinatorData.CONFIG.DriveFlowOffset;
+	         #ProcessUnitData[#i].Drive.VFD.CONFIG.OverrideAlarmDelay := #PlantCoordinatorData.CONFIG.OverrideAlarmDelay;
+	     END_FOR;
+
+
+
+END_FUNCTION
+
+FUNCTION "Global_requests" : Void
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.5
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   VAR_INPUT
+      GlobalOperatingMode : Byte;
+      UnitCount : USInt;
+      ActiveProcessUnitUnits : Int;
+      CommLoss : Array[1..4] of Bool;
+      MaxDriveOverride : Bool;
+      DriveMinFlow : Real;
+      DriveMaxFlow : Real;
+      SeedTotFromUnits : Bool;
+   END_VAR
+
+   VAR_IN_OUT
+      ReqAvgGasSaturation : Real;
+      ReqTotWaterFlow : Real;
+      SP : Array[1..4] of Real;
+      WaterFlow : Array[1..4] of Real;
+   END_VAR
+
+   VAR_TEMP
+      ReqWaterFlowUnit : Real;
+      spSum : Real;
+      flowSum : Real;
+      onlineCount : Int;
+      i : USInt;
+   END_VAR
+
+   VAR CONSTANT
+      OFF : Byte := 16#00;
+      AUTO : Byte := 16#01;
+      MAN : Byte := 16#02;
+      MAX_UNITS : USInt := 4;
+   END_VAR
+
+
+BEGIN
+
+	    CASE #GlobalOperatingMode OF
+	        #OFF:
+	            #ReqTotWaterFlow := 0.0;
+
+	        #AUTO:
+
+
+
+
+
+
+
+	            IF #SeedTotFromUnits THEN
+	                #flowSum := 0.0;
+	                FOR #i := 1 TO #UnitCount DO
+	                    #flowSum := #flowSum + #WaterFlow[#i];
+	                END_FOR;
+	                #ReqTotWaterFlow := LIMIT(MN := #DriveMinFlow * INT_TO_REAL(USINT_TO_INT(#UnitCount)),
+	                                         IN := #flowSum,
+	                                         MX := #DriveMaxFlow * INT_TO_REAL(USINT_TO_INT(#UnitCount)));
+	            END_IF;
+
+
+
+
+
+
+
+
+
+
+	            #ReqTotWaterFlow := LIMIT(MN := #DriveMinFlow * INT_TO_REAL(USINT_TO_INT(#UnitCount)),
+	                                         IN := #ReqTotWaterFlow,
+	                                         MX := #DriveMaxFlow * INT_TO_REAL(USINT_TO_INT(#UnitCount)));
+
+	            FOR #i := 1 TO #UnitCount DO
+	                #SP[#i] := #ReqAvgGasSaturation;
+	            END_FOR;
+
+
+	            IF #MaxDriveOverride THEN
+	                #flowSum := 0.0;
+	                FOR #i := 1 TO #UnitCount DO
+	                    #flowSum := #flowSum + #WaterFlow[#i];
+	                    #WaterFlow[#i] := LIMIT(MN := #DriveMinFlow,
+	                                            IN := #DriveMaxFlow,
+	                                            MX := #DriveMaxFlow);
+	                END_FOR;
+	                #ReqTotWaterFlow := #flowSum;
+	            ELSIF #ActiveProcessUnitUnits > 0 THEN
+	                #ReqWaterFlowUnit := #ReqTotWaterFlow / INT_TO_REAL(#ActiveProcessUnitUnits);
+	                FOR #i := 1 TO #UnitCount DO
+
+	                    #WaterFlow[#i] := LIMIT(MN := #DriveMinFlow,
+	                                            IN := #ReqWaterFlowUnit,
+	                                            MX := #DriveMaxFlow);
+	                END_FOR;
+	            END_IF;
+
+	        #MAN:
+
+
+
+	            #spSum := 0.0;
+	            #flowSum := 0.0;
+	            #onlineCount := 0;
+
+	            FOR #i := 1 TO #UnitCount DO
+	                IF NOT #CommLoss[#i] THEN
+	                    #spSum := #spSum + #SP[#i];
+	                    #flowSum := #flowSum + #WaterFlow[#i];
+	                    #onlineCount := #onlineCount + 1;
+	                END_IF;
+	            END_FOR;
+
+	            IF #onlineCount > 0 THEN
+	                #ReqAvgGasSaturation := #spSum / INT_TO_REAL(#onlineCount);
+	            END_IF;
+	            #ReqTotWaterFlow := #flowSum;
+
+	        ELSE:
+	            ;
+	    END_CASE;
+
+
+END_FUNCTION
+
+FUNCTION_BLOCK "PlantCoordinator"
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.7
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   VAR_INPUT
+      Clock_2Hz : Bool;
+      GasController_BackupSupplyFlowRaw : Int := 0;
+      GasController_BatterySOCLow : Bool := TRUE;
+      GasController_DieselOn : Bool := FALSE;
+      GasController_GridOn : Bool := TRUE;
+      Local_CurrentOperatingMode : Byte;
+   END_VAR
+
+   VAR_OUTPUT
+      GasController_GeneratorCmd : Bool := FALSE;
+   END_VAR
+
+   VAR_IN_OUT
+      PlantCoordinatorData : "PlantCoordinator_Data";
+      ProcessUnitData : Array[1..4] of "ProcessUnit_Data";
+      RcvBuf_202 : "SlaveToMaster_Data";
+      RcvBuf_302 : "SlaveToMaster_Data";
+      RcvBuf_402 : "SlaveToMaster_Data";
+   END_VAR
+
+   VAR
+      _OperatingModeLogic : "OperatingModeLogic";
+      _Global_Reset : "Global_Reset";
+      _Watchdogs : "Watchdogs";
+      _Global_values : "Global_values";
+      _Global_Alarms : "Global_Alarms";
+      _CommLoss_Slaves { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Array[2..4] of Bool;
+      _CommEstablished_Slaves { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Array[2..4] of Bool;
+      _GasController_CommLoss { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Bool;
+      _GasController_CommEstablished { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Bool;
+      _GasController_Watchdog { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : "PLC_WatchdogPair_UDT";
+      _StartupTimer {InstructionName := 'TON_TIME'; LibVersion := '1.0'; ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : TON_TIME;
+      _FirstScan { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Bool := TRUE;
+      _no_of_online_units { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Int;
+      _no_of_drives_running { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Int;
+      BackupSupplyFlowActual_kgh { ExternalWritable := 'False'} : Real;
+      _bottleFlowOK { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Bool;
+      _offSync : Bool;
+      _StartSequencer { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : "UnitStartSequencer";
+      _stagingCmdMode : Array[1..4] of Byte;
+      _stagingActive { ExternalVisible := 'False'} : Bool;
+      _prevReqMode { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Byte;
+   END_VAR
+
+   VAR_TEMP
+      CommLoss : Array[1..4] of Bool;
+      _ProcessUnit_WD : Array[2..4] of "PLC_WatchdogPair_UDT";
+      _SP : Array[1..4] of Real;
+      _WaterFlow : Array[1..4] of Real;
+      i : USInt;
+      _bottleFlowNm3h : Real;
+      StartupDebounceActive : Bool;
+      allPressureLow : Bool;
+      anyConsidered : Bool;
+      maxDriveOverride : Bool;
+      should_override_master : Bool;
+      temp_offSync : Bool;
+   END_VAR
+
+   VAR CONSTANT
+      MAX_UNITS : USInt := 4;
+      STARTUP_DEBOUNCE_TIME : Time := T#10S;
+      BACKUP_SUPPLY_FLOW_FS_NM3H : Real := 185.0;
+      BACKUP_SUPPLY_FLOW_NM3H_TO_KGH : Real := 1.4276;
+      BACKUP_SUPPLY_FLOW_ON_KGH : Real := 1.5;
+      BACKUP_SUPPLY_FLOW_OFF_KGH : Real := 0.75;
+      OFF : Byte := 16#00;
+      AUTO : Byte := 16#01;
+      MAN : Byte := 16#02;
+   END_VAR
+
+
+BEGIN
+
+	    REGION STARTUP_DEBOUNCE
+
+
+
+
+
+
+
+
+
+
+	        IF #_FirstScan THEN
+
+	            #_StartupTimer(IN := FALSE, PT := #STARTUP_DEBOUNCE_TIME);
+	            #_FirstScan := FALSE;
+	            #_offSync := TRUE;
+	        END_IF;
+
+	        #_StartupTimer(IN := TRUE, PT := #STARTUP_DEBOUNCE_TIME);
+
+
+
+
+	        #StartupDebounceActive := NOT #_StartupTimer.Q;
+	    END_REGION
+
+
+	    REGION GasController_INPUT
+
+
+
+	        #PlantCoordinatorData.GasSupply.GeneratorFlowOK := FALSE;
+
+
+
+	        "AI_2_REAL"(MIN := 0.0, VALUE := #GasController_BackupSupplyFlowRaw, MAX := #BACKUP_SUPPLY_FLOW_FS_NM3H, OUT => #_bottleFlowNm3h);
+	        #BackupSupplyFlowActual_kgh := #_bottleFlowNm3h * #BACKUP_SUPPLY_FLOW_NM3H_TO_KGH;
+	        IF #BackupSupplyFlowActual_kgh >= #BACKUP_SUPPLY_FLOW_ON_KGH THEN
+	            #_bottleFlowOK := TRUE;
+	        ELSIF #BackupSupplyFlowActual_kgh < #BACKUP_SUPPLY_FLOW_OFF_KGH THEN
+	            #_bottleFlowOK := FALSE;
+	        END_IF;
+	        #PlantCoordinatorData.GasSupply.BackupSupplyFlowOK := #_bottleFlowOK;
+	        #PlantCoordinatorData.GasSupply.BatterySOCLow := #GasController_BatterySOCLow;
+	        #PlantCoordinatorData.GasSupply.DieselOn := #GasController_DieselOn;
+	        #PlantCoordinatorData.GasSupply.GridOn := #GasController_GridOn;
+	    END_REGION
+
+
+	    REGION WATCHDOG_EVAL
+	        FOR #i := 2 TO #MAX_UNITS DO
+	            #_ProcessUnit_WD[#i] := #ProcessUnitData[#i].Watchdog;
+	        END_FOR;
+
+	        #_Watchdogs(UnitCount := #PlantCoordinatorData.CONFIG.UnitCount,
+	                    SendInterval := #PlantCoordinatorData.CONFIG.WatchdogSendInterval,
+	                    GasController_CommLoss => #_GasController_CommLoss,
+	                    GasController_CommEstablished => #_GasController_CommEstablished,
+	                    ProcessUnit_CommLoss => #_CommLoss_Slaves,
+	                    ProcessUnit_CommEstablished => #_CommEstablished_Slaves,
+	                    GasController := #_GasController_Watchdog,
+	                    ProcessUnit := #_ProcessUnit_WD);
+
+	        FOR #i := 2 TO #MAX_UNITS DO
+	            #ProcessUnitData[#i].Watchdog := #_ProcessUnit_WD[#i];
+	        END_FOR;
+	    END_REGION
+
+	    REGION COMMLOSS_UNIFY
+	        #CommLoss[1] := FALSE;
+	        FOR #i := 2 TO #MAX_UNITS DO
+	            #CommLoss[#i] := #_CommLoss_Slaves[#i];
+	        END_FOR;
+	    END_REGION
+
+	    REGION OPERATING_MODE
+
+
+
+
+
+	        IF #_offSync = TRUE THEN
+	            #_OperatingModeLogic(SystemOperatingMode := #PlantCoordinatorData.OperatingMode,
+	                                 SubsystemCount := #PlantCoordinatorData.CONFIG.UnitCount,
+	                                 In_SubSystem1_OperatingMode := #ProcessUnitData[1].OperatingMode,
+	                                 In_SubSystem2_OperatingMode := #ProcessUnitData[2].OperatingMode,
+	                                 In_SubSystem3_OperatingMode := #ProcessUnitData[3].OperatingMode,
+	                                 In_SubSystem4_OperatingMode := #ProcessUnitData[4].OperatingMode,
+	                                 Out_SubSystem1_OperatingMode => #ProcessUnitData[1].OperatingMode
+	            );
+	            IF #PlantCoordinatorData.OperatingMode = #OFF THEN
+	                #_offSync := FALSE;
+	            END_IF;
+	        END_IF;
+
+
+	        IF #PlantCoordinatorData.OperatingMode = #OFF AND #_offSync = FALSE THEN
+	            #temp_offSync := TRUE;
+	            IF #ProcessUnitData[1].OperatingMode <> #OFF THEN
+	                #temp_offSync := FALSE;
+	            END_IF;
+
+	            FOR #i := 2 TO #MAX_UNITS DO
+	                IF (#ProcessUnitData[#i].OperatingMode <> #OFF) AND NOT #CommLoss[#i] THEN
+	                    #temp_offSync := FALSE;
+	                END_IF;
+	            END_FOR;
+
+	            IF #temp_offSync THEN
+	                #_offSync := TRUE;
+	            END_IF;
+	        END_IF;
+
+	        IF #PlantCoordinatorData.OperatingMode = #AUTO THEN
+	            #_offSync := TRUE;
+	        END_IF;
+
+	        IF #PlantCoordinatorData.OperatingMode = #MAN AND #_offSync THEN
+	            #ProcessUnitData[1].OperatingMode := #"Local_CurrentOperatingMode";
+	        END_IF;
+
+
+
+
+
+
+
+
+
+
+	        #_StartSequencer(SystemOperatingMode := #PlantCoordinatorData.OperatingMode,
+	                         UnitCount := #PlantCoordinatorData.CONFIG.UnitCount,
+	                         StageTimeout := #PlantCoordinatorData.CONFIG.PumpStagingDelay,
+	                         StagingActive => #_stagingActive,
+	                         CmdMode := #_stagingCmdMode);
+
+
+
+	        IF #PlantCoordinatorData.OperatingMode = #AUTO THEN
+	            #ProcessUnitData[1].OperatingMode := #_stagingCmdMode[1];
+	        END_IF;
+
+	    END_REGION
+
+	    REGION GLOBAL_RESET
+	        #_Global_Reset(SendInterval := #PlantCoordinatorData.CONFIG.WatchdogSendInterval,
+	                       MasterReset := #PlantCoordinatorData.Reset,
+	                       MasterResetTotalizer := #PlantCoordinatorData.ResetGasTotalizer,
+	                       MasterResetEnergy:=#PlantCoordinatorData.ResetDriveEnergy,
+	                       ProcessUnitData := #ProcessUnitData);
+	    END_REGION
+
+	    REGION GLOBAL_CONFIG
+	        "Global_config"(PlantCoordinatorData := #PlantCoordinatorData,
+	                        ProcessUnitData := #ProcessUnitData);
+	    END_REGION
+
+	    REGION GLOBAL_REQUESTS
+	        FOR #i := 1 TO #MAX_UNITS DO
+	            #_SP[#i] := #ProcessUnitData[#i].Gas.PID.Setpoint;
+	            #_WaterFlow[#i] := #ProcessUnitData[#i].Drive.VFD.CMD.request;
+	        END_FOR;
+
+
+	        "Global_requests"(GlobalOperatingMode := #PlantCoordinatorData.OperatingMode,
+	                          UnitCount := #PlantCoordinatorData.CONFIG.UnitCount,
+	                          ActiveProcessUnitUnits := #_no_of_drives_running,
+	                          CommLoss := #CommLoss,
+	                          MaxDriveOverride := #PlantCoordinatorData.GasSupply.MaxDriveOverride,
+	                          DriveMinFlow := #PlantCoordinatorData.CONFIG.DriveMinFlow,
+	                          DriveMaxFlow := #PlantCoordinatorData.CONFIG.DriveMaxFlow,
+	                          ReqAvgGasSaturation := #PlantCoordinatorData.ReqGas.AvgSaturation,
+	                          ReqTotWaterFlow := #PlantCoordinatorData.reqTotWaterFlow,
+	                          SeedTotFromUnits := (#PlantCoordinatorData.OperatingMode = #AUTO) AND (#_prevReqMode = #OFF),
+	                          SP := #_SP,
+	                          WaterFlow := #_WaterFlow);
+
+	        FOR #i := 1 TO #MAX_UNITS DO
+	            #ProcessUnitData[#i].Gas.PID.Setpoint := #_SP[#i];
+	            #ProcessUnitData[#i].Drive.VFD.CMD.request := #_WaterFlow[#i];
+	        END_FOR;
+
+
+	        #_prevReqMode := #PlantCoordinatorData.OperatingMode;
+	    END_REGION
+
+	    REGION GLOBAL_VALUES
+	        #_Global_values(CommLoss := #CommLoss,
+	                        PlantCoordinatorData := #PlantCoordinatorData,
+	                        ProcessUnitData := #ProcessUnitData);
+
+	    END_REGION
+
+	    REGION GasController_OUTPUT
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	        #allPressureLow := TRUE;
+	        #anyConsidered := FALSE;
+	        FOR #i := 1 TO #PlantCoordinatorData.CONFIG.UnitCount DO
+	            IF NOT #CommLoss[#i] THEN
+	                #anyConsidered := TRUE;
+	                IF NOT #ProcessUnitData[#i].Gas.Alarms.PressureLow THEN
+	                    #allPressureLow := FALSE;
+	                END_IF;
+	            END_IF;
+	        END_FOR;
+	        #PlantCoordinatorData.GasSupply.AllUnitsPressureLow := #allPressureLow AND #anyConsidered;
+
+
+
+
+
+
+
+	        #maxDriveOverride := NOT #StartupDebounceActive
+	                             AND (#PlantCoordinatorData.OperatingMode <> #OFF)
+	                             AND #PlantCoordinatorData.GasSupply.AllUnitsPressureLow;
+	        #PlantCoordinatorData.GasSupply.MaxDriveOverride := #maxDriveOverride;
+
+
+
+
+
+
+
+
+
+
+
+	        #PlantCoordinatorData.GasSupply.GeneratorCmd := (#PlantCoordinatorData.OperatingMode <> #OFF);
+	        #GasController_GeneratorCmd := #PlantCoordinatorData.GasSupply.GeneratorCmd;
+	    END_REGION
+
+	    REGION PLANT_COORDINATOR_DIAGNOSTIC
+	        "PlantDiagnostics"(Global_operating_mode := #PlantCoordinatorData.OperatingMode,
+	                             UnitCount := #PlantCoordinatorData.CONFIG.UnitCount,
+	                             StagingActive := #_stagingActive,
+	                             CommLoss := #CommLoss,
+	                             ProcessUnitData := #ProcessUnitData,
+	                             Global_STATUS => #PlantCoordinatorData.STATUS,
+	                             SystemHealth => #PlantCoordinatorData.SystemHealth,
+	                             no_of_drives_running => #_no_of_drives_running,
+	                             no_of_online_units => #_no_of_online_units);
+	    END_REGION
+
+	    REGION GLOBAL_ALARMS
+
+	        #_Global_Alarms(PlantCoordinatorData := #PlantCoordinatorData,
+	                        no_of_online_units := #_no_of_online_units,
+	                        StartupDebounceActive := #StartupDebounceActive,
+	                        CommLoss := #CommLoss,
+	                        ProcessUnitData := #ProcessUnitData);
+
+	    END_REGION
+
+
+END_FUNCTION_BLOCK
+

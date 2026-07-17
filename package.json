@@ -1,0 +1,164 @@
+{
+  "name": "tia-lint-server",
+  "displayName": "TIA S7 Lint Server",
+  "description": "Static analysis, code completion, navigation, and quick fixes for Siemens TIA Portal SCL, LAD/FBD declaration exports, PLC data types, and multilingual resources.",
+  "version": "0.1.0",
+  "publisher": "tia-tooling",
+  "license": "Apache-2.0",
+  "private": true,
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Chamoswor/s7-lint-vscode.git"
+  },
+  "categories": [
+    "Linters"
+  ],
+  "activationEvents": [
+    "workspaceContains:**/*.s7dcl",
+    "workspaceContains:**/*.udt",
+    "workspaceContains:**/*.s7res",
+    "workspaceContains:**/*.scl"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "languages": [
+      {
+        "id": "s7dcl",
+        "extensions": [
+          ".s7dcl"
+        ],
+        "aliases": [
+          "S7 Declaration (LAD/FBD)"
+        ],
+        "configuration": "./syntaxes/s7dcl.language-configuration.json"
+      },
+      {
+        "id": "s7udt",
+        "extensions": [
+          ".udt"
+        ],
+        "aliases": [
+          "S7 PLC Data Type"
+        ],
+        "configuration": "./syntaxes/s7dcl.language-configuration.json"
+      },
+      {
+        "id": "s7scl",
+        "extensions": [
+          ".scl"
+        ],
+        "aliases": [
+          "S7 SCL"
+        ],
+        "configuration": "./syntaxes/s7dcl.language-configuration.json"
+      },
+      {
+        "id": "yaml",
+        "extensions": [
+          ".s7res"
+        ]
+      }
+    ],
+    "grammars": [
+      {
+        "language": "s7dcl",
+        "scopeName": "source.s7dcl",
+        "path": "./syntaxes/s7dcl.tmLanguage.json"
+      },
+      {
+        "language": "s7udt",
+        "scopeName": "source.s7dcl",
+        "path": "./syntaxes/s7dcl.tmLanguage.json"
+      },
+      {
+        "language": "s7scl",
+        "scopeName": "source.s7dcl",
+        "path": "./syntaxes/s7dcl.tmLanguage.json"
+      }
+    ],
+    "commands": [
+      {
+        "command": "tiaLint.rebuildCache",
+        "title": "TIA Lint: Rebuild Type Cache"
+      },
+      {
+        "command": "tiaLint.relintWorkspace",
+        "title": "TIA Lint: Re-lint All Open Files"
+      },
+      {
+        "command": "tiaLint.showRuleStats",
+        "title": "TIA Lint: Show Loaded Rule Stats"
+      }
+    ],
+    "semanticTokenTypes": [
+      {
+        "id": "charLiteral",
+        "description": "A single-quoted single-character (Char/WChar) literal, e.g. 'A'"
+      },
+      {
+        "id": "timeLiteral",
+        "description": "A time/duration literal, e.g. T#10S"
+      },
+      {
+        "id": "dateLiteral",
+        "description": "A date/time-of-day/date-time literal, e.g. D#2026-1-1"
+      },
+      {
+        "id": "pointerLiteral",
+        "description": "A legacy pointer literal, e.g. P#DB10.DBX20.0, NULL, ZERO"
+      }
+    ],
+    "semanticTokenModifiers": [
+      {
+        "id": "radix",
+        "description": "A non-decimal (hex/octal/binary) numeric literal, e.g. 16#FF"
+      },
+      {
+        "id": "float",
+        "description": "A floating-point numeric literal, e.g. 4.0"
+      }
+    ],
+    "themes": [
+      {
+        "label": "TIA S7 Dark",
+        "uiTheme": "vs-dark",
+        "path": "./themes/tia-dark-color-theme.json"
+      }
+    ],
+    "configuration": {
+      "title": "TIA S7 Lint Server",
+      "properties": {
+        "tiaLint.mlcLocale": {
+          "type": "string",
+          "default": "en-US",
+          "markdownDescription": "Preferred locale (e.g. `en-US`, `de-DE`) for resolving an `S7_MLC`/`S7_NetworkTitle`/`S7_NetworkComment`/`S7_BlockTitle`/`S7_BlockComment` pragma's ID against its block's `.s7res` MultiLingualTexts file. Falls back to `en-US`, then to whichever locale is present, if the preferred one isn't found for a given ID."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "test": "npm run compile && npm run test:completion && npm run test:quickfix && npm run test:manifest && npm run test:annotated && npm run test:smoke",
+    "test:completion": "node scripts/test-completion-context.js",
+    "test:quickfix": "node scripts/test-instance-quickfix.js",
+    "test:manifest": "node scripts/run-manifest-smoke-tests.js",
+    "test:annotated": "node scripts/run-annotated-diagnostic-tests.js",
+    "test:smoke": "node scripts/smoke-test.js",
+    "package": "npm run compile"
+  },
+  "dependencies": {
+    "fast-xml-parser": "^5.10.0",
+    "js-yaml": "^4.1.0"
+  },
+  "devDependencies": {
+    "@types/js-yaml": "^4.0.9",
+    "@types/node": "^20.19.43",
+    "@types/vscode": "^1.85.0",
+    "typescript": "^5.4.0"
+  }
+}

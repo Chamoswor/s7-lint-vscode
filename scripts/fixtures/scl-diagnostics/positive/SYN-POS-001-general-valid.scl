@@ -1,0 +1,83 @@
+FUNCTION_BLOCK "SyntaxSmoke_Positive"
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+
+VAR
+    enable   : Bool := TRUE;
+    fault    : Bool := FALSE;
+    mode     : Int := 0;
+    a        : Int := 4;
+    b        : Int := 2;
+    result   : Int := 0;
+    limited  : Int := 0;
+    i        : Int := 0;
+    values   : Array[0..9] of Int;
+END_VAR
+
+BEGIN
+    // Assignment and multiline expression
+    #result :=
+        (#a + #b)
+        * 2;
+
+    // IF / ELSIF / ELSE
+    IF #enable AND (#result > 0) THEN
+        #mode := 1;
+    ELSIF #fault THEN
+        #mode := -1;
+    ELSE
+        #mode := 0;
+    END_IF;
+
+    // CASE with a value, list, range, and ELSE branch
+    CASE #mode OF
+        -1:
+            #result := 0;
+        0, 1:
+            #result := #result + 1;
+        2..5:
+            #result := #result + 2;
+        ELSE
+            #result := -1;
+    END_CASE;
+
+    // FOR with CONTINUE and EXIT
+    FOR #i := 0 TO 9 DO
+        #values[#i] := #i;
+
+        IF #i = 2 THEN
+            CONTINUE;
+        END_IF;
+
+        IF #i = 8 THEN
+            EXIT;
+        END_IF;
+    END_FOR;
+
+    // FOR with explicit increment
+    FOR #i := 0 TO 8 BY 2 DO
+        #values[#i] := #values[#i] + 1;
+    END_FOR;
+
+    // WHILE
+    #i := 0;
+    WHILE #i < 3 DO
+        #i := #i + 1;
+    END_WHILE;
+
+    // REPEAT / UNTIL
+    #i := 0;
+    REPEAT
+        #i := #i + 1;
+    UNTIL #i >= 3
+    END_REPEAT;
+
+    // Named arguments in a function call
+    #limited := LIMIT(MN := 0, IN := #result, MX := 100);
+
+    // RETURN is legal before the natural end of the block
+    IF #fault THEN
+        RETURN;
+    END_IF;
+
+END_FUNCTION_BLOCK

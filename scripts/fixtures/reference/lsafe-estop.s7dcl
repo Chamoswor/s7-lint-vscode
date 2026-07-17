@@ -1,0 +1,236 @@
+﻿{
+    S7_Author := "SIEMENS";
+    S7_BlockComment := "MLC_578";
+    S7_BlockTitle := "MLC_4Fh";
+    S7_Family := "LSafe";
+    S7_IECCheck := "TRUE";
+    S7_Optimized := "TRUE";
+    S7_PreferredLanguage := "FBD";
+    S7_Safety := "TRUE";
+    S7_Version := "1.0"
+}
+FUNCTION_BLOCK "LSafe_EStop"
+    VAR_INPUT
+        {
+            S7_Access := "ReadOnly := External";
+            S7_MLC := "MLC_3Vu";
+            S7_Visibility := "Hidden := External"
+        }
+        acknowledge : Bool;
+        {
+            S7_Access := "ReadOnly := External";
+            S7_MLC := "MLC_eC";
+            S7_Visibility := "Hidden := External"
+        }
+        start : Bool;
+        {
+            S7_Access := "ReadOnly := External";
+            S7_MLC := "MLC_YH";
+            S7_Visibility := "Hidden := External"
+        }
+        stop : Bool;
+        {
+            S7_Access := "ReadOnly := External";
+            S7_MLC := "MLC_4dx";
+            S7_Visibility := "Hidden := External"
+        }
+        feedback1 : Bool;
+        {
+            S7_Access := "ReadOnly := External";
+            S7_MLC := "MLC_3n7";
+            S7_Visibility := "Hidden := External"
+        }
+        feedback2 : Bool;
+        {
+            S7_Access := "ReadOnly := External";
+            S7_MLC := "MLC_4zd";
+            S7_Visibility := "Hidden := External"
+        }
+        eStop : Bool;
+        {
+            S7_Access := "ReadOnly := External";
+            S7_MLC := "MLC_dh";
+            S7_Visibility := "Hidden := External"
+        }
+        actuatorVS : Bool;
+        {
+            S7_Access := "ReadOnly := External";
+            S7_MLC := "MLC_37u";
+            S7_Visibility := "Hidden := External"
+        }
+        feedbackTime : Time;
+    END_VAR
+    VAR_OUTPUT
+        {
+            S7_Access := "ReadOnly := External";
+            S7_MLC := "MLC_3eG";
+            S7_Visibility := "Hidden := External"
+        }
+        actuator : Bool;
+        {
+            S7_Access := "ReadOnly := External";
+            S7_MLC := "MLC_4rx";
+            S7_Visibility := "Hidden := External"
+        }
+        eStopReleased : Bool;
+        {
+            S7_Access := "ReadOnly := External";
+            S7_MLC := "MLC_4eq";
+            S7_Visibility := "Hidden := External"
+        }
+        acknowledgeReqestedEStop : Bool;
+        {
+            S7_Access := "ReadOnly := External";
+            S7_MLC := "MLC_347";
+            S7_Visibility := "Hidden := External"
+        }
+        errorFeedback : Bool;
+    END_VAR
+    VAR
+        {
+            S7_Access := "ReadOnly := External";
+            S7_MLC := "MLC_3aq";
+            S7_Visibility := "Hidden := External"
+        }
+        statReleaseEStop : Bool;
+        {
+            S7_Access := "ReadOnly := External";
+            S7_MLC := "MLC_3WY";
+            S7_Visibility := "Hidden := External"
+        }
+        statStartPrevious : Bool;
+        {
+            S7_Access := "ReadOnly := External";
+            S7_MLC := "MLC_4ze";
+            S7_Visibility := "Hidden := External"
+        }
+        statFFStartStop : Bool;
+        {
+            S7_Access := "ReadOnly := External";
+            S7_MLC := "MLC_32h";
+            S7_Visibility := "Hidden := External"
+        }
+        statAcknowlegeReqestedEStop : Bool;
+        {
+            S7_Access := "ReadOnly := External";
+            S7_MLC := "MLC_573";
+            S7_Visibility := "Hidden := External"
+        }
+        instESTOP1 : ESTOP1;
+        {
+            S7_Access := "ReadOnly := External";
+            S7_MLC := "MLC_dY";
+            S7_Visibility := "Hidden := External"
+        }
+        instFDBACK : FDBACK;
+    END_VAR
+
+    {
+        S7_Language := "FBD";
+        S7_NetworkComment := "MLC_5Aj";
+        S7_NetworkTitle := "MLC_4sh"
+    }
+    NETWORK
+        RUNG
+        END_RUNG
+    END_NETWORK
+    {
+        S7_Language := "FBD";
+        S7_NetworkComment := "MLC_xj";
+        S7_NetworkTitle := "MLC_4xU"
+    }
+    NETWORK
+        RUNG
+        END_RUNG
+    END_NETWORK
+    {
+        S7_Language := "FBD";
+        S7_NetworkComment := "MLC_mW";
+        S7_NetworkTitle := "MLC_4vn"
+    }
+    NETWORK
+        RUNG
+            {
+                f_user_card := "1"; 
+                f_image_card := "0"
+            }
+            #instESTOP1.ESTOP1(
+                E_STOP := #eStop,
+                ACK_NEC :=  ,
+                ACK := #acknowledge,
+                TIME_DEL :=  ,
+                Q => #statReleaseEStop,
+                Q_DELAY =>  ,
+                ACK_REQ => #statAcknowlegeReqestedEStop,
+                DIAG =>  
+            )
+        END_RUNG
+    END_NETWORK
+    {
+        S7_Language := "FBD";
+        S7_NetworkComment := "MLC_4gr";
+        S7_NetworkTitle := "MLC_544"
+    }
+    NETWORK
+        RUNG
+            {
+                f_user_card := "1"; 
+                f_image_card := "0"
+            }
+            #instFDBACK.FDBACK(
+                ON := wire#w2,
+                FEEDBACK := wire#w3,
+                QBAD_FIO := NOT #actuatorVS,
+                ACK_NEC :=  ,
+                ACK := #acknowledge,
+                FDB_TIME := #feedbackTime,
+                Q => #actuator,
+                ERROR => #errorFeedback,
+                ACK_REQ =>  ,
+                DIAG =>  
+            )
+        END_RUNG
+        RUNG #feedback1
+            A( in2 := #feedback2 )
+        END_RUNG wire#w3
+        RUNG #instFDBACK.ERROR
+            O(
+                in2 := NOT #actuatorVS,
+                in3 := NOT #statReleaseEStop,
+                in4 := NOT #stop
+            )
+        END_RUNG wire#w1
+        RUNG
+            P_Contact(
+                operand := #start,
+                bit := #statStartPrevious
+            )
+            A(
+                in2 := #statReleaseEStop,
+                in3 := NOT #instFDBACK.ERROR
+            )
+            S_SR(
+                operand := #statFFStartStop,
+                r1 := wire#w1
+            )
+        END_RUNG wire#w2
+    END_NETWORK
+    {
+        S7_Language := "FBD";
+        S7_NetworkTitle := "MLC_52T"
+    }
+    NETWORK
+        RUNG #statReleaseEStop
+            Coil( #eStopReleased )
+        END_RUNG
+    END_NETWORK
+    {
+        S7_Language := "FBD";
+        S7_NetworkTitle := "MLC_4yU"
+    }
+    NETWORK
+        RUNG #statAcknowlegeReqestedEStop
+            Coil( #acknowledgeReqestedEStop )
+        END_RUNG
+    END_NETWORK
+END_FUNCTION_BLOCK

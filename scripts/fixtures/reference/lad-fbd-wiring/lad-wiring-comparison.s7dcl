@@ -1,0 +1,51 @@
+﻿{
+    S7_Optimized := "TRUE";
+    S7_PreferredLanguage := "LAD";
+    S7_Version := "0.1"
+}
+FUNCTION_BLOCK "wiring_comp_LAD"
+    VAR
+        IEC_Timer_0_Instance : TP_TIME;
+    END_VAR
+    VAR_TEMP
+        temp_var : Bool;
+    END_VAR
+    VAR CONSTANT
+        constant_var : Time := T#50ms;
+    END_VAR
+    
+    {
+        S7_Language := "LAD";
+    }
+    NETWORK
+        RUNG wire#powerrail
+            Contact( #temp_var )
+            wire#w1
+            I_Contact( #temp_var )
+            Not()
+            Coil( #temp_var )
+        END_RUNG
+        RUNG wire#w1
+            P_Contact(
+                operand := #temp_var,
+                bit := #temp_var
+            )
+            Coil( #temp_var )
+        END_RUNG
+        RUNG wire#w1
+            P_Contact(
+                operand := #temp_var,
+                bit := #temp_var
+            )
+            Coil( #temp_var )
+        END_RUNG
+        RUNG wire#powerrail
+            I_Contact( #temp_var )
+            { S7_Templates := "time_type := Time" }
+            #IEC_Timer_0_Instance.TP(
+                pt := #constant_var,
+                et =>  
+            )
+        END_RUNG
+    END_NETWORK
+END_FUNCTION_BLOCK

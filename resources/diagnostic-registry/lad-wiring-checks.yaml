@@ -1,0 +1,5 @@
+# Codes emitted by linter/ladWiringChecks.ts.
+
+lad-wire-not-rooted:
+  severity: error
+  message: "'RUNG wire#{wireName}' doesn't trace back to wire#powerrail -- no other RUNG in this NETWORK declares a 'wire#{wireName}' branch tap or 'END_RUNG wire#{wireName}' label, so this wiring is disconnected from the power rail (TIA won't compile a branch left this way)."

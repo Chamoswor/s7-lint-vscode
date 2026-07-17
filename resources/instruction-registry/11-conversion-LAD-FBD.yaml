@@ -1,0 +1,322 @@
+# LAD/FBD conversion-operation registry.
+#
+# Graphical instructions use explicit IN/OUT pins and have no function result.
+# Datatype lists, memory areas and semantics follow Siemens STEP 7 documentation.
+# BCD16 and BCD32 are conversion-only formats maintained by the separate BCD registry.
+
+$fileLanguage: [LAD, FBD]
+Convert:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: in
+    dir: in
+    required: true
+    dataTypes: [Bool, DWord, LWord, Integers, Floating-point numbers, Timers, Date and time, Character strings,
+      BCD16, BCD32]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source value. BYTE and WORD are not selectable as bit-string types in the box. Only valid Siemens source/destination
+      pairs may be combined.
+  - name: out
+    dir: out
+    required: true
+    dataTypes: [Bool, DWord, LWord, Integers, Floating-point numbers, Timers, Date and time, Character strings,
+      BCD16, BCD32]
+    memoryAreas: [I, Q, M, D, L, P]
+    note: Converted destination value. DWORD/LWORD compatibility is platform- and pair-dependent; on S7-1500 Siemens
+      restricts their conversion to or from REAL/LREAL.
+  enEno:
+    en:
+      present: true
+      dataTypes: [Bool]
+      memoryArea:
+        "S7-1200": [I, Q, M, D, L, constant]
+        "S7-1500": [I, Q, M, D, L, T, C, constant]
+    eno:
+      present: true
+      dataTypes: [Bool]
+      memoryArea:
+        "S7-1200": [I, Q, M, D, L]
+        "S7-1500": [I, Q, M, D, L]
+  result:
+    kind: none
+  template:
+    shape: bracketed
+    keys: [SrcType, DestType]
+    extra: {}
+  confidence: confirmed-compiled
+  notes: >-
+    Explicit value conversion. The source bit pattern is transferred right-justified where the selected
+    conversion uses bit-pattern transfer. ENO is FALSE when EN is FALSE or conversion fails.
+  source: "anonymized compiling fixture evidence"
+Round:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: in
+    dir: in
+    required: true
+    dataTypes: [Floating-point numbers]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Floating-point value to round.
+  - name: out
+    dir: out
+    required: true
+    dataTypes: [Integers, Floating-point numbers]
+    memoryAreas: [I, Q, M, D, L, P]
+    note: Nearest integer value, stored in the selected integer or floating-point datatype.
+  enEno:
+    en:
+      present: true
+      dataTypes: [Bool]
+      memoryArea:
+        "S7-1200": [I, Q, M, D, L, constant]
+        "S7-1500": [I, Q, M, D, L, T, C, constant]
+    eno:
+      present: true
+      dataTypes: [Bool]
+      memoryArea:
+        "S7-1200": [I, Q, M, D, L]
+        "S7-1500": [I, Q, M, D, L]
+  result:
+    kind: none
+  template:
+    shape: bracketed
+    keys: [SrcType, DestType]
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Rounds to the nearest integer using ties-to-even. ENO is FALSE when EN is FALSE or an execution
+    error such as overflow occurs.
+  source: "official instruction documentation (paraphrased)"
+Ceil:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: in
+    dir: in
+    required: true
+    dataTypes: [Floating-point numbers]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Floating-point value to round upward.
+  - name: out
+    dir: out
+    required: true
+    dataTypes: [Integers, Floating-point numbers]
+    memoryAreas: [I, Q, M, D, L, P]
+    note: Smallest integer value greater than or equal to IN.
+  enEno:
+    en:
+      present: true
+      dataTypes: [Bool]
+      memoryArea:
+        "S7-1200": [I, Q, M, D, L, constant]
+        "S7-1500": [I, Q, M, D, L, T, C, constant]
+    eno:
+      present: true
+      dataTypes: [Bool]
+      memoryArea:
+        "S7-1200": [I, Q, M, D, L]
+        "S7-1500": [I, Q, M, D, L]
+  result:
+    kind: none
+  template:
+    shape: bracketed
+    keys: [SrcType, DestType]
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Rounds toward positive infinity. ENO is FALSE when EN is FALSE or an execution error such as
+    overflow occurs.
+  source: "official instruction documentation (paraphrased)"
+Floor:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: in
+    dir: in
+    required: true
+    dataTypes: [Floating-point numbers]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Floating-point value to round downward.
+  - name: out
+    dir: out
+    required: true
+    dataTypes: [Integers, Floating-point numbers]
+    memoryAreas: [I, Q, M, D, L, P]
+    note: Largest integer value less than or equal to IN.
+  enEno:
+    en:
+      present: true
+      dataTypes: [Bool]
+      memoryArea:
+        "S7-1200": [I, Q, M, D, L, constant]
+        "S7-1500": [I, Q, M, D, L, T, C, constant]
+    eno:
+      present: true
+      dataTypes: [Bool]
+      memoryArea:
+        "S7-1200": [I, Q, M, D, L]
+        "S7-1500": [I, Q, M, D, L]
+  result:
+    kind: none
+  template:
+    shape: bracketed
+    keys: [SrcType, DestType]
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Rounds toward negative infinity. ENO is FALSE when EN is FALSE or an execution error such as
+    overflow occurs.
+  source: "official instruction documentation (paraphrased)"
+Trunc:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: in
+    dir: in
+    required: true
+    dataTypes: [Floating-point numbers]
+    memoryAreas: [I, Q, M, D, L, constant]
+    note: Floating-point value whose fractional part is discarded.
+  - name: out
+    dir: out
+    required: true
+    dataTypes: [Integers, Floating-point numbers]
+    memoryAreas: [I, Q, M, D, L]
+    note: Integer component of IN, truncated toward zero.
+  enEno:
+    en:
+      present: true
+      dataTypes: [Bool]
+      memoryArea:
+        "S7-1200": [I, Q, M, D, L, constant]
+        "S7-1500": [I, Q, M, D, L, constant]
+    eno:
+      present: true
+      dataTypes: [Bool]
+      memoryArea:
+        "S7-1200": [I, Q, M, D, L]
+        "S7-1500": [I, Q, M, D, L]
+  result:
+    kind: none
+  template:
+    shape: bracketed
+    keys: [SrcType, DestType]
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Discards the fractional part without rounding. ENO is FALSE when EN is FALSE or an execution error
+    such as overflow occurs.
+  source: "official instruction documentation (paraphrased)"
+Scale:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: min
+    dir: in
+    required: true
+    dataTypes: [Integers, Floating-point numbers]
+    memoryAreas: [I, Q, M, D, L, constant]
+    note: Low limit of the destination range; uses the selected destination datatype.
+  - name: value
+    dir: in
+    required: true
+    dataTypes: [Floating-point numbers]
+    memoryAreas: [I, Q, M, D, L, constant]
+    note: Normalized value to scale. A constant used here must be declared.
+  - name: max
+    dir: in
+    required: true
+    dataTypes: [Integers, Floating-point numbers]
+    memoryAreas: [I, Q, M, D, L, constant]
+    note: High limit of the destination range; uses the selected destination datatype.
+  - name: out
+    dir: out
+    required: true
+    dataTypes: [Integers, Floating-point numbers]
+    memoryAreas: [I, Q, M, D, L]
+    note: Scaled result in the selected destination datatype.
+  enEno:
+    en:
+      present: true
+      dataTypes: [Bool]
+      memoryArea:
+        "S7-1200": [I, Q, M, D, L, constant]
+        "S7-1500": [I, Q, M, D, L, T, C, constant]
+    eno:
+      present: true
+      dataTypes: [Bool]
+      memoryArea:
+        "S7-1200": [I, Q, M, D, L]
+        "S7-1500": [I, Q, M, D, L]
+  result:
+    kind: none
+  template:
+    shape: bracketed
+    keys: [SrcType, DestType]
+    extra: {}
+  confidence: confirmed-compiled
+  notes: >-
+    OUT = VALUE * (MAX - MIN) + MIN. ENO becomes FALSE for EN=FALSE, MIN >= MAX, invalid IEEE-754
+    normalized values, overflow, or NaN.
+  source: "anonymized compiling fixture evidence"
+Normalize:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: min
+    dir: in
+    required: true
+    dataTypes: [Integers, Floating-point numbers]
+    memoryAreas: [I, Q, M, D, L, constant]
+    note: Low limit of the source range; uses the selected source datatype.
+  - name: value
+    dir: in
+    required: true
+    dataTypes: [Integers, Floating-point numbers]
+    memoryAreas: [I, Q, M, D, L, constant]
+    note: Value to normalize; uses the selected source datatype.
+  - name: max
+    dir: in
+    required: true
+    dataTypes: [Integers, Floating-point numbers]
+    memoryAreas: [I, Q, M, D, L, constant]
+    note: High limit of the source range; uses the selected source datatype.
+  - name: out
+    dir: out
+    required: true
+    dataTypes: [Floating-point numbers]
+    memoryAreas: [I, Q, M, D, L]
+    note: Normalized floating-point result.
+  enEno:
+    en:
+      present: true
+      dataTypes: [Bool]
+      memoryArea:
+        "S7-1200": [I, Q, M, D, L, constant]
+        "S7-1500": [I, Q, M, D, L, T, C, constant]
+    eno:
+      present: true
+      dataTypes: [Bool]
+      memoryArea:
+        "S7-1200": [I, Q, M, D, L]
+        "S7-1500": [I, Q, M, D, L]
+  result:
+    kind: none
+  template:
+    shape: bracketed
+    keys: [SrcType, DestType]
+    extra: {}
+  confidence: confirmed-compiled
+  notes: >-
+    OUT = (VALUE - MIN) / (MAX - MIN). ENO becomes FALSE for EN=FALSE, MIN >= MAX, invalid IEEE-754
+    normalized values, or NaN.
+  source: "anonymized compiling fixture evidence"

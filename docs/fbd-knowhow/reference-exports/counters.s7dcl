@@ -1,0 +1,70 @@
+﻿{
+    S7_Optimized := "TRUE";
+    S7_PreferredLanguage := "FBD";
+    S7_Version := "0.1"
+}
+FUNCTION_BLOCK "CLAUDE_REF_COUNTER-OPERATIONS"
+    VAR RETAIN
+        CTU_INT_Instance : CTU_INT;
+        CTD_INT_Instance : CTD_INT;
+        CTUD_INT_Instance : CTUD_INT;
+    END_VAR
+    VAR_TEMP
+        Count : Bool;
+        Load : Bool;
+        Reset : Bool;
+        CountUp : Bool;
+        CountDown : Bool;
+    END_VAR
+    VAR CONSTANT
+        NUM1 : Int := 5;
+    END_VAR
+
+    {
+        S7_Language := "FBD";
+        S7_NetworkTitle := "MLC_53k"
+    }
+    NETWORK
+        RUNG #Count
+            { S7_Templates := "value_type := Int" }
+            #CTU_INT_Instance.CTU(
+                r := #Reset,
+                pv := #NUM1,
+                cv =>  
+            )
+        END_RUNG
+    END_NETWORK
+    {
+        S7_Language := "FBD";
+        S7_NetworkTitle := "MLC_4Qw"
+    }
+    NETWORK
+        RUNG #Count
+            { S7_Templates := "value_type := Int" }
+            #CTD_INT_Instance.CTD(
+                ld := #Load,
+                pv := #NUM1,
+                cv =>  
+            )
+        END_RUNG
+    END_NETWORK
+    { S7_Language := "FBD" }
+    NETWORK
+        RUNG #CountUp
+            { S7_Templates := "value_type := Int" }
+            #CTUD_INT_Instance.CTUD(
+                cd := #CountDown,
+                r := #Reset,
+                ld := #Load,
+                pv := #NUM1,
+                qd =>  ,
+                cv =>  
+            )
+        END_RUNG
+    END_NETWORK
+    { S7_Language := "FBD" }
+    NETWORK
+        RUNG
+        END_RUNG
+    END_NETWORK
+END_FUNCTION_BLOCK

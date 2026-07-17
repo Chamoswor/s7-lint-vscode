@@ -1,0 +1,97 @@
+FUNCTION_BLOCK "ExpressionTypeDiagnostics"
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+
+VAR
+    v_bool : Bool := FALSE;
+    v_int  : Int := 1;
+    v_real : Real := 10.0;
+    v_time : Time := T#10ms;
+    v_word : Word := W#16#00FF;
+END_VAR
+
+BEGIN
+    // ------------------------------------------------------------
+    // Implicit numeric conversion
+    // ------------------------------------------------------------
+
+    #v_real := #v_real + #v_int;
+    // EXPECT-WARNING: TT-W001
+    // Int is implicitly converted to Real.
+
+
+    // ------------------------------------------------------------
+    // Invalid explicit conversions
+    // ------------------------------------------------------------
+
+    #v_real := #v_real + INT_TO_REAL(#v_time);
+    // EXPECT-ERROR: TT-E001
+    // INT_TO_REAL requires an Int-compatible argument, not Time.
+
+
+    // ------------------------------------------------------------
+    // Invalid arithmetic operand combinations
+    // ------------------------------------------------------------
+
+    #v_real := #v_real + #v_time;
+    // EXPECT-ERROR: TT-E002
+    // Real and Time cannot be used together with arithmetic addition.
+
+    #v_time := #v_time + #v_real;
+    // EXPECT-ERROR: TT-E003
+    // Time and Real cannot be used together with arithmetic addition.
+
+    #v_int := #v_int + #v_time;
+    // EXPECT-ERROR: TT-E004
+    // Int and Time are incompatible arithmetic operands.
+
+    #v_real := #v_real + #v_bool;
+    // EXPECT-ERROR: TT-E005
+    // Bool is not a numeric operand.
+
+    #v_bool := #v_bool + TRUE;
+    // EXPECT-ERROR: TT-E006
+    // Arithmetic addition is not valid for Bool operands.
+
+
+    // ------------------------------------------------------------
+    // Invalid logical and bit-string operand combinations
+    // ------------------------------------------------------------
+
+    #v_word := #v_word AND #v_bool;
+    // EXPECT-ERROR: TT-E007
+    // Word and Bool belong to different operator domains.
+
+    #v_bool := #v_real AND #v_real;
+    // EXPECT-ERROR: TT-E008
+    // Real operands cannot be used with logical or bit-string AND.
+
+
+    // ------------------------------------------------------------
+    // Invalid comparisons
+    // ------------------------------------------------------------
+
+    #v_bool := #v_real = #v_time;
+    // EXPECT-ERROR: TT-E009
+    // Real and Time are not comparable types.
+
+
+    // ------------------------------------------------------------
+    // Nested expression error propagation
+    // ------------------------------------------------------------
+
+    #v_real := (#v_real + #v_time) * 2.0;
+    // EXPECT-ERROR: TT-E010
+    // The invalid inner expression must propagate an invalid type.
+    // The linter should avoid producing misleading secondary errors.
+
+
+    // ------------------------------------------------------------
+    // Parser and analyzer recovery
+    // ------------------------------------------------------------
+
+    #v_real := #v_real + INT_TO_REAL(#v_int);
+    // EXPECT-PASS: TT-R001
+    // Must still be analyzed after preceding errors.
+
+END_FUNCTION_BLOCK

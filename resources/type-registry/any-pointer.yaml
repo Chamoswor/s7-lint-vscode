@@ -1,0 +1,109 @@
+# The legacy S7 ANY pointer type's full shape: binary layout, the P#
+# literal grammar, and the two internal coding tables it uses. Split out
+# of base-types.yaml's Any entry (see that entry's `notes`) because this
+# is considerably more structure than any other single base type needs —
+# same reasoning slice-access.md and bcd-formats.yaml were split out for.
+#
+# Pasted directly from Siemens' TIA Portal Information System "ANY"
+# reference page by the user (2026-07-13). confidence: official-doc.
+
+structure:
+  sizeBytes: 10
+  components:
+    - name: "Data type"
+      description: "Data type of the elements of the data area — encoded per the `dataTypeCodes` table below."
+    - name: "Repetition factor"
+      description: "Number of elements of the data area."
+    - name: "DB number"
+      description: "Data block that contains the declaration of the data area's elements (0 if not DB-resident)."
+    - name: "Memory area"
+      description: "Memory area of the CPU that stores the data area's elements — encoded per the `memoryAreaCodes` table below."
+    - name: "Start address"
+      description: "Data area start, format \"byte.bit\", identified by the ANY pointer."
+  notes: "Exact byte offsets/widths for each component within the 10-byte layout are NOT given by the source page (only the component list and total size) — don't invent an offset table; if a linter ever needs to parse a raw ANY pointer's binary payload directly (as opposed to just validating the P# literal text form), find or produce a real byte-offset reference first, e.g. from a TIA export or Siemens' lower-level ANY-pointer structure documentation."
+  zeroPointer:
+    literal: "P#Zero value"
+    ladFbdLiteral: "NULL"
+    notes: "Represents 'no value'/'not yet known', not merely absence — 'a zero value represents the absence of a value, but is also a value' (Siemens' own wording). In LAD/FBD, NULL is the only accepted literal spelling for it — P#Zero value's other textual forms are SCL/STL-side."
+
+# --- P# literal grammar (symbolic and absolute forms) ---
+literalGrammar:
+  symbolic:
+    - pattern: 'P#DataBlock.MemoryArea DataAddress Type Number'
+      example: '"MyDB".StructTag.InitialComponents'
+      exampleMeaning: "Area with 10 words in global DB11 starting with DBB20.0"
+    - pattern: 'P#MemoryArea DataAddress Type Number'
+      example: '"MyMarkerTag"'
+      exampleMeaning: "Area with 4 bytes starting with MB20.0"
+    - example: '"MyTag"'
+      exampleMeaning: "Input I1.0"
+    - pattern: 'P#Zero value'
+      example: null
+      exampleMeaning: "Zero value"
+  absolute:
+    - pattern: 'P#DataBlock.MemoryArea DataAddress Type Number'
+      example: 'P#DB11.DBX20.0 INT 10'
+      exampleMeaning: "Area with 10 words in global DB11 starting with DBB20.0"
+    - pattern: 'P#MemoryArea DataAddress Type Number'
+      example: 'P#M20.0 BYTE 10'
+      exampleMeaning: "Area with 10 bytes starting with MB20.0"
+    - example: 'P#I1.0 BOOL 8'
+      exampleMeaning: "Range with 8 bits from input I1.0 — the range length specified must be divisible by 8 for BOOL."
+    - pattern: 'P#Zero value'
+      example: 'P#P0.0 VOID 0, NULL'
+      exampleMeaning: "Zero value. NULL is the only accepted spelling in LAD/FBD specifically (see structure.zeroPointer above)."
+  notes: "Only usable form for LAD/FBD per the source's own footnote on the absolute-form table: 'In the programming languages LAD and FBD, only NULL is a value entry for the zero value' — the other P#... zero-value spellings are SCL/STL text forms, don't expect them in a .s7dcl FBD/LAD network body."
+
+# --- Data type coding (the "Data type" structure component) ---
+dataTypeCodes:
+  "B#16#00": { name: NIL, description: "Null pointer" }
+  "B#16#01": { name: BOOL, description: "Bits", platformOnly: "S7-300/400" }
+  "B#16#02": { name: BYTE, description: "bytes, 8 bits" }
+  "B#16#03": { name: CHAR, description: "8-bit characters" }
+  "B#16#04": { name: WORD, description: "16-bit words" }
+  "B#16#05": { name: INT, description: "16-bit integers" }
+  "B#16#06": { name: DWORD, description: "32-bit words" }
+  "B#16#07": { name: DINT, description: "32-bit integers" }
+  "B#16#08": { name: REAL, description: "32-bit floating-point numbers" }
+  "B#16#09": { name: DATE, description: "Date" }
+  "B#16#0A": { name: TOD, description: "Date and time" }
+  "B#16#0B": { name: TIME, description: "Time duration" }
+  "B#16#0C": { name: S5TIME, description: "Time duration" }
+  "B#16#0E": { name: DT, description: "Date and time" }
+  "B#16#13": { name: STRING, description: "Character string" }
+  "B#16#17": { name: BLOCK_FB, description: "Function block", platformOnly: "S7-300/400" }
+  "B#16#18": { name: BLOCK_FC, description: "Function", platformOnly: "S7-300/400" }
+  "B#16#19": { name: BLOCK_DB, description: "Data block", platformOnly: "S7-300/400" }
+  "B#16#1A": { name: BLOCK_SDB, description: "System data block", platformOnly: "S7-300/400" }
+  "B#16#1C": { name: COUNTER, description: "Counter", platformOnly: "S7-300/400" }
+  "B#16#1D": { name: TIMER, description: "Timer", platformOnly: "S7-300/400" }
+  notes: "Names here are the LEGACY/STL-style spellings printed by Siemens' own ANY-pointer table (BOOL/BYTE/INT/DINT/REAL/TOD/DT/...), NOT necessarily identical to base-types.yaml's canonical keys (Bool/Byte/Int/DInt/Real/Time_Of_Day/Date_And_Time/...) — map through base-types.yaml's `aliases` field (e.g. TOD -> Time_Of_Day, DT -> Date_And_Time) rather than treating these as literal base-types.yaml keys. `platformOnly: S7-300/400` entries mirror this file's own footnote 1 ('These data types can only be used for the ANY pointer on a CPU S7-300/400') — cross-check against platform-availability.NOTLOADED.yaml if a lint rule ever needs to gate ANY-pointer data-type selection by target CPU."
+
+# --- Memory area coding (the "Memory area" structure component) ---
+memoryAreaCodes:
+  "B#16#80": { name: P, description: "I/O", platformOnly: "S7-300/400" }
+  "B#16#81": { name: I, description: "Memory area of inputs" }
+  "B#16#82": { name: Q, description: "Memory area of outputs" }
+  "B#16#83": { name: M, description: "Memory area of bit memory" }
+  "B#16#84": { name: DBX, description: "Data block" }
+  "B#16#85": { name: DIX, description: "Instance data block", platformOnly: "S7-300/400" }
+  "B#16#86": { name: L, description: "Local data" }
+  "B#16#87": { name: V, description: "Previous local data" }
+  notes: "`platformOnly: S7-300/400` entries mirror this file's own footnote 1 on the memory-area table ('These memory areas can only be used for the ANY pointer on an S7-300/400 CPU')."
+
+notes: |
+  Cross-references worth keeping in sync:
+  - base-types.yaml's `Any` entry points here for the full shape; keep
+    the summary there in sync if this file's structure/grammar changes.
+  - platform-availability.NOTLOADED.yaml's `pointer.Any` row already marks Any as
+    S7-300/400 + S7-1500 only (not plain S7-1200) — this file's
+    `platformOnly: S7-300/400` sub-codes are a FINER-GRAINED restriction
+    layered on top of that (a subset of Any's already-restricted data-type/
+    memory-area options is S7-300/400-only specifically, on top of Any
+    itself not existing on plain S7-1200 at all).
+  - instruction-registry/README.md's "Pin data types" section and
+    type-registry/category-index.yaml previously listed `ANY` as an
+    unresolvable umbrella label (no base-types.yaml entry existed) — now
+    that `Any` is a real base-types.yaml key, update both to treat it as
+    a normal concrete type name (exact casing `Any`, not `ANY`) the same
+    way `Struct`/`Variant`/`Array` already were corrected.

@@ -1,0 +1,13 @@
+FUNCTION_BLOCK "Semantic_ArrayVariableIndexExpression"
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+
+VAR
+    i      : Int := 0;
+    values : Array[0..9] of Int;
+END_VAR
+
+BEGIN
+    #values[#i + 1] := 10;
+    // EXPECT: error[array.variable-expression-index] SEM-ARRAY-005
+END_FUNCTION_BLOCK

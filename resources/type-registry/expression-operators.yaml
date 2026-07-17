@@ -1,0 +1,67 @@
+# Domain-compatibility rules for SCL binary expression operators, used by
+# linter/exprTypeChecks.ts (parser/s7dclParser.ts's own peek-based
+# expression parser builds the tree this file's rules are checked against).
+#
+# A "domain" here is coarser than a base-types.yaml `category` -- it's the
+# operator-compatibility grouping IEC 61131-3 actually cares about, derived
+# from `category` via `categoryToDomain` below rather than hand-listing
+# every concrete type again (one source of truth: base-types.yaml's own
+# `category` field). A type whose category isn't listed in
+# `categoryToDomain` (character/string/date-time/system/complex) has NO
+# domain here -- an expression touching one is simply left unchecked by
+# this feature entirely (never guessed), same "don't guess" discipline
+# every other registry in this project already follows.
+
+categoryToDomain:
+  bit: bool
+  bit-string: bit-string
+  integer-signed: numeric
+  integer-unsigned: numeric
+  float: numeric
+  duration: time
+
+# Arithmetic operators: +, -, *, /, MOD.
+arithmetic:
+  operators: ["+", "-", "*", "/", MOD]
+  # Each entry: two domains that may appear together (order-independent --
+  # the checker tries both orders). A pair not listed here is an error.
+  allowedDomainPairs:
+    - [numeric, numeric]
+    - [time, time]
+  # Within an allowed pair, warn (rather than stay silent) when the two
+  # operands' CONCRETE types differ -- e.g. Int + Real (implicit
+  # conversion) -- but only for domains listed here. `time` isn't listed:
+  # Time + Time is exact-type arithmetic in this project's own S7-1500
+  # corpus (TIME_TO_* conversions are always explicit), so a Time/LTime
+  # mismatch is left to the same-type check documentIndex.ts already runs
+  # elsewhere, not re-guessed here.
+  warnOnMismatchWithinDomain: [numeric]
+
+# Logical / bit-string operators: AND, OR, XOR (both keyword and, in a
+# base-types.yaml-confirmed corpus, the same operators apply to Bool and to
+# a matching-width bit string identically -- Word AND Word, DWord AND
+# DWord, Bool AND Bool are all legal; a bit-string domain type still needs
+# an EXACT type match with its partner, not just "same domain" -- Word AND
+# DWord is never legal IEC 61131-3, so `bit-string` is listed in
+# `requireExactTypeMatch` below, unlike `bool` (there's only one Bool type,
+# so the distinction is moot for that domain but harmless to state).
+logical:
+  operators: [AND, OR, XOR]
+  allowedDomainPairs:
+    - [bool, bool]
+    - [bit-string, bit-string]
+  requireExactTypeMatch: [bit-string]
+
+# Comparison operators: =, <>, <, >, <=, >=.
+comparison:
+  operators: ["=", "<>", "<", ">", "<=", ">="]
+  allowedDomainPairs:
+    - [numeric, numeric]
+    - [time, time]
+    - [bool, bool]
+    # Confirmed against real project SCL (distributed-process-control.scl compares two Byte
+    # values with '<>', ProcessSensorAlarms.scl compares two Word values with
+    # '=') -- comparing two SAME-domain bit strings is completely ordinary,
+    # not just an AND/OR/XOR (`logical`) operand shape.
+    - [bit-string, bit-string]
+  warnOnMismatchWithinDomain: [numeric]

@@ -1,0 +1,270 @@
+# File handling, random values and SHA-2 — LAD/FBD registry.
+#
+# Graphical instruction aliases and pin casing are retained from anonymized
+# reference fixtures and apply to both LAD and FBD.
+#
+# Exported `:=` connections cannot distinguish INPUT from IN_OUT. Independently
+# documented IN_OUT parameters are corrected explicitly.
+#
+# Graphical instructions use pins and therefore have `result: { kind: none }`.
+# Missing dataTypes are intentional; unresolved types are never guessed.
+
+$fileLanguage: [LAD, FBD]
+FileReadC:
+  family: extended
+  callShape: instance-dot
+  instanceType: FileReadC
+  pins:
+  - name: REQ
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: Name
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [String]
+  - name: Offset
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [UDInt]
+  - name: Length
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [UDInt]
+  - name: Done
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: Busy
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: Error
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: Status
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [DWord]
+  - name: ResultLength
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [UDInt]
+  - name: Data
+    dir: inout
+    required: true
+    note: ''
+    dataTypes: [Variant]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Read from a file on a memory card. VAR declaration in the source export names the instance
+    `FileReadC_SFB_Instance` — `_SFB` suffix transcribed as-is, same pattern as
+    RCVREC/PRVREC/GetStationInfo above.
+  source: "official instruction documentation (paraphrased)"
+  result:
+    kind: none
+FileWriteC:
+  family: extended
+  callShape: instance-dot
+  instanceType: FileWriteC
+  pins:
+  - name: REQ
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: Name
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [String]
+  - name: Offset
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [UDInt]
+  - name: Length
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [UDInt]
+  - name: Done
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: Busy
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: Error
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: Status
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [DWord]
+  - name: ResultLength
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [UDInt]
+  - name: Data
+    dir: inout
+    required: true
+    note: ''
+    dataTypes: [Variant]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Write to a file on a memory card, inverse of FileReadC — same `_SFB`-suffixed instance-name pattern
+    (FileWriteC_SFB_Instance).
+  source: "official instruction documentation (paraphrased)"
+  result:
+    kind: none
+FileDelete:
+  family: extended
+  callShape: instance-dot
+  instanceType: FileDelete
+  pins:
+  - name: REQ
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: Name
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [String]
+  - name: Done
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: Busy
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: Error
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: Status
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [DWord]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Delete a file on a memory card.
+  source: "official instruction documentation (paraphrased)"
+  result:
+    kind: none
+Random:
+  family: extended
+  callShape: box
+  instanceType: null
+  pins:
+  - name: Ret_Val
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [UDInt]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Generate a random number.
+  source: "official instruction documentation (paraphrased)"
+  result:
+    kind: none
+SHA2:
+  family: extended
+  callShape: instance-dot
+  instanceType: SHA2
+  pins:
+  - name: REQ
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: Data
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [Variant]
+  - name: DataLen
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [UDInt]
+  - name: HashLen
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [UInt]
+  - name: Done
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: Busy
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: Error
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: Status
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [DWord]
+  - name: Hash
+    dir: inout
+    required: true
+    note: ''
+    dataTypes: [Variant]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Compute a SHA-2 family hash over a data buffer.
+  source: "official instruction documentation (paraphrased)"
+  result:
+    kind: none

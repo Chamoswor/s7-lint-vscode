@@ -1,0 +1,252 @@
+# LAD/FBD comparator instruction registry.
+#
+# The six CMP instructions produce a BOOL RLO/box result. EQ and NE support
+# equality comparison for additional structured and indirect data types;
+# ordered comparisons are limited to scalar/orderable types.
+#
+# Memory-area conventions:
+# - CMP inputs: I, Q, M, D, L, P or constant.
+# - IN_RANGE/OUT_RANGE inputs: I, Q, M, D, L or constant.
+# - OK/NOT_OK input: I, Q, M, D or L.
+# - BOOL comparison results may be connected to I, Q, M, D or L.
+#
+# For REAL/LREAL, exact equality is normally unsuitable for tolerance-based
+# logic. Siemens recommends IN_RANGE/OUT_RANGE where a tolerance interval is
+# intended. NaN and invalid time/date values require instruction-specific
+# handling; see the concise instruction notes below.
+#
+$fileLanguage: [LAD, FBD]
+
+EQ_Contact:
+  family: comparator
+  callShape: box
+  instanceType:
+  pins:
+  - {name: in1, dir: in, required: true, dataTypes: ["Bit strings", "Integers", "Floating-point numbers", "Character strings",
+      "Timers", "Date and time", "Array", "Struct", "Variant", "Any", "PLC data type"], note: "First comparison value. Must
+      be type-compatible with in2.", memoryAreas: [I, Q, M, D, L, P, constant]}
+  - {name: in2, dir: in, required: true, dataTypes: ["Bit strings", "Integers", "Floating-point numbers", "Character strings",
+      "Timers", "Date and time", "Array", "Struct", "Variant", "Any", "PLC data type"], note: "Second comparison value. Uses
+      the same datatype and memory-area rules as in1.", memoryAreas: [I, Q, M, D, L, P, constant]}
+  result:
+    kind: value
+    dataTypes:
+    - Bool
+    notes: BOOL RLO/box result; documented destination memory areas are I, Q, M, D and L.
+  template: {shape: single, keys: [SrcType], extra: {}}
+  confidence: confirmed-compiled
+  notes: >-
+    CMP == (Equal). Returns TRUE when the two values compare equal. With IEC Check enabled, operands
+    must have the same datatype; with IEC Check disabled, compatible non-floating operands may be
+    compared by width. REAL/LREAL operands must still have the same datatype, and NaN makes the result
+    FALSE. Structured, ARRAY, VARIANT, ANY and PLC-data-type comparison is subject to CPU firmware and
+    type-compatibility rules.
+  source: "docs/fbd-knowhow/02-Comparators.md"
+NE_Contact:
+  family: comparator
+  callShape: box
+  instanceType:
+  pins:
+  - {name: in1, dir: in, required: true, dataTypes: ["Bit strings", "Integers", "Floating-point numbers", "Character strings",
+      "Timers", "Date and time", "Array", "Struct", "Variant", "Any", "PLC data type"], note: "First comparison value. Must
+      be type-compatible with in2.", memoryAreas: [I, Q, M, D, L, P, constant]}
+  - {name: in2, dir: in, required: true, dataTypes: ["Bit strings", "Integers", "Floating-point numbers", "Character strings",
+      "Timers", "Date and time", "Array", "Struct", "Variant", "Any", "PLC data type"], note: "Second comparison value. Uses
+      the same datatype and memory-area rules as in1.", memoryAreas: [I, Q, M, D, L, P, constant]}
+  result:
+    kind: value
+    dataTypes:
+    - Bool
+    notes: BOOL RLO/box result; documented destination memory areas are I, Q, M, D and L.
+  template: {shape: single, keys: [SrcType], extra: {}}
+  confidence: confirmed-compiled
+  notes: >-
+    CMP <> (Not equal). Uses the same general compatibility rules as EQ. Siemens recommends OUT_RANGE
+    for tolerance-based REAL/LREAL checks. NaN makes the result FALSE, so EQ and NE are not logical
+    complements for invalid floating-point values. Invalid timer/date values are handled according to
+    their conversion rules.
+  source: "docs/fbd-knowhow/02-Comparators.md"
+GE_Contact:
+  family: comparator
+  callShape: box
+  instanceType:
+  pins:
+  - {name: in1, dir: in, required: true, dataTypes: ["Bit strings", "Integers", "Floating-point numbers", "Character strings",
+      "Timers", "Date and time"], note: "First comparison value.", memoryAreas: [I, Q, M, D, L, P, constant]}
+  - {name: in2, dir: in, required: true, dataTypes: ["Bit strings", "Integers", "Floating-point numbers", "Character strings",
+      "Timers", "Date and time"], note: "Second comparison value. Must have the same datatype as in1.", memoryAreas: [I, 
+        Q, M, D, L, P, constant]}
+  result:
+    kind: value
+    dataTypes:
+    - Bool
+    notes: BOOL RLO/box result; documented destination memory areas are I, Q, M, D and L.
+  template: {shape: single, keys: [SrcType], extra: {}}
+  confidence: confirmed-compiled
+  notes: >-
+    CMP >= (Greater or equal). Both operands must have the same datatype. Strings are ordered
+    lexicographically by character code; when one string is a prefix of the other, the longer string is
+    greater. Date/time values are compared chronologically after any permitted implicit conversion.
+  source: "docs/fbd-knowhow/02-Comparators.md"
+LE_Contact:
+  family: comparator
+  callShape: box
+  instanceType:
+  pins:
+  - {name: in1, dir: in, required: true, dataTypes: ["Bit strings", "Integers", "Floating-point numbers", "Character strings",
+      "Timers", "Date and time"], note: "First comparison value.", memoryAreas: [I, Q, M, D, L, P, constant]}
+  - {name: in2, dir: in, required: true, dataTypes: ["Bit strings", "Integers", "Floating-point numbers", "Character strings",
+      "Timers", "Date and time"], note: "Second comparison value. Must have the same datatype as in1.", memoryAreas: [I, 
+        Q, M, D, L, P, constant]}
+  result:
+    kind: value
+    dataTypes:
+    - Bool
+    notes: BOOL RLO/box result; documented destination memory areas are I, Q, M, D and L.
+  template: {shape: single, keys: [SrcType], extra: {}}
+  confidence: confirmed-compiled
+  notes: >-
+    CMP <= (Less or equal). Both operands must have the same datatype. Strings are ordered
+    lexicographically by character code; when one string is a prefix of the other, the shorter string is
+    smaller. Date/time values are compared chronologically after any permitted implicit conversion.
+  source: "docs/fbd-knowhow/02-Comparators.md"
+GT_Contact:
+  family: comparator
+  callShape: box
+  instanceType:
+  pins:
+  - {name: in1, dir: in, required: true, dataTypes: ["Bit strings", "Integers", "Floating-point numbers", "Character strings",
+      "Timers", "Date and time"], note: "First comparison value.", memoryAreas: [I, Q, M, D, L, P, constant]}
+  - {name: in2, dir: in, required: true, dataTypes: ["Bit strings", "Integers", "Floating-point numbers", "Character strings",
+      "Timers", "Date and time"], note: "Second comparison value. Must have the same datatype as in1.", memoryAreas: [I, 
+        Q, M, D, L, P, constant]}
+  result:
+    kind: value
+    dataTypes:
+    - Bool
+    notes: BOOL RLO/box result; documented destination memory areas are I, Q, M, D and L.
+  template: {shape: single, keys: [SrcType], extra: {}}
+  confidence: confirmed-compiled
+  notes: >-
+    CMP > (Greater than). Both operands must have the same datatype. String and date/time ordering
+    follows the same rules as CMP >=, with equality excluded.
+  source: "docs/fbd-knowhow/02-Comparators.md"
+LT_Contact:
+  family: comparator
+  callShape: box
+  instanceType:
+  pins:
+  - {name: in1, dir: in, required: true, dataTypes: ["Bit strings", "Integers", "Floating-point numbers", "Character strings",
+      "Timers", "Date and time"], note: "First comparison value.", memoryAreas: [I, Q, M, D, L, P, constant]}
+  - {name: in2, dir: in, required: true, dataTypes: ["Bit strings", "Integers", "Floating-point numbers", "Character strings",
+      "Timers", "Date and time"], note: "Second comparison value. Must have the same datatype as in1.", memoryAreas: [I, 
+        Q, M, D, L, P, constant]}
+  result:
+    kind: value
+    dataTypes:
+    - Bool
+    notes: BOOL RLO/box result; documented destination memory areas are I, Q, M, D and L.
+  template: {shape: single, keys: [SrcType], extra: {}}
+  confidence: confirmed-compiled
+  notes: >-
+    CMP < (Less than). Both operands must have the same datatype. String and date/time ordering follows
+    the same rules as CMP <=, with equality excluded.
+  source: "docs/fbd-knowhow/02-Comparators.md"
+InRange:
+  family: comparator
+  callShape: box
+  instanceType:
+  pins:
+  - {name: min, dir: in, required: true, dataTypes: ["Integers", "Floating-point numbers"], note: "Lower limit of the comparison
+      range.", memoryAreas: [I, Q, M, D, L, constant]}
+  - {name: in, dir: in, required: true, dataTypes: ["Integers", "Floating-point numbers"], note: "Value to compare with the
+      configured range.", memoryAreas: [I, Q, M, D, L, constant]}
+  - {name: max, dir: in, required: true, dataTypes: ["Integers", "Floating-point numbers"], note: "Upper limit of the comparison
+      range.", memoryAreas: [I, Q, M, D, L, constant]}
+  result:
+    kind: value
+    dataTypes:
+    - Bool
+    notes: BOOL RLO/box result; documented destination memory areas are I, Q, M, D and L.
+  template: {shape: single, keys: [SrcType], extra: {}}
+  confidence: shape-only
+  notes: >-
+    IN_RANGE (Value within range). Returns TRUE when MIN <= VAL and VAL <= MAX. MIN, VAL and MAX must
+    have the same datatype.
+  source: "docs/fbd-knowhow/02-Comparators.md"
+OutRange:
+  family: comparator
+  callShape: box
+  instanceType:
+  pins:
+  - {name: min, dir: in, required: true, dataTypes: ["Integers", "Floating-point numbers"], note: "Lower limit of the comparison
+      range.", memoryAreas: [I, Q, M, D, L, constant]}
+  - {name: in, dir: in, required: true, dataTypes: ["Integers", "Floating-point numbers"], note: "Value to compare with the
+      configured range.", memoryAreas: [I, Q, M, D, L, constant]}
+  - {name: max, dir: in, required: true, dataTypes: ["Integers", "Floating-point numbers"], note: "Upper limit of the comparison
+      range.", memoryAreas: [I, Q, M, D, L, constant]}
+  result:
+    kind: value
+    dataTypes:
+    - Bool
+    notes: BOOL RLO/box result; documented destination memory areas are I, Q, M, D and L.
+  template: {shape: single, keys: [SrcType], extra: {}}
+  confidence: shape-only
+  notes: >-
+    OUT_RANGE (Value outside range). Returns TRUE when VAL < MIN or VAL > MAX. MIN, VAL and MAX must
+    have the same datatype. An invalid REAL value also produces TRUE.
+  source: "docs/fbd-knowhow/02-Comparators.md"
+OK:
+  family: comparator
+  callShape: box
+  instanceType:
+  pins:
+  - name:
+    dir: in
+    required: true
+    dataTypes: ["Floating-point numbers"]
+    note: "REAL or LREAL value to validate."
+    memoryAreas:
+    - I
+    - Q
+    - M
+    - D
+    - L
+  result:
+    kind: value
+    dataTypes:
+    - Bool
+    notes: BOOL RLO/box result; documented destination memory areas are I, Q, M, D and L.
+  template: {shape: none, keys: [], extra: {}}
+  confidence: confirmed-compiled
+  notes: >-
+    OK (Check validity). Returns TRUE when the REAL or LREAL operand is a valid IEEE-754 value.
+    Infinity, NaN and denormalized values are treated as invalid.
+  source: "docs/fbd-knowhow/02-Comparators.md"
+NOK:
+  family: comparator
+  callShape: box
+  instanceType:
+  pins:
+  - name:
+    dir: in
+    required: true
+    dataTypes: ["Floating-point numbers"]
+    note: "REAL or LREAL value to validate."
+    memoryAreas:
+    - I
+    - Q
+    - M
+    - D
+    - L
+  result:
+    kind: value
+    dataTypes:
+    - Bool
+    notes: BOOL RLO/box result; documented destination memory areas are I, Q, M, D and L.
+  template: {shape: none, keys: [], extra: {}}
+  confidence: confirmed-compiled
+  notes: >-
+    NOT_OK (Check invalidity). Logical inverse of OK: returns TRUE for infinity, NaN or a denormalized
+    REAL/LREAL value.
+  source: "docs/fbd-knowhow/02-Comparators.md"

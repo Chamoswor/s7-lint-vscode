@@ -1,0 +1,11 @@
+FUNCTION_BLOCK "Semantic_NestedArray"
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+
+VAR
+    values : Array[0..9] of Array[0..9] of Int;
+    // EXPECT: error[array.nested-array-forbidden] SEM-ARRAY-003
+END_VAR
+
+BEGIN
+END_FUNCTION_BLOCK

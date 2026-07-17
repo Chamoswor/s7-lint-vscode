@@ -1,0 +1,154 @@
+# LAD/FBD shift-and-rotate instruction registry.
+#
+# SHR, SHL, ROR and ROL expose their calculated value through an explicit OUT
+# pin. Consequently, they do not have a separate function result:
+#
+#   result:
+#     kind: none
+#
+# Parameter data types follow the Siemens STEP 7 V20 FBD parameter tables.
+# The source tables contain S7-1200 and S7-1500 columns, but no separate
+# S7-1200 G2 column. By the registry's standing convention, S7-1200 G2 follows
+# the S7-1500 entry where the two columns differ.
+#
+$fileLanguage: [LAD, FBD]
+
+Shr:
+  family: shift-rotate
+  callShape: box
+  instanceType: null
+  pins:
+  - name: in
+    dir: in
+    required: true
+    dataTypes: ["Bit strings", "Integers"]
+    memoryAreas: [I, Q, M, D, L, constant]
+    note: Value to shift right. The selected instruction datatype determines the operand width and signedness.
+  - name: n
+    dir: in
+    required: true
+    dataTypes: [USInt, UInt, UDInt, ULInt]
+    memoryAreas: [I, Q, M, D, L, constant]
+    note: Number of bit positions to shift. ULInt is available on S7-1500 and, by registry convention, S7-1200 G2; it is not listed for the original S7-1200.
+  - name: out
+    dir: out
+    required: true
+    dataTypes: ["Bit strings", "Integers"]
+    memoryAreas: [I, Q, M, D, L]
+    note: Shifted value with the same selected datatype as IN.
+  result:
+    kind: none
+  enEno:
+    en: {present: true, dataTypes: [Bool], memoryArea: {"S7-1200": [I, Q, M, D, L, constant], "S7-1500": [I, Q, M, D, L, T, C, constant]}}
+    eno: {present: true, dataTypes: [Bool], memoryArea: {"S7-1200": [I, Q, M, D, L], "S7-1500": [I, Q, M, D, L]}}
+  template: {shape: none, keys: [], extra: {}}
+  confidence: official-doc
+  notes: >-
+    Shifts IN to the right by N bit positions. N = 0 copies IN unchanged. If N exceeds the operand
+    width, the shift is limited to the available width. Vacated high-order bits are filled with zero for
+    unsigned values and with the sign bit for signed values.
+  source: "official instruction documentation (paraphrased)"
+Shl:
+  family: shift-rotate
+  callShape: box
+  instanceType: null
+  pins:
+  - name: in
+    dir: in
+    required: true
+    dataTypes: ["Bit strings", "Integers"]
+    memoryAreas: [I, Q, M, D, L, constant]
+    note: Value to shift left. The selected instruction datatype determines the operand width.
+  - name: n
+    dir: in
+    required: true
+    dataTypes: [USInt, UInt, UDInt, ULInt]
+    memoryAreas: [I, Q, M, D, L, constant]
+    note: Number of bit positions to shift. ULInt is available on S7-1500 and, by registry convention, S7-1200 G2; it is not listed for the original S7-1200.
+  - name: out
+    dir: out
+    required: true
+    dataTypes: ["Bit strings", "Integers"]
+    memoryAreas: [I, Q, M, D, L]
+    note: Shifted value with the same selected datatype as IN.
+  result:
+    kind: none
+  enEno:
+    en: {present: true, dataTypes: [Bool], memoryArea: {"S7-1200": [I, Q, M, D, L, constant], "S7-1500": [I, Q, M, D, L, T, C, constant]}}
+    eno: {present: true, dataTypes: [Bool], memoryArea: {"S7-1200": [I, Q, M, D, L], "S7-1500": [I, Q, M, D, L]}}
+  template: {shape: none, keys: [], extra: {}}
+  confidence: official-doc
+  notes: >-
+    Shifts IN to the left by N bit positions. N = 0 copies IN unchanged. If N exceeds the operand width,
+    the shift is limited to the available width. Vacated low-order bits are filled with zero.
+  source: "official instruction documentation (paraphrased)"
+Ror:
+  family: shift-rotate
+  callShape: box
+  instanceType: null
+  pins:
+  - name: in
+    dir: in
+    required: true
+    dataTypes: ["Bit strings", "Integers"]
+    memoryAreas: [I, Q, M, D, L, constant]
+    note: Value to rotate right. The selected instruction datatype determines the operand width.
+  - name: n
+    dir: in
+    required: true
+    dataTypes: [USInt, UInt, UDInt, ULInt]
+    memoryAreas: [I, Q, M, D, L, constant]
+    note: Number of bit positions to rotate. ULInt is available on S7-1500 and, by registry convention, S7-1200 G2; it is not listed for the original S7-1200.
+  - name: out
+    dir: out
+    required: true
+    dataTypes: ["Bit strings", "Integers"]
+    memoryAreas: [I, Q, M, D, L]
+    note: Rotated value with the same selected datatype as IN.
+  result:
+    kind: none
+  enEno:
+    en: {present: true, dataTypes: [Bool], memoryArea: {"S7-1200": [I, Q, M, D, L, constant], "S7-1500": [I, Q, M, D, L, T, C, constant]}}
+    eno: {present: true, dataTypes: [Bool], memoryArea: {"S7-1200": [I, Q, M, D, L], "S7-1500": [I, Q, M, D, L]}}
+  template: {shape: none, keys: [], extra: {}}
+  confidence: official-doc
+  notes: >-
+    Rotates IN to the right by N bit positions. Bits leaving the low-order side re-enter at the
+    high-order side, so no bits are discarded. N = 0 copies IN unchanged. If N exceeds the operand
+    width, rotation is still performed using the specified count.
+  source: "official instruction documentation (paraphrased)"
+Rol:
+  family: shift-rotate
+  callShape: box
+  instanceType: null
+  pins:
+  - name: in
+    dir: in
+    required: true
+    dataTypes: ["Bit strings", "Integers"]
+    memoryAreas: [I, Q, M, D, L, constant]
+    note: Value to rotate left. The selected instruction datatype determines the operand width.
+  - name: n
+    dir: in
+    required: true
+    dataTypes: [USInt, UInt, UDInt, ULInt]
+    memoryAreas: [I, Q, M, D, L, constant]
+    note: Number of bit positions to rotate. ULInt is available on S7-1500 and, by registry convention, S7-1200 G2; it is not listed for the original S7-1200.
+  - name: out
+    dir: out
+    required: true
+    dataTypes: ["Bit strings", "Integers"]
+    memoryAreas: [I, Q, M, D, L]
+    note: Rotated value with the same selected datatype as IN.
+  result:
+    kind: none
+  enEno:
+    en: {present: true, dataTypes: [Bool], memoryArea: {"S7-1200": [I, Q, M, D, L, constant], "S7-1500": [I, Q, M, D, L, T, C, constant]}}
+    eno: {present: true, dataTypes: [Bool], memoryArea: {"S7-1200": [I, Q, M, D, L], "S7-1500": [I, Q, M, D, L]}}
+  template: {shape: none, keys: [], extra: {}}
+  confidence: official-doc
+  notes: >-
+    Rotates IN to the left by N bit positions. Bits leaving the high-order side re-enter at the
+    low-order side, so no bits are discarded. N = 0 copies IN unchanged. If N exceeds the operand width,
+    rotation is still performed using the specified count.
+  source: "official instruction documentation (paraphrased)"

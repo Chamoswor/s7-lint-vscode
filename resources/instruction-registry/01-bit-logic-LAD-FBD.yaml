@@ -1,0 +1,424 @@
+# Bit-logic instruction registry shared by LAD and FBD.
+#
+# The incoming RLO and EN/ENO connections are implicit unless represented by
+# an existing pin. T and C entries in `memoryAreas` are S7-1500-only. Edge
+# memory operands are restricted to M or persistent/static DB storage (D).
+$fileLanguage: [LAD, FBD]
+
+Coil:
+  family: bit-logic
+  callShape: box
+  instanceType: null
+  pins:
+    - name: null
+      dir: out
+      required: true
+      dataTypes: [Bool]
+      memoryAreas: [I, Q, M, D, L]
+      note: >-
+        Assigns the incoming RLO to the specified BOOL operand.
+  result:
+    kind: none
+  template: { shape: none, keys: [], extra: {} }
+  confidence: confirmed-compiled
+  notes: >-
+    Assignment coil. The instruction writes the RLO to the operand and passes the RLO through unchanged.
+  source: "docs/fbd-knowhow/01-Bit-Logic.md"
+I_Coil:
+  family: bit-logic
+  callShape: box
+  instanceType: null
+  pins:
+    - name: null
+      dir: out
+      required: true
+      dataTypes: [Bool]
+      memoryAreas: [I, Q, M, D, L]
+      note: >-
+        Assigns the inverted incoming RLO to the specified BOOL operand.
+  result:
+    kind: none
+  template: { shape: none, keys: [], extra: {} }
+  confidence: confirmed-compiled
+  notes: >-
+    Negate-assignment coil. The operand receives the inverse of the incoming RLO.
+  source: "docs/fbd-knowhow/01-Bit-Logic.md"
+S_Coil:
+  family: bit-logic
+  callShape: box
+  instanceType: null
+  pins:
+    - name: null
+      dir: out
+      required: true
+      dataTypes: [Bool]
+      memoryAreas: [I, Q, M, D, L]
+      note: >-
+        BOOL operand set to TRUE when the incoming RLO is TRUE.
+  result:
+    kind: none
+  template: { shape: none, keys: [], extra: {} }
+  confidence: confirmed-compiled
+  notes: >-
+    Set-output coil. A FALSE incoming RLO leaves the operand unchanged.
+  source: "docs/fbd-knowhow/01-Bit-Logic.md"
+R_Coil:
+  family: bit-logic
+  callShape: box
+  instanceType: null
+  pins:
+    - name: null
+      dir: out
+      required: true
+      dataTypes: [Bool]
+      memoryAreas: [I, Q, M, D, L, T, C]
+      note: >-
+        Operand reset to FALSE when the incoming RLO is TRUE. T and C are S7-1500-only.
+  result:
+    kind: none
+  template: { shape: none, keys: [], extra: {} }
+  confidence: confirmed-compiled
+  notes: >-
+    Reset-output coil. A FALSE incoming RLO leaves the operand unchanged.
+  source: "docs/fbd-knowhow/01-Bit-Logic.md"
+S_BitfieldCoil:
+  family: bit-logic
+  callShape: box
+  instanceType: null
+  pins:
+    - name: operand
+      dir: out
+      required: true
+      dataTypes: [Bool]
+      memoryAreas: [I, Q, M, D]
+      note: >-
+        First BOOL in the bit field to set. For D, the operand must identify an ARRAY of
+        BOOL element in a DB or IDB.
+    - name: n
+      dir: in
+      required: true
+      dataTypes: [UInt]
+      memoryAreas: [constant]
+      note: >-
+        Constant UINT specifying the number of consecutive bits to set.
+  result:
+    kind: none
+  template: { shape: none, keys: [], extra: {} }
+  confidence: shape-only
+  notes: >-
+    Sets N consecutive bits beginning at operand when enabled. For structured BOOL fields, processing is
+    limited to the available bits.
+  source: "docs/fbd-knowhow/01-Bit-Logic.md"
+R_BitfieldCoil:
+  family: bit-logic
+  callShape: box
+  instanceType: null
+  pins:
+    - name: operand
+      dir: out
+      required: true
+      dataTypes: [Bool]
+      memoryAreas: [I, Q, M, D]
+      note: >-
+        First BOOL in the bit field to reset. For D, the operand must identify an ARRAY of
+        BOOL element in a DB or IDB.
+    - name: n
+      dir: in
+      required: true
+      dataTypes: [UInt]
+      memoryAreas: [constant]
+      note: >-
+        Constant UINT specifying the number of consecutive bits to reset.
+  result:
+    kind: none
+  template: { shape: none, keys: [], extra: {} }
+  confidence: shape-only
+  notes: >-
+    Resets N consecutive bits beginning at operand when enabled. For structured BOOL fields, processing
+    is limited to the available bits.
+  source: "docs/fbd-knowhow/01-Bit-Logic.md"
+S_SR:
+  family: bit-logic
+  callShape: box
+  instanceType: null
+  pins:
+    - name: operand
+      dir: in
+      required: true
+      dataTypes: [Bool]
+      memoryAreas: [I, Q, M, D, L, T, C, constant]
+      note: >-
+        Set input. T and C are S7-1500-only.
+    - name: r1
+      dir: in
+      required: false
+      dataTypes: [Bool]
+      memoryAreas: [I, Q, M, D, L, T, C, constant]
+      note: >-
+        Reset input. T and C are S7-1500-only.
+    - name: q
+      dir: out
+      required: false
+      dataTypes: [Bool]
+      memoryAreas: [I, Q, M, D, L]
+      note: >-
+        Optional output carrying the current signal state of the flip-flop operand.
+  result:
+    kind: none
+  template: { shape: none, keys: [], extra: {} }
+  confidence: shape-only
+  notes: >-
+    Reset-dominant set/reset flip-flop. R1 has priority when set and reset are TRUE simultaneously.
+  source: "docs/fbd-knowhow/01-Bit-Logic.md"
+S_RS:
+  family: bit-logic
+  callShape: box
+  instanceType: null
+  pins:
+    - name: operand
+      dir: in
+      required: true
+      dataTypes: [Bool]
+      memoryAreas: [I, Q, M, D, L, T, C, constant]
+      note: >-
+        Reset input. T and C are S7-1500-only.
+    - name: s1
+      dir: in
+      required: false
+      dataTypes: [Bool]
+      memoryAreas: [I, Q, M, D, L, T, C, constant]
+      note: >-
+        Set input. T and C are S7-1500-only.
+    - name: q
+      dir: out
+      required: false
+      dataTypes: [Bool]
+      memoryAreas: [I, Q, M, D, L]
+      note: >-
+        Optional output carrying the current signal state of the flip-flop operand.
+  result:
+    kind: none
+  template: { shape: none, keys: [], extra: {} }
+  confidence: shape-only
+  notes: >-
+    Set-dominant reset/set flip-flop. S1 has priority when reset and set are TRUE simultaneously.
+  source: "docs/fbd-knowhow/01-Bit-Logic.md"
+P_Contact:
+  family: bit-logic
+  callShape: box
+  instanceType: null
+  pins:
+    - name: operand
+      dir: in
+      required: true
+      dataTypes: [Bool]
+      memoryAreas: [I, Q, M, D, L, T, C, constant]
+      note: >-
+        BOOL signal scanned for a rising edge. T and C are S7-1500-only.
+    - name: bit
+      dir: in
+      required: true
+      dataTypes: [Bool]
+      memoryAreas: [M, D]
+      note: >-
+        Edge-memory BOOL storing the previous signal state; use a unique M bit or
+        persistent/static DB member.
+  result:
+    kind: value
+    dataTypes: [Bool]
+  template: { shape: none, keys: [], extra: {} }
+  confidence: confirmed-compiled
+  notes: >-
+    Returns TRUE for one program cycle when the scanned operand changes from FALSE to TRUE.
+  source: "docs/fbd-knowhow/01-Bit-Logic.md"
+N_Contact:
+  family: bit-logic
+  callShape: box
+  instanceType: null
+  pins:
+    - name: operand
+      dir: in
+      required: true
+      dataTypes: [Bool]
+      memoryAreas: [I, Q, M, D, L, T, C, constant]
+      note: >-
+        BOOL signal scanned for a falling edge. T and C are S7-1500-only.
+    - name: bit
+      dir: in
+      required: true
+      dataTypes: [Bool]
+      memoryAreas: [M, D]
+      note: >-
+        Edge-memory BOOL storing the previous signal state; use a unique M bit or
+        persistent/static DB member.
+  result:
+    kind: value
+    dataTypes: [Bool]
+  template: { shape: none, keys: [], extra: {} }
+  confidence: confirmed-compiled
+  notes: >-
+    Returns TRUE for one program cycle when the scanned operand changes from TRUE to FALSE.
+  source: "docs/fbd-knowhow/01-Bit-Logic.md"
+P_Coil:
+  family: bit-logic
+  callShape: box
+  instanceType: null
+  pins:
+    - name: operand
+      dir: out
+      required: true
+      dataTypes: [Bool]
+      memoryAreas: [I, Q, M, D, L]
+      note: >-
+        BOOL operand set to TRUE for one cycle on a rising edge of the incoming RLO.
+    - name: bit
+      dir: in
+      required: true
+      dataTypes: [Bool]
+      memoryAreas: [M, D]
+      note: >-
+        Edge-memory BOOL storing the previous RLO; use a unique M bit or persistent/static
+        DB member.
+  result:
+    kind: none
+  template: { shape: none, keys: [], extra: {} }
+  confidence: confirmed-compiled
+  notes: >-
+    Positive-edge coil. The destination is TRUE for one cycle when the incoming RLO changes from FALSE
+    to TRUE.
+  source: "docs/fbd-knowhow/01-Bit-Logic.md"
+N_Coil:
+  family: bit-logic
+  callShape: box
+  instanceType: null
+  pins:
+    - name: operand
+      dir: out
+      required: true
+      dataTypes: [Bool]
+      memoryAreas: [I, Q, M, D, L]
+      note: >-
+        BOOL operand set to TRUE for one cycle on a falling edge of the incoming RLO.
+    - name: bit
+      dir: in
+      required: true
+      dataTypes: [Bool]
+      memoryAreas: [M, D]
+      note: >-
+        Edge-memory BOOL storing the previous RLO; use a unique M bit or persistent/static
+        DB member.
+  result:
+    kind: none
+  template: { shape: none, keys: [], extra: {} }
+  confidence: confirmed-compiled
+  notes: >-
+    Negative-edge coil. The destination is TRUE for one cycle when the incoming RLO changes from TRUE to
+    FALSE.
+  source: "docs/fbd-knowhow/01-Bit-Logic.md"
+P_Trig:
+  family: bit-logic
+  callShape: box
+  instanceType: null
+  pins:
+    - name: null
+      dir: out
+      required: true
+      dataTypes: [Bool]
+      memoryAreas: [M, D]
+      note: >-
+        Edge-memory BOOL storing the previous RLO; the address must be unique within the
+        program.
+    - name: q
+      dir: out
+      required: false
+      dataTypes: [Bool]
+      memoryAreas: [I, Q, M, D, L]
+      note: >-
+        Optional BOOL output carrying the positive-edge evaluation result.
+  result:
+    kind: none
+  template: { shape: none, keys: [], extra: {} }
+  confidence: confirmed-compiled
+  notes: >-
+    Scans the incoming RLO for a FALSE-to-TRUE transition and sets Q for one program cycle.
+  source: "docs/fbd-knowhow/01-Bit-Logic.md"
+N_Trig:
+  family: bit-logic
+  callShape: box
+  instanceType: null
+  pins:
+    - name: null
+      dir: out
+      required: true
+      dataTypes: [Bool]
+      memoryAreas: [M, D]
+      note: >-
+        Edge-memory BOOL storing the previous RLO; the address must be unique within the
+        program.
+    - name: q
+      dir: out
+      required: false
+      dataTypes: [Bool]
+      memoryAreas: [I, Q, M, D, L]
+      note: >-
+        Optional BOOL output carrying the negative-edge evaluation result.
+  result:
+    kind: none
+  template: { shape: none, keys: [], extra: {} }
+  confidence: confirmed-compiled
+  notes: >-
+    Scans the incoming RLO for a TRUE-to-FALSE transition and sets Q for one program cycle.
+  source: "docs/fbd-knowhow/01-Bit-Logic.md"
+R_TRIG:
+  family: bit-logic
+  callShape: instance-dot
+  instanceType: R_TRIG
+  pins:
+    - name: clk
+      dir: in
+      required: true
+      dataTypes: [Bool]
+      memoryAreas: [I, Q, M, D, L, constant]
+      note: >-
+        Incoming BOOL signal whose rising edge is evaluated.
+    - name: q
+      dir: out
+      required: false
+      dataTypes: [Bool]
+      memoryAreas: [I, Q, M, D, L]
+      note: >-
+        Optional BOOL output set to TRUE for one program cycle on a rising edge.
+  result:
+    kind: none
+  template: { shape: none, keys: [], extra: {} }
+  confidence: confirmed-compiled
+  notes: >-
+    Instance-based positive-edge detector. The instance stores the previous CLK state.
+  source: "docs/fbd-knowhow/01-Bit-Logic.md"
+F_TRIG:
+  family: bit-logic
+  callShape: instance-dot
+  instanceType: F_TRIG
+  pins:
+    - name: clk
+      dir: in
+      required: true
+      dataTypes: [Bool]
+      memoryAreas: [I, Q, M, D, L, constant]
+      note: >-
+        Incoming BOOL signal whose falling edge is evaluated.
+    - name: q
+      dir: out
+      required: false
+      dataTypes: [Bool]
+      memoryAreas: [I, Q, M, D, L]
+      note: >-
+        Optional BOOL output set to TRUE for one program cycle on a falling edge.
+  result:
+    kind: none
+  template: { shape: none, keys: [], extra: {} }
+  confidence: confirmed-compiled
+  notes: >-
+    Instance-based negative-edge detector. IEC startup behavior requires the instance member Stat_Bit to
+    be initialized to TRUE.
+  source: "docs/fbd-knowhow/01-Bit-Logic.md"

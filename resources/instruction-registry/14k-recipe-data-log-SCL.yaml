@@ -1,0 +1,489 @@
+# Recipe and data-log instructions — SCL registry.
+#
+# SCL callable names and parameter casing use Siemens' canonical spelling.
+# Function returns are represented by `result`, not by graphical OUT/RET_VAL pins.
+#
+# S_Move and generic S_CONV are intentionally not emitted as callable SCL
+# entries. Their SCL forms are assignment and typed <source>_TO_<destination>
+# conversion respectively. T_COMBINE expands to CONCAT_DATE_TOD or
+# CONCAT_DATE_LTOD.
+#
+# Missing dataTypes are intentional; unresolved types are never guessed.
+
+$fileLanguage: [SCL]
+RecipeExport:
+  family: extended
+  callShape: instance-dot
+  instanceType: RecipeExport
+  pins:
+  - name: REQ
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: DONE
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: BUSY
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: ERROR
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: STATUS
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Word]
+  - name: RECIPE_DB
+    dir: inout
+    required: true
+    note: ''
+    dataTypes: [DB_ANY]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Export a recipe data block to a memory card.
+  source: "official instruction documentation (paraphrased)"
+  result:
+    kind: none
+RecipeImport:
+  family: extended
+  callShape: instance-dot
+  instanceType: RecipeImport
+  pins:
+  - name: REQ
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: DONE
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: BUSY
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: ERROR
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: STATUS
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Word]
+  - name: RECIPE_DB
+    dir: inout
+    required: true
+    note: ''
+    dataTypes: [DB_ANY]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Import a recipe data block from a memory card, inverse of RecipeExport.
+  source: "official instruction documentation (paraphrased)"
+  result:
+    kind: none
+DataLogCreate:
+  family: extended
+  callShape: instance-dot
+  instanceType: DataLogCreate
+  pins:
+  - name: REQ
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: RECORDS
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [UDInt]
+  - name: FORMAT
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [UInt]
+  - name: TIMESTAMP
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: NAME
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [String]
+  - name: DONE
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: BUSY
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: ERROR
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: STATUS
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Word]
+  - name: ID
+    dir: inout
+    required: true
+    note: ''
+    dataTypes: [DWord]
+  - name: HEADER
+    dir: inout
+    required: true
+    note: ''
+    dataTypes: [Variant]
+  - name: DATA
+    dir: inout
+    required: true
+    note: ''
+    dataTypes: [Variant]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Create a DataLog (memory-card CSV log) file.
+  source: "official instruction documentation (paraphrased)"
+  result:
+    kind: none
+DataLogOpen:
+  family: extended
+  callShape: instance-dot
+  instanceType: DataLogOpen
+  pins:
+  - name: REQ
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: MODE
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [UInt]
+  - name: NAME
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [String]
+  - name: DONE
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: BUSY
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: ERROR
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: STATUS
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Word]
+  - name: ID
+    dir: inout
+    required: true
+    note: ''
+    dataTypes: [DWord]
+  - name: Data
+    dir: inout
+    required: true
+    note: ''
+    dataTypes: [Variant]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Open an existing DataLog file for writing.
+  source: "official instruction documentation (paraphrased)"
+  result:
+    kind: none
+DataLogWrite:
+  family: extended
+  callShape: instance-dot
+  instanceType: DataLogWrite
+  pins:
+  - name: REQ
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: DONE
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: BUSY
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: ERROR
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: STATUS
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Word]
+  - name: ID
+    dir: inout
+    required: true
+    note: ''
+    dataTypes: [DWord]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Write a record to an open DataLog file.
+  source: "official instruction documentation (paraphrased)"
+  result:
+    kind: none
+DataLogClear:
+  family: extended
+  callShape: instance-dot
+  instanceType: DataLogClear
+  pins:
+  - name: REQ
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: DONE
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: BUSY
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: ERROR
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: STATUS
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Word]
+  - name: ID
+    dir: inout
+    required: true
+    note: ''
+    dataTypes: [DWord]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Clear (empty) a DataLog file's records without deleting the file.
+  source: "official instruction documentation (paraphrased)"
+  result:
+    kind: none
+DataLogClose:
+  family: extended
+  callShape: instance-dot
+  instanceType: DataLogClose
+  pins:
+  - name: REQ
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: DONE
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: BUSY
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: ERROR
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: STATUS
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Word]
+  - name: ID
+    dir: inout
+    required: true
+    note: ''
+    dataTypes: [DWord]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Close an open DataLog file.
+  source: "official instruction documentation (paraphrased)"
+  result:
+    kind: none
+DataLogDelete:
+  family: extended
+  callShape: instance-dot
+  instanceType: DataLogDelete
+  pins:
+  - name: REQ
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: NAME
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [String]
+  - name: DelFile
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: DONE
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: BUSY
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: ERROR
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: STATUS
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Word]
+  - name: ID
+    dir: inout
+    required: true
+    note: ''
+    dataTypes: [DWord]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Delete a DataLog file.
+  source: "official instruction documentation (paraphrased)"
+  result:
+    kind: none
+DataLogNewFile:
+  family: extended
+  callShape: instance-dot
+  instanceType: DataLogNewFile
+  pins:
+  - name: REQ
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: RECORDS
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [UDInt]
+  - name: NAME
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [String]
+  - name: DONE
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: BUSY
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: ERROR
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: STATUS
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Word]
+  - name: ID
+    dir: inout
+    required: true
+    note: ''
+    dataTypes: [DWord]
+  - name: Data
+    dir: inout
+    required: true
+    note: ''
+    dataTypes: [Variant]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Roll over to a new DataLog file (e.g. when the current one is full), reusing DataLogCreate's
+    HEADER/DATA structure.
+  source: "official instruction documentation (paraphrased)"
+  result:
+    kind: none

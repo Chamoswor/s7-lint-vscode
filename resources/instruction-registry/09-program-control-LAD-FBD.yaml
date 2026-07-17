@@ -1,0 +1,197 @@
+# LAD/FBD program-control instruction registry.
+#
+# These entries are graphical LAD/FBD control-flow elements. Do not create a
+# parallel 09-program-control-SCL.yaml instruction registry: SCL expresses the
+# same behavior with native grammar such as labels, GOTO, RETURN, IF and CASE.
+# Those constructs must be validated by the SCL parser/statement rules rather
+# than as callable instructions with pins.
+#
+# Jump-label fields are intentionally untyped. They contain label references,
+# not PLC operands, and therefore have no dataTypes or memoryAreas.
+$fileLanguage: [LAD, FBD]
+
+Label:
+  family: program-control
+  callShape: box
+  instanceType: null
+  pins: []
+  result: { kind: none }
+  template: { shape: none, keys: [], extra: {} }
+  confidence: confirmed-compiled
+  notes: >-
+    Declares a jump target at the beginning of a network. The label must be unique within the block.
+  source: "anonymized compiling fixture evidence"
+JumpCoil:
+  family: program-control
+  callShape: box
+  instanceType: null
+  pins: []
+  result: { kind: none }
+  template: { shape: none, keys: [], extra: {} }
+  confidence: confirmed-compiled
+  notes: >-
+    JMP: jumps to the referenced label when the incoming RLO is TRUE. The target must be a uniquely
+    named label in the same block and may be before or after the current network. Only one JMP, JMPN or
+    RET jumping coil may be used in one network. The label reference is graphical metadata rather than a
+    typed pin.
+  source: "anonymized compiling fixture evidence"
+I_JumpCoil:
+  family: program-control
+  callShape: box
+  instanceType: null
+  pins: []
+  result: { kind: none }
+  template: { shape: none, keys: [], extra: {} }
+  confidence: confirmed-compiled
+  notes: >-
+    JMPN: jumps to the referenced label when the incoming RLO is FALSE. The target must be a uniquely
+    named label in the same block and may be before or after the current network. Only one JMP, JMPN or
+    RET jumping coil may be used in one network. The label reference is graphical metadata rather than a
+    typed pin.
+  source: "anonymized compiling fixture evidence"
+JumpList:
+  family: program-control
+  callShape: box
+  instanceType: null
+  pins:
+    - name: k
+      dir: in
+      required: true
+      dataTypes: [UInt]
+      memoryAreas: [I, Q, M, D, L, constant]
+      note: >-
+        Zero-based selection index: K = 0 selects DEST0, K = 1 selects DEST1,
+        and so on. If K is outside the configured destination range, execution
+        continues in the next network.
+    - name: dst0
+      dir: out
+      required: true
+      note: "First jump-label reference; selected when K = 0."
+    - name: dst1
+      dir: out
+      required: true
+      note: "Second jump-label reference; selected when K = 1."
+    - name: dstN
+      dir: out
+      required: false
+      note: >-
+        Placeholder for additional numbered destination labels. Siemens
+        documents support for at least 32 outputs on S7-1200 and at least 256
+        outputs on S7-1500; these values are not documented as maximum limits.
+  enEno:
+    en:
+      present: true
+      dataTypes: [Bool]
+      memoryArea:
+        "S7-1200": [I, Q, M, D, L, constant]
+        "S7-1500": [I, Q, M, D, L, constant]
+    eno:
+      present: false
+      dataTypes: []
+      memoryArea:
+        "S7-1200": []
+        "S7-1500": []
+  result: { kind: none }
+  template: { shape: none, keys: [], extra: {} }
+  confidence: official-doc
+  notes: >-
+    JMP_LIST: transfers execution to DEST[K] when EN is TRUE. DEST fields are label references and are
+    intentionally modeled without dataTypes.
+  source: "official instruction documentation (paraphrased)"
+Switch:
+  family: program-control
+  callShape: box
+  instanceType: null
+  pins:
+    - name: k
+      dir: in
+      required: true
+      dataTypes: [UInt]
+      memoryAreas: [I, Q, M, D, L, constant]
+      note: "Value evaluated against the configured comparison values."
+    - name: case0
+      dir: in
+      required: true
+      dataTypes: ["Bit strings", "Integers", "Floating-point numbers", Time, LTime, Date, Time_Of_Day, LTime_Of_Day, LDT]
+      memoryAreas: [I, Q, M, D, L, constant]
+      note: >-
+        First comparison value. Bit strings permit == and <>. The remaining
+        supported datatypes permit ==, <>, >=, <=, > and <. LTime,
+        LTime_Of_Day and LDT are S7-1500-class additions.
+    - name: case1
+      dir: in
+      required: true
+      dataTypes: ["Bit strings", "Integers", "Floating-point numbers", Time, LTime, Date, Time_Of_Day, LTime_Of_Day, LDT]
+      memoryAreas: [I, Q, M, D, L, constant]
+      note: "Second comparison value; follows the same datatype and operator rules as case0."
+    - name: caseN
+      dir: in
+      required: false
+      dataTypes: ["Bit strings", "Integers", "Floating-point numbers", Time, LTime, Date, Time_Of_Day, LTime_Of_Day, LDT]
+      memoryAreas: [I, Q, M, D, L, constant]
+      note: >-
+        Placeholder for additional numbered comparison values. Each additional
+        comparison is paired with the corresponding DESTn label.
+    - name: else
+      dir: out
+      required: true
+      note: >-
+        Fallback jump-label reference. With no ELSE label configured, execution
+        continues in the next network.
+    - name: dst0
+      dir: out
+      required: true
+      note: "Jump-label reference used when the first comparison matches."
+    - name: dst1
+      dir: out
+      required: true
+      note: "Jump-label reference used when the second comparison matches."
+    - name: dstN
+      dir: out
+      required: false
+      note: >-
+        Placeholder for additional numbered jump-label references. Siemens
+        documents DEST2 through DEST32 for S7-1200 and DEST2 through DEST256
+        for S7-1500.
+  enEno:
+    en:
+      present: true
+      dataTypes: [Bool]
+      memoryArea:
+        "S7-1200": [I, Q, M, D, L, constant]
+        "S7-1500": [I, Q, M, D, L, constant]
+    eno:
+      present: false
+      dataTypes: []
+      memoryArea:
+        "S7-1200": []
+        "S7-1500": []
+  result: { kind: none }
+  template: { shape: none, keys: [], extra: {} }
+  confidence: official-doc
+  notes: >-
+    SWITCH: evaluates comparisons in ascending order and jumps on the first match. If none match, ELSE
+    is used. The CASEn comparison operators are box attributes and require a dedicated pragma/attribute
+    check; they are not datatype-template keys.
+  source: "official instruction documentation (paraphrased)"
+ReturnCoil:
+  family: program-control
+  callShape: box
+  instanceType: null
+  pins:
+    - name: operand
+      dir: in
+      required: false
+      dataTypes: [Bool]
+      memoryAreas: [I, Q, M, D, L, T, C]
+      note: >-
+        Boolean return value used only when the instruction is configured for
+        Ret Value. T and C are S7-1500-only memory areas.
+  result: { kind: none }
+  template: { shape: none, keys: [], extra: {} }
+  confidence: official-doc
+  notes: >-
+    RET: ends the current block when its incoming condition is TRUE, or unconditionally when connected
+    directly to the power rail. The selected mode (Ret RLO, Ret True, Ret False or Ret Value) determines
+    the caller's ENO. Only one JMP, JMPN or RET jumping coil may be used in one network.
+  source: "official instruction documentation (paraphrased)"

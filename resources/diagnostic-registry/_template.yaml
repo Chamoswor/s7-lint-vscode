@@ -1,0 +1,30 @@
+# Copy this into the file that owns the check emitting your new code (see
+# README.md's "Where a code belongs" section), then delete the file-level
+# comment and fill in real values. Never loaded itself -- rules/loadRules.ts
+# skips this exact filename the same way instruction-registry/_template.yaml
+# is skipped.
+
+some-diagnostic-code:
+  # error | warning | information -- the DEFAULT severity, used whenever the
+  # calling check doesn't pass an explicit override. Most codes never
+  # override this; a handful compute severity at runtime from a DIFFERENT
+  # registry's data (e.g. instruction-registry's `confidence` field) --
+  # see README.md's "Severity: default vs. override".
+  severity: error
+
+  # `{name}`-style placeholders, filled in from the params the calling check
+  # passes to formatDiagnostic. Every placeholder used here must have a
+  # matching param at every call site, or formatDiagnostic throws.
+  message: "'{thing}' is wrong because {reason}."
+
+  # Use `variants` INSTEAD OF `message` only when this one code's prose
+  # genuinely differs by call site (not just by a filled-in param) -- see
+  # README.md's "Variants vs. params". Delete this block if you don't need it.
+  # variants:
+  #   some-case: "..."
+  #   other-case: "..."
+
+  # Optional, maintainer-facing only -- never read by formatDiagnostic.
+  # Explain which check(s) emit this code and, if variants are used, which
+  # call site maps to which variant key.
+  notes: "Emitted by linter/exampleChecks.ts's checkSomething."

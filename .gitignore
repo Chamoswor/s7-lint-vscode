@@ -1,0 +1,21 @@
+# Local configuration and credentials
+/.claude/settings.local.json
+/.tia/
+.env
+.env.*
+!.env.example
+
+# Test and tooling output
+/out/
+coverage/
+.nyc_output/
+*.tsbuildinfo
+*.log
+*.tmp
+
+# Operating-system files
+.DS_Store
+Thumbs.db
+
+# Node
+node_modules/

@@ -1,0 +1,154 @@
+# Canonical Siemens memory-area identifiers used in TIA instruction tables.
+memoryAreas:
+  I:
+    name: process-image-input
+    description: Process-image input area.
+    resolvedFrom:
+      - absolute-address
+      - plc-tag-address
+
+  Q:
+    name: process-image-output
+    description: Process-image output area.
+    resolvedFrom:
+      - absolute-address
+      - plc-tag-address
+
+  M:
+    name: bit-memory
+    description: Bit-memory/marker area.
+    resolvedFrom:
+      - absolute-address
+      - plc-tag-address
+
+  D:
+    name: data-block
+    description: Global DB data or persistent FB instance data.
+    resolvedFrom:
+      - global-data-block
+      - instance-data-block
+      - fb-static
+      - plc-tag-address
+
+  L:
+    name: local-data
+    description: Block-local operand area used by TIA instruction documentation.
+    resolvedFrom:
+      - block-interface
+      - temporary-local-data
+
+  P:
+    name: peripheral-io
+    description: Direct peripheral I/O access, bypassing the process image.
+    resolvedFrom:
+      - peripheral-address
+
+  T:
+    name: timer-memory
+    description: Timer-memory area (legacy S7-300/400-style; also legal on S7-1500). Confirmed in real EN/ENO and pin memory-area tables (e.g. the math family's EN/ENO, several move-family pins) alongside I/Q/M/D/L/constant.
+    resolvedFrom:
+      - absolute-address
+
+  C:
+    name: counter-memory
+    description: Counter-memory area (legacy S7-300/400-style; also legal on S7-1500). Same confirmation source as T above.
+    resolvedFrom:
+      - absolute-address
+
+  constant:
+    name: constant
+    description: Literal or named compile-time constant.
+    resolvedFrom:
+      - literal
+      - local-constant
+      - global-constant
+
+# Default mapping for classifying symbols against the memory-area column in
+# Siemens instruction documentation.
+#
+# Important:
+# - I, Q, M and P are not block declaration sections. They are determined from
+#   the resolved address or PLC-tag metadata.
+# - Pin/instruction-specific declaration restrictions must override these
+#   defaults. Example: TypeOf/TypeOfElements accepts L, but Siemens explicitly
+#   restricts the declaration sections to Input, InOut and Temp.
+declarationMapping:
+  InOut:
+    tiaDocOperandArea: L
+    physicalStorageByBlock:
+      FC: L
+      FB: D
+
+  Input:
+    tiaDocOperandArea: L
+    physicalStorageByBlock:
+      FC: L
+      FB: D
+      OB: L
+
+  Output:
+    tiaDocOperandArea: L
+    physicalStorageByBlock:
+      FC: L
+      FB: D
+
+  Static:
+    tiaDocOperandArea: D
+    physicalStorageByBlock:
+      FB: D
+
+  Temp:
+    tiaDocOperandArea: L
+    physicalStorageByBlock:
+      FC: L
+      FB: L
+      OB: L
+
+  Constant:
+    tiaDocOperandArea: constant
+    physicalStorageByBlock:
+      FC: constant
+      FB: constant
+      OB: constant
+
+# Resolution rules for operands that are not local declarations.
+operandResolution:
+  absolutePrefixes:
+    "%I": I
+    "%Q": Q
+    "%M": M
+    "%DB": D
+
+  symbolicKinds:
+    globalDbMember: D
+    instanceDbMember: D
+    plcInputTag: I
+    plcOutputTag: Q
+    plcMemoryTag: M
+    literal: constant
+    namedConstant: constant
+
+  peripheralSuffix:
+    suffix: ":P"
+    area: P
+    validBaseAreas:
+      - I
+      - Q
+
+# Instruction metadata takes precedence over the default declaration mapping.
+matching:
+  precedence:
+    - pin.allowedDeclarations
+    - pin.memoryAreas
+    - declarationMapping
+    - operandResolution
+
+  example:
+    instruction: TypeOf
+    pin:
+      memoryAreas:
+        - L
+      allowedDeclarations:
+        - Input
+        - InOut
+        - Temp

@@ -1,0 +1,555 @@
+# System and module diagnostics — LAD/FBD registry.
+#
+# Graphical instruction aliases and pin casing are retained from anonymized
+# reference fixtures and apply to both LAD and FBD.
+#
+# Exported `:=` connections cannot distinguish INPUT from IN_OUT. Independently
+# documented IN_OUT parameters are corrected explicitly.
+#
+# Graphical instructions use pins and therefore have `result: { kind: none }`.
+# Missing dataTypes are intentional; unresolved types are never guessed.
+
+$fileLanguage: [LAD, FBD]
+RD_SINFO:
+  family: extended
+  callShape: box
+  instanceType: null
+  pins:
+  - name: RET_VAL
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Int]
+  - name: TOP_SI
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Variant]
+  - name: START_UP_SI
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Variant]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Read the start info of the OB that most recently called the calling block.
+  source: "official instruction documentation (paraphrased)"
+  result:
+    kind: none
+RT_INFO:
+  family: extended
+  callShape: box
+  instanceType: null
+  pins:
+  - name: MODE
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [UInt]
+  - name: OB
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [OB_ANY]
+  - name: Ret_Val
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Int]
+  - name: INFO
+    dir: inout
+    required: true
+    note: ''
+    dataTypes: [Variant]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Returns runtime-measurement information for the selected organization block.
+  source: "official instruction documentation (paraphrased)"
+  result:
+    kind: none
+LED:
+  family: extended
+  callShape: box
+  instanceType: null
+  pins:
+  - name: LADDR
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [HW_ANY]
+  - name: LED
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [UInt]
+  - name: Ret_Val
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Int]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Read a module's LED status.
+  source: "official instruction documentation (paraphrased)"
+  result:
+    kind: none
+Get_IM_Data:
+  family: extended
+  callShape: instance-dot
+  instanceType: Get_IM_Data
+  pins:
+  - name: LADDR
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [HW_ANY]
+  - name: IM_TYPE
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [UInt]
+  - name: DONE
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: BUSY
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: ERROR
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: STATUS
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [DWord]
+  - name: DATA
+    dir: inout
+    required: true
+    note: ''
+    dataTypes: [Variant]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Read a module's identification and maintenance (I&M) data.
+  source: "official instruction documentation (paraphrased)"
+  result:
+    kind: none
+Get_Name:
+  family: extended
+  callShape: instance-dot
+  instanceType: Get_Name
+  pins:
+  - name: LADDR
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [HW_ANY]
+  - name: STATION_NR
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [UInt]
+  - name: DONE
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: BUSY
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: ERROR
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: LEN
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [UInt]
+  - name: STATUS
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [DWord]
+  - name: DATA
+    dir: inout
+    required: true
+    note: ''
+    dataTypes: [Variant]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Read a PROFINET device's assigned name.
+  source: "official instruction documentation (paraphrased)"
+  result:
+    kind: none
+GetStationInfo:
+  family: extended
+  callShape: instance-dot
+  instanceType: GetStationInfo
+  pins:
+  - name: REQ
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: LADDR
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [HW_ANY]
+  - name: DETAIL
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [UInt]
+  - name: MODE
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [UInt]
+  - name: DONE
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: BUSY
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: ERROR
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: STATUS
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [DWord]
+  - name: DATA
+    dir: inout
+    required: true
+    note: ''
+    dataTypes: [Variant]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Read a PROFINET IO station's diagnostic/status information. VAR declaration in the source export
+    names the instance `GetStationInfo_SFB_Instance` — the `_SFB` suffix transcribed as-is, same pattern
+    as RCVREC/PRVREC above.
+  source: "official instruction documentation (paraphrased)"
+  result:
+    kind: none
+GetChecksum:
+  family: extended
+  callShape: instance-dot
+  instanceType: GetChecksum
+  pins:
+  - name: Scope
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [UInt]
+  - name: Range
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [UInt]
+  - name: Subrange
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [UInt]
+  - name: Done
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: Busy
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: Error
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: Status
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [DWord]
+  - name: Checksum
+    dir: inout
+    required: true
+    note: ''
+    dataTypes: [Variant]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Compute a checksum over program/config data.
+  source: "official instruction documentation (paraphrased)"
+  result:
+    kind: none
+GetSMCinfo:
+  family: extended
+  callShape: instance-dot
+  instanceType: GetSMCinfo
+  pins:
+  - name: REQ
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: Mode
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [UInt]
+  - name: Done
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: Busy
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: Error
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: Status
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [DWord]
+  - name: Info
+    dir: inout
+    required: true
+    note: ''
+    dataTypes: [Variant]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Query SIMATIC Memory Card (SMC) information.
+  source: "official instruction documentation (paraphrased)"
+  result:
+    kind: none
+GetClockStatus:
+  family: extended
+  callShape: box
+  instanceType: null
+  pins:
+  - name: Ret_Val
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Int]
+  - name: ClockStatus
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [DWord]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Query the CPU's real-time clock status/synchronization state.
+  source: "official instruction documentation (paraphrased)"
+  result:
+    kind: none
+DeviceStates:
+  family: extended
+  callShape: box
+  instanceType: null
+  pins:
+  - name: LADDR
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [HW_IOSYSTEM]
+  - name: MODE
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [UInt]
+  - name: Ret_Val
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Int]
+  - name: STATE
+    dir: inout
+    required: true
+    note: ''
+    dataTypes: [Variant]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Query PROFINET/PROFIBUS device operating states.
+  source: "official instruction documentation (paraphrased)"
+  result:
+    kind: none
+ModuleStates:
+  family: extended
+  callShape: box
+  instanceType: null
+  pins:
+  - name: LADDR
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [HW_ANY]
+  - name: MODE
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [UInt]
+  - name: Ret_Val
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Int]
+  - name: STATE
+    dir: inout
+    required: true
+    note: ''
+    dataTypes: [Variant]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Query module operating states within a device — same pin shape as DeviceStates, module-level rather
+    than device-level.
+  source: "official instruction documentation (paraphrased)"
+  result:
+    kind: none
+GEN_DIAG:
+  family: extended
+  callShape: box
+  instanceType: null
+  pins:
+  - name: LADDR
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [HW_ANY]
+  - name: MODE
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [UInt]
+  - name: Ret_Val
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Int]
+  - name: DiagEvent
+    dir: inout
+    required: true
+    note: ''
+    dataTypes: [Variant]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Generate a user-defined diagnostic event/alarm for a module.
+  source: "official instruction documentation (paraphrased)"
+  result:
+    kind: none
+GET_DIAG:
+  family: extended
+  callShape: box
+  instanceType: null
+  pins:
+  - name: MODE
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [UInt]
+  - name: LADDR
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [HW_ANY]
+  - name: RET_VAL
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Int]
+  - name: CNT_DIAG
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [UInt]
+  - name: DIAG
+    dir: inout
+    required: true
+    note: ''
+    dataTypes: [Variant]
+  - name: DETAIL
+    dir: inout
+    required: true
+    note: ''
+    dataTypes: [Variant]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Read a module's diagnostic data records.
+  source: "official instruction documentation (paraphrased)"
+  result:
+    kind: none

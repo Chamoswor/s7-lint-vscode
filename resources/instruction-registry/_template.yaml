@@ -1,0 +1,52 @@
+# Copy this file when adding an instruction. It documents every supported field;
+# remove optional fields that are not established by the available evidence.
+# The runtime loader skips this file by name.
+
+InstructionName:
+  family: bit-logic # bit-logic | comparator | counter | timer | math | move | word-logic | shift-rotate | program-control | runtime-control | conversion | technology | extended | communication
+  callShape: box # box | instance-dot | coil-ref
+  instanceType: null # only for instance-dot / coil-ref, e.g. TON_TIME (the VAR declaration type)
+
+  pins:
+    - name: in # null = positional/unnamed arg, e.g. `Coil( #x )`
+      dir: in # in (:=) | out (=>) | inout (read/write parameter)
+      required: true # false = pin may be left blank, e.g. `et =>  `
+      dataTypes: [] # legal Datatypes for this pin's operand -- see README's "Pin data types". [] = not yet transcribed (don't guess); ["*"] = Siemens' own table says "all data types"
+      containerKinds: [] # OMIT this key entirely unless confirmed -- e.g. [Array] or [Array, Struct]; see README's "Container-kind addressing"
+      memoryAreas: [] # legal operand memory areas (I/Q/M/D/L/P/constant) -- see system-registry/memory.yaml
+      allowedDeclarations: [] # legal VAR_* declaration sections (Input/Output/InOut/Static/Temp/Constant) -- takes precedence over memoryAreas when both are set, see system-registry/memory.yaml's matching.precedence
+      note: ""
+
+  enEno: # EN/ENO metadata -- see README's "EN/ENO metadata". OMIT the whole field if unconfirmed either way, don't guess `present: false`.
+    # memoryArea is a per-platform memoryAreas-shaped array (I/Q/M/D/L/P/T/C/constant -- same values a pin's own
+    # memoryAreas uses, see system-registry/memory.yaml), NOT free-text prose -- [] means "not yet transcribed for
+    # this platform", same "don't guess" convention an empty pin dataTypes/memoryAreas list already follows.
+    en: { present: true, dataTypes: [Bool], memoryArea: { "S7-1200": [], "S7-1500": [] } }
+    eno: { present: true, dataTypes: [Bool], memoryArea: { "S7-1200": [], "S7-1500": [] } }
+
+  result: # the value the CALL EXPRESSION ITSELF produces, if any -- see system-registry/result.yaml for the full schema (kinds, inference rules, usage contexts). OMIT this whole field entirely to mean `{ kind: none }` -- don't write `kind: none` just to be explicit.
+    kind: none # none | value | inferred | type-expression
+    # kind: value additionally needs: dataTypes: [Bool]
+    # kind: inferred additionally needs: rule: same-as-source | common-compatible-type | numeric-expression | bit-string-expression | instruction-specific, and sourcePins: [0]  (zero-based indexes into THIS entry's own pins list above)
+    # kind: type-expression additionally needs: sourcePins: [0], and usually usage: { storable: false, allowedContexts: [type-comparison, case-selector] }
+
+  template:
+    shape: none # none | single | eno-pair | bracketed
+    keys: [] # [SrcType] | [value_type] | [SrcType, DestType]
+    extra: {} # e.g. { S7_GenerateENO: "TRUE" }
+
+  # confirmed-compiled: verified by an anonymized compiling fixture
+  # official-doc: transcribed from instruction documentation, but not fixture-compiled
+  # shape-only: only the instruction name/signature shape is established
+  confidence: shape-only # confirmed-compiled | official-doc | shape-only
+
+  # Keep notes as a short technical paraphrase of behavior, limitations, or
+  # unresolved scope. Do not include copied prose, customer identifiers,
+  # private filenames, network IDs, work-log dates, or maintainer task history.
+  notes: >-
+    Concise technical behavior or scope note.
+
+  # Use a repository-relative public evidence path where one exists. Otherwise
+  # use one of the normalized evidence labels documented in README.md.
+  source: "anonymized reference fixture (signature only)"
+  language: [] # OMIT this whole field entirely unless CONFIRMED single-language -- see README's "Per-language instructions"

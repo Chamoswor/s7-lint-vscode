@@ -1,0 +1,77 @@
+# Machine-readable version of instruction-registry/README.md's "Pin data
+# types" umbrella-label table. A lint server resolving an instruction
+# pin's `dataTypes` entry should use THIS FILE to expand an umbrella
+# label (e.g. "Integers") into concrete base-types.yaml keys — not
+# re-derive the mapping from base-types.yaml's `category` field
+# independently, and not hand-parse the README's prose table. Keeps one
+# source of truth instead of three (base-types.yaml categories, this
+# file, the README table) silently drifting apart.
+#
+# Maintenance: if a new elementary type is added to base-types.yaml,
+# add it to the matching category's `types` list here too. If a new
+# category shows up with no umbrella label yet, it simply has no entry
+# under `umbrellaLabels` — that's fine until an instruction-registry
+# pin actually needs to reference it as a category rather than naming
+# types directly.
+#
+# What this file does NOT solve (see instruction-registry/README.md's
+# "Pin data types" section and type-registry/udt-dependency-cache.md's
+# "Why this matters beyond..." section for the rest of the chain):
+# resolving a real `.s7dcl` operand (`#TagIn_1`, `"DB".tag`, a literal,
+# a slice) to a concrete type in the first place. That requires a
+# per-block symbol table which udt-dependency-cache.md explicitly flags
+# as NOT YET DESIGNED — this file only answers "given a resolved type
+# name, which umbrella labels does it belong to," not "what type does
+# this operand have."
+
+categoriesByType:
+  # base-types.yaml `category` field, verbatim, with its member types.
+  bit: { types: [Bool] }
+  bit-string: { types: [Byte, Word, DWord, LWord] }
+  integer-signed: { types: [SInt, Int, DInt, LInt] }
+  integer-unsigned: { types: [USInt, UInt, UDInt, ULInt] }
+  float: { types: [Real, LReal] }
+  duration: { types: [S5Time, Time, LTime] }
+  date-time: { types: [Date, Time_Of_Day, LTime_Of_Day, LDT, Date_And_Time, DTL] }
+  character: { types: [Char, WChar] }
+  string: { types: [String, WString] }
+  system: { types: [Variant, Void, Any, Pointer] }
+  complex: { types: [Array, Struct, Reference] }
+
+umbrellaLabels:
+  # Every umbrella label instruction-registry/*.yaml's `dataTypes` fields
+  # are allowed to use, and which categoriesByType entries (hence which
+  # concrete types) it expands to. A label with `categories: []` cannot
+  # be resolved from this file at all — see its `notes`.
+  "Binary numbers":
+    categories: [bit, bit-string]
+  "Bit strings":
+    categories: [bit-string]
+  "Integers":
+    categories: [integer-signed, integer-unsigned]
+  "Floating-point numbers":
+    categories: [float]
+  "Character strings":
+    categories: [character, string]
+  "Timers":
+    categories: [duration]
+  "Date and time":
+    categories: [date-time]
+  "PLC data type":
+    categories: []
+    notes: "Not a base-types.yaml category — resolves via a named UDT lookup against type-registry/udt-dependency-cache.md's live cache instead, which needs the not-yet-designed per-block symbol table (see this repo's instruction-registry/README.md 'Pin data types' section) before it can be checked against a real .s7dcl operand at all."
+
+notes: |
+  `Array` and `Struct` are NOT umbrella labels — they're real
+  base-types.yaml keys (category: complex) and appear in a pin's
+  `dataTypes` list as concrete type names directly, the same way `Bool`
+  or `Time` would. Don't add them here; see
+  instruction-registry/README.md's "Pin data types" section for why.
+
+  `Any` (RESOLVED 2026-07-13, previously an unresolvable "ANY" umbrella
+  label here) is now the same story as Array/Struct: a real
+  base-types.yaml key (category: system — see base-types.yaml's `Any`
+  entry and type-registry/any-pointer.yaml for its full shape), not an
+  umbrella label. Existing instruction-registry `dataTypes` lists that
+  still say `"ANY"` (Siemens' own table casing) should be updated to the
+  concrete-type form `Any`, matching the Struct/Variant/Array casing fix.

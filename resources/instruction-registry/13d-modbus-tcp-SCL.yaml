@@ -1,0 +1,394 @@
+# Modbus TCP and redundant Modbus TCP — SCL registry.
+#
+# Instruction names and named-parameter casing use the exact Siemens spelling.
+# No automatic case transformation is applied.
+#
+# These are FB/library/procedure calls, not value-returning functions. Every
+# entry therefore has `result: { kind: none }`. For FB instance calls only
+# InOut operands remain structurally required; bare FC/procedure calls retain
+# required input and InOut operands.
+#
+# Missing dataTypes are intentional: unknown types are not guessed.
+
+$fileLanguage: [SCL]
+MB_CLIENT:
+  family: communication
+  callShape: instance-dot
+  instanceType: MB_CLIENT
+  pins:
+  - name: REQ
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: DISCONNECT
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: MB_MODE
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [USInt]
+  - name: MB_DATA_ADDR
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [UDInt]
+  - name: MB_DATA_LEN
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [UInt]
+  - name: RD_MB_DATA_ADDR
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [UDInt]
+  - name: RD_MB_DATA_LEN
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [UInt]
+  - name: WR_MB_DATA_ADDR
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [UDInt]
+  - name: WR_MB_DATA_LEN
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [UInt]
+  - name: DONE
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: BUSY
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: ERROR
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: STATUS
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Word]
+  - name: MB_DATA_PTR
+    dir: inout
+    required: true
+    note: ''
+    dataTypes: [Variant]
+  - name: CONNECT
+    dir: inout
+    required: true
+    note: ''
+    dataTypes: [Variant]
+  - name: RD_MB_DATA_PTR
+    dir: inout
+    required: true
+    note: ''
+    dataTypes: [Variant]
+  - name: WR_MB_DATA_PTR
+    dir: inout
+    required: true
+    note: ''
+    dataTypes: [Variant]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    . Modbus TCP client FB.
+  source: "official instruction documentation (paraphrased)"
+  result:
+    kind: none
+MB_SERVER:
+  family: communication
+  callShape: instance-dot
+  instanceType: MB_SERVER
+  pins:
+  - name: DISCONNECT
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: NDR
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: DR
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: ERROR
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: STATUS
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Word]
+  - name: MB_HOLD_REG
+    dir: inout
+    required: true
+    note: ''
+    dataTypes: [Variant]
+  - name: CONNECT
+    dir: inout
+    required: true
+    note: ''
+    dataTypes: [Variant]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    . Modbus TCP server FB.
+  source: "official instruction documentation (paraphrased)"
+  result:
+    kind: none
+MB_RED_CLIENT:
+  family: communication
+  callShape: instance-dot
+  instanceType: MB_RED_CLIENT
+  pins:
+  - name: REG_KEY
+    dir: in
+    required: false
+    note: ''
+  - name: USE_ALL_CONN
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: REQ
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: DISCONNECT
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: MB_MODE
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [USInt]
+  - name: MB_DATA_ADDR
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [UDInt]
+  - name: MB_DATA_LEN
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [UInt]
+  - name: LICENSED
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: IDENT_CODE
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [String]
+  - name: DONE
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: BUSY
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: ERROR
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: STATUS_0A
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Word]
+  - name: STATUS_1A
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Word]
+  - name: STATUS_0B
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Word]
+  - name: STATUS_1B
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Word]
+  - name: RED_ERR_S7
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: RED_ERR_DEV
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: TOT_COM_ERR
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: MB_DATA_PTR
+    dir: inout
+    required: true
+    note: ''
+    dataTypes: [Variant]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    . Redundant (R/H-system, dual-channel A/B) Modbus TCP client FB. VAR declaration in the source
+    export is `MB_RED_CLIENT_DB : MB_RED_CLIENT` — instance suffixed `_DB` not `_Instance`, transcribed
+    as-is.
+  source: "official instruction documentation (paraphrased)"
+  result:
+    kind: none
+MB_RED_SERVER:
+  family: communication
+  callShape: instance-dot
+  instanceType: MB_RED_SERVER
+  pins:
+  - name: REG_KEY
+    dir: in
+    required: false
+    note: ''
+  - name: DISCONNECT
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: LICENSED
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: IDENT_CODE
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [String]
+  - name: DR_NDR_0A
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: ERROR_0A
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: STATUS_0A
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Word]
+  - name: DR_NDR_1A
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: ERROR_1A
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: STATUS_1A
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Word]
+  - name: DR_NDR_0B
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: ERROR_0B
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: STATUS_0B
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Word]
+  - name: DR_NDR_1B
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: ERROR_1B
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: STATUS_1B
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Word]
+  - name: RED_ERR_S7
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: RED_ERR_DEV
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: TOT_COM_ERR
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: MB_HOLD_REG
+    dir: inout
+    required: true
+    note: ''
+    dataTypes: [Variant]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    . Redundant (R/H-system) Modbus TCP server FB — VAR declaration also uses `_DB` suffix
+    (MB_RED_SERVER_DB), same as MB_RED_CLIENT.
+  source: "official instruction documentation (paraphrased)"
+  result:
+    kind: none

@@ -1,0 +1,11 @@
+FUNCTION_BLOCK "Semantic_RefInFbStatic"
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+
+VAR
+    badReference : REF_TO Int;
+    // EXPECT: error[reference.illegal-declaration-section] SEM-REF-003
+END_VAR
+
+BEGIN
+END_FUNCTION_BLOCK

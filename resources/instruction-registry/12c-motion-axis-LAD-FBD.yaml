@@ -1,0 +1,1448 @@
+# S7-1500 axis, measuring-input, cam-output and torque instructions — LAD/FBD registry.
+#
+# Graphical instruction keys and pin spelling follow anonymized reference
+# fixture evidence and apply to both LAD and FBD. `:=` cannot distinguish INPUT from IN_OUT, so only independently
+# verified IN_OUT declarations were corrected.
+#
+# Every entry is an FB/technology-object call and therefore has
+# `result: { kind: none }`. Missing dataTypes are intentional: no type is
+# fabricated where the export and a Siemens parameter table did not establish it.
+
+$fileLanguage: [LAD, FBD]
+MC_POWER:
+  family: technology
+  callShape: instance-dot
+  instanceType: MC_POWER
+  pins:
+  - name: Axis
+    dir: in
+    required: true
+    note: ''
+  - name: Enable
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: StartMode
+    dir: in
+    required: true
+    note: ''
+  - name: StopMode
+    dir: in
+    required: true
+    note: ''
+  - name: Status
+    dir: out
+    required: true
+    note: ''
+  - name: Busy
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: Error
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: ErrorId
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Word]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: shape-only
+  notes: >-
+    Motion Control FB (axis enable/power).
+  source: "anonymized reference fixture (signature only)"
+  result:
+    kind: none
+MC_RESET:
+  family: technology
+  callShape: instance-dot
+  instanceType: MC_RESET
+  pins:
+  - name: Axis
+    dir: in
+    required: true
+    note: ''
+  - name: Execute
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: Restart
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: Done
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: Busy
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: CommandAborted
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: Error
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: ErrorId
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Word]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: shape-only
+  notes: >-
+    Motion Control FB (acknowledge axis error / restart).
+  source: "anonymized reference fixture (signature only)"
+  result:
+    kind: none
+MC_HOME:
+  family: technology
+  callShape: instance-dot
+  instanceType: MC_HOME
+  pins:
+  - name: Axis
+    dir: in
+    required: true
+    note: ''
+  - name: Execute
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: Position
+    dir: in
+    required: true
+    note: ''
+  - name: Mode
+    dir: in
+    required: true
+    note: ''
+  - name: Sensor
+    dir: in
+    required: true
+    note: ''
+  - name: ReferenceMarkPosition
+    dir: out
+    required: true
+    note: ''
+  - name: Done
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: Busy
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: CommandAborted
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: Error
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: ErrorId
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Word]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: shape-only
+  notes: >-
+    Motion Control FB (homing).
+  source: "anonymized reference fixture (signature only)"
+  result:
+    kind: none
+MC_HALT:
+  family: technology
+  callShape: instance-dot
+  instanceType: MC_HALT
+  pins:
+  - name: Axis
+    dir: in
+    required: true
+    note: ''
+  - name: Execute
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: Deceleration
+    dir: in
+    required: true
+    note: ''
+  - name: Jerk
+    dir: in
+    required: true
+    note: ''
+  - name: AbortAcceleration
+    dir: in
+    required: true
+    note: ''
+  - name: Mode
+    dir: in
+    required: true
+    note: ''
+  - name: Done
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: Busy
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: CommandAborted
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: Error
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: ErrorId
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Word]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: shape-only
+  notes: >-
+    Motion Control FB (halt axis motion).
+  source: "anonymized reference fixture (signature only)"
+  result:
+    kind: none
+MC_MOVEABSOLUTE:
+  family: technology
+  callShape: instance-dot
+  instanceType: MC_MOVEABSOLUTE
+  pins:
+  - name: Axis
+    dir: in
+    required: true
+    note: ''
+  - name: Execute
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: Position
+    dir: in
+    required: true
+    note: ''
+  - name: Velocity
+    dir: in
+    required: true
+    note: ''
+  - name: Acceleration
+    dir: in
+    required: true
+    note: ''
+  - name: Deceleration
+    dir: in
+    required: true
+    note: ''
+  - name: Jerk
+    dir: in
+    required: true
+    note: ''
+  - name: Direction
+    dir: in
+    required: true
+    note: ''
+  - name: BufferMode
+    dir: in
+    required: true
+    note: ''
+  - name: Done
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: Busy
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: Active
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: CommandAborted
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: Error
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: ErrorId
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Word]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: shape-only
+  notes: >-
+    Motion Control FB (absolute positioning).
+  source: "anonymized reference fixture (signature only)"
+  result:
+    kind: none
+MC_MOVERELATIVE:
+  family: technology
+  callShape: instance-dot
+  instanceType: MC_MOVERELATIVE
+  pins:
+  - name: Axis
+    dir: in
+    required: true
+    note: ''
+  - name: Execute
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: Distance
+    dir: in
+    required: true
+    note: ''
+  - name: Velocity
+    dir: in
+    required: true
+    note: ''
+  - name: Acceleration
+    dir: in
+    required: true
+    note: ''
+  - name: Deceleration
+    dir: in
+    required: true
+    note: ''
+  - name: Jerk
+    dir: in
+    required: true
+    note: ''
+  - name: BufferMode
+    dir: in
+    required: true
+    note: ''
+  - name: Done
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: Busy
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: Active
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: CommandAborted
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: Error
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: ErrorId
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Word]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: shape-only
+  notes: >-
+    Motion Control FB (relative positioning).
+  source: "anonymized reference fixture (signature only)"
+  result:
+    kind: none
+MC_MOVEVELOCITY:
+  family: technology
+  callShape: instance-dot
+  instanceType: MC_MOVEVELOCITY
+  pins:
+  - name: Axis
+    dir: in
+    required: true
+    note: ''
+  - name: Execute
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: Velocity
+    dir: in
+    required: true
+    note: ''
+  - name: Acceleration
+    dir: in
+    required: true
+    note: ''
+  - name: Deceleration
+    dir: in
+    required: true
+    note: ''
+  - name: Jerk
+    dir: in
+    required: true
+    note: ''
+  - name: Direction
+    dir: in
+    required: true
+    note: ''
+  - name: Current
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: PositionControlled
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: InVelocity
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: Busy
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: CommandAborted
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: Error
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: ErrorId
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Word]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: shape-only
+  notes: >-
+    Motion Control FB (velocity motion).
+  source: "anonymized reference fixture (signature only)"
+  result:
+    kind: none
+MC_MOVEJOG:
+  family: technology
+  callShape: instance-dot
+  instanceType: MC_MOVEJOG
+  pins:
+  - name: Axis
+    dir: in
+    required: true
+    note: ''
+  - name: JogForward
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: JogBackward
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: Velocity
+    dir: in
+    required: true
+    note: ''
+  - name: Acceleration
+    dir: in
+    required: true
+    note: ''
+  - name: Deceleration
+    dir: in
+    required: true
+    note: ''
+  - name: Jerk
+    dir: in
+    required: true
+    note: ''
+  - name: PositionControlled
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: InVelocity
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: Busy
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: CommandAborted
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: Error
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: ErrorId
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Word]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: shape-only
+  notes: >-
+    Motion Control FB (jog motion).
+  source: "anonymized reference fixture (signature only)"
+  result:
+    kind: none
+MC_MOVESUPERIMPOSED:
+  family: technology
+  callShape: instance-dot
+  instanceType: MC_MOVESUPERIMPOSED
+  pins:
+  - name: Axis
+    dir: in
+    required: true
+    note: ''
+  - name: Execute
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: Distance
+    dir: in
+    required: true
+    note: ''
+  - name: VelocityDiff
+    dir: in
+    required: true
+    note: ''
+  - name: Acceleration
+    dir: in
+    required: true
+    note: ''
+  - name: Deceleration
+    dir: in
+    required: true
+    note: ''
+  - name: Jerk
+    dir: in
+    required: true
+    note: ''
+  - name: Done
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: Busy
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: CommandAborted
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: Error
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: ErrorId
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Word]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: shape-only
+  notes: >-
+    Motion Control FB (superimposed/additive motion).
+  source: "anonymized reference fixture (signature only)"
+  result:
+    kind: none
+MC_HALTSUPERIMPOSED:
+  family: technology
+  callShape: instance-dot
+  instanceType: MC_HALTSUPERIMPOSED
+  pins:
+  - name: Axis
+    dir: in
+    required: true
+    note: ''
+  - name: Execute
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: Deceleration
+    dir: in
+    required: true
+    note: ''
+  - name: Jerk
+    dir: in
+    required: true
+    note: ''
+  - name: AbortAcceleration
+    dir: in
+    required: true
+    note: ''
+  - name: Done
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: Busy
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: CommandAborted
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: Error
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: ErrorId
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Word]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: shape-only
+  notes: >-
+    Motion Control FB (halt superimposed motion).
+  source: "anonymized reference fixture (signature only)"
+  result:
+    kind: none
+MC_SETSENSOR:
+  family: technology
+  callShape: instance-dot
+  instanceType: MC_SETSENSOR
+  pins:
+  - name: Axis
+    dir: in
+    required: true
+    note: ''
+  - name: Execute
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: Sensor
+    dir: in
+    required: true
+    note: ''
+  - name: Mode
+    dir: in
+    required: true
+    note: ''
+  - name: ReferenceSensor
+    dir: in
+    required: true
+    note: ''
+  - name: Done
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: Busy
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: CommandAborted
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: Error
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: ErrorId
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Word]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: shape-only
+  notes: >-
+    Motion Control FB (configure homing sensor).
+  source: "anonymized reference fixture (signature only)"
+  result:
+    kind: none
+MC_STOP:
+  family: technology
+  callShape: instance-dot
+  instanceType: MC_STOP
+  pins:
+  - name: Axis
+    dir: in
+    required: true
+    note: ''
+  - name: Execute
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: Mode
+    dir: in
+    required: true
+    note: ''
+  - name: Deceleration
+    dir: in
+    required: true
+    note: ''
+  - name: Jerk
+    dir: in
+    required: true
+    note: ''
+  - name: AbortAcceleration
+    dir: in
+    required: true
+    note: ''
+  - name: Done
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: Busy
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: CommandAborted
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: Error
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: ErrorId
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Word]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: shape-only
+  notes: >-
+    Motion Control FB (emergency stop).
+  source: "anonymized reference fixture (signature only)"
+  result:
+    kind: none
+MC_SETAXISSTW:
+  family: technology
+  callShape: instance-dot
+  instanceType: MC_SETAXISSTW
+  pins:
+  - name: Axis
+    dir: in
+    required: true
+    note: ''
+  - name: Execute
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: STW1
+    dir: in
+    required: true
+    note: ''
+  - name: STW1BitMask
+    dir: in
+    required: true
+    note: ''
+  - name: STW2
+    dir: in
+    required: true
+    note: ''
+  - name: STW2BitMask
+    dir: in
+    required: true
+    note: ''
+  - name: Done
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: Busy
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: CommandAborted
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: Error
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: ErrorId
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Word]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: shape-only
+  notes: >-
+    Motion Control FB (set drive control/status word bits).
+  source: "anonymized reference fixture (signature only)"
+  result:
+    kind: none
+MC_WRITEPARAMETER:
+  family: technology
+  callShape: instance-dot
+  instanceType: MC_WRITEPARAMETER
+  pins:
+  - name: Axis
+    dir: in
+    required: true
+    note: ''
+  - name: Execute
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: ParameterNumber
+    dir: in
+    required: true
+    note: ''
+  - name: Value
+    dir: in
+    required: true
+    note: ''
+  - name: Done
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: Busy
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: CommandAborted
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: Error
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: ErrorId
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Word]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: shape-only
+  notes: >-
+    Motion Control FB (write drive/axis parameter).
+  source: "anonymized reference fixture (signature only)"
+  result:
+    kind: none
+MC_SAVEABSOLUTEENCODERDATA:
+  family: technology
+  callShape: instance-dot
+  instanceType: MC_SAVEABSOLUTEENCODERDATA
+  pins:
+  - name: Execute
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: Done
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: Busy
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: Error
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: ErrorId
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Word]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: shape-only
+  notes: >-
+    Motion Control FB (persist absolute encoder data).
+  source: "anonymized reference fixture (signature only)"
+  result:
+    kind: none
+MC_MEASURINGINPUT:
+  family: technology
+  callShape: instance-dot
+  instanceType: MC_MEASURINGINPUT
+  pins:
+  - name: MeasuringInput
+    dir: in
+    required: true
+    note: ''
+  - name: Execute
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: Mode
+    dir: in
+    required: true
+    note: ''
+  - name: MeasuringRange
+    dir: in
+    required: true
+    note: ''
+  - name: StartPosition
+    dir: in
+    required: true
+    note: ''
+  - name: EndPosition
+    dir: in
+    required: true
+    note: ''
+  - name: Done
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: Busy
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: CommandAborted
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: Error
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: ErrorId
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Word]
+  - name: MeasuredValue1
+    dir: out
+    required: true
+    note: ''
+  - name: MeasuredValue2
+    dir: out
+    required: true
+    note: ''
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: shape-only
+  notes: >-
+    Motion Control FB (single-shot measuring input).
+  source: "anonymized reference fixture (signature only)"
+  result:
+    kind: none
+MC_MEASURINGINPUTCYCLIC:
+  family: technology
+  callShape: instance-dot
+  instanceType: MC_MEASURINGINPUTCYCLIC
+  pins:
+  - name: MeasuringInput
+    dir: in
+    required: true
+    note: ''
+  - name: Execute
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: Mode
+    dir: in
+    required: true
+    note: ''
+  - name: MeasuringRange
+    dir: in
+    required: true
+    note: ''
+  - name: StartPosition
+    dir: in
+    required: true
+    note: ''
+  - name: EndPosition
+    dir: in
+    required: true
+    note: ''
+  - name: Busy
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: CommandAborted
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: Error
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: ErrorId
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Word]
+  - name: MeasuredValue1
+    dir: out
+    required: true
+    note: ''
+  - name: MeasuredValue2
+    dir: out
+    required: true
+    note: ''
+  - name: MeasuredValue1Counter
+    dir: out
+    required: true
+    note: ''
+  - name: MeasuredValue2Counter
+    dir: out
+    required: true
+    note: ''
+  - name: LostEdgeCounter1
+    dir: out
+    required: true
+    note: ''
+  - name: LostEdgeCounter2
+    dir: out
+    required: true
+    note: ''
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: shape-only
+  notes: >-
+    Motion Control FB (cyclic measuring input). No Done pin, unlike MC_MEASURINGINPUT — a real shape
+    difference between the single-shot and cyclic variants, transcribed as-is.
+  source: "anonymized reference fixture (signature only)"
+  result:
+    kind: none
+MC_ABORTMEASURINGINPUT:
+  family: technology
+  callShape: instance-dot
+  instanceType: MC_ABORTMEASURINGINPUT
+  pins:
+  - name: MeasuringInput
+    dir: in
+    required: true
+    note: ''
+  - name: Execute
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: Done
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: Busy
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: CommandAborted
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: Error
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: ErrorId
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Word]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: shape-only
+  notes: >-
+    Motion Control FB (abort measuring input).
+  source: "anonymized reference fixture (signature only)"
+  result:
+    kind: none
+MC_OUTPUTCAM:
+  family: technology
+  callShape: instance-dot
+  instanceType: MC_OUTPUTCAM
+  pins:
+  - name: OutputCam
+    dir: in
+    required: true
+    note: ''
+  - name: Enable
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: OnPosition
+    dir: in
+    required: true
+    note: ''
+  - name: OffPosition
+    dir: in
+    required: true
+    note: ''
+  - name: Duration
+    dir: in
+    required: true
+    note: ''
+  - name: Mode
+    dir: in
+    required: true
+    note: ''
+  - name: Direction
+    dir: in
+    required: true
+    note: ''
+  - name: CamOutput
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: Busy
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: Error
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: ErrorId
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Word]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: shape-only
+  notes: >-
+    Motion Control FB (position-based output cam).
+  source: "anonymized reference fixture (signature only)"
+  result:
+    kind: none
+MC_CAMTRACK:
+  family: technology
+  callShape: instance-dot
+  instanceType: MC_CAMTRACK
+  pins:
+  - name: CamTrack
+    dir: in
+    required: true
+    note: ''
+  - name: Enable
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: Mode
+    dir: in
+    required: true
+    note: ''
+  - name: InvertOutput
+    dir: in
+    required: true
+    note: ''
+  - name: TrackOutput
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: Busy
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: Error
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: ErrorId
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Word]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: shape-only
+  notes: >-
+    Motion Control FB (cam track output).
+  source: "anonymized reference fixture (signature only)"
+  result:
+    kind: none
+MC_TORQUEADDITIVE:
+  family: technology
+  callShape: instance-dot
+  instanceType: MC_TORQUEADDITIVE
+  pins:
+  - name: Axis
+    dir: in
+    required: true
+    note: ''
+  - name: Enable
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: Value
+    dir: in
+    required: true
+    note: ''
+  - name: Busy
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: Error
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: ErrorId
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Word]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: shape-only
+  notes: >-
+    Motion Control FB (additive torque setpoint).
+  source: "anonymized reference fixture (signature only)"
+  result:
+    kind: none
+MC_TORQUERANGE:
+  family: technology
+  callShape: instance-dot
+  instanceType: MC_TORQUERANGE
+  pins:
+  - name: Axis
+    dir: in
+    required: true
+    note: ''
+  - name: Enable
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: UpperLimit
+    dir: in
+    required: true
+    note: ''
+  - name: LowerLimit
+    dir: in
+    required: true
+    note: ''
+  - name: Busy
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: Error
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: ErrorId
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Word]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: shape-only
+  notes: >-
+    Motion Control FB (torque range monitoring).
+  source: "anonymized reference fixture (signature only)"
+  result:
+    kind: none
+MC_TORQUELIMITING:
+  family: technology
+  callShape: instance-dot
+  instanceType: MC_TORQUELIMITING
+  pins:
+  - name: Axis
+    dir: in
+    required: true
+    note: ''
+  - name: Enable
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: Limit
+    dir: in
+    required: true
+    note: ''
+  - name: Mode
+    dir: in
+    required: true
+    note: ''
+  - name: InClamping
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: InLimitation
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: Busy
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: Error
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: ErrorId
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Word]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: shape-only
+  notes: >-
+    Motion Control FB (torque limiting).
+  source: "anonymized reference fixture (signature only)"
+  result:
+    kind: none

@@ -1,0 +1,11 @@
+FUNCTION_BLOCK "Semantic_ArrayOfReferences"
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+
+VAR_TEMP
+    badReferences : Array[0..1] of REF_TO Int;
+    // EXPECT: error[reference.array-of-references-forbidden] SEM-REF-004
+END_VAR
+
+BEGIN
+END_FUNCTION_BLOCK

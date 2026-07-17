@@ -1,0 +1,29 @@
+# Codes emitted by linter/symbolChecks.ts.
+
+undeclared-identifier:
+  severity: error
+  message: "'{ref}' isn't declared anywhere in this block's VAR sections."
+
+condition-not-a-tag:
+  severity: error
+  message: "{keyword} condition '{shown}' isn't a valid operand -- a local tag needs a '#' prefix (e.g. '#{name}'), a global tag must be quoted (e.g. \"{name}\")."
+
+condition-not-bool:
+  severity: error
+  message: "{keyword} condition '{shown}' resolves to '{typeName}', not Bool."
+
+dot-access-illegal-section:
+  severity: error
+  message: "'.{memberName}' is declared {section} on '{blockName}' -- only IN/OUT/IN_OUT/STATIC members are reachable via dot notation."
+
+dot-access-no-instance:
+  severity: error
+  message: "'{blockName}' is a FUNCTION -- it has no instance data, so '.{memberName}' is never valid."
+
+dot-access-needs-instance:
+  severity: error
+  message: "\"{blockName}\" is a {blockType}'s own type name, not an instance -- an external quoted reference can only dot into a real DATA_BLOCK instance (TIA Portal itself refuses \"{blockName}\".member on a bare function block, offering instance-creation actions instead)."
+
+external-symbol-not-found:
+  severity: error
+  message: "\"{name}\" doesn't match any known workspace block (DATA_BLOCK/FUNCTION/FUNCTION_BLOCK) -- check spelling, or it may be defined outside this workspace."

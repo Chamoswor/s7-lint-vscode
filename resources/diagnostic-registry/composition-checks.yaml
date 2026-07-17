@@ -1,0 +1,5 @@
+# Codes emitted by linter/compositionChecks.ts.
+
+too-many-structs-per-data-block:
+  severity: error
+  message: "'{blockName}' declares {total} anonymous STRUCTs (crossed the limit at member '{memberName}') -- composition-rules.yaml's maxStructsPerDataBlock caps this at {limit} on S7-1200/S7-1500; Siemens recommends PLC data types (UDTs) instead past this point."

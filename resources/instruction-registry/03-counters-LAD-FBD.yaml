@@ -1,0 +1,101 @@
+# LAD/FBD IEC-counter instruction registry.
+#
+# CU/CD and the primary status output are represented by the surrounding RLO
+# where they are implicit in the graphical export. Explicit pins remain listed
+# under `pins`.
+#
+# Memory-area conventions from Siemens STEP 7 V21:
+# - CU/CD: I, Q, M, D, L or constant.
+# - R/LD: I, Q, M, D, L, P or constant on S7-1200;
+#         S7-1500 additionally permits T and C.
+# - PV: I, Q, M, D, L, P or constant.
+# - Q/QU/QD: I, Q, M, D or L.
+# - CV: I, Q, M, D, L or P.
+#
+# `result` represents the implicit BOOL status/RLO output:
+# CTU.Q, CTD.Q or CTUD.QU. Explicit outputs such as QD and CV remain pins.
+#
+# Each counter instance must be called at only one program location. Counter
+# state saturates at the selected datatype limits and is stored in the assigned
+# IEC-counter instance.
+#
+$fileLanguage: [LAD, FBD]
+
+CTU:
+  family: counter
+  callShape: instance-dot
+  instanceType: CTU_INT # generic family: CTU_<Type>, e.g. CTU_INT, CTU_DINT — instanceType varies with counted type
+  pins:
+  - {name: r, dir: in, required: true, dataTypes: [Bool], note: "Reset input. Sets CV to zero while TRUE. T and
+      C are valid only for S7-1500.", memoryAreas: [I, Q, M, T, C, D, L, P, constant]}
+  - {name: pv, dir: in, required: true, dataTypes: ["Integers", Char, WChar, Date], note: "Preset value used by
+      the status comparison Q := (CV >= PV).", memoryAreas: [I, Q, M, D, L, P, constant]}
+  - {name: cv, dir: out, required: false, dataTypes: ["Integers", Char, WChar, Date], note: "Current counter value.
+      Saturates at the upper limit of the selected counter datatype.", memoryAreas: [I, Q, M, D, L, P]}
+  result:
+    kind: value
+    dataTypes:
+    - Bool
+    notes: Implicit Q/RLO status. TRUE while CV is greater than or equal to PV.
+  template: {shape: single, keys: [value_type], extra: {}}
+  confidence: confirmed-compiled
+  notes: >-
+    Count-up IEC counter. The incoming RLO drives CU; each positive edge increments CV by one. R has
+    priority and holds CV at zero while TRUE. The counter instance may be a shared IEC_<Counter> DB or a
+    compatible static CTU_<Type>/IEC_<Counter> multi-instance. Use the instance at one program location
+    only.
+  source: "docs/fbd-knowhow/03-Counters.md"
+CTD:
+  family: counter
+  callShape: instance-dot
+  instanceType: CTD_INT # generic family: CTD_<Type> — same alternatives as CTU (CTD_SINT/USINT, CTD_INT/UINT, CTD_DINT/UDINT, + CTD_LINT/ULINT on S7-1500), or the matching IEC_<Counter> struct directly.
+  pins:
+  - {name: ld, dir: in, required: true, dataTypes: [Bool], note: "Load input. Loads PV into CV while TRUE. T and
+      C are valid only for S7-1500.", memoryAreas: [I, Q, M, T, C, D, L, P, constant]}
+  - {name: pv, dir: in, required: true, dataTypes: ["Integers", Char, WChar, Date], note: "Preset value loaded into
+      CV when LD is TRUE.", memoryAreas: [I, Q, M, D, L, P, constant]}
+  - {name: cv, dir: out, required: false, dataTypes: ["Integers", Char, WChar, Date], note: "Current counter value.
+      Saturates at the lower limit of the selected counter datatype.", memoryAreas: [I, Q, M, D, L, P]}
+  result:
+    kind: value
+    dataTypes:
+    - Bool
+    notes: Implicit Q/RLO status. TRUE while CV is less than or equal to zero.
+  template: {shape: single, keys: [value_type], extra: {}}
+  confidence: confirmed-compiled
+  notes: >-
+    Count-down IEC counter. The incoming RLO drives CD; each positive edge decrements CV by one. LD
+    loads PV into CV and suppresses counting while TRUE. The counter instance may be a shared
+    IEC_<Counter> DB or a compatible static CTD_<Type>/IEC_<Counter> multi-instance. Use the instance at
+    one program location only.
+  source: "docs/fbd-knowhow/03-Counters.md"
+CTUD:
+  family: counter
+  callShape: instance-dot
+  instanceType: CTUD_INT # generic family: CTUD_<Type> — same alternatives as CTU/CTD (CTUD_SINT/USINT, CTUD_INT/UINT, CTUD_DINT/UDINT, + CTUD_LINT/ULINT on S7-1500), or the matching IEC_<Counter> struct directly — see file header.
+  pins:
+  - {name: cd, dir: in, required: true, dataTypes: [Bool], note: "Count-down input. A positive edge decrements CV
+      unless R or LD is active.", memoryAreas: [I, Q, M, D, L, constant]}
+  - {name: r, dir: in, required: true, dataTypes: [Bool], note: "Reset input. Sets CV to zero and blocks CU, CD
+      and LD while TRUE. T and C are S7-1500-only.", memoryAreas: [I, Q, M, T, C, D, L, P, constant]}
+  - {name: ld, dir: in, required: true, dataTypes: [Bool], note: "Load input. Loads PV into CV and blocks CU/CD
+      while TRUE. T and C are S7-1500-only.", memoryAreas: [I, Q, M, T, C, D, L, P, constant]}
+  - {name: pv, dir: in, required: true, dataTypes: ["Integers", Char, WChar, Date], note: "Preset value used by
+      QU and loaded into CV when LD is TRUE.", memoryAreas: [I, Q, M, D, L, P, constant]}
+  - {name: qd, dir: out, required: false, dataTypes: [Bool], note: "Down-counter status. TRUE while CV is less than
+      or equal to zero.", memoryAreas: [I, Q, M, D, L]}
+  - {name: cv, dir: out, required: false, dataTypes: ["Integers", Char, WChar, Date], note: "Current counter value.
+      Saturates at both limits of the selected counter datatype.", memoryAreas: [I, Q, M, D, L, P]}
+  result:
+    kind: value
+    dataTypes:
+    - Bool
+    notes: Implicit QU/RLO status. TRUE while CV is greater than or equal to PV.
+  template: {shape: single, keys: [value_type], extra: {}}
+  confidence: confirmed-compiled
+  notes: >-
+    Up/down IEC counter. The incoming RLO drives CU and the explicit CD pin drives count-down.
+    Simultaneous positive CU and CD edges leave CV unchanged. R has priority over LD; LD blocks both
+    count inputs. The instance may be a shared IEC_<Counter> DB or a compatible static
+    CTUD_<Type>/IEC_<Counter> multi-instance. Use it at one program location only.
+  source: "docs/fbd-knowhow/03-Counters.md"

@@ -1,0 +1,77 @@
+# "Symbolic access during runtime" — a cross-cutting S7-1500-only
+# feature, not a single instruction's behavior, so it lives here rather
+# than being re-explained inline in every instruction-registry entry
+# that depends on it (instruction-registry/06-move.yaml's "Symbolic
+# move" sub-family: ResolveSymbols, MoveResolvedSymbolsToBuffer,
+# MoveResolvedSymbolsFromBuffer). Per type-registry/README.md's
+# "Standard: where a fact belongs" — those entries cross-reference this
+# file instead of duplicating it.
+# Source: Siemens "Symbolic access during runtime" overview page +
+# "Resolve several symbols" (ResolveSymbols) reference page, pasted by
+# user 2026-07-13.
+
+purpose: "Lets external applications (HMI, OPC UA, other communication functions) read/write PLC program tags by SYMBOLIC NAME during runtime, without that access being statically programmed at block-authoring time — the tag names are supplied dynamically (manually or program-controlled) at runtime instead."
+
+platform:
+  requirement: "S7-1500 ONLY, firmware >= V3.0. Not available on S7-1200/S7-1200 G2/S7-300/S7-400 at all — this is a genuine platform exclusivity, not a two-column table needing the standard G2-follows-S7-1500 convention (there's no S7-1200 column to begin with)."
+  tagAttributeRequirement: "The target tag must have the 'Accessible from HMI/OPC UA/Web API' or 'Writable from HMI/OPC UA/Web API' attribute set — a per-tag opt-in, not automatic for every tag just because the CPU/firmware qualifies."
+
+comparisonToAnyPointer: "More flexible/efficient than an ANY pointer specifically because it can access BOTH optimized and non-optimized memory areas — an ANY pointer (see any-pointer.yaml) can only access non-optimized data."
+
+accessTable:
+  notes: "Two firmware sub-versions gate DIFFERENT subsets of what's accessible — V3.0 is a strict subset of V3.1, not an independent list. A linter checking 'is this target legal for symbolic access' needs the firmware version, not just the S7-1500 platform check."
+  supportedAtV3_0:
+    - "PLC tags (I, Q, M)"
+    - "Elements of data blocks (individual elements only, not whole DBs)"
+    - "Elementary data types"
+    - "ARRAY and STRUCT — access to INDIVIDUAL ELEMENTS only, not the whole structure (whole-structure access is V3.1+)"
+    - "Hardware data types"
+  additionallySupportedAtV3_1:
+    - "Data blocks based on a PLC data type/system data type"
+    - "ARRAY and STRUCT — access to the ENTIRE structure (in addition to individual elements, still supported)"
+    - "STRING and WSTRING"
+    - "DTL"
+    - "PLC data types and system data types (as a whole, presumably paired with the DB-based-on-UDT/SDT entry above)"
+    - "IEC timers and counters"
+  neverSupported:
+    - "Data blocks as a whole (only their elements, at any version)"
+    - "Technology objects, or elements of technology objects"
+    - "I/O (Tag name: P) — the peripheral memory area"
+    - "Legacy Timers (T) and Counters (T or C) — the non-IEC S7 timer/counter memory areas, as opposed to IEC timers/counters which ARE supported at V3.1"
+    - "Elements in the load memory"
+    - "Write-protected elements"
+    - "References (see references.yaml)"
+    - "Pointer, Any, Remote, Block_FB, Block_FC, Multi-FB (see pointer-type.yaml / any-pointer.yaml / system-types.yaml's Remote entry)"
+    - "Data in fail-safe (F-) program parts — accessing these makes the CPU switch to STOP, a hard runtime fault, not just a rejected/erroring access"
+  structEndiannessNote: "To access a tag of the STRUCT data type specifically, the memory-format parameter used by the read/write Move instruction must be set to Little-Endian (mode := 2#1) — a real, easily-missed configuration requirement for STRUCT access specifically, not mentioned for any other accessible type in this table."
+
+workflow:
+  description: "Two distinct steps, using two distinct instruction categories — cross-reference instruction-registry/06-move.yaml's 'Symbolic move' sub-family for the actual instructions:"
+  step1_resolve:
+    instruction: "ResolveSymbols ('Resolve several symbols') — the ONLY resolution instruction; asynchronous (execute/done/busy/error/status pattern, NOT a plain EN/ENO box — see that instruction's own entry)."
+    purpose: "Converts symbolic tag NAMES (WSTRING) into typed REFERENCES (ResolvedSymbol system-struct instances) — a reference is a typed pointer usable to actually address the tag."
+    inputs: "nameList: Array of WSTRING, the tag names to resolve."
+    outputs: "referenceList: Array of ResolvedSymbol (SDT), one resolved reference per input name — SAME array limits required on both nameList and referenceList (a linter-checkable structural constraint given both tags' declared ARRAY bounds)."
+  matchingArrayBounds:
+    # Machine-checkable form of the "SAME array limits" sentence above --
+    # `instruction` matches an instruction-registry key exactly, `pins`
+    # names the two pins whose operand's declared ARRAY bounds must be
+    # identical. A flat single-instruction fact today; reshape to a list
+    # if a second instruction with this same constraint is ever confirmed.
+    instruction: ResolveSymbols
+    pins: [nameList, referenceList]
+    notes: "TIA reports runtime STATUS 80B4 if the bounds don't match."
+  step2_readWrite:
+    instructions: "MoveResolvedSymbolsToBuffer ('Read values from resolved symbols and write them into buffer') and MoveResolvedSymbolsFromBuffer (the inverse) — SYNCHRONOUS (single-scan, plain EN/ENO-shaped, unlike step 1's async ResolveSymbols) instructions that dereference the already-resolved references from step 1 to actually move tag VALUES."
+    purpose: "MoveResolvedSymbolsToBuffer: src = Array of ResolvedSymbol (the resolved references), dst = Array of BYTE (a target buffer) — reads the tag values via the references and writes them into the buffer. MoveResolvedSymbolsFromBuffer is the mirror (writes buffer bytes back out to the referenced tags)."
+    beforeEachCall: "Siemens' own recommended pattern: check each ResolvedSymbol entry's `resolved`/`status` fields BEFORE calling either Move instruction on it, since a reference can go stale between resolution and use (a DB reload in RUN mode can invalidate an already-resolved reference — see system-types.yaml's ResolvedSymbol entry, specifically its `runModeInvalidation` field, for the full four-state resolved/status semantics and recovery pattern; not re-explained here to avoid duplicating that file)."
+
+nameListFormat:
+  type: "WSTRING, max 254 UTF-16 characters per entry."
+  qualification: "Must be a FULLY QUALIFIED name including namespace — the `#` local-tag qualifier is explicitly NOT supported here (unlike normal .s7dcl local-tag references elsewhere in this project)."
+  arrayElementAccess: "Array elements ARE supported inside a name string, but ONLY with a fixed/constant index — e.g. `myNamespace.mySubnamespace.myDataBlock.myArray[7,12,1]` is legal; a VARIABLE index (`myArray[myIndexTag]`) is explicitly NOT supported. This is a runtime STRING-CONTENT rule (validating the text inside a WSTRING array element), not a normal .s7dcl operand-syntax rule — a lint server would need to parse the string literal's content specifically to check this, a different mechanism than every other check in this registry."
+
+configurationLimits:
+  maxConcurrentResolveSymbolsInstances: 10
+  maxTotalSymbolsAcrossAllActiveInstances: 2000
+  notes: "Both are runtime/configuration ceilings on ResolveSymbols specifically, not statically enforceable from a single block's source alone (would need whole-program instance-counting) — recorded for completeness, flagged as a whole-program-analysis-tier check rather than a per-call lint rule."

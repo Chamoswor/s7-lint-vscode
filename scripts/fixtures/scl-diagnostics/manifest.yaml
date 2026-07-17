@@ -1,0 +1,388 @@
+suite: TIA SCL syntax and structural smoke tests
+version: '0.1'
+conventions:
+  oneIntendedDefectPerNegativeFile: true
+  assert:
+  - zero diagnostics for positive fixtures
+  - at least one matching-severity diagnostic for negative fixtures
+  doNotSnapshot:
+  - diagnostic code
+  - source range
+  - full human-readable message
+  cascadePolicy: Allow parser cascades initially, but assert the primary diagnostic.
+    Prefer zero cascades after recovery improves.
+  platformPolicy: Skip platform-specific fixtures when the configured CPU does not
+    support the tested type or feature.
+positive:
+- id: SYN-POS-001
+  file: positive/SYN-POS-001-general-valid.scl
+  expectedDiagnostics: 0
+negative:
+- id: SYN-STMT-001
+  file: negative/parser/SYN-STMT-001-missing-assignment-semicolon.scl
+  severity: error
+  layer: parser
+  rule: Every SCL instruction must terminate with a semicolon.
+  recoveryExpected: true
+- id: SYN-STMT-002
+  file: negative/parser/SYN-STMT-002-equals-instead-of-assignment.scl
+  severity: error
+  layer: parser
+  rule: Value assignment uses :=, not =.
+  recoveryExpected: true
+- id: SYN-EXPR-001
+  file: negative/parser/SYN-EXPR-001-unclosed-parenthesis.scl
+  severity: error
+  layer: parser
+  rule: Opening parenthesis must have a matching closing parenthesis.
+  recoveryExpected: true
+- id: SYN-EXPR-002
+  file: negative/parser/SYN-EXPR-002-dangling-binary-operator.scl
+  severity: error
+  layer: parser
+  rule: A binary operator requires a right-hand operand.
+  recoveryExpected: true
+- id: SYN-IF-001
+  file: negative/parser/SYN-IF-001-missing-then.scl
+  severity: error
+  layer: parser
+  rule: IF condition must be followed by THEN.
+  recoveryExpected: true
+- id: SYN-IF-002
+  file: negative/parser/SYN-IF-002-wrong-end-keyword.scl
+  severity: error
+  layer: parser
+  rule: IF is terminated by END_IF;.
+  recoveryExpected: false
+- id: SYN-IF-003
+  file: negative/parser/SYN-IF-003-missing-end-if-semicolon.scl
+  severity: error
+  layer: parser
+  rule: END_IF must be terminated by a semicolon.
+  recoveryExpected: true
+- id: SYN-IF-004
+  file: negative/parser/SYN-IF-004-elsif-missing-then.scl
+  severity: error
+  layer: parser
+  rule: ELSIF condition must be followed by THEN.
+  recoveryExpected: true
+- id: SYN-IF-005
+  file: negative/parser/SYN-IF-005-unmatched-end-if.scl
+  severity: error
+  layer: parser
+  rule: END_IF cannot occur without a corresponding IF.
+  recoveryExpected: true
+- id: SYN-CASE-001
+  file: negative/parser/SYN-CASE-001-missing-of.scl
+  severity: error
+  layer: parser
+  rule: CASE test expression must be followed by OF.
+  recoveryExpected: true
+- id: SYN-CASE-002
+  file: negative/parser/SYN-CASE-002-missing-label-colon.scl
+  severity: error
+  layer: parser
+  rule: Each CASE value list must be followed by a colon.
+  recoveryExpected: true
+- id: SYN-CASE-003
+  file: negative/parser/SYN-CASE-003-malformed-range.scl
+  severity: error
+  layer: parser
+  rule: 'CASE ranges use exactly two periods: lo..hi.'
+  recoveryExpected: true
+- id: SYN-CASE-004
+  file: negative/parser/SYN-CASE-004-missing-end-case.scl
+  severity: error
+  layer: parser
+  rule: CASE must be terminated by END_CASE;.
+  recoveryExpected: false
+- id: SYN-FOR-001
+  file: negative/parser/SYN-FOR-001-missing-assignment-operator.scl
+  severity: error
+  layer: parser
+  rule: FOR header requires loop-variable := start-value.
+  recoveryExpected: true
+- id: SYN-FOR-002
+  file: negative/parser/SYN-FOR-002-missing-to.scl
+  severity: error
+  layer: parser
+  rule: FOR header requires TO between start and end values.
+  recoveryExpected: true
+- id: SYN-FOR-003
+  file: negative/parser/SYN-FOR-003-missing-do.scl
+  severity: error
+  layer: parser
+  rule: FOR header must end with DO.
+  recoveryExpected: true
+- id: SYN-FOR-004
+  file: negative/parser/SYN-FOR-004-wrong-end-keyword.scl
+  severity: error
+  layer: parser
+  rule: FOR is terminated by END_FOR;.
+  recoveryExpected: false
+- id: SYN-FOR-005
+  file: negative/parser/SYN-FOR-005-unmatched-end-for.scl
+  severity: error
+  layer: parser
+  rule: END_FOR cannot occur without a corresponding FOR.
+  recoveryExpected: true
+- id: SYN-WHILE-001
+  file: negative/parser/SYN-WHILE-001-missing-do.scl
+  severity: error
+  layer: parser
+  rule: WHILE condition must be followed by DO.
+  recoveryExpected: true
+- id: SYN-WHILE-002
+  file: negative/parser/SYN-WHILE-002-wrong-end-keyword.scl
+  severity: error
+  layer: parser
+  rule: WHILE is terminated by END_WHILE;.
+  recoveryExpected: false
+- id: SYN-REPEAT-001
+  file: negative/parser/SYN-REPEAT-001-missing-until.scl
+  severity: error
+  layer: parser
+  rule: REPEAT body must be followed by UNTIL condition before END_REPEAT;.
+  recoveryExpected: true
+- id: SYN-REPEAT-002
+  file: negative/parser/SYN-REPEAT-002-missing-end-repeat.scl
+  severity: error
+  layer: parser
+  rule: REPEAT must be terminated by END_REPEAT;.
+  recoveryExpected: false
+- id: SYN-CTRL-001
+  file: negative/parser/SYN-CTRL-001-exit-outside-loop.scl
+  severity: error
+  layer: parser
+  rule: EXIT is legal only inside FOR, WHILE, or REPEAT loops.
+  recoveryExpected: true
+- id: SYN-CTRL-002
+  file: negative/parser/SYN-CTRL-002-continue-outside-loop.scl
+  severity: error
+  layer: parser
+  rule: CONTINUE is legal only inside a loop.
+  recoveryExpected: true
+- id: SYN-CTRL-003
+  file: negative/parser/SYN-CTRL-003-mismatched-nesting.scl
+  severity: error
+  layer: parser
+  rule: Nested control statements must close in last-opened, first-closed order.
+  recoveryExpected: false
+- id: SYN-DECL-001
+  file: negative/parser/SYN-DECL-001-missing-colon.scl
+  severity: error
+  layer: parser
+  rule: 'A variable declaration requires name : data-type ;'
+  recoveryExpected: true
+- id: SYN-DECL-002
+  file: negative/parser/SYN-DECL-002-missing-semicolon.scl
+  severity: error
+  layer: parser
+  rule: A declaration must terminate with a semicolon.
+  recoveryExpected: true
+- id: SYN-DECL-003
+  file: negative/parser/SYN-DECL-003-missing-end-var.scl
+  severity: error
+  layer: parser
+  rule: A VAR section must be terminated by END_VAR.
+  recoveryExpected: false
+- id: SYN-BLOCK-001
+  file: negative/parser/SYN-BLOCK-001-missing-begin.scl
+  severity: error
+  layer: parser
+  rule: Executable statements must follow BEGIN.
+  recoveryExpected: false
+- id: SYN-ARRAY-001
+  file: negative/parser/SYN-ARRAY-001-missing-index-bracket.scl
+  severity: error
+  layer: parser
+  rule: Array indexing requires matching square brackets.
+  recoveryExpected: true
+- id: SYN-CALL-001
+  file: negative/parser/SYN-CALL-001-missing-right-parenthesis.scl
+  severity: error
+  layer: parser
+  rule: Instruction/function calls require a closing parenthesis.
+  recoveryExpected: true
+- id: SYN-CALL-002
+  file: negative/parser/SYN-CALL-002-missing-argument-comma.scl
+  severity: error
+  layer: parser
+  rule: Named call arguments must be comma-separated.
+  recoveryExpected: true
+- id: SYN-LEX-001
+  file: negative/parser/SYN-LEX-001-unterminated-string.scl
+  severity: error
+  layer: lexer
+  rule: A single-quoted string literal must be terminated.
+  recoveryExpected: false
+- id: SYN-LEX-002
+  file: negative/parser/SYN-LEX-002-unterminated-block-comment.scl
+  severity: error
+  layer: lexer
+  rule: A block comment opened with (* must be closed with *).
+  recoveryExpected: false
+- id: SEM-ARRAY-001
+  file: negative/semantic/SEM-ARRAY-001-reversed-bounds.scl
+  severity: error
+  layer: semantic
+  rule: Each array dimension requires lower bound <= upper bound.
+  registrySource: composition-rules.yaml
+  targetPlatform: S7-1200/S7-1500
+- id: SEM-ARRAY-002
+  file: negative/semantic/SEM-ARRAY-002-too-many-dimensions.scl
+  severity: error
+  layer: semantic
+  rule: An ARRAY may have at most six dimensions.
+  registrySource: composition-rules.yaml
+  targetPlatform: S7-1200/S7-1500
+- id: SEM-ARRAY-003
+  file: negative/semantic/SEM-ARRAY-003-nested-array.scl
+  severity: error
+  layer: semantic
+  rule: An ARRAY cannot directly contain another ARRAY.
+  registrySource: composition-rules.yaml
+  targetPlatform: S7-1200/S7-1500
+- id: SEM-ARRAY-004
+  file: negative/semantic/SEM-ARRAY-004-bound-out-of-supported-range.scl
+  severity: error
+  layer: semantic
+  rule: Array index values must be within -32768..32767.
+  registrySource: composition-rules.yaml
+  targetPlatform: S7-1200/S7-1500
+- id: SEM-ARRAY-005
+  file: negative/semantic/SEM-ARRAY-005-variable-index-expression.scl
+  severity: error
+  layer: semantic
+  rule: Variable expressions are not legal as an ARRAY index; a variable or constant
+    expression is legal.
+  registrySource: composition-rules.yaml
+  targetPlatform: S7-1200/S7-1500
+  notes: Registry-sourced rule; validate against TIA compiler because this is stricter
+    than many IEC ST implementations.
+- id: SEM-ARRAY-006
+  file: negative/semantic/SEM-ARRAY-006-dynamic-array-in-fb-input.scl
+  severity: error
+  layer: semantic
+  rule: In an FB, ARRAY[*] is legal only in VAR_IN_OUT.
+  registrySource: composition-rules.yaml
+  targetPlatform: S7-1200/S7-1500
+- id: SEM-REF-001
+  file: negative/semantic/SEM-REF-001-ref-to-bool.scl
+  severity: error
+  layer: semantic
+  rule: Bool is not a legal REF_TO target type.
+  registrySource: references.yaml
+  targetPlatform: S7-1500 / S7-1200 G2 where Reference is available
+- id: SEM-REF-002
+  file: negative/semantic/SEM-REF-002-ref-to-sized-string.scl
+  severity: error
+  layer: semantic
+  rule: A string reference is declared as REF_TO String, without a length.
+  registrySource: references.yaml
+  targetPlatform: S7-1500 / S7-1200 G2 where Reference is available
+- id: SEM-REF-003
+  file: negative/semantic/SEM-REF-003-ref-in-fb-static.scl
+  severity: error
+  layer: semantic
+  rule: In an FB, REF_TO is legal only in VAR_TEMP.
+  registrySource: references.yaml
+  targetPlatform: S7-1500 / S7-1200 G2 where Reference is available
+- id: SEM-REF-004
+  file: negative/semantic/SEM-REF-004-array-of-references.scl
+  severity: error
+  layer: semantic
+  rule: An ARRAY whose element type is REF_TO is illegal.
+  registrySource: references.yaml
+  targetPlatform: S7-1500 / S7-1200 G2 where Reference is available
+- id: SEM-REF-005
+  file: negative/semantic/SEM-REF-005-manual-initial-value.scl
+  severity: error
+  layer: semantic
+  rule: A reference cannot be manually initialized in the interface.
+  registrySource: references.yaml
+  targetPlatform: S7-1500 / S7-1200 G2 where Reference is available
+- id: SEM-REF-006
+  file: negative/semantic/SEM-REF-006-ref-to-temp-target.scl
+  severity: error
+  layer: semantic
+  rule: REF() cannot target temporary local data.
+  registrySource: references.yaml
+  targetPlatform: S7-1500 / S7-1200 G2 where Reference is available
+- id: SEM-REF-007
+  file: negative/semantic/SEM-REF-007-dereference-non-reference.scl
+  severity: error
+  layer: semantic
+  rule: The ^ dereference operator requires a Reference operand.
+  registrySource: references.yaml
+  targetPlatform: S7-1500 / S7-1200 G2 where Reference is available
+- id: SEM-REF-008
+  file: negative/semantic/SEM-REF-008-compare-two-references.scl
+  severity: error
+  layer: semantic
+  rule: References may only be compared against NULL.
+  registrySource: references.yaml
+  targetPlatform: S7-1500 / S7-1200 G2 where Reference is available
+- id: SEM-REF-009
+  file: negative/semantic/SEM-REF-009-chained-assignment-attempt.scl
+  severity: error
+  layer: semantic
+  rule: Assignment attempts using ?= cannot be chained.
+  registrySource: references.yaml
+  targetPlatform: S7-1500 / S7-1200 G2 where Reference is available
+- id: SEM-SECTION-001
+  file: negative/semantic/SEM-SECTION-001-variant-in-static.scl
+  severity: error
+  layer: semantic
+  rule: Variant is not legal in an FB Static section.
+  registrySource: section-legality.yaml
+  targetPlatform: S7-1200/S7-1500
+- id: SEM-SECTION-002
+  file: negative/semantic/SEM-SECTION-002-any-in-output.scl
+  severity: error
+  layer: semantic
+  rule: Any is not legal in an Output section.
+  registrySource: section-legality.yaml
+  targetPlatform: S7-1500 where Any is available
+- id: SEM-SECTION-003
+  file: negative/semantic/SEM-SECTION-003-pointer-in-output.scl
+  severity: error
+  layer: semantic
+  rule: Pointer is not legal in an Output section.
+  registrySource: section-legality.yaml
+  targetPlatform: S7-1500 where Pointer is available
+- id: SEM-SECTION-004
+  file: negative/semantic/SEM-SECTION-004-iec-timer-in-output.scl
+  severity: error
+  layer: semantic
+  rule: IEC_TIMER is not legal in an Output section.
+  registrySource: section-legality.yaml
+  targetPlatform: S7-1200/S7-1500
+- id: SEM-FOR-001
+  file: negative/semantic/SEM-FOR-001-modify-loop-variable.scl
+  severity: error
+  layer: semantic
+  rule: The FOR run tag cannot be modified from inside its loop body.
+  registrySource: Siemens SCL FOR reference
+  targetPlatform: S7-1200/S7-1500
+- id: SEM-FOR-002
+  file: negative/semantic/SEM-FOR-002-mixed-signed-unsigned.scl
+  severity: error
+  layer: semantic
+  rule: Signed and unsigned integer types cannot be mixed in one FOR statement.
+  registrySource: Siemens SCL FOR reference
+  targetPlatform: S7-1200/S7-1500
+knownRegistryIssues:
+- topic: REF_TO ARRAY[*]
+  status: excluded from executable fixtures
+  reason: composition-rules.yaml says it can be a reference target, while references.yaml
+    lists ARRAY[*] as disallowed. Resolve the registry contradiction before adding
+    a pass/fail fixture.
+- topic: Pointer P# prefix legality in SCL
+  status: excluded from executable fixtures
+  reason: pointer-type.yaml explicitly marks its section/access-mode matrix as STL-confirmed
+    only, not independently confirmed for SCL.
+- topic: Symbolic runtime access
+  status: not part of general syntax suite
+  reason: Most rules depend on CPU firmware, project attributes, whole-program state,
+    or string-content validation rather than core SCL grammar.

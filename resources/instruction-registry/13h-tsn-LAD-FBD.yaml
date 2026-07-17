@@ -1,0 +1,60 @@
+# TSN communication configuration — LAD/FBD registry.
+#
+# Graphical instruction aliases and pin casing follow anonymized reference
+# fixture evidence and apply to both LAD and FBD.
+#
+# Exported `:=` connections cannot distinguish Input from InOut. Parameters
+# independently documented as InOut have therefore been corrected explicitly.
+# Every entry has `result: { kind: none }`.
+#
+# Missing dataTypes are intentional: unknown types are not guessed.
+
+$fileLanguage: [LAD, FBD]
+TC_CONFIG:
+  family: communication
+  callShape: instance-dot
+  instanceType: TC_CONFIG
+  pins:
+  - name: REQ
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: INTERFACE
+    dir: in
+    required: true
+    note: ''
+  - name: BUSY
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: DONE
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: ERROR
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: STATUS
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Word]
+  - name: CONFIG
+    dir: in
+    required: true
+    note: ''
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: shape-only
+  notes: >-
+    . Time-sensitive-communication (TSN) interface configuration FB.
+  source: "anonymized reference fixture (signature only)"
+  result:
+    kind: none

@@ -1,0 +1,445 @@
+# SCL math-function registry.
+#
+# This category contains the callable SCL functions documented under
+# "Math functions". Arithmetic operations such as +, -, *, /, MOD, unary minus
+# and exponentiation (**) are native SCL operators and are not duplicated here.
+#
+# SCL function values are represented by `result`; they are not modeled as an
+# OUT pin. Unary functions use one positional `<Expression>` argument, therefore
+# their input pin has `name: null`.
+#
+# All documented expression operands and function values use memory areas
+# I, Q, M, D, L or P. Literal constants may occur inside an SCL expression,
+# but `constant` is not listed as a separate memory area in these function
+# parameter tables.
+#
+# MIN and MAX accept between 2 and 32 inputs. TOD, LTOD, DATE and LDT are legal
+# only when IEC Check is disabled. LIMIT requires MN, IN and MX to have the same
+# datatype.
+$fileLanguage: [SCL]
+
+ABS:
+  family: math
+  callShape: box
+  instanceType: null
+
+  pins:
+    - name: null
+      dir: in
+      required: true
+      dataTypes: [SInt, Int, DInt, LInt, "Floating-point numbers"]
+      memoryAreas: [I, Q, M, D, L, P]
+      note: >-
+        Positional input expression. LINT is available on S7-1500; the other
+        listed signed integer types and floating-point types are supported
+        according to the target CPU.
+
+  result:
+    kind: inferred
+    rule: same-as-source
+    sourcePins: [0]
+    notes: >-
+      Absolute value with the same resolved datatype as the input expression.
+      The function value may be assigned to I, Q, M, D, L or P.
+
+  template: { shape: none, keys: [], extra: {} }
+  confidence: official-doc
+  notes: >-
+    Returns the absolute value of a signed integer or floating-point expression. Example: #Result :=
+    ABS(#Value);
+  source: "official instruction documentation (paraphrased)"
+MIN:
+  family: math
+  callShape: box
+  instanceType: null
+
+  pins:
+    - name: IN1
+      dir: in
+      required: true
+      dataTypes: ["Integers", "Floating-point numbers", Time, LTime, Time_Of_Day, LTime_Of_Day, Date, LDT, Date_And_Time, DTL]
+      memoryAreas: [I, Q, M, D, L, P]
+      note: First value to compare.
+
+    - name: IN2
+      dir: in
+      required: true
+      dataTypes: ["Integers", "Floating-point numbers", Time, LTime, Time_Of_Day, LTime_Of_Day, Date, LDT, Date_And_Time, DTL]
+      memoryAreas: [I, Q, M, D, L, P]
+      note: Second value to compare.
+
+    - name: INn
+      dir: in
+      required: false
+      dataTypes: ["Integers", "Floating-point numbers", Time, LTime, Time_Of_Day, LTime_Of_Day, Date, LDT, Date_And_Time, DTL]
+      memoryAreas: [I, Q, M, D, L, P]
+      note: Optional consecutively numbered inputs IN3 through IN32.
+
+  result:
+    kind: inferred
+    rule: common-compatible-type
+    sourcePins: [0, 1, 2]
+    notes: >-
+      Lowest input value after the permitted implicit datatype resolution. The
+      function value may be assigned to I, Q, M, D, L or P.
+
+  template: { shape: none, keys: [], extra: {} }
+  confidence: official-doc
+  notes: >-
+    Returns the lowest of 2 to 32 inputs. The result is invalid if implicit datatype conversion fails or
+    a floating-point operand is invalid. TOD, LTOD, DATE and LDT require IEC Check to be disabled.
+  source: "official instruction documentation (paraphrased)"
+MAX:
+  family: math
+  callShape: box
+  instanceType: null
+
+  pins:
+    - name: IN1
+      dir: in
+      required: true
+      dataTypes: ["Integers", "Floating-point numbers", Time, LTime, Time_Of_Day, LTime_Of_Day, Date, LDT, Date_And_Time, DTL]
+      memoryAreas: [I, Q, M, D, L, P]
+      note: First value to compare.
+
+    - name: IN2
+      dir: in
+      required: true
+      dataTypes: ["Integers", "Floating-point numbers", Time, LTime, Time_Of_Day, LTime_Of_Day, Date, LDT, Date_And_Time, DTL]
+      memoryAreas: [I, Q, M, D, L, P]
+      note: Second value to compare.
+
+    - name: INn
+      dir: in
+      required: false
+      dataTypes: ["Integers", "Floating-point numbers", Time, LTime, Time_Of_Day, LTime_Of_Day, Date, LDT, Date_And_Time, DTL]
+      memoryAreas: [I, Q, M, D, L, P]
+      note: Optional consecutively numbered inputs IN3 through IN32.
+
+  result:
+    kind: inferred
+    rule: common-compatible-type
+    sourcePins: [0, 1, 2]
+    notes: >-
+      Greatest input value after the permitted implicit datatype resolution.
+      The function value may be assigned to I, Q, M, D, L or P.
+
+  template: { shape: none, keys: [], extra: {} }
+  confidence: official-doc
+  notes: >-
+    Returns the greatest of 2 to 32 inputs. The result is invalid if implicit datatype conversion fails
+    or a floating-point operand is invalid. TOD, LTOD, DATE and LDT require IEC Check to be disabled.
+  source: "official instruction documentation (paraphrased)"
+LIMIT:
+  family: math
+  callShape: box
+  instanceType: null
+
+  pins:
+    - name: MN
+      dir: in
+      required: true
+      dataTypes: ["Integers", "Floating-point numbers", Time, LTime, Time_Of_Day, LTime_Of_Day, Date, LDT, Date_And_Time, DTL]
+      memoryAreas: [I, Q, M, D, L, P]
+      note: Low limit.
+
+    - name: IN
+      dir: in
+      required: true
+      dataTypes: ["Integers", "Floating-point numbers", Time, LTime, Time_Of_Day, LTime_Of_Day, Date, LDT, Date_And_Time, DTL]
+      memoryAreas: [I, Q, M, D, L, P]
+      note: Value to clamp.
+
+    - name: MX
+      dir: in
+      required: true
+      dataTypes: ["Integers", "Floating-point numbers", Time, LTime, Time_Of_Day, LTime_Of_Day, Date, LDT, Date_And_Time, DTL]
+      memoryAreas: [I, Q, M, D, L, P]
+      note: High limit.
+
+  result:
+    kind: inferred
+    rule: same-as-source
+    sourcePins: [1]
+    notes: >-
+      Clamped value with the same datatype as IN. The function value may be
+      assigned to I, Q, M, D, L or P.
+
+  template: { shape: none, keys: [], extra: {} }
+  confidence: official-doc
+  notes: >-
+    Returns MN when IN is below MN, MX when IN is above MX, otherwise IN. MN, IN and MX must have the
+    same datatype. TOD, LTOD, DATE and LDT require IEC Check to be disabled.
+  source: "official instruction documentation (paraphrased)"
+SQR:
+  family: math
+  callShape: box
+  instanceType: null
+
+  pins:
+    - name: null
+      dir: in
+      required: true
+      dataTypes: ["Floating-point numbers"]
+      memoryAreas: [I, Q, M, D, L, P]
+      note: Positional floating-point expression to square.
+
+  result:
+    kind: inferred
+    rule: same-as-source
+    sourcePins: [0]
+    notes: Square of the input with the same floating-point datatype.
+
+  template: { shape: none, keys: [], extra: {} }
+  confidence: official-doc
+  notes: >-
+    Returns the square of the input expression.
+  source: "official instruction documentation (paraphrased)"
+SQRT:
+  family: math
+  callShape: box
+  instanceType: null
+
+  pins:
+    - name: null
+      dir: in
+      required: true
+      dataTypes: ["Floating-point numbers"]
+      memoryAreas: [I, Q, M, D, L, P]
+      note: Positional floating-point expression.
+
+  result:
+    kind: inferred
+    rule: same-as-source
+    sourcePins: [0]
+    notes: Square root with the same floating-point datatype as the input.
+
+  template: { shape: none, keys: [], extra: {} }
+  confidence: official-doc
+  notes: >-
+    Returns the square root. A negative input produces an invalid floating-point value; zero returns
+    zero.
+  source: "official instruction documentation (paraphrased)"
+LN:
+  family: math
+  callShape: box
+  instanceType: null
+
+  pins:
+    - name: null
+      dir: in
+      required: true
+      dataTypes: ["Floating-point numbers"]
+      memoryAreas: [I, Q, M, D, L, P]
+      note: Positional floating-point expression.
+
+  result:
+    kind: inferred
+    rule: same-as-source
+    sourcePins: [0]
+    notes: Natural logarithm with the same floating-point datatype as the input.
+
+  template: { shape: none, keys: [], extra: {} }
+  confidence: official-doc
+  notes: >-
+    Returns the natural logarithm to base e. Inputs below zero produce an invalid floating-point value.
+  source: "official instruction documentation (paraphrased)"
+EXP:
+  family: math
+  callShape: box
+  instanceType: null
+
+  pins:
+    - name: null
+      dir: in
+      required: true
+      dataTypes: ["Floating-point numbers"]
+      memoryAreas: [I, Q, M, D, L, P]
+      note: Positional exponent expression.
+
+  result:
+    kind: inferred
+    rule: same-as-source
+    sourcePins: [0]
+    notes: Exponential value with the same floating-point datatype as the input.
+
+  template: { shape: none, keys: [], extra: {} }
+  confidence: official-doc
+  notes: >-
+    Returns e raised to the input expression.
+  source: "official instruction documentation (paraphrased)"
+SIN:
+  family: math
+  callShape: box
+  instanceType: null
+
+  pins:
+    - name: null
+      dir: in
+      required: true
+      dataTypes: ["Floating-point numbers"]
+      memoryAreas: [I, Q, M, D, L, P]
+      note: Positional angle expression in radians.
+
+  result:
+    kind: inferred
+    rule: same-as-source
+    sourcePins: [0]
+    notes: Sine value with the same floating-point datatype as the input.
+
+  template: { shape: none, keys: [], extra: {} }
+  confidence: official-doc
+  notes: >-
+    Returns the sine of an angle expressed in radians.
+  source: "official instruction documentation (paraphrased)"
+COS:
+  family: math
+  callShape: box
+  instanceType: null
+
+  pins:
+    - name: null
+      dir: in
+      required: true
+      dataTypes: ["Floating-point numbers"]
+      memoryAreas: [I, Q, M, D, L, P]
+      note: Positional angle expression in radians.
+
+  result:
+    kind: inferred
+    rule: same-as-source
+    sourcePins: [0]
+    notes: Cosine value with the same floating-point datatype as the input.
+
+  template: { shape: none, keys: [], extra: {} }
+  confidence: official-doc
+  notes: >-
+    Returns the cosine of an angle expressed in radians.
+  source: "official instruction documentation (paraphrased)"
+TAN:
+  family: math
+  callShape: box
+  instanceType: null
+
+  pins:
+    - name: null
+      dir: in
+      required: true
+      dataTypes: ["Floating-point numbers"]
+      memoryAreas: [I, Q, M, D, L, P]
+      note: Positional angle expression in radians.
+
+  result:
+    kind: inferred
+    rule: same-as-source
+    sourcePins: [0]
+    notes: Tangent value with the same floating-point datatype as the input.
+
+  template: { shape: none, keys: [], extra: {} }
+  confidence: official-doc
+  notes: >-
+    Returns the tangent of an angle expressed in radians.
+  source: "official instruction documentation (paraphrased)"
+ASIN:
+  family: math
+  callShape: box
+  instanceType: null
+
+  pins:
+    - name: null
+      dir: in
+      required: true
+      dataTypes: ["Floating-point numbers"]
+      memoryAreas: [I, Q, M, D, L, P]
+      note: Positional sine value in the interval [-1, +1].
+
+  result:
+    kind: inferred
+    rule: same-as-source
+    sourcePins: [0]
+    notes: Angle in radians with the same floating-point datatype as the input.
+
+  template: { shape: none, keys: [], extra: {} }
+  confidence: official-doc
+  notes: >-
+    Returns an angle from -pi/2 to +pi/2. Inputs outside [-1, +1] do not represent a valid arcsine
+    operand.
+  source: "official instruction documentation (paraphrased)"
+ACOS:
+  family: math
+  callShape: box
+  instanceType: null
+
+  pins:
+    - name: null
+      dir: in
+      required: true
+      dataTypes: ["Floating-point numbers"]
+      memoryAreas: [I, Q, M, D, L, P]
+      note: Positional cosine value in the interval [-1, +1].
+
+  result:
+    kind: inferred
+    rule: same-as-source
+    sourcePins: [0]
+    notes: Angle in radians with the same floating-point datatype as the input.
+
+  template: { shape: none, keys: [], extra: {} }
+  confidence: official-doc
+  notes: >-
+    Returns an angle from zero to +pi. Inputs outside [-1, +1] do not represent a valid arccosine
+    operand.
+  source: "official instruction documentation (paraphrased)"
+ATAN:
+  family: math
+  callShape: box
+  instanceType: null
+
+  pins:
+    - name: null
+      dir: in
+      required: true
+      dataTypes: ["Floating-point numbers"]
+      memoryAreas: [I, Q, M, D, L, P]
+      note: Positional tangent value.
+
+  result:
+    kind: inferred
+    rule: same-as-source
+    sourcePins: [0]
+    notes: Angle in radians with the same floating-point datatype as the input.
+
+  template: { shape: none, keys: [], extra: {} }
+  confidence: official-doc
+  notes: >-
+    Returns an angle from -pi/2 to +pi/2.
+  source: "official instruction documentation (paraphrased)"
+FRAC:
+  family: math
+  callShape: box
+  instanceType: null
+
+  pins:
+    - name: null
+      dir: in
+      required: true
+      dataTypes: ["Floating-point numbers"]
+      memoryAreas: [I, Q, M, D, L, P]
+      note: Positional floating-point expression whose fractional part is returned.
+
+  result:
+    kind: inferred
+    rule: instruction-specific
+    sourcePins: [0]
+    dataTypes: ["Floating-point numbers"]
+    notes: >-
+      Floating-point function value. The result datatype may be selected
+      explicitly with FRAC_<datatype>; otherwise it is inferred from typed
+      operands/constants, with REAL as the default.
+
+  template: { shape: none, keys: [], extra: {} }
+  confidence: official-doc
+  notes: >-
+    Returns the fractional part of the input, for example 1.125 -> 0.125. Example explicit result type:
+    FRAC_LREAL(#Value).
+  source: "official instruction documentation (paraphrased)"

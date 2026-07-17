@@ -1,0 +1,155 @@
+// Loads the bundled YAML knowledge base directly from ./resources into
+// typed in-memory maps. The resources directory is the canonical source.
+import * as fs from "fs";
+import * as path from "path";
+import * as yaml from "js-yaml";
+import {
+  AnyPointerRegistry,
+  BaseTypeRegistry,
+  BcdFormatRegistry,
+  CategoryIndex,
+  CompositionRules,
+  DiagnosticRegistry,
+  ExpressionOperatorRules,
+  InstructionEntry,
+  InstructionRegistry,
+  MemoryAreaRegistry,
+  PointerTypeRegistry,
+  ReferencesRegistry,
+  ResultSchema,
+  RuleSet,
+  SectionLegality,
+  SymbolicRuntimeAccessRegistry,
+  SystemRegistry,
+  SystemTypeRegistry,
+} from "./types";
+
+function readYaml<T>(filePath: string): T {
+  const text = fs.readFileSync(filePath, "utf-8");
+  return yaml.load(text) as T;
+}
+
+/** Reserved key (never a real instruction name -- those are all plain PLC
+ * identifiers) a family file can set ONCE to default every entry in that
+ * file to a given `language` instead of repeating it on each one --
+ * see instruction-registry/README.md's "Per-language instructions". An
+ * entry's OWN `language` field (if it sets one) always wins over this. */
+const FILE_LANGUAGE_KEY = "$fileLanguage";
+
+/** Naming convention for a dedicated SCL-casing sibling file (e.g.
+ * `04-timers-SCL.yaml` next to `04-timers.yaml`) -- a FULL standalone
+ * entry per instruction, in SCL's own calling convention (real SCL
+ * parameter-name casing, every FBD-implicit pin made explicit), loaded
+ * into `RuleSet.sclInstructions` -- a SEPARATE map from `RuleSet.
+ * instructions`, so e.g. `TP`'s SCL-cased entry here doesn't collide
+ * with (overwrite) `04-timers.yaml`'s own FBD-cased `TP` entry in the
+ * shared map. See instruction-registry/README.md's "SCL as a third
+ * language" section. */
+const SCL_ONLY_SUFFIX = "-SCL.yaml";
+
+/** A reference/copy-me schema file, not real registry data -- never a real
+ * instruction name (all of those are plain PLC identifiers), so it can't
+ * collide with one either; see its own header comment. Excluded here
+ * independently of the real registry entries. */
+const TEMPLATE_FILE = "_template.yaml";
+
+function loadInstructionRegistry(dir: string, includeFile: (fileName: string) => boolean): InstructionRegistry {
+  const merged: InstructionRegistry = {};
+  for (const file of fs.readdirSync(dir)) {
+    if (file === TEMPLATE_FILE) continue;
+    if (!file.endsWith(".yaml") || !includeFile(file)) continue;
+    const parsed = readYaml<Record<string, unknown>>(path.join(dir, file));
+    const fileLanguage = parsed[FILE_LANGUAGE_KEY] as string[] | undefined;
+    for (const [name, value] of Object.entries(parsed)) {
+      if (name === FILE_LANGUAGE_KEY) continue;
+      const entry = value as InstructionEntry;
+      merged[name] = fileLanguage && !entry.language ? { ...entry, language: fileLanguage } : entry;
+    }
+  }
+  return merged;
+}
+
+/** Names section-legality.yaml treats as legal in a VAR_* section but that
+ * have no base-types.yaml / system-types.yaml entry -- see
+ * resources/type-registry/udt-dependency-cache.md's Build algorithm step 1b. */
+function computeOpaqueNames(
+  sectionLegality: SectionLegality,
+  baseTypes: BaseTypeRegistry,
+  systemTypes: SystemTypeRegistry
+): Set<string> {
+  const names = new Set<string>(sectionLegality.allSections.datatypes);
+  for (const section of Object.values(sectionLegality.sections)) {
+    for (const n of section.additionalDatatypes) names.add(n);
+  }
+  names.delete("Array[0..1] of"); // placeholder, not a real name -- see section-legality.yaml's trailing comment
+  const opaque = new Set<string>();
+  for (const n of names) {
+    if (!(n in baseTypes) && !(n in systemTypes)) opaque.add(n);
+  }
+  return opaque;
+}
+
+function loadSystemRegistry(resourcesDir: string): SystemRegistry {
+  const systemDir = path.join(resourcesDir, "system-registry");
+  return {
+    memory: readYaml<MemoryAreaRegistry>(path.join(systemDir, "memory.yaml")),
+    result: readYaml<ResultSchema>(path.join(systemDir, "result.yaml")),
+  };
+}
+
+/** Loads every `*.yaml` file in resources/diagnostic-registry/ into one
+ * flat code -> DiagnosticSpec map -- same "one file per source module,
+ * merged into a single map" shape `loadInstructionRegistry` uses, but
+ * without that function's per-file `$fileLanguage` default (a diagnostic
+ * code's severity/message never varies by which file it happens to be
+ * declared in). Two files declaring the same code is a registry bug (a
+ * copy-paste of an existing code into the wrong file) -- the later file
+ * silently wins, same "trust the data" discipline `loadInstructionRegistry`
+ * itself applies rather than adding a runtime duplicate-key guard here. */
+function loadDiagnosticRegistry(resourcesDir: string): DiagnosticRegistry {
+  const dir = path.join(resourcesDir, "diagnostic-registry");
+  const merged: DiagnosticRegistry = {};
+  for (const file of fs.readdirSync(dir)) {
+    if (file === TEMPLATE_FILE || !file.endsWith(".yaml")) continue;
+    Object.assign(merged, readYaml<DiagnosticRegistry>(path.join(dir, file)));
+  }
+  return merged;
+}
+
+export function loadRuleSet(resourcesDir: string): RuleSet {
+  const typeDir = path.join(resourcesDir, "type-registry");
+  const instrDir = path.join(resourcesDir, "instruction-registry");
+
+  const baseTypes = readYaml<BaseTypeRegistry>(path.join(typeDir, "base-types.yaml"));
+  const systemTypes = readYaml<SystemTypeRegistry>(path.join(typeDir, "system-types.yaml"));
+  const sectionLegality = readYaml<SectionLegality>(path.join(typeDir, "section-legality.yaml"));
+  const composition = readYaml<CompositionRules>(path.join(typeDir, "composition-rules.yaml"));
+  const categoryIndex = readYaml<CategoryIndex>(path.join(typeDir, "category-index.yaml"));
+  const bcdFormats = readYaml<BcdFormatRegistry>(path.join(typeDir, "bcd-formats.yaml"));
+  const instructions = loadInstructionRegistry(instrDir, (f) => !f.endsWith(SCL_ONLY_SUFFIX));
+  const sclInstructions = loadInstructionRegistry(instrDir, (f) => f.endsWith(SCL_ONLY_SUFFIX));
+  const anyPointer = readYaml<AnyPointerRegistry>(path.join(typeDir, "any-pointer.yaml"));
+  const pointerType = readYaml<PointerTypeRegistry>(path.join(typeDir, "pointer-type.yaml"));
+  const references = readYaml<ReferencesRegistry>(path.join(typeDir, "references.yaml"));
+  const symbolicRuntimeAccess = readYaml<SymbolicRuntimeAccessRegistry>(path.join(typeDir, "symbolic-runtime-access.yaml"));
+  const exprOperators = readYaml<ExpressionOperatorRules>(path.join(typeDir, "expression-operators.yaml"));
+
+  return {
+    instructions,
+    sclInstructions,
+    baseTypes,
+    systemTypes,
+    sectionLegality,
+    composition,
+    categoryIndex,
+    bcdFormats,
+    opaqueSectionNames: computeOpaqueNames(sectionLegality, baseTypes, systemTypes),
+    systemRegistry: loadSystemRegistry(resourcesDir),
+    anyPointer,
+    pointerType,
+    references,
+    symbolicRuntimeAccess,
+    exprOperators,
+    diagnostics: loadDiagnosticRegistry(resourcesDir),
+  };
+}

@@ -1,0 +1,116 @@
+# The legacy S7 POINTER type's full shape: binary layout, the four
+# pointer kinds, the P# literal grammar, the STL prefix-legality rules,
+# and its memory-area coding table. Split out of base-types.yaml's
+# `Pointer` entry the same way any-pointer.yaml was for `Any` — see that
+# entry's notes for the explicit warning that Pointer and Any are
+# DIFFERENT encodings despite both being P#-addressed legacy pointers.
+#
+# Pasted directly from Siemens' TIA Portal Information System "POINTER"
+# reference page by the user (2026-07-13). confidence: official-doc.
+
+structure:
+  sizeBytes: 6
+  components:
+    - name: "DB number"
+      description: "Data block number, or 0 if the data is not stored in a DB."
+    - name: "Memory area"
+      description: "Memory area in the CPU — encoded per the `memoryAreaCodes` table below."
+    - name: "Tag address"
+      description: "Byte.bit address of the tag."
+  notes: "Exact byte offsets/widths for each component within the 6-byte layout are NOT given by the source page (only the component list and total size), same caveat as any-pointer.yaml's structure — don't invent an offset table without a real reference."
+
+pointerKinds:
+  - name: "Area-internal pointer"
+    description: "Contains only the address of a tag (implicitly within the current/default memory area)."
+  - name: "Cross-area pointer"
+    description: "Contains the memory area AND the address of a tag."
+  - name: "DB pointer"
+    description: "Contains a data block number IN ADDITION to the memory area and address — points to a data block tag specifically."
+  - name: "Zero pointer"
+    description: "Indicates a missing value — 'no value exists, or the value is not yet known.' Same 'a zero value represents the absence of a value, but is also a value' framing any-pointer.yaml's zero pointer uses."
+    zeroLiteral: "ZERO"
+    notes: "Spelled 'ZERO' here, NOT 'NULL' like Any's LAD/FBD zero-pointer literal (see any-pointer.yaml) — the two legacy pointer types don't share a zero-value keyword, don't assume they do."
+
+# --- P# literal grammar — four distinct patterns, one per pointer kind ---
+# NOTE: shares the P# prefix convention with any-pointer.yaml but the
+# patterns themselves are DIFFERENT (no Type/Number suffix here — Pointer
+# has no "data type + repetition factor" the way Any does).
+literalGrammar:
+  areaInternal:
+    symbolic: { pattern: 'P#Byte.Bit', example: '"MyTag"' }
+    absolute: { pattern: 'P#Byte.Bit', example: 'P#20.0' }
+  crossArea:
+    symbolic: { pattern: 'P#OperandAreaByte.Bit', example: '"MyTag"' }
+    absolute: { pattern: 'P#OperandAreaByte.Bit', example: 'P#M20.0' }
+  dbPointer:
+    symbolic: { pattern: 'P#Data_block.Data_operand', example: '"MyDB"."MyTag"' }
+    absolute: { pattern: 'P#Data_block.Data_operand', example: 'P#DB10.DBX20.0' }
+  zeroPointer:
+    symbolic: { pattern: 'P#Zero value', example: null }
+    absolute: { pattern: 'P#Zero value', example: 'P#0.0, ZERO' }
+  notes: "The symbolic-form examples for area-internal/cross-area pointers are BOTH just \"MyTag\" in the source table — the distinction between the two kinds isn't visible in the symbolic literal text itself, only in the absolute form (bare P#20.0 vs. area-qualified P#M20.0) and in which components the resulting binary pointer actually populates. Don't expect a lint server to distinguish area-internal from cross-area from symbolic text alone."
+
+prefixBehavior:
+  withoutPrefix: "Entering a value WITHOUT the P# prefix when supplying a formal POINTER parameter in a block call is automatically converted to POINTER format by TIA."
+  withPrefix: "Using the literal P# prefix restricts the pointer to targeting memory areas with 'Standard' (non-optimized) access mode ONLY — this is unconditional (not S7-1500-specific the way Any's optimized-access restriction is scoped)."
+
+# --- STL-specific legality of a P#-prefixed tag reference ---
+# Whether `#someTag` may be referenced with the P# prefix at all depends
+# on block type, the block's access mode, and which interface section
+# the tag was declared in.
+stlPrefixLegality:
+  FC:
+    optimizedAccess:
+      allowed: false
+      notes: "A tag cannot be used in the program code with the P# prefix at all, regardless of section."
+    standardAccess:
+      allowed: true
+      rules:
+        - "Structured tags declared in the block's InOut section CAN be used with P#."
+        - "Tags with elementary data types CANNOT be used with P#, even in Standard access mode."
+  FB:
+    optimizedAccess:
+      allowed: false
+      notes: "A tag cannot be used in the program code with the P# prefix at all, regardless of section."
+    standardAccess:
+      allowed: true
+      rules:
+        - "Tags declared in the Static, Input, or Output sections CAN be used with P#."
+        - "Tags of PLC data type (UDT), specifically declared in the InOut section, CAN be used with P#."
+  notes: "Source explicitly frames this as an STL-programming-language concern ('The following should be noted when using the prefix P# in the STL programming language') — not independently confirmed whether the same block-type/access-mode/section matrix applies identically to LAD/FBD/SCL P#-prefixed references, or whether it's STL-specific. Treat as STL-confirmed only until checked for the other languages."
+
+# --- Memory area coding (the "Memory area" structure component) ---
+# NOTE: overlaps with any-pointer.yaml's memoryAreaCodes for I/Q/M/DBX/
+# DIX/L/V but is NOT identical — Pointer has S7-1500-specific peripheral
+# input/output codes (16#1/16#2) that Any's table doesn't have, and a
+# multi-value "V from higher call levels" range (C0/C1/...) that Any's
+# table doesn't mention either. Don't assume the two tables are
+# interchangeable even where entries look similar.
+memoryAreaCodes:
+  "B#16#80": { name: P, description: "Peripherals on a CPU S7-300/400", platformOnly: "S7-300/400" }
+  "16#1": { name: P, description: "Peripheral inputs on a CPU S7-1500", platformOnly: "S7-1500", notes: "Coding format differs from the rest of this table (bare '16#1', not 'B#16#...') — transcribed exactly as the source page wrote it, not a typo introduced here." }
+  "16#2": { name: P, description: "Peripheral outputs on a CPU S7-1500", platformOnly: "S7-1500", notes: "Same bare-hex coding-format note as 16#1 above." }
+  "B#16#81": { name: I, description: "Memory area of inputs" }
+  "B#16#82": { name: Q, description: "Memory area of outputs" }
+  "B#16#83": { name: M, description: "Memory area of bit memory" }
+  "B#16#84": { name: DBX, description: "Data block" }
+  "B#16#85": { name: DIX, description: "Instance data block" }
+  "B#16#86": { name: L, description: "Local data" }
+  "B#16#87": { name: V, description: "Previous local data (local data of the calling module)" }
+  "B#16#C0, B#16#C1, etc.": { name: V, description: "Previous local data (local data of calling modules from higher levels of the call hierarchy)", notes: "A RANGE of codes (C0, C1, ...), not a single value — one code per call-hierarchy level above the immediate caller. Exact upper bound not given by the source; don't assume a specific max without checking further." }
+  notes: "UNLIKE any-pointer.yaml's memoryAreaCodes table, DIX (B#16#85) is NOT marked S7-300/400-only here — only the plain P code (B#16#80) carries that footnote on this table. Don't assume DIX's platform restriction (if any) carries over from the Any table; treat the two tables as independently sourced even for overlapping codes."
+
+notes: |
+  Cross-references worth keeping in sync:
+  - base-types.yaml's `Pointer` entry points here for the full shape.
+  - type-registry/any-pointer.yaml documents the SIBLING legacy pointer
+    type `Any` — similar purpose, different encoding, different zero-
+    value keyword (NULL vs. ZERO). Read both before assuming either
+    generalizes to the other.
+  - section-legality.yaml already lists `Pointer` as legal in InOut/Input
+    additionalDatatypes; its earlier "no base-types.yaml entry describes
+    its format/size" caveat is RESOLVED now — update that note.
+  - platform-availability.NOTLOADED.yaml's `pointer.Pointer` row already marks it
+    S7-300/400 + S7-1500 only (not plain S7-1200); this file's
+    `platformOnly` sub-codes are a finer-grained restriction layered on
+    top, same relationship any-pointer.yaml has to its own platform row.

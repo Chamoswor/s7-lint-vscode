@@ -1,0 +1,193 @@
+# Runtime symbol and instance information — SCL registry.
+#
+# SCL callable names and parameter casing use Siemens' canonical spelling.
+# Function returns are represented by `result`, not by graphical OUT/RET_VAL pins.
+#
+# S_Move and generic S_CONV are intentionally not emitted as callable SCL
+# entries. Their SCL forms are assignment and typed <source>_TO_<destination>
+# conversion respectively. T_COMBINE expands to CONCAT_DATE_TOD or
+# CONCAT_DATE_LTOD.
+#
+# Missing dataTypes are intentional; unresolved types are never guessed.
+
+$fileLanguage: [SCL]
+GetSymbolName:
+  family: extended
+  callShape: box
+  instanceType: null
+  pins:
+  - name: variable
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [Variant]
+  - name: size
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [UInt]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Read the symbolic name of a referenced tag at runtime.
+  source: "official instruction documentation (paraphrased)"
+  result:
+    kind: value
+    dataTypes: [WString]
+    notes: SCL function return value.
+GetSymbolPath:
+  family: extended
+  callShape: box
+  instanceType: null
+  pins:
+  - name: variable
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [Variant]
+  - name: size
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [UInt]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Read the full symbolic path of a referenced tag at runtime.
+  source: "official instruction documentation (paraphrased)"
+  result:
+    kind: value
+    dataTypes: [WString]
+    notes: SCL function return value.
+GetInstanceName:
+  family: extended
+  callShape: box
+  instanceType: null
+  pins:
+  - name: size
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [UInt]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Read the calling block's own instance name.
+  source: "official instruction documentation (paraphrased)"
+  result:
+    kind: value
+    dataTypes: [WString]
+    notes: SCL function return value.
+GetInstancePath:
+  family: extended
+  callShape: box
+  instanceType: null
+  pins:
+  - name: size
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [UInt]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Read the calling block's own instance path.
+  source: "official instruction documentation (paraphrased)"
+  result:
+    kind: value
+    dataTypes: [WString]
+    notes: SCL function return value.
+GetBlockName:
+  family: extended
+  callShape: box
+  instanceType: null
+  pins:
+  - name: size
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [UInt]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Read the calling block's own name.
+  source: "official instruction documentation (paraphrased)"
+  result:
+    kind: value
+    dataTypes: [WString]
+    notes: SCL function return value.
+GetSymbolForReference:
+  family: extended
+  callShape: instance-dot
+  instanceType: GetSymbolForReference
+  pins:
+  - name: execute
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: objectRef
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [Reference]
+  - name: size
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [UInt]
+  - name: done
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: busy
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: error
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: status
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Word]
+  - name: reliability
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [UInt]
+  - name: symbol
+    dir: inout
+    required: true
+    note: ''
+    dataTypes: [WString]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Resolves the symbolic name for a Reference-typed tag (`objectRef`).
+  source: "official instruction documentation (paraphrased)"
+  result:
+    kind: none

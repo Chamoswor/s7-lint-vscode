@@ -1,0 +1,120 @@
+{
+    S7_BlockComment := "Fixture";
+    S7_BlockTitle := "Fixture";
+    S7_Optimized := "TRUE";
+    S7_PreferredLanguage := "FBD";
+    S7_Version := "0.1"
+}
+FUNCTION_BLOCK "FB_MotorProtection"
+    VAR_INPUT
+        { S7_MLC := "Fixture" }
+        i_xMprSignal : Bool;
+        { S7_MLC := "Fixture" }
+        i_xNormallyClosed : Bool := TRUE;
+        { S7_MLC := "Fixture" }
+        i_xPumpRunning : Bool;
+        { S7_MLC := "Fixture" }
+        i_tDebounce : Time := T#200MS;
+        { S7_MLC := "Fixture" }
+        i_xAckAlarm : Bool;
+    END_VAR
+    VAR_OUTPUT
+        { S7_MLC := "Fixture" }
+        q_xTrip : Bool;
+        { S7_MLC := "Fixture" }
+        q_xTripInRun : Bool;
+        { S7_MLC := "Fixture" }
+        q_xAlarmMpr : Bool;
+        { S7_MLC := "Fixture" }
+        q_xBlockStart : Bool;
+        { S7_MLC := "Fixture" }
+        q_xAlarmGroup : Bool;
+    END_VAR
+    VAR
+        statTrip : Bool;
+        statTripInRun : Bool;
+        statAlmMpr : Bool;
+        tonDeb : TON_TIME;
+    END_VAR
+    VAR_TEMP
+        tTripRaw : Bool;
+    END_VAR
+
+    {
+        S7_Language := "FBD";
+        S7_NetworkTitle := "Fixture"
+    }
+    NETWORK
+        RUNG #i_xNormallyClosed
+            A( in2 := NOT #i_xMprSignal )
+            O( in2 := wire#w1 )
+            Coil( #tTripRaw )
+        END_RUNG
+        RUNG #i_xMprSignal
+            A( in2 := NOT #i_xNormallyClosed )
+        END_RUNG wire#w1
+    END_NETWORK
+    {
+        S7_Language := "FBD";
+        S7_NetworkTitle := "Fixture"
+    }
+    NETWORK
+        RUNG #tTripRaw
+            { S7_Templates := "time_type := Time" }
+            #tonDeb.TON(
+                pt := #i_tDebounce,
+                et =>
+            )
+            Coil( #statTrip )
+        END_RUNG
+    END_NETWORK
+    {
+        S7_Language := "FBD";
+        S7_NetworkTitle := "Fixture"
+    }
+    NETWORK
+        RUNG #statTrip
+            A( in2 := #i_xPumpRunning )
+            S_Coil( #statTripInRun )
+        END_RUNG
+        RUNG #i_xAckAlarm
+            A( in2 := NOT #statTrip )
+            R_Coil( #statTripInRun )
+        END_RUNG
+    END_NETWORK
+    {
+        S7_Language := "FBD";
+        S7_NetworkTitle := "Fixture"
+    }
+    NETWORK
+        RUNG #statTrip
+            S_Coil( #statAlmMpr )
+        END_RUNG
+        RUNG #i_xAckAlarm
+            A( in2 := NOT #statTrip )
+            R_Coil( #statAlmMpr )
+        END_RUNG
+    END_NETWORK
+    {
+        S7_Language := "FBD";
+        S7_NetworkTitle := "Fixture"
+    }
+    NETWORK
+        RUNG #statTrip
+            Coil( #q_xTrip )
+            Coil( #q_xBlockStart )
+        END_RUNG
+        RUNG #statTripInRun
+            Coil( #q_xTripInRun )
+        END_RUNG
+        RUNG #statAlmMpr
+            Coil( #q_xAlarmMpr )
+            Coil( #q_xAlarmGroup )
+        END_RUNG
+    END_NETWORK
+    { S7_Language := "FBD" }
+    NETWORK
+        RUNG
+        END_RUNG
+    END_NETWORK
+END_FUNCTION_BLOCK

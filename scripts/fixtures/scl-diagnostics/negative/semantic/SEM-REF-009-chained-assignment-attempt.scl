@@ -1,0 +1,14 @@
+FUNCTION_BLOCK "Semantic_ChainedAssignmentAttempt"
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+
+VAR_TEMP
+    targetReference : REF_TO Int;
+    sourceA         : Variant;
+    sourceB         : Variant;
+END_VAR
+
+BEGIN
+    #targetReference ?= #sourceA ?= #sourceB;
+    // EXPECT: error[reference.assignment-attempt-chained] SEM-REF-009
+END_FUNCTION_BLOCK

@@ -1,0 +1,369 @@
+# String conversion, array conversion and structured string processing — SCL registry.
+#
+# SCL callable names and parameter casing use Siemens' canonical spelling.
+# Function returns are represented by `result`, not by graphical OUT/RET_VAL pins.
+#
+# S_Move and generic S_CONV are intentionally not emitted as callable SCL
+# entries. Their SCL forms are assignment and typed <source>_TO_<destination>
+# conversion respectively. T_COMBINE expands to CONCAT_DATE_TOD or
+# CONCAT_DATE_LTOD.
+#
+# Missing dataTypes are intentional; unresolved types are never guessed.
+
+$fileLanguage: [SCL]
+S_COMP:
+  family: extended
+  callShape: box
+  instanceType: null
+  pins:
+  - name: in1
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [String, WString]
+  - name: in2
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [String, WString]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    STRING/WSTRING comparison. Same confirmed `{ S7_Relation := "EQ" }` pragma shape as T_COMP above —
+    see that entry's note.
+  source: "official instruction documentation (paraphrased)"
+  result:
+    kind: value
+    dataTypes: [Bool]
+    notes: SCL function return value.
+STRG_VAL:
+  family: extended
+  callShape: box
+  instanceType: null
+  pins:
+  - name: in
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [String, WString]
+  - name: format
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [UInt]
+  - name: P
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [UInt]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Parse a numeric value out of a string.
+  source: "official instruction documentation (paraphrased)"
+  result:
+    kind: inferred
+    rule: instruction-specific
+    notes: SCL function return datatype depends on the selected source/destination datatype or instruction variant.
+VAL_STRG:
+  family: extended
+  callShape: box
+  instanceType: null
+  pins:
+  - name: in
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [Integers, Floating-point numbers]
+  - name: size
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [UInt]
+  - name: prec
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [UInt]
+  - name: format
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [UInt]
+  - name: P
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [UInt]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Format a numeric value into a string.
+  source: "official instruction documentation (paraphrased)"
+  result:
+    kind: value
+    dataTypes: [String, WString]
+    notes: SCL function return value.
+Strg_TO_Chars:
+  family: extended
+  callShape: box
+  instanceType: null
+  pins:
+  - name: Strg
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [String, WString]
+  - name: pChars
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [UInt]
+  - name: Chars
+    dir: inout
+    required: true
+    note: ''
+    dataTypes: [Array, Struct, PLC data type]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Copy a STRING into an ARRAY of CHAR.
+  source: "official instruction documentation (paraphrased)"
+  result:
+    kind: value
+    dataTypes: [Int]
+    notes: SCL function return value.
+Chars_TO_Strg:
+  family: extended
+  callShape: box
+  instanceType: null
+  pins:
+  - name: Chars
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [Array, Struct, PLC data type]
+  - name: pChars
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [UInt]
+  - name: Cnt
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [UInt]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Copy an ARRAY of CHAR into a STRING, inverse of Strg_TO_Chars.
+  source: "official instruction documentation (paraphrased)"
+  result:
+    kind: value
+    dataTypes: [String, WString]
+    notes: SCL function return value.
+MAX_LEN:
+  family: extended
+  callShape: box
+  instanceType: null
+  pins:
+  - name: in
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [String, WString]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Query a STRING/WSTRING tag's declared maximum length.
+  source: "official instruction documentation (paraphrased)"
+  result:
+    kind: value
+    dataTypes: [DInt]
+    notes: SCL function return value.
+Join:
+  family: extended
+  callShape: box
+  instanceType: null
+  pins:
+  - name: mode
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [UInt]
+  - name: recSeparator
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [String, WString]
+  - name: endSeparator
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [String, WString]
+  - name: srcStruct
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [Struct, PLC data type]
+  - name: count
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [UInt]
+  - name: dstArray
+    dir: inout
+    required: true
+    note: ''
+    dataTypes: [Array]
+  - name: position
+    dir: inout
+    required: true
+    note: ''
+    dataTypes: [DInt]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: shape-only
+  notes: >-
+    Join a struct's members into a delimited character array, inverse of Split below.
+  source: "anonymized reference fixture (signature only)"
+  result:
+    kind: value
+    dataTypes: [Int]
+    notes: SCL function return value.
+Split:
+  family: extended
+  callShape: box
+  instanceType: null
+  pins:
+  - name: mode
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [UInt]
+  - name: recSeparator
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [String, WString]
+  - name: endSeparator
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [String, WString]
+  - name: srcArray
+    dir: inout
+    required: true
+    note: ''
+    dataTypes: [Array]
+  - name: count
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [UInt]
+  - name: dstStruct
+    dir: inout
+    required: true
+    note: ''
+    dataTypes: [Struct, PLC data type]
+  - name: position
+    dir: inout
+    required: true
+    note: ''
+    dataTypes: [DInt]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: shape-only
+  notes: >-
+    Split a delimited character array into a struct's members, inverse of Join above.
+  source: "anonymized reference fixture (signature only)"
+  result:
+    kind: value
+    dataTypes: [Int]
+    notes: SCL function return value.
+ATH:
+  family: extended
+  callShape: box
+  instanceType: null
+  pins:
+  - name: in
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [String]
+  - name: n
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [UInt]
+  - name: out
+    dir: inout
+    required: true
+    note: ''
+    dataTypes: [Array, Struct, PLC data type]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Convert ASCII characters to packed hex/BCD.
+  source: "official instruction documentation (paraphrased)"
+  result:
+    kind: value
+    dataTypes: [Int]
+    notes: SCL function return value.
+HTA:
+  family: extended
+  callShape: box
+  instanceType: null
+  pins:
+  - name: in
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [Array, Struct, PLC data type]
+  - name: n
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [UInt]
+  - name: out
+    dir: inout
+    required: true
+    note: ''
+    dataTypes: [String]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Convert packed hex/BCD to ASCII characters, inverse of AsciiToHex.
+  source: "official instruction documentation (paraphrased)"
+  result:
+    kind: value
+    dataTypes: [Int]
+    notes: SCL function return value.

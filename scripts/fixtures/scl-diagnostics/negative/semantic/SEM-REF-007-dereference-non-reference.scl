@@ -1,0 +1,13 @@
+FUNCTION_BLOCK "Semantic_DereferenceNonReference"
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+
+VAR_TEMP
+    value  : Int;
+    result : Int;
+END_VAR
+
+BEGIN
+    #result := #value^;
+    // EXPECT: error[reference.dereference-non-reference] SEM-REF-007
+END_FUNCTION_BLOCK

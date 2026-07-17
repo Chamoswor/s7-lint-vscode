@@ -1,0 +1,62 @@
+# LAD-specific bit-logic instruction registry.
+#
+# Contact and I_Contact query a BOOL operand, while Not inverts the incoming
+# result of logic operation (RLO). T and C entries in `memoryAreas` are valid
+# only for S7-1500.
+$fileLanguage: [LAD]
+
+Contact:
+  family: bit-logic
+  callShape: box
+  instanceType: null
+  pins:
+    - name: null
+      dir: in
+      required: true
+      dataTypes: [Bool]
+      memoryAreas: [I, Q, M, D, L, T, C, constant]
+      note: >-
+        BOOL operand whose signal state is queried.
+  result:
+    kind: value
+    dataTypes: [Bool]
+  template: { shape: none, keys: [], extra: {} }
+  confidence: confirmed-compiled
+  notes: >-
+    Normally open contact. It transfers the incoming RLO when the operand is TRUE; otherwise the output
+    RLO is FALSE.
+  source: "scripts/fixtures/reference/lad-fbd-wiring/lad-wiring-comparison.s7dcl"
+I_Contact:
+  family: bit-logic
+  callShape: box
+  instanceType: null
+  pins:
+    - name: null
+      dir: in
+      required: true
+      dataTypes: [Bool]
+      memoryAreas: [I, Q, M, D, L, T, C, constant]
+      note: >-
+        BOOL operand whose inverted signal state is queried.
+  result:
+    kind: value
+    dataTypes: [Bool]
+  template: { shape: none, keys: [], extra: {} }
+  confidence: confirmed-compiled
+  notes: >-
+    Normally closed contact. It transfers the incoming RLO when the operand is FALSE; otherwise the
+    output RLO is FALSE.
+  source: "scripts/fixtures/reference/lad-fbd-wiring/lad-wiring-comparison.s7dcl"
+Not:
+  family: bit-logic
+  callShape: box
+  instanceType: null
+  pins: []
+  result:
+    kind: value
+    dataTypes: [Bool]
+  template: { shape: none, keys: [], extra: {} }
+  confidence: confirmed-compiled
+  notes: >-
+    Inverts the incoming result of logic operation without querying or writing a separate operand.
+  source: "scripts/fixtures/reference/lad-fbd-wiring/lad-wiring-comparison.s7dcl"

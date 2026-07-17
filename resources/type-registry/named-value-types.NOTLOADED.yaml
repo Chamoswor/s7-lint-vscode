@@ -1,0 +1,75 @@
+# Named value data types (NVT) — S7-1500-only named-constant-set wrapper
+# around an Integer or Bit-string base type. Pasted by user 2026-07-13
+# from Siemens' NVT reference page. confidence: official-doc.
+#
+# ⚠️ SCOPE WARNING (user's own clarification, 2026-07-13): every
+# verification this registry has done so far (`confirmed-compiled`
+# entries throughout instruction-registry/, the .s7dcl grammar this repo
+# targets) was done from FBD exports in SIMATIC SD (.s7dcl) format. Much
+# of what follows describes TIA PORTAL'S OWN EDITOR/PROJECT-TREE
+# behavior and a SEPARATE DOCUMENT FORMAT (`.nvt` files) — NOT .s7dcl
+# syntax. Treat the `declarationFileFormat` section below as "useful if
+# a lint server ever needs to parse .nvt files directly," not as
+# something that appears inside a `.s7dcl` block export. The
+# `usageInProgramCode` section is the part actually relevant to linting
+# `.s7dcl` text — verify against a real compiled export before trusting
+# it the way this repo's `confirmed-compiled` tier requires; nothing
+# here has that confirmation yet, it's transcribed documentation only.
+
+platform:
+  requirement: "S7-1500 only (confirms platform-availability.NOTLOADED.yaml's existing 'Named value data types (NVT)' row: S7-1500 true, S7-1200/S7-300-400 false, S7-1200 G2 'S7-1500-compatible')."
+  supportedLanguages: [LAD, FBD, SCL, GRAPH]
+  notes: "STL is NOT listed among supported languages — unconfirmed whether that's a real exclusion or just an omission from this particular doc page. Also: 'available only within software units' — a project-organizational scoping concept, not itself a syntax rule; a lint server would need to know which software unit a block belongs to if it ever needs to check NVT visibility/publication rules (see declarationFileFormat.publishing below), which this repo doesn't currently model at all."
+
+semantics:
+  baseTypeConstraint:
+    allowed: ["SInt", "USInt", "Int", "UInt", "DInt", "UDInt", "LInt", "ULInt", "Byte", "Word", "DWord", "LWord"]
+    disallowed: "Any other base type (Real/LReal, Bool, Time/date-time types, String/WString, Struct/Array/UDT, ...) — an NVT's base type MUST be one of the 8 integer types or 4 bit-string types listed, nothing else. Per IEC 61131-3, the bit-string-based ones cannot take negative values (consistent with those types' own unsigned nature)."
+  notAStrictEnum: "CRITICAL semantic point: an NVT-typed tag/value is NOT constrained to the declared named values — 'tags based on Named value data types can assume all values that lie within the value range of the base data type, thus including values not explicitly specified in the declaration.' A lint server must NOT treat an NVT the way it might treat a strict enum — any value legal for the base type is legal for the NVT-typed tag, named or not. The named values are documentation/readability sugar over the base type, not a value-range restriction."
+  defaultValue: "Optional in the declaration; if omitted, the FIRST value in the declaration list is used as the default."
+
+usageInProgramCode:
+  # The part of this whole page most likely to actually appear inside a
+  # .s7dcl file, per the user's own scope clarification above.
+  literalSyntax: "<namedValueType>#<NAMED_VALUE>"
+  literalSemantics: "Used in operations exactly like any other constant of the underlying base data type — e.g. an Int-based NVT's named-value literal is usable anywhere an Int constant would be. Can ALSO be used to declare ARRAY bounds or STRING length — i.e. `MyNvt#SOME_BOUND` could legally appear where composition-rules.yaml's array.bounds or a String[n] length expects a constant."
+  declarationAsParameterOrMemberType: "An NVT name can be used as the Datatype wherever a type name is otherwise legal: a block-interface parameter, a global-DB element, or a PLC-data-type (UDT) member — i.e. the same declaration-slot the type name occupies is a normal `<name> : <NvtTypeName>;`-shaped line, same textual shape as referencing a UDT. UNCONFIRMED whether section-legality.yaml's existing per-VAR_*-section rules (which don't have an NVT-specific row) apply to NVT names the same way they do to UDT names — treat as likely-same-as-UDT but not verified."
+  crossReference: "If a lint server's symbol-table/type-resolution work (the still-undesigned piece flagged in this file's udt-dependency-cache.md sibling) ever needs to resolve an NVT-typed tag down to a concrete storage type for e.g. instruction-registry dataTypes checking, the answer is simply the NVT's declared base type (semantics.baseTypeConstraint above) — an NVT adds no storage shape of its own beyond that."
+
+# --- .nvt declaration file format — TIA-internal, NOT confirmed to be
+# .s7dcl syntax. See the SCOPE WARNING at the top of this file. ---
+declarationFileFormat:
+  fileExtension: ".nvt"
+  projectLocation: "Project tree, 'PLC data types' folder — same tree location as UDTs, but a different file format/extension."
+  programmingModel: "'Document-based programming' — the NVT is authored directly as a text document, not built through a form-based UI the way most TIA declarations are."
+  syntax: |
+    NAMESPACE <name>
+    TYPE
+    { PUBLISHED := 'TRUE|FALSE' }
+    <namedValueType> : <BaseType>
+    (
+      <NAME_1> := <Value_1>,
+      <NAME_2> := <Value_2>,
+      <NAME_3> := <Value_3>
+    ) := <Default>;
+    END_TYPE
+    END_NAMESPACE
+  syntaxElements:
+    "NAMESPACE ... END_NAMESPACE": "Optional. Groups one or more NVT declarations under a namespace; omitted entirely if the type isn't namespaced. Same namespace-qualified addressing concept as composition-rules.yaml's struct addressing section (<Namespace>.<Blockname>...) — likely the same underlying namespace mechanism, not independently re-confirmed here."
+    "TYPE ... END_TYPE": "Wraps one or more NVT declarations."
+    "{ PUBLISHED := 'TRUE|FALSE' }": "Optional pragma. Whether the NVT is visible to OTHER software units. Defaults to NOT published if omitted."
+    "{ S7_UnitAccess := \"PUBLISHED | UNPUBLISHED\" }": "Optional, alternative spelling of the same publish/unpublish pragma as PUBLISHED above — same default (unpublished) if omitted. Two pragma spellings for the same concept; don't treat them as different settings."
+    "<namedValueType> : <BaseType>": "The NVT's own name and base type. IEC 61131-3 naming conventions apply."
+    "<NAME_n> := <Value_n>": "One named value per line, comma-separated. Max name length 128 characters. Names are NOT multilingual (single spelling, no per-locale text the way block/tag comments can have)."
+    ":= <Default>": "Optional trailing default value — see semantics.defaultValue above."
+    "// comment": "Line comment, extends to end of line."
+    "(* comment *) / * comment */": "Multi-line comment block."
+  publishing:
+    notes: "PUBLISHED/S7_UnitAccess pragma controls cross-software-unit visibility — this repo doesn't currently model 'software units' as a concept anywhere (not in instruction-registry/ or the rest of type-registry/), so a lint server can't evaluate this rule without that model existing first. Flagged as a gap, not solved here."
+  renameHandling: "Renaming an NVT via TIA's own 'Rename' context-menu command updates all reference locations automatically. Renaming by directly editing the text in the programming editor does NOT propagate — stale references become a COMPILE-TIME syntax error, not a silent bug. Not something a static lint server needs to model differently from any other unresolved-name error, just noting WHY a dangling NVT reference might occur (a manual text rename, not necessarily a typo)."
+  commentVisibilityRules:
+    rules:
+      - "Only a `//` line comment (not the block-comment forms) is eligible to show as a tooltip / block-interface comment at the point of use."
+      - "A comment on the WHOLE NVT must sit below the `TYPE` keyword and directly above the NVT's own declaration line."
+      - "A comment on a SINGLE named value must sit directly above that named value's own declaration line."
+    notes: "Cosmetic/IDE-display concern, not a correctness rule — low priority for a lint server, included for completeness only."

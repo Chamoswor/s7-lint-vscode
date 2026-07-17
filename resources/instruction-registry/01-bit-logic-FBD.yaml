@@ -1,0 +1,118 @@
+# FBD-specific bit-logic instruction registry.
+#
+# A, O and X combine the implicit incoming rung signal with explicitly
+# connected BOOL operands. T and C entries in `memoryAreas` are valid only
+# for S7-1500; the other listed areas also apply to S7-1200/S7-1200 G2.
+$fileLanguage: [FBD]
+
+A:
+  family: bit-logic
+  callShape: box
+  instanceType: null
+  pins:
+    - name: in2
+      dir: in
+      required: false
+      dataTypes: [Bool]
+      memoryAreas: [I, Q, M, D, L, T, C, constant]
+      note: >-
+        Second explicit AND operand; the incoming rung signal is implicit.
+    - name: in3
+      dir: in
+      required: false
+      dataTypes: [Bool]
+      memoryAreas: [I, Q, M, D, L, T, C, constant]
+      note: >-
+        Optional third AND operand.
+    - name: in4
+      dir: in
+      required: false
+      dataTypes: [Bool]
+      memoryAreas: [I, Q, M, D, L, T, C, constant]
+      note: >-
+        Optional fourth AND operand.
+  result:
+    kind: value
+    dataTypes: [Bool]
+  template: { shape: none, keys: [], extra: {} }
+  confidence: confirmed-compiled
+  notes: >-
+    Returns TRUE only when the incoming rung signal and every connected operand are TRUE. The box can be
+    widened with additional operands.
+  source: "docs/fbd-knowhow/01-Bit-Logic.md"
+O:
+  family: bit-logic
+  callShape: box
+  instanceType: null
+  pins:
+    - name: in2
+      dir: in
+      required: false
+      dataTypes: [Bool]
+      memoryAreas: [I, Q, M, D, L, T, C, constant]
+      note: >-
+        Second explicit OR operand; the incoming rung signal is implicit.
+    - name: in3
+      dir: in
+      required: false
+      dataTypes: [Bool]
+      memoryAreas: [I, Q, M, D, L, T, C, constant]
+      note: >-
+        Optional third OR operand.
+    - name: in4
+      dir: in
+      required: false
+      dataTypes: [Bool]
+      memoryAreas: [I, Q, M, D, L, T, C, constant]
+      note: >-
+        Optional fourth OR operand.
+    - name: in5
+      dir: in
+      required: false
+      dataTypes: [Bool]
+      memoryAreas: [I, Q, M, D, L, T, C, constant]
+      note: >-
+        Optional fifth OR operand.
+    - name: in6
+      dir: in
+      required: false
+      dataTypes: [Bool]
+      memoryAreas: [I, Q, M, D, L, T, C, constant]
+      note: >-
+        Optional sixth OR operand.
+  result:
+    kind: value
+    dataTypes: [Bool]
+  template: { shape: none, keys: [], extra: {} }
+  confidence: confirmed-compiled
+  notes: >-
+    Returns TRUE when the incoming rung signal or at least one connected operand is TRUE. The box can be
+    widened with additional operands.
+  source: "docs/fbd-knowhow/01-Bit-Logic.md"
+X:
+  family: bit-logic
+  callShape: box
+  instanceType: null
+  pins:
+    - name: in2
+      dir: in
+      required: false
+      dataTypes: [Bool]
+      memoryAreas: [I, Q, M, D, L, T, C, constant]
+      note: >-
+        Second explicit EXCLUSIVE OR operand; the incoming rung signal is implicit.
+    - name: in3
+      dir: in
+      required: false
+      dataTypes: [Bool]
+      memoryAreas: [I, Q, M, D, L, T, C, constant]
+      note: >-
+        Optional third EXCLUSIVE OR operand.
+  result:
+    kind: value
+    dataTypes: [Bool]
+  template: { shape: none, keys: [], extra: {} }
+  confidence: shape-only
+  notes: >-
+    Returns TRUE when an odd number of the incoming rung signal and connected operands are TRUE.
+  source: "docs/fbd-knowhow/01-Bit-Logic.md"

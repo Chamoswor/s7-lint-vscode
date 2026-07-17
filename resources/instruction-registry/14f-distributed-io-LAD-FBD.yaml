@@ -1,0 +1,790 @@
+# Distributed I/O and data-record access — LAD/FBD registry.
+#
+# Graphical instruction aliases and pin casing are retained from anonymized
+# reference fixtures and apply to both LAD and FBD.
+#
+# Exported `:=` connections cannot distinguish INPUT from IN_OUT. Independently
+# documented IN_OUT parameters are corrected explicitly.
+#
+# Graphical instructions use pins and therefore have `result: { kind: none }`.
+# Missing dataTypes are intentional; unresolved types are never guessed.
+
+$fileLanguage: [LAD, FBD]
+RDREC:
+  family: extended
+  callShape: instance-dot
+  instanceType: RDREC
+  pins:
+  - name: REQ
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: ID
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [HW_IO]
+  - name: INDEX
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [UInt]
+  - name: MLEN
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [UInt]
+  - name: VALID
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: BUSY
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: ERROR
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: STATUS
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [DWord]
+  - name: LEN
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [UInt]
+  - name: RECORD
+    dir: inout
+    required: true
+    note: ''
+    dataTypes: [Variant]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Read a data record from a module/device.
+  source: "official instruction documentation (paraphrased)"
+  result:
+    kind: none
+WRREC:
+  family: extended
+  callShape: instance-dot
+  instanceType: WRREC
+  pins:
+  - name: REQ
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: ID
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [HW_IO]
+  - name: INDEX
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [UInt]
+  - name: LEN
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [UInt]
+  - name: DONE
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: BUSY
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: ERROR
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: STATUS
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [DWord]
+  - name: RECORD
+    dir: inout
+    required: true
+    note: ''
+    dataTypes: [Variant]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Write a data record to a module/device, inverse of RDREC.
+  source: "official instruction documentation (paraphrased)"
+  result:
+    kind: none
+GETIO:
+  family: extended
+  callShape: instance-dot
+  instanceType: GETIO
+  pins:
+  - name: ID
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [HW_IO]
+  - name: STATUS
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [DWord]
+  - name: LEN
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [UInt]
+  - name: INPUTS
+    dir: inout
+    required: true
+    note: ''
+    dataTypes: [Variant]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Read a submodule's inputs directly (bypassing the process image).
+  source: "official instruction documentation (paraphrased)"
+  result:
+    kind: none
+SETIO:
+  family: extended
+  callShape: instance-dot
+  instanceType: SETIO
+  pins:
+  - name: ID
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [HW_IO]
+  - name: STATUS
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [DWord]
+  - name: OUTPUTS
+    dir: inout
+    required: true
+    note: ''
+    dataTypes: [Variant]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Write a submodule's outputs directly (bypassing the process image), inverse of GETIO.
+  source: "official instruction documentation (paraphrased)"
+  result:
+    kind: none
+GETIO_PART:
+  family: extended
+  callShape: instance-dot
+  instanceType: GETIO_PART
+  pins:
+  - name: ID
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [HW_IO]
+  - name: OFFSET
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [UInt]
+  - name: LEN
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [UInt]
+  - name: STATUS
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [DWord]
+  - name: ERROR
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: INPUTS
+    dir: inout
+    required: true
+    note: ''
+    dataTypes: [Variant]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Partial/offset variant of GETIO.
+  source: "official instruction documentation (paraphrased)"
+  result:
+    kind: none
+SETIO_PART:
+  family: extended
+  callShape: instance-dot
+  instanceType: SETIO_PART
+  pins:
+  - name: ID
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [HW_IO]
+  - name: OFFSET
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [UInt]
+  - name: LEN
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [UInt]
+  - name: STATUS
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [DWord]
+  - name: ERROR
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: OUTPUTS
+    dir: inout
+    required: true
+    note: ''
+    dataTypes: [Variant]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Partial/offset variant of SETIO.
+  source: "official instruction documentation (paraphrased)"
+  result:
+    kind: none
+RALRM:
+  family: extended
+  callShape: instance-dot
+  instanceType: RALRM
+  pins:
+  - name: MODE
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [UInt]
+  - name: F_ID
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [HW_IO]
+  - name: MLEN
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [UInt]
+  - name: NEW
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: STATUS
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [DWord]
+  - name: ID
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [HW_IO]
+  - name: LEN
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [UInt]
+  - name: TINFO
+    dir: inout
+    required: true
+    note: ''
+    dataTypes: [Variant]
+  - name: AINFO
+    dir: inout
+    required: true
+    note: ''
+    dataTypes: [Variant]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Receive a hardware-interrupt/diagnostic alarm's associated information.
+  source: "official instruction documentation (paraphrased)"
+  result:
+    kind: none
+D_ACT_DP:
+  family: extended
+  callShape: box
+  instanceType: null
+  pins:
+  - name: REQ
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: MODE
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [UInt]
+  - name: LADDR
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [HW_ANY]
+  - name: RET_VAL
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Int]
+  - name: BUSY
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Activate/deactivate a DP slave/PROFINET IO device.
+  source: "official instruction documentation (paraphrased)"
+  result:
+    kind: none
+DPRD_DAT:
+  family: extended
+  callShape: box
+  instanceType: null
+  pins:
+  - name: LADDR
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [HW_IO]
+  - name: RET_VAL
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Int]
+  - name: RECORD
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Variant]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Read consistent data of a DP standard slave/PROFINET IO device.
+  source: "official instruction documentation (paraphrased)"
+  result:
+    kind: none
+DPWR_DAT:
+  family: extended
+  callShape: box
+  instanceType: null
+  pins:
+  - name: LADDR
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [HW_IO]
+  - name: RECORD
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [Variant]
+  - name: RET_VAL
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Int]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Write consistent data to a DP standard slave/PROFINET IO device, inverse of DPRD_DAT.
+  source: "official instruction documentation (paraphrased)"
+  result:
+    kind: none
+RCVREC:
+  family: extended
+  callShape: instance-dot
+  instanceType: RCVREC
+  pins:
+  - name: MODE
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [UInt]
+  - name: F_ID
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [HW_IO]
+  - name: MLEN
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [UInt]
+  - name: CODE1
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [UInt]
+  - name: CODE2
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [UInt]
+  - name: NEW
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: STATUS
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [DWord]
+  - name: SLOT
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [UInt]
+  - name: SUBSLOT
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [UInt]
+  - name: INDEX
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [UInt]
+  - name: LEN
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [UInt]
+  - name: RECORD
+    dir: inout
+    required: true
+    note: ''
+    dataTypes: [Variant]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Receive a data record (I-device/shared-device context). VAR declaration in the source export names
+    the instance `RCVREC_SFB_Instance` — the `_SFB` suffix (vs. this file's usual `_Instance`) is
+    transcribed faithfully, not normalized.
+  source: "official instruction documentation (paraphrased)"
+  result:
+    kind: none
+PRVREC:
+  family: extended
+  callShape: instance-dot
+  instanceType: PRVREC
+  pins:
+  - name: MODE
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [UInt]
+  - name: F_ID
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [HW_IO]
+  - name: CODE1
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [UInt]
+  - name: CODE2
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [UInt]
+  - name: LEN
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [UInt]
+  - name: NEW
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: STATUS
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [DWord]
+  - name: SLOT
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [UInt]
+  - name: SUBSLOT
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [UInt]
+  - name: INDEX
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [UInt]
+  - name: RLEN
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [UInt]
+  - name: RECORD
+    dir: inout
+    required: true
+    note: ''
+    dataTypes: [Variant]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Provide a data record (I-device/shared-device context), inverse-ish of RCVREC — same `_SFB`-suffixed
+    instance-name pattern (PRVREC_SFB_Instance).
+  source: "official instruction documentation (paraphrased)"
+  result:
+    kind: none
+RD_DPAR:
+  family: extended
+  callShape: instance-dot
+  instanceType: RD_DPAR
+  pins:
+  - name: REQ
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: LADDR
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [HW_IO]
+  - name: INDEX
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [UInt]
+  - name: VALID
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: BUSY
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: ERROR
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: STATUS
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [DWord]
+  - name: LEN
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [UInt]
+  - name: RECORD
+    dir: inout
+    required: true
+    note: ''
+    dataTypes: [Variant]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Read a module parameter record.
+  source: "official instruction documentation (paraphrased)"
+  result:
+    kind: none
+RD_DPARA:
+  family: extended
+  callShape: box
+  instanceType: null
+  pins:
+  - name: REQ
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: LADDR
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [HW_IO]
+  - name: RECNUM
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [UInt]
+  - name: RET_VAL
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Int]
+  - name: BUSY
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: RECORD
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Variant]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Read a distributed-I/O parameter record, asynchronous variant.
+  source: "official instruction documentation (paraphrased)"
+  result:
+    kind: none
+RD_DPARM:
+  family: extended
+  callShape: box
+  instanceType: null
+  pins:
+  - name: IOID
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [UInt]
+  - name: LADDR
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [HW_IO]
+  - name: RECNUM
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [UInt]
+  - name: RET_VAL
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Int]
+  - name: RECORD
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Variant]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: shape-only
+  notes: >-
+    Read a distributed-I/O parameter record, synchronous variant.
+  source: "anonymized reference fixture (signature only)"
+  result:
+    kind: none
+WR_DPARM:
+  family: extended
+  callShape: box
+  instanceType: null
+  pins:
+  - name: REQ
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: LADDR
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [HW_IO]
+  - name: RECNUM
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [UInt]
+  - name: RET_VAL
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Int]
+  - name: BUSY
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: shape-only
+  notes: >-
+    Write a distributed-I/O parameter record.
+  source: "anonymized reference fixture (signature only)"
+  result:
+    kind: none

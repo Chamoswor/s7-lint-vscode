@@ -1,0 +1,28 @@
+﻿MultiLingualTexts:
+  - id: MLC_m9
+    en-US: 'CMP ==: Equal'
+  - id: MLC_4Ek
+    en-US: 'CMP <>: Not equal'
+  - id: MLC_mz
+    en-US: 'CMP >=: Greater or equal'
+  - id: MLC_46h
+    en-US: 'CMP <=: Less or equal'
+  - id: MLC_3Aw
+    en-US: 'CMP >: Greater than'
+  - id: MLC_3WQ
+    en-US: 'CMP <: Less than'
+  - id: MLC_3aX
+    en-US: 'IN_RANGE: Value within range'
+  - id: MLC_3vg
+    en-US: 'OUT_RANGE: Value outside range'
+  - id: MLC_49F
+    en-US: 'OK: Check validity'
+  - id: MLC_3B7
+    en-US: |-
+      You can use the "Check validity" instruction to check if the value of an operand (<Operand>) is a valid floating-point number. The check is performed in every program cycle. If the operand value at the time of the query is a valid floating-point number, the output box will return the signal state"1". In all other cases, the signal state at the output of the "Check validity" instruction is "0".
+
+      You can use the "Check validity" instruction together with the EN mechanism. If you connect the instruction box to an EN enable input, the enable input is set only when the result of the validity query of the value is positive. You can use this function to ensure that an instruction is enabled only when the value of the specified operand is a valid floating-point number.
+  - id: MLC_3na
+    en-US: 'NOT_OK: Check invalidity'
+  - id: MLC_56f
+    en-US: You can use the "Check invalidity" instruction to check if the value of an operand (<Operand>) is an invalid floating-point number. The check is performed in every program cycle. If the operand value at the time of the query is a valid floating-point number, then the output box will return the signal state "1". In all other cases, the signal state on the output box is "0".

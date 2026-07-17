@@ -1,0 +1,403 @@
+# Date, time-of-day and runtime-meter instructions — LAD/FBD registry.
+#
+# Graphical instruction aliases and pin casing are retained from anonymized
+# reference fixtures and apply to both LAD and FBD.
+#
+# Exported `:=` connections cannot distinguish INPUT from IN_OUT. Independently
+# documented IN_OUT parameters are corrected explicitly.
+#
+# Graphical instructions use pins and therefore have `result: { kind: none }`.
+# Missing dataTypes are intentional; unresolved types are never guessed.
+
+$fileLanguage: [LAD, FBD]
+T_COMP:
+  family: extended
+  callShape: box
+  instanceType: null
+  pins:
+  - name: in1
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [Timers, Date and time]
+  - name: in2
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [Timers, Date and time]
+  - name: out
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Compares time values using a preceding `S7_Relation` pragma such as `EQ`. The `template` field models
+    only `S7_Templates`, so the relation pragma is not represented there.
+  source: "official instruction documentation (paraphrased)"
+  result:
+    kind: none
+T_CONV:
+  family: extended
+  callShape: box
+  instanceType: null
+  pins:
+  - name: in
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [Timers, Date and time]
+  - name: out
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Integers, Timers, Date and time]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Time-value type conversion.
+  source: "official instruction documentation (paraphrased)"
+  result:
+    kind: none
+T_ADD:
+  family: extended
+  callShape: box
+  instanceType: null
+  pins:
+  - name: in1
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [Integers, Bit strings, Timers, Date and time]
+  - name: in2
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [Integers, Bit strings, Timers, Date and time]
+  - name: out
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Integers, Bit strings, Timers, Date and time]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Time-value addition.
+  source: "official instruction documentation (paraphrased)"
+  result:
+    kind: none
+T_SUB:
+  family: extended
+  callShape: box
+  instanceType: null
+  pins:
+  - name: in1
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [Integers, Bit strings, Timers, Date and time]
+  - name: in2
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [Integers, Bit strings, Timers, Date and time]
+  - name: out
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Integers, Bit strings, Timers, Date and time]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Time-value subtraction.
+  source: "official instruction documentation (paraphrased)"
+  result:
+    kind: none
+T_DIFF:
+  family: extended
+  callShape: box
+  instanceType: null
+  pins:
+  - name: in1
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [Date and time]
+  - name: in2
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [Date and time]
+  - name: out
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Time, LTime, Int]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Time-value difference.
+  source: "official instruction documentation (paraphrased)"
+  result:
+    kind: none
+T_COMBINE:
+  family: extended
+  callShape: box
+  instanceType: null
+  pins:
+  - name: in1
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [Date]
+  - name: in2
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [Time_Of_Day, LTime_Of_Day]
+  - name: out
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Date_And_Time, LDT]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Combine a date value and a time-of-day value (likely DATE+TOD -> DTL, unconfirmed).
+  source: "official instruction documentation (paraphrased)"
+  result:
+    kind: none
+WR_SYS_T:
+  family: extended
+  callShape: box
+  instanceType: null
+  pins:
+  - name: IN
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [Date_And_Time, DTL, LDT]
+  - name: RET_VAL
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Int]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Write the CPU's system (UTC) time.
+  source: "official instruction documentation (paraphrased)"
+  result:
+    kind: none
+RD_SYS_T:
+  family: extended
+  callShape: box
+  instanceType: null
+  pins:
+  - name: RET_VAL
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Int]
+  - name: OUT
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Date_And_Time, DTL, LDT]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Read the CPU's system (UTC) time.
+  source: "official instruction documentation (paraphrased)"
+  result:
+    kind: none
+RD_LOC_T:
+  family: extended
+  callShape: box
+  instanceType: null
+  pins:
+  - name: RET_VAL
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Int]
+  - name: OUT
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [DTL, LDT]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Read the CPU's local (timezone-adjusted) time.
+  source: "official instruction documentation (paraphrased)"
+  result:
+    kind: none
+WR_LOC_T:
+  family: extended
+  callShape: box
+  instanceType: null
+  pins:
+  - name: LOCTIME
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [DTL, LDT]
+  - name: DST
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: Ret_Val
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Int]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Write the CPU's local time (with daylight-saving flag).
+  source: "official instruction documentation (paraphrased)"
+  result:
+    kind: none
+SET_TIMEZONE:
+  family: extended
+  callShape: instance-dot
+  instanceType: SET_TIMEZONE
+  pins:
+  - name: REQ
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: TimeZone
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [Int]
+  - name: DONE
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: BUSY
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: ERROR
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: STATUS
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Word]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Set the CPU's timezone.
+  source: "official instruction documentation (paraphrased)"
+  result:
+    kind: none
+TIME_TCK:
+  family: extended
+  callShape: box
+  instanceType: null
+  pins:
+  - name: RET_VAL
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [UDInt]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Read the CPU's millisecond tick counter.
+  source: "official instruction documentation (paraphrased)"
+  result:
+    kind: none
+RTM:
+  family: extended
+  callShape: box
+  instanceType: null
+  pins:
+  - name: NR
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [UInt]
+  - name: MODE
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [USInt]
+  - name: PV
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [UInt]
+  - name: RET_VAL
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Int]
+  - name: CQ
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: CV
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [UInt]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Runtime meter FB for tracking operating hours.
+  source: "official instruction documentation (paraphrased)"
+  result:
+    kind: none

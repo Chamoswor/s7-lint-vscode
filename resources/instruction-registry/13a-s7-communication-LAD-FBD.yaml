@@ -1,0 +1,172 @@
+# S7 connection communication — LAD/FBD registry.
+#
+# Graphical instruction aliases and pin casing follow anonymized reference
+# fixture evidence and apply to both LAD and FBD.
+#
+# Exported `:=` connections cannot distinguish Input from InOut. Parameters
+# independently documented as InOut have therefore been corrected explicitly.
+# Every entry has `result: { kind: none }`.
+#
+# Missing dataTypes are intentional: unknown types are not guessed.
+
+$fileLanguage: [LAD, FBD]
+GET:
+  family: communication
+  callShape: instance-dot
+  instanceType: GET
+  pins:
+  - name: REQ
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: ID
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [Word]
+  - name: NDR
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: ERROR
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: STATUS
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Word]
+  - name: ADDR_1
+    dir: inout
+    required: true
+    note: ''
+    dataTypes: [Remote]
+  - name: ADDR_2
+    dir: inout
+    required: true
+    note: ''
+    dataTypes: [Remote]
+  - name: ADDR_3
+    dir: inout
+    required: true
+    note: ''
+    dataTypes: [Remote]
+  - name: ADDR_4
+    dir: inout
+    required: true
+    note: ''
+    dataTypes: [Remote]
+  - name: RD_1
+    dir: inout
+    required: true
+    note: ''
+    dataTypes: [Variant]
+  - name: RD_2
+    dir: inout
+    required: true
+    note: ''
+    dataTypes: [Variant]
+  - name: RD_3
+    dir: inout
+    required: true
+    note: ''
+    dataTypes: [Variant]
+  - name: RD_4
+    dir: inout
+    required: true
+    note: ''
+    dataTypes: [Variant]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    . S7 communication FB (read data from a remote CPU).
+  source: "official instruction documentation (paraphrased)"
+  result:
+    kind: none
+PUT:
+  family: communication
+  callShape: instance-dot
+  instanceType: PUT
+  pins:
+  - name: REQ
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: ID
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [Word]
+  - name: DONE
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: ERROR
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: STATUS
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Word]
+  - name: ADDR_1
+    dir: inout
+    required: true
+    note: ''
+    dataTypes: [Remote]
+  - name: ADDR_2
+    dir: inout
+    required: true
+    note: ''
+    dataTypes: [Remote]
+  - name: ADDR_3
+    dir: inout
+    required: true
+    note: ''
+    dataTypes: [Remote]
+  - name: ADDR_4
+    dir: inout
+    required: true
+    note: ''
+    dataTypes: [Remote]
+  - name: SD_1
+    dir: inout
+    required: true
+    note: ''
+    dataTypes: [Variant]
+  - name: SD_2
+    dir: inout
+    required: true
+    note: ''
+    dataTypes: [Variant]
+  - name: SD_3
+    dir: inout
+    required: true
+    note: ''
+    dataTypes: [Variant]
+  - name: SD_4
+    dir: inout
+    required: true
+    note: ''
+    dataTypes: [Variant]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    . S7 communication FB (write data to a remote CPU).
+  source: "official instruction documentation (paraphrased)"
+  result:
+    kind: none

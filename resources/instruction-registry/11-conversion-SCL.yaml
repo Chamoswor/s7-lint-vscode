@@ -1,0 +1,3692 @@
+# SCL conversion-operation registry.
+#
+# SCL conversion operations are functions. Their calculated value is represented
+# by `result`, never by an OUT pin.
+#
+# The CONVERT palette operation generates a concrete <source>_TO_<destination>
+# function call in SCL; `CONVERT(...)` is therefore not registered as a callable
+# SCL function. Typed conversion entries cover documented source/destination
+# pairs. Notes retain only behavioral constraints, and source metadata records
+# the evidence tier without internal corpus names.
+
+$fileLanguage: [SCL]
+
+ROUND:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [Floating-point numbers]
+    memoryAreas: [I, Q, M, D, L, P]
+    note: Floating-point expression to round.
+  result:
+    kind: inferred
+    rule: instruction-specific
+    sourcePins: [0]
+    dataTypes: [Integers, Floating-point numbers]
+    notes: Nearest integer value. The suffix ROUND_<datatype> may select the result datatype explicitly; the documented
+      default is DInt.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Rounds to nearest using ties-to-even. Example: #Result := ROUND_REAL(#Value);
+  source: "official instruction documentation (paraphrased)"
+CEIL:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [Floating-point numbers]
+    memoryAreas: [I, Q, M, D, L, P]
+    note: Floating-point expression to round upward.
+  result:
+    kind: inferred
+    rule: instruction-specific
+    sourcePins: [0]
+    dataTypes: [Integers, Floating-point numbers]
+    notes: Smallest integer value greater than or equal to the input. CEIL_<datatype> selects the result datatype;
+      default DInt.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Function form with no OUT parameter. Example: #Result := CEIL_REAL(#Value);
+  source: "official instruction documentation (paraphrased)"
+FLOOR:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [Floating-point numbers]
+    memoryAreas: [I, Q, M, D, L, P]
+    note: Floating-point expression to round downward.
+  result:
+    kind: inferred
+    rule: instruction-specific
+    sourcePins: [0]
+    dataTypes: [Integers, Floating-point numbers]
+    notes: Largest integer value less than or equal to the input. FLOOR_<datatype> selects the result datatype;
+      default DInt.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Function form with no OUT parameter. Example: #Result := FLOOR_REAL(#Value);
+  source: "official instruction documentation (paraphrased)"
+TRUNC:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [Floating-point numbers]
+    memoryAreas: [I, Q, M, D, L]
+    note: Floating-point expression whose fractional part is discarded.
+  result:
+    kind: inferred
+    rule: instruction-specific
+    sourcePins: [0]
+    dataTypes: [Integers, Floating-point numbers]
+    notes: Integer component truncated toward zero. TRUNC_<datatype> selects the result datatype; default DInt.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Function form with no OUT parameter. Example: #Result := TRUNC_SINT(#Value);
+  source: "official instruction documentation (paraphrased)"
+SCALE_X:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: MIN
+    dir: in
+    required: true
+    dataTypes: [Integers, Floating-point numbers]
+    memoryAreas: [I, Q, M, D, L]
+    note: Low limit of the destination range.
+  - name: VALUE
+    dir: in
+    required: true
+    dataTypes: [Floating-point numbers]
+    memoryAreas: [I, Q, M, D, L]
+    note: Normalized value to scale. A constant used here must be declared.
+  - name: MAX
+    dir: in
+    required: true
+    dataTypes: [Integers, Floating-point numbers]
+    memoryAreas: [I, Q, M, D, L]
+    note: High limit of the destination range.
+  result:
+    kind: inferred
+    rule: instruction-specific
+    sourcePins: [0, 1, 2]
+    dataTypes: [Integers, Floating-point numbers]
+    notes: Scaled function value. SCALE_X_<datatype> selects the result datatype; the documented default is Int.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Function form: #Result := SCALE_X(MIN := #Min, VALUE := #Value, MAX := #Max). There is no OUT
+    parameter.
+  source: "official instruction documentation (paraphrased)"
+NORM_X:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: MIN
+    dir: in
+    required: true
+    dataTypes: [Integers, Floating-point numbers]
+    memoryAreas: [I, Q, M, D, L]
+    note: Low limit of the source range.
+  - name: VALUE
+    dir: in
+    required: true
+    dataTypes: [Integers, Floating-point numbers]
+    memoryAreas: [I, Q, M, D, L]
+    note: Value to normalize.
+  - name: MAX
+    dir: in
+    required: true
+    dataTypes: [Integers, Floating-point numbers]
+    memoryAreas: [I, Q, M, D, L]
+    note: High limit of the source range.
+  result:
+    kind: inferred
+    rule: instruction-specific
+    sourcePins: [0, 1, 2]
+    dataTypes: [Floating-point numbers]
+    notes: Normalized function value. NORM_X_<datatype> may select Real or LReal explicitly; the documented default
+      is Real.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Function form: #Result := NORM_X(MIN := #Min, VALUE := #Value, MAX := #Max). There is no OUT
+    parameter.
+  source: "official instruction documentation (paraphrased)"
+UINT_TO_DINT:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [UInt]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype UInt.
+  result:
+    kind: value
+    dataTypes: [DInt]
+    notes: Converted function value of datatype DInt.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := UINT_TO_DINT(#Value);
+  source: "official instruction documentation (paraphrased)"
+UINT_TO_REAL:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [UInt]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype UInt.
+  result:
+    kind: value
+    dataTypes: [Real]
+    notes: Converted function value of datatype Real.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := UINT_TO_REAL(#Value);
+  source: "official instruction documentation (paraphrased)"
+UINT_TO_USINT:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [UInt]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype UInt.
+  result:
+    kind: value
+    dataTypes: [USInt]
+    notes: Converted function value of datatype USInt.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Narrowing typed SCL conversion. ENO/error behavior depends on the active IEC-check and target CPU
+    rules.
+  source: "official instruction documentation (paraphrased)"
+LREAL_TO_REAL:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [LReal]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype LReal.
+  result:
+    kind: value
+    dataTypes: [Real]
+    notes: Converted function value of datatype Real.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Narrowing typed SCL conversion. ENO/error behavior depends on the active IEC-check and target CPU
+    rules.
+  source: "official instruction documentation (paraphrased)"
+REAL_TO_INT:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [Real]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype Real.
+  result:
+    kind: value
+    dataTypes: [Int]
+    notes: Converted function value of datatype Int.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Narrowing typed SCL conversion. ENO/error behavior depends on the active IEC-check and target CPU
+    rules.
+  source: "official instruction documentation (paraphrased)"
+USINT_TO_INT:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [USInt]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype USInt.
+  result:
+    kind: value
+    dataTypes: [Int]
+    notes: Converted function value of datatype Int.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := USINT_TO_INT(#Value);
+  source: "official instruction documentation (paraphrased)"
+INT_TO_REAL:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [Int]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype Int.
+  result:
+    kind: value
+    dataTypes: [Real]
+    notes: Converted function value of datatype Real.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. The call may be nested inside another expression.
+  source: "official instruction documentation (paraphrased)"
+DINT_TO_TIME:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [DInt]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype DInt.
+  result:
+    kind: value
+    dataTypes: [Time]
+    notes: Converted function value of datatype Time.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Interprets the DINT value as milliseconds and returns a TIME value.
+  source: "official instruction documentation (paraphrased)"
+TIME_TO_DINT:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [Time]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype Time.
+  result:
+    kind: value
+    dataTypes: [DInt]
+    notes: Converted function value of datatype DInt.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Returns the TIME duration as its DINT millisecond representation.
+  source: "official instruction documentation (paraphrased)"
+BOOL_TO_BYTE:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [Bool]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype Bool.
+  result:
+    kind: value
+    dataTypes: [Byte]
+    notes: The Bool value is transferred to the least significant bit of the target data type; all other bits are 0.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := BOOL_TO_BYTE(#Value);
+  source: "official instruction documentation (paraphrased)"
+BOOL_TO_WORD:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [Bool]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype Bool.
+  result:
+    kind: value
+    dataTypes: [Word]
+    notes: The Bool value is transferred to the least significant bit of the target data type; all other bits are 0.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := BOOL_TO_WORD(#Value);
+  source: "official instruction documentation (paraphrased)"
+BOOL_TO_DWORD:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [Bool]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype Bool.
+  result:
+    kind: value
+    dataTypes: [DWord]
+    notes: The Bool value is transferred to the least significant bit of the target data type; all other bits are 0.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := BOOL_TO_DWORD(#Value);
+  source: "official instruction documentation (paraphrased)"
+BOOL_TO_INT:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [Bool]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype Bool.
+  result:
+    kind: value
+    dataTypes: [Int]
+    notes: The Bool value is transferred to the least significant bit of the target data type; all other bits are 0.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := BOOL_TO_INT(#Value);
+  source: "official instruction documentation (paraphrased)"
+BOOL_TO_DINT:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [Bool]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype Bool.
+  result:
+    kind: value
+    dataTypes: [DInt]
+    notes: The Bool value is transferred to the least significant bit of the target data type; all other bits are 0.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := BOOL_TO_DINT(#Value);
+  source: "official instruction documentation (paraphrased)"
+BYTE_TO_BOOL:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [Byte]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype Byte.
+  result:
+    kind: value
+    dataTypes: [Bool]
+    notes: The least significant bit of the source value is transferred into the destination data type.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := BYTE_TO_BOOL(#Value);
+  source: "official instruction documentation (paraphrased)"
+BYTE_TO_WORD:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [Byte]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype Byte.
+  result:
+    kind: value
+    dataTypes: [Word]
+    notes: The value is transferred to the least significant byte of the target data type.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := BYTE_TO_WORD(#Value);
+  source: "official instruction documentation (paraphrased)"
+BYTE_TO_DWORD:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [Byte]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype Byte.
+  result:
+    kind: value
+    dataTypes: [DWord]
+    notes: The value is transferred to the least significant byte of the target data type.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := BYTE_TO_DWORD(#Value);
+  source: "official instruction documentation (paraphrased)"
+BYTE_TO_SINT:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [Byte]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype Byte.
+  result:
+    kind: value
+    dataTypes: [SInt]
+    notes: The value is transferred to the target data type.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := BYTE_TO_SINT(#Value);
+  source: "official instruction documentation (paraphrased)"
+BYTE_TO_USINT:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [Byte]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype Byte.
+  result:
+    kind: value
+    dataTypes: [USInt]
+    notes: The value is transferred to the target data type.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := BYTE_TO_USINT(#Value);
+  source: "official instruction documentation (paraphrased)"
+BYTE_TO_INT:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [Byte]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype Byte.
+  result:
+    kind: value
+    dataTypes: [Int]
+    notes: The value is transferred to the least significant byte of the target data type.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := BYTE_TO_INT(#Value);
+  source: "official instruction documentation (paraphrased)"
+BYTE_TO_UINT:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [Byte]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype Byte.
+  result:
+    kind: value
+    dataTypes: [UInt]
+    notes: The value is transferred to the least significant byte of the target data type.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := BYTE_TO_UINT(#Value);
+  source: "official instruction documentation (paraphrased)"
+BYTE_TO_DINT:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [Byte]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype Byte.
+  result:
+    kind: value
+    dataTypes: [DInt]
+    notes: The value is transferred to the least significant byte of the target data type.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := BYTE_TO_DINT(#Value);
+  source: "official instruction documentation (paraphrased)"
+BYTE_TO_UDINT:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [Byte]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype Byte.
+  result:
+    kind: value
+    dataTypes: [UDInt]
+    notes: The value is transferred to the least significant byte of the target data type.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := BYTE_TO_UDINT(#Value);
+  source: "official instruction documentation (paraphrased)"
+WORD_TO_BOOL:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [Word]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype Word.
+  result:
+    kind: value
+    dataTypes: [Bool]
+    notes: The least significant bit of the source value is transferred into the destination data type.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := WORD_TO_BOOL(#Value);
+  source: "official instruction documentation (paraphrased)"
+WORD_TO_BYTE:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [Word]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype Word.
+  result:
+    kind: value
+    dataTypes: [Byte]
+    notes: The least significant byte of the source value is transferred to the target data type.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := WORD_TO_BYTE(#Value);
+  source: "official instruction documentation (paraphrased)"
+WORD_TO_DWORD:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [Word]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype Word.
+  result:
+    kind: value
+    dataTypes: [DWord]
+    notes: The value is transferred to the least significant word of the target data type.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := WORD_TO_DWORD(#Value);
+  source: "official instruction documentation (paraphrased)"
+WORD_TO_SINT:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [Word]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype Word.
+  result:
+    kind: value
+    dataTypes: [SInt]
+    notes: The least significant byte of the source value is transferred to the target data type.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := WORD_TO_SINT(#Value);
+  source: "official instruction documentation (paraphrased)"
+WORD_TO_USINT:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [Word]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype Word.
+  result:
+    kind: value
+    dataTypes: [USInt]
+    notes: The least significant byte of the source value is transferred to the target data type.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := WORD_TO_USINT(#Value);
+  source: "official instruction documentation (paraphrased)"
+WORD_TO_INT:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [Word]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype Word.
+  result:
+    kind: value
+    dataTypes: [Int]
+    notes: The value is transferred to the target data type.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := WORD_TO_INT(#Value);
+  source: "official instruction documentation (paraphrased)"
+WORD_TO_UINT:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [Word]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype Word.
+  result:
+    kind: value
+    dataTypes: [UInt]
+    notes: The value is transferred to the target data type.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := WORD_TO_UINT(#Value);
+  source: "official instruction documentation (paraphrased)"
+WORD_TO_DINT:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [Word]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype Word.
+  result:
+    kind: value
+    dataTypes: [DInt]
+    notes: The value is transferred to the least significant word of the target data type.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := WORD_TO_DINT(#Value);
+  source: "official instruction documentation (paraphrased)"
+WORD_TO_UDINT:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [Word]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype Word.
+  result:
+    kind: value
+    dataTypes: [UDInt]
+    notes: The value is transferred to the least significant word of the target data type.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := WORD_TO_UDINT(#Value);
+  source: "official instruction documentation (paraphrased)"
+DWORD_TO_BOOL:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [DWord]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype DWord.
+  result:
+    kind: value
+    dataTypes: [Bool]
+    notes: The least significant bit of the source value is transferred into the destination data type.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := DWORD_TO_BOOL(#Value);
+  source: "official instruction documentation (paraphrased)"
+DWORD_TO_BYTE:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [DWord]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype DWord.
+  result:
+    kind: value
+    dataTypes: [Byte]
+    notes: The least significant byte of the source value is transferred to the target data type.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := DWORD_TO_BYTE(#Value);
+  source: "official instruction documentation (paraphrased)"
+DWORD_TO_WORD:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [DWord]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype DWord.
+  result:
+    kind: value
+    dataTypes: [Word]
+    notes: The least significant byte of the source value is transferred to the target data type.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := DWORD_TO_WORD(#Value);
+  source: "official instruction documentation (paraphrased)"
+DWORD_TO_SINT:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [DWord]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype DWord.
+  result:
+    kind: value
+    dataTypes: [SInt]
+    notes: The least significant byte of the source value is transferred to the target data type.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := DWORD_TO_SINT(#Value);
+  source: "official instruction documentation (paraphrased)"
+DWORD_TO_USINT:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [DWord]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype DWord.
+  result:
+    kind: value
+    dataTypes: [USInt]
+    notes: The least significant word of the source value is transferred to the target data type.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := DWORD_TO_USINT(#Value);
+  source: "official instruction documentation (paraphrased)"
+DWORD_TO_INT:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [DWord]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype DWord.
+  result:
+    kind: value
+    dataTypes: [Int]
+    notes: The least significant word of the source value is transferred to the target data type.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := DWORD_TO_INT(#Value);
+  source: "official instruction documentation (paraphrased)"
+DWORD_TO_UINT:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [DWord]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype DWord.
+  result:
+    kind: value
+    dataTypes: [UInt]
+    notes: The least significant word of the source value is transferred to the target data type.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := DWORD_TO_UINT(#Value);
+  source: "official instruction documentation (paraphrased)"
+DWORD_TO_DINT:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [DWord]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype DWord.
+  result:
+    kind: value
+    dataTypes: [DInt]
+    notes: The value is transferred to the target data type.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := DWORD_TO_DINT(#Value);
+  source: "official instruction documentation (paraphrased)"
+DWORD_TO_UDINT:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [DWord]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype DWord.
+  result:
+    kind: value
+    dataTypes: [UDInt]
+    notes: The value is transferred to the target data type.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := DWORD_TO_UDINT(#Value);
+  source: "official instruction documentation (paraphrased)"
+DWORD_TO_REAL:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [DWord]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype DWord.
+  result:
+    kind: value
+    dataTypes: [Real]
+    notes: The value is transferred to the target data type.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := DWORD_TO_REAL(#Value);
+  source: "official instruction documentation (paraphrased)"
+SINT_TO_BOOL:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [SInt]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype SInt.
+  result:
+    kind: value
+    dataTypes: [Bool]
+    notes: The least significant bit of the source value is transferred into the destination data type.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := SINT_TO_BOOL(#Value);
+  source: "official instruction documentation (paraphrased)"
+SINT_TO_BYTE:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [SInt]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype SInt.
+  result:
+    kind: value
+    dataTypes: [Byte]
+    notes: The value is transferred to the target data type.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := SINT_TO_BYTE(#Value);
+  source: "official instruction documentation (paraphrased)"
+SINT_TO_WORD:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [SInt]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype SInt.
+  result:
+    kind: value
+    dataTypes: [Word]
+    notes: The value is transferred to the least significant byte of the target data type.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := SINT_TO_WORD(#Value);
+  source: "official instruction documentation (paraphrased)"
+SINT_TO_DWORD:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [SInt]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype SInt.
+  result:
+    kind: value
+    dataTypes: [DWord]
+    notes: The value is transferred to the least significant byte of the target data type.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := SINT_TO_DWORD(#Value);
+  source: "official instruction documentation (paraphrased)"
+SINT_TO_INT:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [SInt]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype SInt.
+  result:
+    kind: value
+    dataTypes: [Int]
+    notes: The value is converted.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := SINT_TO_INT(#Value);
+  source: "official instruction documentation (paraphrased)"
+SINT_TO_DINT:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [SInt]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype SInt.
+  result:
+    kind: value
+    dataTypes: [DInt]
+    notes: The value is converted.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := SINT_TO_DINT(#Value);
+  source: "official instruction documentation (paraphrased)"
+SINT_TO_USINT:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [SInt]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype SInt.
+  result:
+    kind: value
+    dataTypes: [USInt]
+    notes: The value is converted.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := SINT_TO_USINT(#Value);
+  source: "official instruction documentation (paraphrased)"
+SINT_TO_UINT:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [SInt]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype SInt.
+  result:
+    kind: value
+    dataTypes: [UInt]
+    notes: The value is converted.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := SINT_TO_UINT(#Value);
+  source: "official instruction documentation (paraphrased)"
+SINT_TO_UDINT:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [SInt]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype SInt.
+  result:
+    kind: value
+    dataTypes: [UDInt]
+    notes: The value is converted.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := SINT_TO_UDINT(#Value);
+  source: "official instruction documentation (paraphrased)"
+SINT_TO_REAL:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [SInt]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype SInt.
+  result:
+    kind: value
+    dataTypes: [Real]
+    notes: The value is converted.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := SINT_TO_REAL(#Value);
+  source: "official instruction documentation (paraphrased)"
+SINT_TO_LREAL:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [SInt]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype SInt.
+  result:
+    kind: value
+    dataTypes: [LReal]
+    notes: The value is converted.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := SINT_TO_LREAL(#Value);
+  source: "official instruction documentation (paraphrased)"
+SINT_TO_CHAR:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [SInt]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype SInt.
+  result:
+    kind: value
+    dataTypes: [Char]
+    notes: The value is converted.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := SINT_TO_CHAR(#Value);
+  source: "official instruction documentation (paraphrased)"
+SINT_TO_STRING:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [SInt]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype SInt.
+  result:
+    kind: value
+    dataTypes: [String]
+    notes: The value is converted.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := SINT_TO_STRING(#Value);
+  source: "official instruction documentation (paraphrased)"
+USINT_TO_BOOL:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [USInt]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype USInt.
+  result:
+    kind: value
+    dataTypes: [Bool]
+    notes: The least significant bit of the source value is transferred into the destination data type.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := USINT_TO_BOOL(#Value);
+  source: "official instruction documentation (paraphrased)"
+USINT_TO_BYTE:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [USInt]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype USInt.
+  result:
+    kind: value
+    dataTypes: [Byte]
+    notes: The value is transferred to the target data type.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := USINT_TO_BYTE(#Value);
+  source: "official instruction documentation (paraphrased)"
+USINT_TO_WORD:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [USInt]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype USInt.
+  result:
+    kind: value
+    dataTypes: [Word]
+    notes: The value is transferred to the least significant byte of the target data type.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := USINT_TO_WORD(#Value);
+  source: "official instruction documentation (paraphrased)"
+USINT_TO_DWORD:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [USInt]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype USInt.
+  result:
+    kind: value
+    dataTypes: [DWord]
+    notes: The value is transferred to the least significant byte of the target data type.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := USINT_TO_DWORD(#Value);
+  source: "official instruction documentation (paraphrased)"
+USINT_TO_UINT:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [USInt]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype USInt.
+  result:
+    kind: value
+    dataTypes: [UInt]
+    notes: The value is transferred to the least significant byte of the target data type.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := USINT_TO_UINT(#Value);
+  source: "official instruction documentation (paraphrased)"
+USINT_TO_DINT:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [USInt]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype USInt.
+  result:
+    kind: value
+    dataTypes: [DInt]
+    notes: The value is transferred to the least significant byte of the target data type.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := USINT_TO_DINT(#Value);
+  source: "official instruction documentation (paraphrased)"
+USINT_TO_UDINT:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [USInt]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype USInt.
+  result:
+    kind: value
+    dataTypes: [UDInt]
+    notes: The value is transferred to the least significant byte of the target data type.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := USINT_TO_UDINT(#Value);
+  source: "official instruction documentation (paraphrased)"
+USINT_TO_SINT:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [USInt]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype USInt.
+  result:
+    kind: value
+    dataTypes: [SInt]
+    notes: The value is converted.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := USINT_TO_SINT(#Value);
+  source: "official instruction documentation (paraphrased)"
+USINT_TO_REAL:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [USInt]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype USInt.
+  result:
+    kind: value
+    dataTypes: [Real]
+    notes: The value is converted.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := USINT_TO_REAL(#Value);
+  source: "official instruction documentation (paraphrased)"
+USINT_TO_LREAL:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [USInt]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype USInt.
+  result:
+    kind: value
+    dataTypes: [LReal]
+    notes: The value is converted.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := USINT_TO_LREAL(#Value);
+  source: "official instruction documentation (paraphrased)"
+USINT_TO_CHAR:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [USInt]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype USInt.
+  result:
+    kind: value
+    dataTypes: [Char]
+    notes: The value is converted.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := USINT_TO_CHAR(#Value);
+  source: "official instruction documentation (paraphrased)"
+USINT_TO_STRING:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [USInt]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype USInt.
+  result:
+    kind: value
+    dataTypes: [String]
+    notes: The value is converted.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := USINT_TO_STRING(#Value);
+  source: "official instruction documentation (paraphrased)"
+INT_TO_BOOL:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [Int]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype Int.
+  result:
+    kind: value
+    dataTypes: [Bool]
+    notes: The least significant bit of the source value is transferred into the destination data type.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := INT_TO_BOOL(#Value);
+  source: "official instruction documentation (paraphrased)"
+INT_TO_BYTE:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [Int]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype Int.
+  result:
+    kind: value
+    dataTypes: [Byte]
+    notes: The value is converted.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := INT_TO_BYTE(#Value);
+  source: "official instruction documentation (paraphrased)"
+INT_TO_DWORD:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [Int]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype Int.
+  result:
+    kind: value
+    dataTypes: [DWord]
+    notes: The value is converted.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := INT_TO_DWORD(#Value);
+  source: "official instruction documentation (paraphrased)"
+INT_TO_SINT:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [Int]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype Int.
+  result:
+    kind: value
+    dataTypes: [SInt]
+    notes: The value is converted.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := INT_TO_SINT(#Value);
+  source: "official instruction documentation (paraphrased)"
+INT_TO_USINT:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [Int]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype Int.
+  result:
+    kind: value
+    dataTypes: [USInt]
+    notes: The value is converted.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := INT_TO_USINT(#Value);
+  source: "official instruction documentation (paraphrased)"
+INT_TO_UINT:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [Int]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype Int.
+  result:
+    kind: value
+    dataTypes: [UInt]
+    notes: The value is converted.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := INT_TO_UINT(#Value);
+  source: "official instruction documentation (paraphrased)"
+INT_TO_UDINT:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [Int]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype Int.
+  result:
+    kind: value
+    dataTypes: [UDInt]
+    notes: The value is converted.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := INT_TO_UDINT(#Value);
+  source: "official instruction documentation (paraphrased)"
+INT_TO_LREAL:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [Int]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype Int.
+  result:
+    kind: value
+    dataTypes: [LReal]
+    notes: The value is converted.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := INT_TO_LREAL(#Value);
+  source: "official instruction documentation (paraphrased)"
+INT_TO_CHAR:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [Int]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype Int.
+  result:
+    kind: value
+    dataTypes: [Char]
+    notes: The value is converted.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := INT_TO_CHAR(#Value);
+  source: "official instruction documentation (paraphrased)"
+INT_TO_STRING:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [Int]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype Int.
+  result:
+    kind: value
+    dataTypes: [String]
+    notes: The value is converted.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := INT_TO_STRING(#Value);
+  source: "official instruction documentation (paraphrased)"
+INT_TO_WORD:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [Int]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype Int.
+  result:
+    kind: value
+    dataTypes: [Word]
+    notes: The value is transferred to the target data type.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := INT_TO_WORD(#Value);
+  source: "official instruction documentation (paraphrased)"
+INT_TO_DINT:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [Int]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype Int.
+  result:
+    kind: value
+    dataTypes: [DInt]
+    notes: The value is transferred to the least significant byte of the target data type.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := INT_TO_DINT(#Value);
+  source: "official instruction documentation (paraphrased)"
+UINT_TO_BOOL:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [UInt]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype UInt.
+  result:
+    kind: value
+    dataTypes: [Bool]
+    notes: The least significant bit of the source value is transferred into the destination data type.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := UINT_TO_BOOL(#Value);
+  source: "official instruction documentation (paraphrased)"
+UINT_TO_BYTE:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [UInt]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype UInt.
+  result:
+    kind: value
+    dataTypes: [Byte]
+    notes: The value is converted.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := UINT_TO_BYTE(#Value);
+  source: "official instruction documentation (paraphrased)"
+UINT_TO_SINT:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [UInt]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype UInt.
+  result:
+    kind: value
+    dataTypes: [SInt]
+    notes: The value is converted.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := UINT_TO_SINT(#Value);
+  source: "official instruction documentation (paraphrased)"
+UINT_TO_INT:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [UInt]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype UInt.
+  result:
+    kind: value
+    dataTypes: [Int]
+    notes: The value is converted.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := UINT_TO_INT(#Value);
+  source: "official instruction documentation (paraphrased)"
+UINT_TO_LREAL:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [UInt]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype UInt.
+  result:
+    kind: value
+    dataTypes: [LReal]
+    notes: The value is converted.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := UINT_TO_LREAL(#Value);
+  source: "official instruction documentation (paraphrased)"
+UINT_TO_CHAR:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [UInt]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype UInt.
+  result:
+    kind: value
+    dataTypes: [Char]
+    notes: The value is converted.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := UINT_TO_CHAR(#Value);
+  source: "official instruction documentation (paraphrased)"
+UINT_TO_STRING:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [UInt]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype UInt.
+  result:
+    kind: value
+    dataTypes: [String]
+    notes: The value is converted.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := UINT_TO_STRING(#Value);
+  source: "official instruction documentation (paraphrased)"
+UINT_TO_WORD:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [UInt]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype UInt.
+  result:
+    kind: value
+    dataTypes: [Word]
+    notes: The value is transferred to the target data type.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := UINT_TO_WORD(#Value);
+  source: "official instruction documentation (paraphrased)"
+UINT_TO_DATE:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [UInt]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype UInt.
+  result:
+    kind: value
+    dataTypes: [Date]
+    notes: The value is transferred to the target data type.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := UINT_TO_DATE(#Value);
+  source: "official instruction documentation (paraphrased)"
+UINT_TO_DWORD:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [UInt]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype UInt.
+  result:
+    kind: value
+    dataTypes: [DWord]
+    notes: The value is transferred to the least significant byte of the target data type.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := UINT_TO_DWORD(#Value);
+  source: "official instruction documentation (paraphrased)"
+UINT_TO_UDINT:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [UInt]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype UInt.
+  result:
+    kind: value
+    dataTypes: [UDInt]
+    notes: The value is transferred to the least significant byte of the target data type.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := UINT_TO_UDINT(#Value);
+  source: "official instruction documentation (paraphrased)"
+DINT_TO_BOOL:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [DInt]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype DInt.
+  result:
+    kind: value
+    dataTypes: [Bool]
+    notes: The least significant bit of the source value is transferred into the destination data type.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := DINT_TO_BOOL(#Value);
+  source: "official instruction documentation (paraphrased)"
+DINT_TO_BYTE:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [DInt]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype DInt.
+  result:
+    kind: value
+    dataTypes: [Byte]
+    notes: The value is converted.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := DINT_TO_BYTE(#Value);
+  source: "official instruction documentation (paraphrased)"
+DINT_TO_WORD:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [DInt]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype DInt.
+  result:
+    kind: value
+    dataTypes: [Word]
+    notes: The value is converted.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := DINT_TO_WORD(#Value);
+  source: "official instruction documentation (paraphrased)"
+DINT_TO_SINT:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [DInt]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype DInt.
+  result:
+    kind: value
+    dataTypes: [SInt]
+    notes: The value is converted.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := DINT_TO_SINT(#Value);
+  source: "official instruction documentation (paraphrased)"
+DINT_TO_USINT:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [DInt]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype DInt.
+  result:
+    kind: value
+    dataTypes: [USInt]
+    notes: The value is converted.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := DINT_TO_USINT(#Value);
+  source: "official instruction documentation (paraphrased)"
+DINT_TO_INT:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [DInt]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype DInt.
+  result:
+    kind: value
+    dataTypes: [Int]
+    notes: The value is converted.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := DINT_TO_INT(#Value);
+  source: "official instruction documentation (paraphrased)"
+DINT_TO_UINT:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [DInt]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype DInt.
+  result:
+    kind: value
+    dataTypes: [UInt]
+    notes: The value is converted.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := DINT_TO_UINT(#Value);
+  source: "official instruction documentation (paraphrased)"
+DINT_TO_UDINT:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [DInt]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype DInt.
+  result:
+    kind: value
+    dataTypes: [UDInt]
+    notes: The value is converted.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := DINT_TO_UDINT(#Value);
+  source: "official instruction documentation (paraphrased)"
+DINT_TO_REAL:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [DInt]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype DInt.
+  result:
+    kind: value
+    dataTypes: [Real]
+    notes: The value is converted.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := DINT_TO_REAL(#Value);
+  source: "official instruction documentation (paraphrased)"
+DINT_TO_LREAL:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [DInt]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype DInt.
+  result:
+    kind: value
+    dataTypes: [LReal]
+    notes: The value is converted.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := DINT_TO_LREAL(#Value);
+  source: "official instruction documentation (paraphrased)"
+DINT_TO_CHAR:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [DInt]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype DInt.
+  result:
+    kind: value
+    dataTypes: [Char]
+    notes: The value is converted.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := DINT_TO_CHAR(#Value);
+  source: "official instruction documentation (paraphrased)"
+DINT_TO_STRING:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [DInt]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype DInt.
+  result:
+    kind: value
+    dataTypes: [String]
+    notes: The value is converted.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := DINT_TO_STRING(#Value);
+  source: "official instruction documentation (paraphrased)"
+DINT_TO_DWORD:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [DInt]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype DInt.
+  result:
+    kind: value
+    dataTypes: [DWord]
+    notes: The value is transferred to the target data type.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := DINT_TO_DWORD(#Value);
+  source: "official instruction documentation (paraphrased)"
+UDINT_TO_BOOL:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [UDInt]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype UDInt.
+  result:
+    kind: value
+    dataTypes: [Bool]
+    notes: The least significant bit of the source value is transferred into the destination data type.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := UDINT_TO_BOOL(#Value);
+  source: "official instruction documentation (paraphrased)"
+UDINT_TO_BYTE:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [UDInt]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype UDInt.
+  result:
+    kind: value
+    dataTypes: [Byte]
+    notes: The value is converted.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := UDINT_TO_BYTE(#Value);
+  source: "official instruction documentation (paraphrased)"
+UDINT_TO_WORD:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [UDInt]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype UDInt.
+  result:
+    kind: value
+    dataTypes: [Word]
+    notes: The value is converted.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := UDINT_TO_WORD(#Value);
+  source: "official instruction documentation (paraphrased)"
+UDINT_TO_SINT:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [UDInt]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype UDInt.
+  result:
+    kind: value
+    dataTypes: [SInt]
+    notes: The value is converted.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := UDINT_TO_SINT(#Value);
+  source: "official instruction documentation (paraphrased)"
+UDINT_TO_USINT:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [UDInt]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype UDInt.
+  result:
+    kind: value
+    dataTypes: [USInt]
+    notes: The value is converted.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := UDINT_TO_USINT(#Value);
+  source: "official instruction documentation (paraphrased)"
+UDINT_TO_INT:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [UDInt]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype UDInt.
+  result:
+    kind: value
+    dataTypes: [Int]
+    notes: The value is converted.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := UDINT_TO_INT(#Value);
+  source: "official instruction documentation (paraphrased)"
+UDINT_TO_UINT:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [UDInt]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype UDInt.
+  result:
+    kind: value
+    dataTypes: [UInt]
+    notes: The value is converted.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := UDINT_TO_UINT(#Value);
+  source: "official instruction documentation (paraphrased)"
+UDINT_TO_DINT:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [UDInt]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype UDInt.
+  result:
+    kind: value
+    dataTypes: [DInt]
+    notes: The value is converted.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := UDINT_TO_DINT(#Value);
+  source: "official instruction documentation (paraphrased)"
+UDINT_TO_REAL:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [UDInt]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype UDInt.
+  result:
+    kind: value
+    dataTypes: [Real]
+    notes: The value is converted.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := UDINT_TO_REAL(#Value);
+  source: "official instruction documentation (paraphrased)"
+UDINT_TO_LREAL:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [UDInt]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype UDInt.
+  result:
+    kind: value
+    dataTypes: [LReal]
+    notes: The value is converted.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := UDINT_TO_LREAL(#Value);
+  source: "official instruction documentation (paraphrased)"
+UDINT_TO_CHAR:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [UDInt]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype UDInt.
+  result:
+    kind: value
+    dataTypes: [Char]
+    notes: The value is converted.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := UDINT_TO_CHAR(#Value);
+  source: "official instruction documentation (paraphrased)"
+UDINT_TO_STRING:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [UDInt]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype UDInt.
+  result:
+    kind: value
+    dataTypes: [String]
+    notes: The value is converted.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := UDINT_TO_STRING(#Value);
+  source: "official instruction documentation (paraphrased)"
+UDINT_TO_DWORD:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [UDInt]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype UDInt.
+  result:
+    kind: value
+    dataTypes: [DWord]
+    notes: The value is transferred to the target data type.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := UDINT_TO_DWORD(#Value);
+  source: "official instruction documentation (paraphrased)"
+UDINT_TO_TOD:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [UDInt]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype UDInt.
+  result:
+    kind: value
+    dataTypes: [Time_Of_Day]
+    notes: The value is transferred to the target data type.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := UDINT_TO_TOD(#Value);
+  source: "official instruction documentation (paraphrased)"
+REAL_TO_DWORD:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [Real]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype Real.
+  result:
+    kind: value
+    dataTypes: [DWord]
+    notes: The value is transferred to the target data type.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := REAL_TO_DWORD(#Value);
+  source: "official instruction documentation (paraphrased)"
+REAL_TO_LREAL:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [Real]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype Real.
+  result:
+    kind: value
+    dataTypes: [LReal]
+    notes: The value is transferred to the target data type.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := REAL_TO_LREAL(#Value);
+  source: "official instruction documentation (paraphrased)"
+REAL_TO_SINT:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [Real]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype Real.
+  result:
+    kind: value
+    dataTypes: [SInt]
+    notes: The value is converted.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := REAL_TO_SINT(#Value);
+  source: "official instruction documentation (paraphrased)"
+REAL_TO_USINT:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [Real]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype Real.
+  result:
+    kind: value
+    dataTypes: [USInt]
+    notes: The value is converted.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := REAL_TO_USINT(#Value);
+  source: "official instruction documentation (paraphrased)"
+REAL_TO_UINT:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [Real]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype Real.
+  result:
+    kind: value
+    dataTypes: [UInt]
+    notes: The value is converted.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := REAL_TO_UINT(#Value);
+  source: "official instruction documentation (paraphrased)"
+REAL_TO_DINT:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [Real]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype Real.
+  result:
+    kind: value
+    dataTypes: [DInt]
+    notes: The value is converted.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := REAL_TO_DINT(#Value);
+  source: "official instruction documentation (paraphrased)"
+REAL_TO_UDINT:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [Real]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype Real.
+  result:
+    kind: value
+    dataTypes: [UDInt]
+    notes: The value is converted.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := REAL_TO_UDINT(#Value);
+  source: "official instruction documentation (paraphrased)"
+REAL_TO_STRING:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [Real]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype Real.
+  result:
+    kind: value
+    dataTypes: [String]
+    notes: The value is converted.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := REAL_TO_STRING(#Value);
+  source: "official instruction documentation (paraphrased)"
+LREAL_TO_SINT:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [LReal]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype LReal.
+  result:
+    kind: value
+    dataTypes: [SInt]
+    notes: The value is converted.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := LREAL_TO_SINT(#Value);
+  source: "official instruction documentation (paraphrased)"
+LREAL_TO_USINT:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [LReal]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype LReal.
+  result:
+    kind: value
+    dataTypes: [USInt]
+    notes: The value is converted.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := LREAL_TO_USINT(#Value);
+  source: "official instruction documentation (paraphrased)"
+LREAL_TO_INT:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [LReal]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype LReal.
+  result:
+    kind: value
+    dataTypes: [Int]
+    notes: The value is converted.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := LREAL_TO_INT(#Value);
+  source: "official instruction documentation (paraphrased)"
+LREAL_TO_UINT:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [LReal]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype LReal.
+  result:
+    kind: value
+    dataTypes: [UInt]
+    notes: The value is converted.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := LREAL_TO_UINT(#Value);
+  source: "official instruction documentation (paraphrased)"
+LREAL_TO_DINT:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [LReal]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype LReal.
+  result:
+    kind: value
+    dataTypes: [DInt]
+    notes: The value is converted.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := LREAL_TO_DINT(#Value);
+  source: "official instruction documentation (paraphrased)"
+LREAL_TO_UDINT:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [LReal]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype LReal.
+  result:
+    kind: value
+    dataTypes: [UDInt]
+    notes: The value is converted.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := LREAL_TO_UDINT(#Value);
+  source: "official instruction documentation (paraphrased)"
+LREAL_TO_STRING:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [LReal]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype LReal.
+  result:
+    kind: value
+    dataTypes: [String]
+    notes: The value is converted.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := LREAL_TO_STRING(#Value);
+  source: "official instruction documentation (paraphrased)"
+DTL_TO_DATE:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [DTL]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype DTL.
+  result:
+    kind: value
+    dataTypes: [Date]
+    notes: The value is converted.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := DTL_TO_DATE(#Value);
+  source: "official instruction documentation (paraphrased)"
+DTL_TO_TOD:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [DTL]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype DTL.
+  result:
+    kind: value
+    dataTypes: [Time_Of_Day]
+    notes: The value is converted.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := DTL_TO_TOD(#Value);
+  source: "official instruction documentation (paraphrased)"
+TOD_TO_UDINT:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [Time_Of_Day]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype Time_Of_Day.
+  result:
+    kind: value
+    dataTypes: [UDInt]
+    notes: The value is converted.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := TOD_TO_UDINT(#Value);
+  source: "official instruction documentation (paraphrased)"
+DATE_TO_UINT:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [Date]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype Date.
+  result:
+    kind: value
+    dataTypes: [UInt]
+    notes: The value is converted.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := DATE_TO_UINT(#Value);
+  source: "official instruction documentation (paraphrased)"
+CHAR_TO_SINT:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [Char]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype Char.
+  result:
+    kind: value
+    dataTypes: [SInt]
+    notes: The value is converted.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := CHAR_TO_SINT(#Value);
+  source: "official instruction documentation (paraphrased)"
+CHAR_TO_USINT:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [Char]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype Char.
+  result:
+    kind: value
+    dataTypes: [USInt]
+    notes: The value is converted.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := CHAR_TO_USINT(#Value);
+  source: "official instruction documentation (paraphrased)"
+CHAR_TO_INT:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [Char]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype Char.
+  result:
+    kind: value
+    dataTypes: [Int]
+    notes: The value is converted.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := CHAR_TO_INT(#Value);
+  source: "official instruction documentation (paraphrased)"
+CHAR_TO_UINT:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [Char]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype Char.
+  result:
+    kind: value
+    dataTypes: [UInt]
+    notes: The value is converted.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := CHAR_TO_UINT(#Value);
+  source: "official instruction documentation (paraphrased)"
+CHAR_TO_DINT:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [Char]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype Char.
+  result:
+    kind: value
+    dataTypes: [DInt]
+    notes: The value is converted.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := CHAR_TO_DINT(#Value);
+  source: "official instruction documentation (paraphrased)"
+CHAR_TO_UDINT:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [Char]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype Char.
+  result:
+    kind: value
+    dataTypes: [UDInt]
+    notes: The value is converted.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := CHAR_TO_UDINT(#Value);
+  source: "official instruction documentation (paraphrased)"
+CHAR_TO_STRING:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [Char]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype Char.
+  result:
+    kind: value
+    dataTypes: [String]
+    notes: The value is transferred to the first character of the string.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := CHAR_TO_STRING(#Value);
+  source: "official instruction documentation (paraphrased)"
+STRING_TO_SINT:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [String]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype String.
+  result:
+    kind: value
+    dataTypes: [SInt]
+    notes: The value is converted.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := STRING_TO_SINT(#Value);
+  source: "official instruction documentation (paraphrased)"
+STRING_TO_USINT:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [String]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype String.
+  result:
+    kind: value
+    dataTypes: [USInt]
+    notes: The value is converted.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := STRING_TO_USINT(#Value);
+  source: "official instruction documentation (paraphrased)"
+STRING_TO_INT:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [String]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype String.
+  result:
+    kind: value
+    dataTypes: [Int]
+    notes: The value is converted.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := STRING_TO_INT(#Value);
+  source: "official instruction documentation (paraphrased)"
+STRING_TO_UINT:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [String]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype String.
+  result:
+    kind: value
+    dataTypes: [UInt]
+    notes: The value is converted.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := STRING_TO_UINT(#Value);
+  source: "official instruction documentation (paraphrased)"
+STRING_TO_DINT:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [String]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype String.
+  result:
+    kind: value
+    dataTypes: [DInt]
+    notes: The value is converted.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := STRING_TO_DINT(#Value);
+  source: "official instruction documentation (paraphrased)"
+STRING_TO_UDINT:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [String]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype String.
+  result:
+    kind: value
+    dataTypes: [UDInt]
+    notes: The value is converted.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := STRING_TO_UDINT(#Value);
+  source: "official instruction documentation (paraphrased)"
+STRING_TO_REAL:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [String]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype String.
+  result:
+    kind: value
+    dataTypes: [Real]
+    notes: The value is converted.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := STRING_TO_REAL(#Value);
+  source: "official instruction documentation (paraphrased)"
+STRING_TO_LREAL:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [String]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype String.
+  result:
+    kind: value
+    dataTypes: [LReal]
+    notes: The value is converted.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := STRING_TO_LREAL(#Value);
+  source: "official instruction documentation (paraphrased)"
+STRING_TO_CHAR:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [String]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype String.
+  result:
+    kind: value
+    dataTypes: [Char]
+    notes: The first character of the string is copied to the Char.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := STRING_TO_CHAR(#Value);
+  source: "official instruction documentation (paraphrased)"

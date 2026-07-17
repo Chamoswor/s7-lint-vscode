@@ -1,0 +1,55 @@
+﻿{
+    S7_Optimized := "TRUE";
+    S7_PreferredLanguage := "FBD";
+    S7_Version := "0.1"
+}
+FUNCTION_BLOCK "CLAUDE_REF_PROGRAM-CONTROL-OPERATION"
+    { S7_Language := "FBD" }
+    NETWORK
+        Label()
+        RUNG
+            JumpCoil( )
+        END_RUNG
+    END_NETWORK
+    { S7_Language := "FBD" }
+    NETWORK
+        RUNG
+            I_JumpCoil( )
+        END_RUNG
+    END_NETWORK
+    { S7_Language := "FBD" }
+    NETWORK
+        RUNG
+            JumpList(
+                k :=  ,
+                dst0 =>  ,
+                dst1 =>  
+            )
+        END_RUNG
+        RUNG
+            {
+                CASE0 := "=="; 
+                CASE1 := "=="
+            }
+            Switch(
+                k :=  ,
+                case0 :=  ,
+                case1 :=  ,
+                else =>  ,
+                dst0 =>  ,
+                dst1 =>  
+            )
+        END_RUNG
+    END_NETWORK
+    { S7_Language := "FBD" }
+    NETWORK
+        RUNG
+            ReturnCoil( )
+        END_RUNG
+    END_NETWORK
+    { S7_Language := "FBD" }
+    NETWORK
+        RUNG
+        END_RUNG
+    END_NETWORK
+END_FUNCTION_BLOCK

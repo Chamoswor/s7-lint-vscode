@@ -1,0 +1,52 @@
+# Codes emitted by linter/instructionChecks.ts -- the per-call checks
+# resources/instruction-registry/README.md documents (name known, required
+# pins present, no unknown pins, S7_Templates shape, EN/ENO). checkCall also
+# emits unknown-instruction/unknown-pin/pin-case-mismatch, but those live in
+# shared.yaml since analysis/documentIndex.ts's custom-FB-instance checks
+# reuse the same codes with different prose (see that file's own `variants`).
+
+missing-template:
+  severity: error
+  message: "'{callName}' expects an S7_Templates pragma ({shape}: [{keys}]) immediately before the call, but none was found."
+  notes: "checkTemplate overrides severity per-call: error when the triggering instruction-registry entry is confidence:confirmed-compiled, warning when confidence:shape-only (README's own confidence rule -- a shape-only entry's pin shape was only proven with blank pins, so whether it even needs a template is a best guess)."
+
+template-shape-mismatch:
+  severity: error
+  message: "S7_Templates on '{callName}' has shape '{actualShape}', expected '{expectedShape}' (got \"{raw}\")."
+  notes: "Severity overridden per-call, same confidence-based rule as missing-template."
+
+template-key-mismatch:
+  severity: error
+  message: "S7_Templates on '{callName}' uses key(s) [{actualKeys}], expected [{expectedKeys}] (got \"{raw}\")."
+  notes: "Severity overridden per-call, same confidence-based rule as missing-template."
+
+template-value-unrecognized:
+  severity: warning
+  message: "S7_Templates key '{key}' on '{callName}' has value \"{value}\" -- {problem}."
+  notes: "Always warning regardless of confidence -- new, unverified-in-the-wild territory, not the README's own confirmed shape/key rule (see checkTemplate's own comment)."
+
+missing-template-extra:
+  severity: error
+  message: "'{callName}' expects pragma '{extraKey} := \"{extraVal}\"' alongside S7_Templates, but it's missing."
+  notes: "Severity overridden per-call, same confidence-based rule as missing-template."
+
+template-extra-mismatch:
+  severity: error
+  message: "Pragma '{extraKey}' on '{callName}' is \"{actual}\", expected \"{extraVal}\"."
+  notes: "Severity overridden per-call, same confidence-based rule as missing-template."
+
+eno-generation-not-supported:
+  severity: error
+  message: "'{callName}' has no ENO output at all (enEno.eno.present: false), but this call's pragma requests ENO generation (S7_GenerateENO := \"{requested}\")."
+
+instruction-wrong-language:
+  severity: error
+  message: "'{callName}' is only valid in {languages} networks, but this NETWORK is declared S7_Language := \"{networkLanguage}\"."
+
+missing-required-pin:
+  severity: error
+  variants:
+    named: "Missing required pin '{pinName}' on instruction '{callName}'."
+    scl: "Missing required parameter '{pinName}' on instruction '{callName}'."
+    positional: "'{callName}' expects at least {expected} positional argument(s), found {found}."
+  notes: "'named' -- a required NAMED pin absent from a LAD/FBD call. 'scl' -- the same NAMED case for an SCL call (networkLanguage === \"SCL\") -- previously unreachable for SCL (required was blanket-relaxed for every SCL call), now reachable for a dedicated *-SCL.yaml entry whose own data genuinely requires a parameter (e.g. 11-conversion-SCL.yaml's LREAL_TO_REAL). 'positional' -- fewer positional arguments than the registry's required positional-pin count; already says 'argument', not 'pin', so it's shared as-is by both languages."

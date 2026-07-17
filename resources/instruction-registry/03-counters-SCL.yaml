@@ -1,0 +1,199 @@
+# SCL IEC-counter instruction registry.
+#
+# These instructions are stateful IEC-counter instance calls and therefore do
+# not produce a function return value. Q/QU/QD and CV are output parameters.
+#
+# Shared instance DB call:
+#   "CounterDB".CTU(CU := #Start, R := #Reset, PV := 10,
+#                   Q => #Reached, CV => #Value);
+#
+# Static multi-instance call:
+#   #Counter(CU := #Start, R := #Reset, PV := 10,
+#            Q => #Reached, CV => #Value);
+#
+# Siemens' SCL parameter tables use:
+# - CU/CD: I, Q, M, D, L
+# - R/LD: I, Q, M, D, L, P
+# - PV: I, Q, M, D, L, P; Siemens also explicitly permits a constant
+# - Q/QU/QD: I, Q, M, D, L
+# - CV: I, Q, M, D, L, P
+#
+# Use each IEC-counter instance at only one program location.
+$fileLanguage: [SCL]
+
+CTU:
+  family: counter
+  callShape: instance-dot
+  instanceType: CTU_INT
+
+  pins:
+    - name: CU
+      dir: in
+      required: false
+      dataTypes: [Bool]
+      memoryAreas: [I, Q, M, D, L]
+      note: Positive-edge count input.
+
+    - name: R
+      dir: in
+      required: false
+      dataTypes: [Bool]
+      memoryAreas: [I, Q, M, D, L, P]
+      note: Reset input. Sets CV to zero and suppresses CU while TRUE.
+
+    - name: PV
+      dir: in
+      required: false
+      dataTypes: ["Integers"]
+      memoryAreas: [I, Q, M, D, L, P, constant]
+      note: Preset value used by Q := (CV >= PV). Siemens explicitly permits a constant.
+
+    - name: Q
+      dir: out
+      required: false
+      dataTypes: [Bool]
+      memoryAreas: [I, Q, M, D, L]
+      note: Counter status. TRUE while CV is greater than or equal to PV.
+
+    - name: CV
+      dir: out
+      required: false
+      dataTypes: ["Integers", Char, WChar, Date]
+      memoryAreas: [I, Q, M, D, L, P]
+      note: Current counter value; saturates at the selected datatype's upper limit.
+
+  result:
+    kind: none
+
+  template: { shape: single, keys: [value_type], extra: {} }
+  confidence: official-doc
+  notes: >-
+    Count-up IEC counter. The instance may be a shared IEC_<Counter> data block called as "DB".CTU(...)
+    or a compatible CTU_<Type>/IEC_<Counter> static multi-instance called directly as #Instance(...).
+    S7-1500 additionally supports LINT/ULINT counter variants. The instance state is retentive under
+    Siemens' documented optimized-instance rules.
+  source: "official instruction documentation (paraphrased)"
+CTD:
+  family: counter
+  callShape: instance-dot
+  instanceType: CTD_INT
+
+  pins:
+    - name: CD
+      dir: in
+      required: false
+      dataTypes: [Bool]
+      memoryAreas: [I, Q, M, D, L]
+      note: Positive-edge count-down input.
+
+    - name: LD
+      dir: in
+      required: false
+      dataTypes: [Bool]
+      memoryAreas: [I, Q, M, D, L, P]
+      note: Load input. Loads PV into CV and suppresses CD while TRUE.
+
+    - name: PV
+      dir: in
+      required: false
+      dataTypes: ["Integers"]
+      memoryAreas: [I, Q, M, D, L, P, constant]
+      note: Preset value loaded into CV when LD is TRUE. Siemens explicitly permits a constant.
+
+    - name: Q
+      dir: out
+      required: false
+      dataTypes: [Bool]
+      memoryAreas: [I, Q, M, D, L]
+      note: Counter status. TRUE while CV is less than or equal to zero.
+
+    - name: CV
+      dir: out
+      required: false
+      dataTypes: ["Integers", Char, WChar, Date]
+      memoryAreas: [I, Q, M, D, L, P]
+      note: Current counter value; saturates at the selected datatype's lower limit.
+
+  result:
+    kind: none
+
+  template: { shape: single, keys: [value_type], extra: {} }
+  confidence: official-doc
+  notes: >-
+    Count-down IEC counter. The instance may be a shared IEC_<Counter> data block called as
+    "DB".CTD(...) or a compatible CTD_<Type>/IEC_<Counter> static multi-instance called directly as
+    #Instance(...). S7-1500 additionally supports LINT/ULINT counter variants.
+  source: "official instruction documentation (paraphrased)"
+CTUD:
+  family: counter
+  callShape: instance-dot
+  instanceType: CTUD_INT
+
+  pins:
+    - name: CU
+      dir: in
+      required: false
+      dataTypes: [Bool]
+      memoryAreas: [I, Q, M, D, L]
+      note: Positive-edge count-up input.
+
+    - name: CD
+      dir: in
+      required: false
+      dataTypes: [Bool]
+      memoryAreas: [I, Q, M, D, L]
+      note: Positive-edge count-down input.
+
+    - name: R
+      dir: in
+      required: false
+      dataTypes: [Bool]
+      memoryAreas: [I, Q, M, D, L, P]
+      note: Reset input. Sets CV to zero and blocks CU, CD and LD while TRUE.
+
+    - name: LD
+      dir: in
+      required: false
+      dataTypes: [Bool]
+      memoryAreas: [I, Q, M, D, L, P]
+      note: Load input. Loads PV into CV and blocks CU/CD while TRUE.
+
+    - name: PV
+      dir: in
+      required: false
+      dataTypes: ["Integers"]
+      memoryAreas: [I, Q, M, D, L, P, constant]
+      note: Preset value used by QU and loaded into CV by LD. Siemens permits a constant.
+
+    - name: QU
+      dir: out
+      required: false
+      dataTypes: [Bool]
+      memoryAreas: [I, Q, M, D, L]
+      note: Up-counter status. TRUE while CV is greater than or equal to PV.
+
+    - name: QD
+      dir: out
+      required: false
+      dataTypes: [Bool]
+      memoryAreas: [I, Q, M, D, L]
+      note: Down-counter status. TRUE while CV is less than or equal to zero.
+
+    - name: CV
+      dir: out
+      required: false
+      dataTypes: ["Integers", Char, WChar, Date]
+      memoryAreas: [I, Q, M, D, L, P]
+      note: Current counter value; saturates at the selected datatype's limits.
+
+  result:
+    kind: none
+
+  template: { shape: single, keys: [value_type], extra: {} }
+  confidence: official-doc
+  notes: >-
+    Up/down IEC counter. Simultaneous positive edges at CU and CD leave CV unchanged. R has priority and
+    blocks CU, CD and LD; LD blocks both count inputs. The instance may be a shared IEC_<Counter> DB or
+    a compatible CTUD_<Type>/IEC_<Counter> static multi-instance. S7-1500 additionally supports
+    LINT/ULINT counter variants.
+  source: "official instruction documentation (paraphrased)"

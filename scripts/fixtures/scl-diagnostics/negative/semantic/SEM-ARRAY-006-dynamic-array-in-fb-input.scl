@@ -1,0 +1,11 @@
+FUNCTION_BLOCK "Semantic_DynamicArrayInFbInput"
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+
+VAR_INPUT
+    values : Array[*] of Int;
+    // EXPECT: error[array.dynamic-bounds-illegal-section] SEM-ARRAY-006
+END_VAR
+
+BEGIN
+END_FUNCTION_BLOCK

@@ -1,0 +1,21 @@
+FUNCTION_BLOCK "Syntax_MismatchedNesting"
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+
+VAR
+    a        : Int := 1;
+    b        : Int := 2;
+    result   : Int := 0;
+    flag     : Bool := TRUE;
+    i        : Int := 0;
+    values   : Array[0..9] of Int;
+END_VAR
+BEGIN
+    IF #flag THEN
+        WHILE #i < 10 DO
+            #i := #i + 1;
+        END_IF;
+    END_WHILE;
+    // EXPECT: error[syntax.mismatched-block-terminator] SYN-CTRL-003
+
+END_FUNCTION_BLOCK

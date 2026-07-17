@@ -1,0 +1,310 @@
+# SCL word-logic instruction registry.
+#
+# Bitwise AND, OR, XOR and NOT are native SCL operators and are therefore not
+# duplicated as callable instruction entries here.
+#
+# DECO, ENCO, SEL and MUX are functions. Their calculated value is represented
+# by `result`, not by an OUT pin.
+#
+# DEMUX is a procedure-style instruction with explicit OUT parameters and no
+# function return value.
+#
+# The official SCL parameter tables list I, Q, M, D, L and P. Literal constants
+# may be used as SCL expressions, but `constant` is not added to memoryAreas
+# where Siemens does not list it.
+#
+$fileLanguage:
+- SCL
+DECO:
+  family: word-logic
+  callShape: box
+  instanceType: null
+  pins:
+  - name: IN
+    dir: in
+    required: true
+    dataTypes: [UInt]
+    memoryAreas:
+    - I
+    - Q
+    - M
+    - D
+    - L
+    - P
+    note: Bit position to set. Values greater than 31 are reduced modulo 32.
+  result:
+    kind: inferred
+    rule: instruction-specific
+    sourcePins:
+    - 0
+    dataTypes: ["Bit strings"]
+    notes: BYTE, WORD, DWORD or LWORD function value with one bit set. The result type can be selected explicitly
+      with DECO_<datatype>; otherwise it is inferred from typed context, with DWORD as the documented default.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Decodes IN to a one-hot bit string. Example: #Result := DECO_BYTE(IN := #Position);
+  source: "official instruction documentation (paraphrased)"
+ENCO:
+  family: word-logic
+  callShape: box
+  instanceType: null
+  pins:
+  - name: IN
+    dir: in
+    required: true
+    dataTypes: ["Bit strings"]
+    memoryAreas:
+    - I
+    - Q
+    - M
+    - D
+    - L
+    - P
+    note: Bit string whose least-significant set bit is located.
+  result:
+    kind: value
+    dataTypes: [Int]
+    notes: Bit position of the least-significant set bit. The function value may be assigned to I, Q, M, D, L or P.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Returns zero when IN is zero or only bit 0 is set. With automatic ENO generation enabled, a zero
+    input causes ENO to become FALSE.
+  source: "official instruction documentation (paraphrased)"
+SEL:
+  family: word-logic
+  callShape: box
+  instanceType: null
+  pins:
+  - name: G
+    dir: in
+    required: true
+    dataTypes: [Bool]
+    memoryAreas:
+    - I
+    - Q
+    - M
+    - D
+    - L
+    note: FALSE selects IN0; TRUE selects IN1.
+  - name: IN0
+    dir: in
+    required: true
+    dataTypes: ["Binary numbers", Integers, "Floating-point numbers", Timers, "Character strings", Time_Of_Day, LTime_Of_Day, Date, Date_And_Time, LDT]
+    memoryAreas:
+    - I
+    - Q
+    - M
+    - D
+    - L
+    - P
+    note: Value returned when G is FALSE.
+  - name: IN1
+    dir: in
+    required: true
+    dataTypes: ["Binary numbers", Integers, "Floating-point numbers", Timers, "Character strings", Time_Of_Day, LTime_Of_Day, Date, Date_And_Time, LDT]
+    memoryAreas:
+    - I
+    - Q
+    - M
+    - D
+    - L
+    - P
+    note: Value returned when G is TRUE.
+  result:
+    kind: inferred
+    rule: common-compatible-type
+    sourcePins:
+    - 1
+    - 2
+    notes: Selected value. The function value has the common compatible datatype of IN0 and IN1 and may be assigned
+      to I, Q, M, D, L or P.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Selects IN0 when G is FALSE and IN1 when G is TRUE. All value parameters must belong to the same
+    compatible datatype class.
+  source: "official instruction documentation (paraphrased)"
+MUX:
+  family: word-logic
+  callShape: box
+  instanceType: null
+  pins:
+  - name: K
+    dir: in
+    required: true
+    dataTypes: [Integers]
+    memoryAreas:
+    - I
+    - Q
+    - M
+    - D
+    - L
+    - P
+    note: Zero-based selector. 0 selects IN0, 1 selects IN1, and so on.
+  - name: IN0
+    dir: in
+    required: true
+    dataTypes: ["Binary numbers", Integers, "Floating-point numbers", Timers, "Character strings", Time_Of_Day, LTime_Of_Day, Date, Date_And_Time, LDT]
+    memoryAreas:
+    - I
+    - Q
+    - M
+    - D
+    - L
+    - P
+    note: First selectable value.
+  - name: IN1
+    dir: in
+    required: true
+    dataTypes: ["Binary numbers", Integers, "Floating-point numbers", Timers, "Character strings", Time_Of_Day, LTime_Of_Day, Date, Date_And_Time, LDT]
+    memoryAreas:
+    - I
+    - Q
+    - M
+    - D
+    - L
+    - P
+    note: Second selectable value.
+  - name: INn
+    dir: in
+    required: false
+    dataTypes: ["Binary numbers", Integers, "Floating-point numbers", Timers, "Character strings", Time_Of_Day, LTime_Of_Day, Date, Date_And_Time, LDT]
+    memoryAreas:
+    - I
+    - Q
+    - M
+    - D
+    - L
+    - P
+    note: Optional consecutively numbered inputs IN2 through IN31.
+  - name: INELSE
+    dir: in
+    required: false
+    dataTypes: ["Binary numbers", Integers, "Floating-point numbers", Timers, "Character strings", Time_Of_Day, LTime_Of_Day, Date, Date_And_Time, LDT]
+    memoryAreas:
+    - I
+    - Q
+    - M
+    - D
+    - L
+    - P
+    note: Fallback value returned when K does not select an available input.
+  result:
+    kind: inferred
+    rule: common-compatible-type
+    sourcePins:
+    - 1
+    - 2
+    - 3
+    - 4
+    notes: Selected input value, or INELSE for an out-of-range selector. The function value may be assigned to I,
+      Q, M, D, L or P.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Selects one of at most 32 inputs. All value inputs and INELSE must use one compatible datatype. If K
+    is outside the available range and INELSE is omitted, the function value is invalid.
+  source: "official instruction documentation (paraphrased)"
+DEMUX:
+  family: word-logic
+  callShape: box
+  instanceType: null
+  pins:
+  - name: K
+    dir: in
+    required: true
+    dataTypes: [Integers]
+    memoryAreas:
+    - I
+    - Q
+    - M
+    - D
+    - L
+    - P
+    note: Zero-based selector. 0 selects OUT0, 1 selects OUT1, and so on.
+  - name: IN
+    dir: in
+    required: true
+    dataTypes: ["Binary numbers", Integers, "Floating-point numbers", Timers, "Character strings", Time_Of_Day, LTime_Of_Day, Date, Date_And_Time, LDT]
+    memoryAreas:
+    - I
+    - Q
+    - M
+    - D
+    - L
+    - P
+    note: Value copied to the selected output.
+  - name: OUT0
+    dir: out
+    required: true
+    dataTypes: ["Binary numbers", Integers, "Floating-point numbers", Timers, "Character strings", Time_Of_Day, LTime_Of_Day, Date, Date_And_Time, LDT]
+    memoryAreas:
+    - I
+    - Q
+    - M
+    - D
+    - L
+    - P
+    note: First selectable output.
+  - name: OUT1
+    dir: out
+    required: true
+    dataTypes: ["Binary numbers", Integers, "Floating-point numbers", Timers, "Character strings", Time_Of_Day, LTime_Of_Day, Date, Date_And_Time, LDT]
+    memoryAreas:
+    - I
+    - Q
+    - M
+    - D
+    - L
+    - P
+    note: Second selectable output.
+  - name: OUTn
+    dir: out
+    required: false
+    dataTypes: ["Binary numbers", Integers, "Floating-point numbers", Timers, "Character strings", Time_Of_Day, LTime_Of_Day, Date, Date_And_Time, LDT]
+    memoryAreas:
+    - I
+    - Q
+    - M
+    - D
+    - L
+    - P
+    note: Optional consecutively numbered outputs OUT2 through OUT31.
+  - name: OUTELSE
+    dir: out
+    required: false
+    dataTypes: ["Binary numbers", Integers, "Floating-point numbers", Timers, "Character strings", Time_Of_Day, LTime_Of_Day, Date, Date_And_Time, LDT]
+    memoryAreas:
+    - I
+    - Q
+    - M
+    - D
+    - L
+    - P
+    note: Fallback output receiving IN when K is outside the available range.
+  result:
+    kind: none
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Copies IN to one of at most 32 outputs selected by K; other outputs remain unchanged. For an
+    out-of-range K, IN is written to OUTELSE when connected. All value parameters should use the same
+    datatype to avoid implicit conversion.
+  source: "official instruction documentation (paraphrased)"

@@ -1,0 +1,108 @@
+# OPC UA server method handling — SCL registry.
+#
+# Instruction names and named-parameter casing use the exact Siemens spelling.
+# No automatic case transformation is applied.
+#
+# These are FB/library/procedure calls, not value-returning functions. Every
+# entry therefore has `result: { kind: none }`. For FB instance calls only
+# InOut operands remain structurally required; bare FC/procedure calls retain
+# required input and InOut operands.
+#
+# Missing dataTypes are intentional: unknown types are not guessed.
+
+$fileLanguage: [SCL]
+OPC_UA_ServerMethodPre:
+  family: communication
+  callShape: instance-dot
+  instanceType: OPC_UA_ServerMethodPre
+  pins:
+  - name: Done
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: Busy
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: Error
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: Status
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [DWord]
+  - name: UAMethod_Called
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: UAMethod_InParameters
+    dir: inout
+    required: true
+    note: ''
+    dataTypes: [Variant]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    . OPC UA server-method-call preamble FB.
+  source: "official instruction documentation (paraphrased)"
+  result:
+    kind: none
+OPC_UA_ServerMethodPost:
+  family: communication
+  callShape: instance-dot
+  instanceType: OPC_UA_ServerMethodPost
+  pins:
+  - name: UAMethod_Result
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [DWord]
+  - name: UAMethod_Finished
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: Done
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: Busy
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: Error
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: Status
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [DWord]
+  - name: UAMethod_OutParameters
+    dir: inout
+    required: true
+    note: ''
+    dataTypes: [Variant]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    . OPC UA server-method-call postamble FB, paired with OPC_UA_ServerMethodPre above.
+  source: "official instruction documentation (paraphrased)"
+  result:
+    kind: none

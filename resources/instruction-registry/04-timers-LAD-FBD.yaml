@@ -1,0 +1,246 @@
+# LAD/FBD IEC-timer instruction registry.
+#
+# This file contains both the standard timer boxes (TP, TON, TOF and TONR)
+# and the graphical timer-reference forms used to start, reset or modify an
+# already declared IEC-timer instance.
+#
+# Memory-area conventions:
+# - Timer references: D or L.
+# - Start-coil VALUE and PT load values: I, Q, M, D, L or constant.
+# - Standard-box PT/R inputs:
+#     S7-1200: I, Q, M, D, L or constant.
+#     S7-1500: I, Q, M, D, L, P or constant.
+# - Standard-box implicit IN:
+#     S7-1200: I, Q, M, D, L or constant.
+#     S7-1500: I, Q, M, D, L, T, C, P or constant.
+# - Standard-box Q/ET:
+#     S7-1200: I, Q, M, D or L.
+#     S7-1500: I, Q, M, D, L or P.
+#
+# The start-coil forms are terminal network elements and therefore have no
+# result value. Standard TP/TON/TOF/TONR boxes expose their implicit Q/RLO as a
+# BOOL result. RT and PT preserve the incoming RLO and expose it as their BOOL
+# box result.
+#
+# Q and ET are refreshed when interconnected or explicitly accessed. Writing
+# or reinitializing IEC-timer instance data while timing is active can disrupt
+# timer operation.
+#
+$fileLanguage: [LAD, FBD]
+
+TP_Coil:
+  family: timer
+  callShape: coil-ref
+  instanceType: TP_TIME
+  pins:
+  - {name: timer, dir: out, required: true, dataTypes: [IEC_TIMER, TP_TIME, IEC_LTIMER, TP_LTIME], note: "IEC-timer instance
+      referenced by the graphical start instruction. The instance must be stored in D or L.", memoryAreas: [D, L]}
+  - {name: pt, dir: in, required: true, dataTypes: [Time, LTime], note: "Positive TIME value, or LTIME for a compatible
+      S7-1500 long-timer instance.", memoryAreas: [I, Q, M, D, L, constant]}
+  result:
+    kind: none
+    notes: Terminal coil-style instruction; timer status is queried separately through the instance.
+  template: {shape: single, keys: [time_type], extra: {}}
+  confidence: confirmed-compiled
+  notes: >-
+    Starts the referenced pulse timer on a positive RLO edge. The timer runs for VALUE regardless of
+    later RLO changes and ignores additional rising edges while active. The instruction must be placed
+    at the end of the network. Q and ET are not pins on this form and must be queried from the
+    referenced timer instance.
+  source: "docs/fbd-knowhow/04-Timers.md"
+TON_Coil:
+  family: timer
+  callShape: coil-ref
+  instanceType: TON_TIME
+  pins:
+  - {name: timer, dir: out, required: true, dataTypes: [IEC_TIMER, TON_TIME, IEC_LTIMER, TON_LTIME], note: "IEC-timer
+      instance referenced by the graphical start instruction. The instance must be stored in D or L.", memoryAreas: [
+      D, L]}
+  - {name: pt, dir: in, required: true, dataTypes: [Time, LTime], note: "Positive TIME value, or LTIME for a compatible
+      S7-1500 long-timer instance.", memoryAreas: [I, Q, M, D, L, constant]}
+  result:
+    kind: none
+    notes: Terminal coil-style instruction; timer status is queried separately through the instance.
+  template: {shape: single, keys: [time_type], extra: {}}
+  confidence: confirmed-compiled
+  notes: >-
+    Starts the referenced on-delay timer. Timing continues while the RLO remains TRUE; a FALSE RLO
+    resets the timer before or after expiry. The instruction must be placed at the end of the network. Q
+    and ET are not pins on this form and must be queried from the referenced timer instance.
+  source: "docs/fbd-knowhow/04-Timers.md"
+TOF_Coil:
+  family: timer
+  callShape: coil-ref
+  instanceType: TOF_TIME
+  pins:
+  - {name: timer, dir: out, required: true, dataTypes: [IEC_TIMER, TOF_TIME, IEC_LTIMER, TOF_LTIME], note: "IEC-timer
+      instance referenced by the graphical start instruction. The instance must be stored in D or L.", memoryAreas: [
+      D, L]}
+  - {name: pt, dir: in, required: true, dataTypes: [Time, LTime], note: "Positive TIME value, or LTIME for a compatible
+      S7-1500 long-timer instance.", memoryAreas: [I, Q, M, D, L, constant]}
+  result:
+    kind: none
+    notes: Terminal coil-style instruction; timer status is queried separately through the instance.
+  template: {shape: single, keys: [time_type], extra: {}}
+  confidence: confirmed-compiled
+  notes: >-
+    Starts the referenced off-delay timer on a negative RLO edge. Q remains TRUE during the off-delay; a
+    TRUE RLO cancels an active off-delay and resets ET. The instruction must be placed at the end of the
+    network. Q and ET are not pins on this form and must be queried from the referenced timer instance.
+  source: "docs/fbd-knowhow/04-Timers.md"
+TONR_Coil:
+  family: timer
+  callShape: coil-ref
+  instanceType: TONR_TIME
+  pins:
+  - {name: timer, dir: out, required: true, dataTypes: [IEC_TIMER, TONR_TIME, IEC_LTIMER, TONR_LTIME], note: "IEC-timer
+      instance referenced by the graphical start instruction. The instance must be stored in D or L.", memoryAreas: [
+      D, L]}
+  - {name: pt, dir: in, required: true, dataTypes: [Time, LTime], note: "Positive TIME value, or LTIME for a compatible
+      S7-1500 long-timer instance.", memoryAreas: [I, Q, M, D, L, constant]}
+  result:
+    kind: none
+    notes: Terminal coil-style instruction; timer status is queried separately through the instance.
+  template: {shape: single, keys: [time_type], extra: {}}
+  confidence: confirmed-compiled
+  notes: >-
+    Accumulates elapsed time while the RLO is TRUE and pauses while it is FALSE. This graphical form has
+    no reset pin; reset the same instance with RT. The instruction must be placed at the end of the
+    network. Q and ET are not pins on this form and must be queried from the referenced timer instance.
+  source: "docs/fbd-knowhow/04-Timers.md"
+RT_Coil:
+  family: timer
+  callShape: box
+  instanceType:
+  pins:
+  - name:
+    dir: out
+    required: true
+    dataTypes: [IEC_TIMER, IEC_LTIMER, TP_TIME, TP_LTIME, TON_TIME, TON_LTIME, TOF_TIME, TOF_LTIME, TONR_TIME, 
+        TONR_LTIME]
+    note: "IEC-timer instance to reset. TP, TON, TOF and TONR timer structures are supported."
+    memoryAreas:
+    - D
+    - L
+  result:
+    kind: value
+    dataTypes:
+    - Bool
+    notes: Transparent RLO result; the instruction resets the timer only when the incoming RLO is TRUE.
+  template: {shape: none, keys: [], extra: {}}
+  confidence: confirmed-compiled
+  notes: >-
+    Resets all structure components of the referenced IEC timer to zero when the incoming RLO is TRUE.
+    The instruction does not alter the RLO and is not restricted to the end of the network.
+  source: "docs/fbd-knowhow/04-Timers.md"
+PT_Coil:
+  family: timer
+  callShape: coil-ref
+  instanceType:      # works for any of the four timer instance types
+  pins:
+  - {name: timer, dir: out, required: true, dataTypes: [IEC_TIMER, IEC_LTIMER, TP_TIME, TP_LTIME, TON_TIME, 
+        TON_LTIME, TOF_TIME, TOF_LTIME, TONR_TIME, TONR_LTIME], note: "IEC-timer instance whose programmed duration is
+      modified.", memoryAreas: [D, L]}
+  - {name: PT, dir: in, required: true, dataTypes: [Time, LTime], note: "TIME duration, or LTIME for a compatible S7-1500
+      long-timer instance.", memoryAreas: [I, Q, M, D, L, constant]}
+  result:
+    kind: value
+    dataTypes:
+    - Bool
+    notes: Transparent RLO result; the duration is written only while the incoming RLO is TRUE.
+  template: {shape: none, keys: [], extra: {}}
+  confidence: confirmed-compiled
+  notes: >-
+    Writes PT into the referenced IEC-timer structure in every scan in which the incoming RLO is TRUE.
+    Changing the duration of a running timer can change its status at the next Q/ET update.
+  source: "docs/fbd-knowhow/04-Timers.md"
+TP:
+  family: timer
+  callShape: instance-dot
+  instanceType: TP_TIME
+  pins:
+  - {name: pt, dir: in, required: true, dataTypes: [Time, LTime], note: "Positive TIME value; LTIME and peripheral-area
+      P are available only with a compatible S7-1500 long timer.", memoryAreas: [I, Q, M, D, L, P, constant]}
+  - {name: et, dir: out, required: false, dataTypes: [Time, LTime], note: "Current elapsed time. LTIME and peripheral-area
+      P are available only on supported S7-1500 configurations.", memoryAreas: [I, Q, M, D, L, P]}
+  result:
+    kind: value
+    dataTypes:
+    - Bool
+    notes: Implicit Q/RLO output. Destination P is available only on S7-1500; S7-1200 uses I, Q, M, D or L.
+  template: {shape: single, keys: [time_type], extra: {}}
+  confidence: confirmed-compiled
+  notes: >-
+    Generate pulse. A positive edge at the implicit IN starts timing. Q remains TRUE for PT regardless
+    of later IN changes; another rising edge while active does not restart the pulse. The implicit IN
+    accepts I, Q, M, D, L or constant on S7-1200; S7-1500 additionally permits T, C and P. Q and ET are
+    updated when interconnected or explicitly accessed.
+  source: "docs/fbd-knowhow/04-Timers.md"
+TON:
+  family: timer
+  callShape: instance-dot
+  instanceType: TON_TIME
+  pins:
+  - {name: pt, dir: in, required: true, dataTypes: [Time, LTime], note: "Positive TIME value; LTIME and peripheral-area
+      P are available only with a compatible S7-1500 long timer.", memoryAreas: [I, Q, M, D, L, P, constant]}
+  - {name: et, dir: out, required: false, dataTypes: [Time, LTime], note: "Current elapsed time. LTIME and peripheral-area
+      P are available only on supported S7-1500 configurations.", memoryAreas: [I, Q, M, D, L, P]}
+  result:
+    kind: value
+    dataTypes:
+    - Bool
+    notes: Implicit Q/RLO output. Destination P is available only on S7-1500; S7-1200 uses I, Q, M, D or L.
+  template: {shape: single, keys: [time_type], extra: {}}
+  confidence: confirmed-compiled
+  notes: >-
+    Generate on-delay. A positive edge at the implicit IN starts timing. Q becomes TRUE after PT and
+    remains TRUE only while IN remains TRUE. The implicit IN accepts I, Q, M, D, L or constant on
+    S7-1200; S7-1500 additionally permits T, C and P. Q and ET are updated when interconnected or
+    explicitly accessed.
+  source: "docs/fbd-knowhow/04-Timers.md"
+TOF:
+  family: timer
+  callShape: instance-dot
+  instanceType: TOF_TIME
+  pins:
+  - {name: pt, dir: in, required: true, dataTypes: [Time, LTime], note: "Positive TIME value; LTIME and peripheral-area
+      P are available only with a compatible S7-1500 long timer.", memoryAreas: [I, Q, M, D, L, P, constant]}
+  - {name: et, dir: out, required: false, dataTypes: [Time, LTime], note: "Current elapsed time. LTIME and peripheral-area
+      P are available only on supported S7-1500 configurations.", memoryAreas: [I, Q, M, D, L, P]}
+  result:
+    kind: value
+    dataTypes:
+    - Bool
+    notes: Implicit Q/RLO output. Destination P is available only on S7-1500; S7-1200 uses I, Q, M, D or L.
+  template: {shape: single, keys: [time_type], extra: {}}
+  confidence: confirmed-compiled
+  notes: >-
+    Generate off-delay. Q follows a TRUE implicit IN immediately. A negative edge starts PT; Q remains
+    TRUE until PT expires. Returning IN to TRUE cancels the active off-delay. The implicit IN accepts I,
+    Q, M, D, L or constant on S7-1200; S7-1500 additionally permits T, C and P. Q and ET are updated
+    when interconnected or explicitly accessed.
+  source: "docs/fbd-knowhow/04-Timers.md"
+TONR:
+  family: timer
+  callShape: instance-dot
+  instanceType: TONR_TIME
+  pins:
+  - {name: r, dir: in, required: true, dataTypes: [Bool], note: "Reset input. TRUE resets Q and ET and blocks accumulation.
+      Peripheral-area P is S7-1500-only.", memoryAreas: [I, Q, M, D, L, P, constant]}
+  - {name: pt, dir: in, required: true, dataTypes: [Time, LTime], note: "Positive maximum accumulation time. LTIME and
+      peripheral-area P require a compatible S7-1500 long timer.", memoryAreas: [I, Q, M, D, L, P, constant]}
+  - {name: et, dir: out, required: false, dataTypes: [Time, LTime], note: "Accumulated elapsed time. LTIME and peripheral-area
+      P are available only on supported S7-1500 configurations.", memoryAreas: [I, Q, M, D, L, P]}
+  result:
+    kind: value
+    dataTypes:
+    - Bool
+    notes: Implicit Q/RLO output. Destination P is available only on S7-1500; S7-1200 uses I, Q, M, D or L.
+  template: {shape: single, keys: [time_type], extra: {}}
+  confidence: confirmed-compiled
+  notes: >-
+    Time accumulator. Elapsed time is accumulated while the implicit IN is TRUE and retained while IN is
+    FALSE. R resets and blocks timing while TRUE; Q remains TRUE after PT until R resets the instance.
+    The implicit IN accepts I, Q, M, D, L or constant on S7-1200; S7-1500 additionally permits T, C and
+    P. Q and ET are updated when interconnected or explicitly accessed.
+  source: "docs/fbd-knowhow/04-Timers.md"

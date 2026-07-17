@@ -1,0 +1,127 @@
+# Structural composition rules for Array / Struct / PLC data type /
+# Variant, transcribed from Siemens' S7-1200 manual, "PLC concepts >
+# Data types" (docs.tia.siemens.cloud/.../plc-concepts/data-types), plus
+# (struct: section, 2026-07-13) a dedicated Siemens "STRUCT" reference
+# page pasted by the user — memory layout, addressing syntax, anonymous-
+# vs-UDT tradeoffs, and assignment-compatibility rules weren't covered by
+# the original manual excerpt at all. These are rules the lint server
+# enforces on top of the type-dependency cache (see
+# udt-dependency-cache.md) — not per-type data, so they live separately
+# from base-types.yaml.
+
+array:
+  dimensions:
+    min: 1
+    max: 6
+    notes: "Multi-dimensional bounds are comma-separated: Name[i1_min..i1_max, i2_min..i2_max, ...] of <type>."
+  bounds:
+    rule: "lo <= hi required, per dimension. lo may be negative."
+    validExamples: ["ARRAY[1..20] of REAL", "ARRAY[-5..5] of INT", "ARRAY[1..2, 3..4] of CHAR"]
+  index:
+    validIndexTypes: [USInt, SInt, UInt, Int, UDInt, DInt]
+    valueLimits: { min: -32768, max: 32767 }
+    valueLimitsNote: "This ±32767 limit applies to the INDEX VALUE regardless of which of the six index types is declared for lo/hi — e.g. declaring UDInt bounds doesn't grant a larger effective range than an Int would. A linter should flag any lo/hi literal outside [-32768, 32767] even on a UDInt/DInt-bounded array."
+    actualParameterRule: "Mixed constants and variables are valid for indexing; constant expressions are valid; VARIABLE expressions (e.g. #i + 1) are NOT valid as an index."
+  elementType:
+    rule: "All elements of one array must be the same data type."
+    nestedArraysForbidden: true
+    nestedArraysNote: "Arrays of arrays are NOT allowed — Array[0..9] of Array[0..9] of Int is illegal. An array element may still be a Struct or UDT that itself contains an array."
+  memorySize: "size of one element * total number of elements across all dimensions."
+  availability: "Cannot be created in the PLC tags editor — only in block Interface editors (OB/FC/FB) and the DB editor."
+  dynamicBounds:
+    syntax: "ARRAY[*] of <type> — the `*` stands in for the lo/hi bounds, which are NOT fixed at declaration time. A DIFFERENT declaration form from the fixed-bounds ARRAY[lo..hi] syntax above, not just a special case of it."
+    purpose: "The actual bounds are determined by whatever REAL array the caller passes in at the call site — lets one FB/FC parameter accept arrays of varying (caller-determined) size, instead of requiring a fixed size baked into the block interface."
+    # Keys/values are the full block-type keyword and `.s7dcl` VAR_* section
+    # keyword this project's parser uses (same convention references.yaml's
+    # own `declaration.legalSections` follows) -- machine-checkable
+    # directly. ORGANIZATION_BLOCK has no entry at all: ARRAY[*] isn't
+    # legal in an OB, same "absent means not legal, never guessed" rule.
+    declarationSections:
+      FUNCTION: [VAR_INPUT, VAR_IN_OUT]
+      FUNCTION_BLOCK: [VAR_IN_OUT]
+    declarationSectionsNote: "RESTRICTED, not legal everywhere a normal ARRAY is: in an FB, ONLY the InOut section; in an FC, ONLY the Input and InOut sections. NOT legal in FB Input/Output/Static/Temp, NOT legal in FC Output/Temp, and not usable as a PLC tag or DB member at all (matches the general ARRAY availability restriction above, but ARRAY[*] is additionally narrower even within block interfaces) — CONFIRMED 2026-07-13 from the LOWER_BOUND/UPPER_BOUND instructions' own reference pages (instruction-registry/06-move.yaml)."
+    firmwareGate: "S7-1200 firmware >= V4.2, S7-1500 firmware >= V2.0 — CROSS-CONFIRMED from THREE independent Siemens reference pages: Deserialize/Serialize's SRC_ARRAY/DEST_ARRAY footnote (instruction-registry/06-move.yaml), and LOWER_BOUND/UPPER_BOUND's own 'Availability of the instruction' notes. No separate S7-1200 G2 floor given anywhere — per the standing platform-availability.NOTLOADED.yaml convention, G2 follows the S7-1500 answer (FW>=V2.0)."
+    runtimeBoundQuery: "The actual lo/hi bounds of a real ARRAY[*] parameter are NOT known at compile time and must be read at runtime, per dimension, via the LOWER_BOUND ('Read out ARRAY low limit') and UPPER_BOUND ('Read out ARRAY high limit') instructions — DIM selects which dimension (1-based, matching the dimension-ordering convention used everywhere else in this file). See instruction-registry/06-move.yaml for their full pin/ENO details; not re-derived here."
+    referenceTarget: "Can be the target of a Reference (REF_TO ARRAY[*] of <type>) — see references.yaml's `referenceableTargets`, already captured there, not duplicated here."
+
+struct:
+  maxNestingDepth: 8
+  # Machine-checkable form of the numbers maxNestingDepthNote explains below
+  # -- cache/typeCache.ts reads these directly rather than hardcoding them.
+  # `inOutSectionBonus` is recorded here for completeness but NOT currently
+  # enforced by typeCache.ts: applying it needs to know which VAR_* section
+  # a given UDT USAGE sits in (a per-block-interface fact), whereas
+  # typeCache.ts computes a UDT's nesting depth once, globally, from its own
+  # declaration -- a different architectural layer (analysis/documentIndex.ts
+  # walks per-block VAR sections instead). Don't assume it's applied just
+  # because it's recorded here.
+  nestingDepthRules:
+    baseLimit: 8
+    extendedLimit: 26
+    extendedLimitFirmwareGate:
+      "S7-1500": ">=V4.0"
+      "S7-1200 G2": ">=V4.1"
+    inOutSectionBonus: 1
+    arrayOfStructOrUdtCost: 3
+  maxNestingDepthNote: "UPDATED 2026-07-13, more nuanced than a flat '8' — that's the BASE limit ('a structure can be nested up to eight levels deep' per the manual). Three refinements from Siemens' STRUCT-specific reference page, pasted by the user:
+    1. EXTENDED LIMIT: on S7-1500 firmware >= V4.0 AND S7-1200 G2 firmware >= V4.1, the limit is 26 hierarchical levels instead of 8 — directly relevant to this project's primary targets (S7-1200 G2 / S7-1500, see tia_target_platforms memory), so assume 26 is the real ceiling to check against once firmware is confirmed >= those floors, not 8.
+    2. ARRAY-OF-STRUCT/UDT COSTS 3 LEVELS: nesting an ARRAY of STRUCT or ARRAY of UDT consumes 3 hierarchy levels per occurrence, not 1 — a linter computing depth against either the 8 or 26 ceiling must weight ARRAY-of-STRUCT/UDT nodes by 3, not by 1 the way a plain nested Struct member is weighted.
+    3. INOUT SECTION GETS +1: the InOut interface section specifically allows depth 9 (not 8) — a section-specific carve-out on top of the base limit; check the declaring section before applying the flat ceiling.
+    Counting method, with a worked example: depth is calculated INCLUDING the highest/outermost structure element — 'Anna.Berta.Carla' (three dot-separated levels) corresponds to nesting depth 3, not 2. A linter should count nesting depth while walking a UDT's dependency tree (see udt-dependency-cache.md) using this inclusive counting rule, and flag depth beyond the applicable ceiling (8/9/26 depending on section and firmware) as an error, independent of the separate circular-dependency check."
+  maxStructsPerDataBlock:
+    limit: 252
+    notes: "NEW rule, not previously tracked here: a maximum of 252 STRUCT declarations are permitted in ONE data block on S7-1200/S7-1500 CPUs. Siemens' own recommendation when more are needed: use PLC data types (UDT) instead of raw STRUCT. A linter could count STRUCT (not UDT) declarations per DB and warn as the count approaches 252, error if it's exceeded (though TIA's own compiler is the actual enforcement point)."
+  composition: "Structs can nest other Structs and Arrays (structure of structures containing arrays, etc.) — the same composition freedom PLC data types (UDTs) have, since a UDT is just a named, reusable top-level Struct."
+  availability: "Cannot be created in the PLC tags editor — only in the DB editor or a block Interface editor."
+  memoryLayout:
+    nonOptimized:
+      alignment: "A STRUCT tag always starts at a word boundary (an even-address byte) in a non-optimized block."
+      order: "Components are laid out in memory in DECLARATION order (not necessarily alphabetical or any other reordering)."
+      componentAlignment: "BOOL components start at the least-significant bit of the current byte. BYTE and CHAR components start at the next byte boundary. Components of any OTHER data type start at the next WORD boundary."
+      end: "The whole STRUCT occupies memory up to the next word boundary after its last component."
+    optimized:
+      order: "Components are reordered/aligned by SIZE, not declaration order — 'the order in the memory does not correspond to the display in the editor.' A linter must NOT assume declaration order reflects actual memory layout for a struct in an optimized-access block; only the non-optimized layout above is order-preserving."
+      boolPacking: "SOURCED 2026-07-13 from Siemens' Serialize/Deserialize reference pages ('Size of the memory area' notes), not the STRUCT page itself. S7-1500 ONLY: a BOOL component's packed length depends on the data type of the component that FOLLOWS it — 1 byte if followed by a Byte-sized field, 2 bytes if followed by a Word-sized field, etc. (Deserialize's own page states the simpler S7-1200-generation rule instead: BOOL is always 1 byte in an optimized block — a real platform difference, not restated identically across Siemens' own pages). Consequence: a struct consisting largely of BOOL can be LARGER in the optimized memory area than in the standard memory area (inverted from the usual optimized-is-smaller expectation), while a struct with a low proportion of BOOL is smaller optimized than standard, same as the general case. Siemens' own authoring recommendation: order a struct's components with large data types FIRST and BOOL elements LAST, to minimize this padding — a style/info-level lint candidate (flag a struct/UDT with early BOOL fields followed by larger fields), not a correctness error. Simple (non-nested, non-ARRAY) structures in the optimized area otherwise contain NO filling bytes at all; ARRAYs of structures and nested structures DO still contain filling bytes even when optimized — there's no general rule for which memory area a given composed structure ends up smaller in, it depends on the specific member mix."
+  addressing:
+    syntax:
+      - "\"<Blockname>\".Structure.Element — dot-separated component access, block name in double quotes."
+      - "<Namespace>.<Blockname>.Structure.Element — namespace-qualified form: the block name is NOT quoted when the block lives in a namespace, and the namespace prefix precedes it, dot-separated, per IEC-compliant notation."
+    notes: "The namespace-qualified addressing form is a NEW grammar element not previously captured anywhere in type-registry/ or instruction-registry/ — first seen here in the STRUCT-addressing context specifically, but almost certainly generalizes to any block/tag reference (not just struct members) since it's about how the BLOCK NAME resolves, not struct-specific syntax. Treat as confirmed for struct-member addressing, unconfirmed-but-likely for other tag/block references until seen elsewhere. All components of a structured tag can be addressed individually regardless of whether the structure came from a PLC data type (UDT) or an anonymous declaration — same addressing syntax either way."
+  anonymousVsUdt:
+    definition: "A 'structure declaration used directly at the tag' (not via a named PLC data type) is an anonymous structure."
+    disadvantagesOfAnonymous:
+      - "Higher maintenance cost — a copy-pasted anonymous structure must be changed at every copy, individually, on any change."
+      - "NOT assignment-compatible with a PLC data type (UDT) of identical shape — see assignmentCompatibility below; this incompatibility is specific to anonymous structs, UDT-to-UDT assignment with identical shape IS allowed."
+      - "Extra type-check overhead: 'the matching types of all structural components are checked' — implies anonymous-struct transfers pay a type-checking cost UDT-identified transfers don't, though the exact mechanism isn't detailed further."
+      - "Higher memory/load cost — each anonymous structure is its own separate object definition loaded to the AS (Automation System), even if structurally identical to another anonymous struct elsewhere."
+    recommendation: "Siemens' own explicit recommendation: program structures as PLC data types (UDTs), not anonymous structs — UDTs are reusable and centrally editable. Worth an info/style-level lint suggestion when a large or repeated anonymous STRUCT declaration is detected, not just a correctness rule."
+    runtimePerformanceCaution: "Instructions that structurally analyze a tag at runtime (Serialize, Deserialize, CMP/comparator, MOVE) walk the FULL shape of a complex structured tag, substructure by substructure — a very complex/deeply-nested structure, OR a large total number of DISTINCT anonymous structure definitions across the program, can cause 'an unexpected increase in the run time' of instructions operating on them. Siemens' own mitigations: avoid anonymous structs (use UDTs); avoid multiple near-duplicate structure declarations (consolidate into one shared declaration); avoid many individual same-typed tags in a structure/DB (use ARRAY instead). Not a static type error, but a real performance-lint candidate — e.g. flag Serialize/Deserialize/CMP/MOVE calls whose operand resolves to a deeply-nested or highly-duplicated anonymous struct shape."
+  assignmentCompatibility:
+    structToUdtOrUdtToUdt: "A Struct and a PLC data type (UDT), or two different UDTs, CAN be assigned to one another if their structures are 'identical' — meaning the DATA TYPES and the ORDER of all components (including recursively, for nested/lower-level structures) match. For two different UDTs specifically, the PLC-data-type NAMES do not have to match. UNCONFIRMED whether individual COMPONENT/member names must also match for this identical-structure test, or only types+order — the source text only explicitly waives the requirement for the top-level PLC-data-type name, not member names; don't assume member names are irrelevant without checking further."
+    anonymousStructToUdt: "NOT assignment-compatible even with an identical shape — see anonymousVsUdt.disadvantagesOfAnonymous above. This is a real exception to the general 'identical structure -> assignable' rule."
+    systemDataTypes: "User-defined PLC data types and structures CANNOT be assigned to/from system data types (system-types.yaml's IEC_TIMER, ERROR_STRUCT, TCON_Param, etc.) AT ALL, even with a bit-identical member layout — a hard incompatibility, no identical-shape exception applies here the way it does for Struct/UDT-to-UDT."
+    wholeStructAsParameter: "A block's STRUCT-typed formal (Input) parameter requires the actual parameter to be a STRUCT with an IDENTICAL structure — same component NAMES and same data types, in order (stricter phrasing than the general Struct/UDT assignment rule above, which only mentioned types+order — names ARE explicitly required to match for parameter-passing specifically)."
+    individualComponentAsParameter: "A single component of a STRUCT tag can be passed as an actual parameter on its own, provided its type matches the formal parameter's type — ordinary type-matching, no structural-identity requirement since it's just one scalar/nested value, not the whole struct."
+
+plcDataType:
+  definition: "A named, reusable Struct defined once under the project tree's 'PLC data types' branch, then referenced by name wherever a Struct-shaped type is needed."
+  usableAs:
+    - "A data type in a code block interface or in data blocks"
+    - "A template for creating multiple global data blocks sharing the same structure"
+    - "A data type for PLC tag declarations in the I and Q memory areas"
+  availability: "Available as a reference type in the PLC tags editor (as a named type, not to define it) and in block Interface editors / DB editor (to define and use it)."
+  crossConfirmed2026-07-13: "A dedicated 'PLC data types (UDT)' reference page (separate from the STRUCT page struct: above was sourced from) independently repeats — near-verbatim — the SAME nesting-depth ceilings (8 base / 26 on S7-1500 FW>=V4.0, Array-of-STRUCT/UDT costing 3 levels), the SAME assignment-compatibility rules (identical-structure Struct<->UDT and UDT<->UDT assignment, PLC-data-type names don't have to match, no assignment to/from system data types, individual-component-as-parameter), and the SAME namespace-qualified addressing form (<Namespace>.<Blockname>.Element, block name unquoted) already captured under struct.addressing/struct.assignmentCompatibility above. Two independent Siemens pages agreeing is good confirmation — no changes needed to those sections, just noting the second source here. This page did NOT independently confirm the InOut=9 or S7-1200 G2 FW>=V4.1 extensions (only mentioned S7-1500 FW>=V4.0) — not a contradiction, just not re-confirmed from this angle."
+  systemGeneratedUdts:
+    notes: "Some instructions generate their OWN PLC data types during instancing, saved into the same 'PLC data types' project folder as user-authored UDTs. Siemens' own warning: don't put these in a library (can cause undesirable system behavior) — implying they're meant to be treated as implementation detail, not stable user-facing types. GAP: no naming convention or marker is given to DISTINGUISH a system-generated UDT from a user-authored one during a workspace scan — udt-dependency-cache.md's build algorithm (step 2, 'Scan') doesn't currently account for this distinction at all. A lint server doing a blanket glob over `**/PLC data types/**/*.xml` would pick these up identically to user UDTs; whether that's actually fine (they're still valid UDTs, just system-authored) or should be filtered/flagged differently is unresolved — flag, don't guess a filtering rule."
+  externalSourceDefaultValueExport:
+    notes: "If a UDT-typed parameter's default value is overridden LOCALLY in a block's own interface (rather than in the UDT's own type definition), that local override is NOT exported when generating external sources — only the UDT's own default value is. Re-importing the generated source loses the local override silently. Not itself a static-lint rule (a lint server reading an already-exported source would just never see the lost override in the first place), but useful context if a diff between 'what's in the block interface in TIA' and 'what's in the exported source' ever needs explaining."
+
+variant:
+  storageSizeBytes: 0
+  pointsTo: "Variables of different data types or parameters, including whole structures and individual structure members."
+  referenceForms:
+    - { representation: symbolic, form: "MyTag" }
+    - { representation: symbolic, form: "DB_name.Struct_name.element_name", example: "MyDB.Struct1.pressure1" }
+    - { representation: absolute, form: "%MW10" }
+    - { representation: absolute, form: "P#DB_number.Operand_Type Length", example: "P#DB10.DBX10.0 INT 12" }
+  notes: "A Variant pointer itself occupies no memory — only the thing it points to does."

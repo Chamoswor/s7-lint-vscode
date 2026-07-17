@@ -1,0 +1,99 @@
+# PWM and PTO pulse control — LAD/FBD registry.
+#
+# Graphical instruction aliases and pin casing are retained from anonymized
+# reference fixtures and apply to both LAD and FBD.
+#
+# Exported `:=` connections cannot distinguish INPUT from IN_OUT. Independently
+# documented IN_OUT parameters are corrected explicitly.
+#
+# Graphical instructions use pins and therefore have `result: { kind: none }`.
+# Missing dataTypes are intentional; unresolved types are never guessed.
+
+$fileLanguage: [LAD, FBD]
+CTRL_PWM:
+  family: extended
+  callShape: instance-dot
+  instanceType: CTRL_PWM
+  pins:
+  - name: PWM
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [HW_PWM]
+  - name: ENABLE
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: BUSY
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: STATUS
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Word]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Control a pulse-width-modulation hardware output.
+  source: "official instruction documentation (paraphrased)"
+  result:
+    kind: none
+CTRL_PTO:
+  family: extended
+  callShape: instance-dot
+  instanceType: CTRL_PTO
+  pins:
+  - name: REQ
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: PTO
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [HW_PTO]
+  - name: FREQUENCY
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [UDInt]
+  - name: DONE
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: BUSY
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: ERROR
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Bool]
+  - name: STATUS
+    dir: out
+    required: true
+    note: ''
+    dataTypes: [Word]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Control a pulse-train-output hardware output at a given frequency (distinct from the MC_*_PTO Motion
+    Control FBs in 12f-motion-pto-LAD-FBD.yaml, which drive a PTO via positioning commands rather than a raw
+    frequency).
+  source: "official instruction documentation (paraphrased)"
+  result:
+    kind: none

@@ -1,0 +1,121 @@
+# Process-image update and synchronization — SCL registry.
+#
+# SCL callable names and parameter casing use Siemens' canonical spelling.
+# Function returns are represented by `result`, not by graphical OUT/RET_VAL pins.
+#
+# S_Move and generic S_CONV are intentionally not emitted as callable SCL
+# entries. Their SCL forms are assignment and typed <source>_TO_<destination>
+# conversion respectively. T_COMBINE expands to CONCAT_DATE_TOD or
+# CONCAT_DATE_LTOD.
+#
+# Missing dataTypes are intentional; unresolved types are never guessed.
+
+$fileLanguage: [SCL]
+UPDAT_PI:
+  family: extended
+  callShape: box
+  instanceType: null
+  pins:
+  - name: PART
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [PIP]
+  - name: FLADDR
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [HW_IO]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Update part of the process-image input table.
+  source: "official instruction documentation (paraphrased)"
+  result:
+    kind: value
+    dataTypes: [Int]
+    notes: SCL function return value.
+UPDAT_PO:
+  family: extended
+  callShape: box
+  instanceType: null
+  pins:
+  - name: PART
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [PIP]
+  - name: FLADDR
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [HW_IO]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Update part of the process-image output table.
+  source: "official instruction documentation (paraphrased)"
+  result:
+    kind: value
+    dataTypes: [Int]
+    notes: SCL function return value.
+SYNC_PI:
+  family: extended
+  callShape: box
+  instanceType: null
+  pins:
+  - name: PART
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [PIP]
+  - name: FLADDR
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [HW_IO]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Synchronous (isochronous) update of part of the process-image input table.
+  source: "official instruction documentation (paraphrased)"
+  result:
+    kind: value
+    dataTypes: [Int]
+    notes: SCL function return value.
+SYNC_PO:
+  family: extended
+  callShape: box
+  instanceType: null
+  pins:
+  - name: PART
+    dir: in
+    required: true
+    note: ''
+    dataTypes: [PIP]
+  - name: FLADDR
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [HW_IO]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Synchronous (isochronous) update of part of the process-image output table.
+  source: "official instruction documentation (paraphrased)"
+  result:
+    kind: value
+    dataTypes: [Int]
+    notes: SCL function return value.

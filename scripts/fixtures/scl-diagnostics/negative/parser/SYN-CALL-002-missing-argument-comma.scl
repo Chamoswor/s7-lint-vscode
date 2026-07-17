@@ -1,0 +1,19 @@
+FUNCTION_BLOCK "Syntax_CallMissingComma"
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+
+VAR
+    a        : Int := 1;
+    b        : Int := 2;
+    result   : Int := 0;
+    flag     : Bool := TRUE;
+    i        : Int := 0;
+    values   : Array[0..9] of Int;
+END_VAR
+BEGIN
+    #result := LIMIT(MN := 0 IN := #a, MX := 100);
+    // EXPECT: error[syntax.expected-comma] SYN-CALL-002
+    #result := 123;
+    // RECOVERY
+
+END_FUNCTION_BLOCK

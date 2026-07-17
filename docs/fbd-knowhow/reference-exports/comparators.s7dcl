@@ -1,0 +1,158 @@
+﻿{
+    S7_Optimized := "TRUE";
+    S7_PreferredLanguage := "FBD";
+    S7_Version := "0.1"
+}
+FUNCTION_BLOCK "CLAUDE_REF_COMPARATOR-OPERATIONS"
+    VAR
+        S1 : Bool;
+    END_VAR
+    VAR_TEMP
+        Num1 : Int;
+        Num2 : Int;
+        Num3 : Int;
+        Real1 : Real;
+    END_VAR
+
+    {
+        S7_Language := "FBD";
+        S7_NetworkTitle := "MLC_m9"
+    }
+    NETWORK
+        RUNG
+            { S7_Templates := "SrcType := Int" }
+            EQ_Contact(
+                in1 := #Num1,
+                in2 := #Num2
+            )
+            Coil( #S1 )
+        END_RUNG
+    END_NETWORK
+    {
+        S7_Language := "FBD";
+        S7_NetworkTitle := "MLC_4Ek"
+    }
+    NETWORK
+        RUNG
+            { S7_Templates := "SrcType := Int" }
+            NE_Contact(
+                in1 := #Num1,
+                in2 := #Num2
+            )
+            Coil( #S1 )
+        END_RUNG
+    END_NETWORK
+    {
+        S7_Language := "FBD";
+        S7_NetworkTitle := "MLC_mz"
+    }
+    NETWORK
+        RUNG
+            { S7_Templates := "SrcType := Int" }
+            GE_Contact(
+                in1 := #Num1,
+                in2 := #Num2
+            )
+            Coil( #S1 )
+        END_RUNG
+    END_NETWORK
+    {
+        S7_Language := "FBD";
+        S7_NetworkTitle := "MLC_46h"
+    }
+    NETWORK
+        RUNG
+            { S7_Templates := "SrcType := Int" }
+            LE_Contact(
+                in1 := #Num1,
+                in2 := #Num2
+            )
+            Coil( #S1 )
+        END_RUNG
+    END_NETWORK
+    {
+        S7_Language := "FBD";
+        S7_NetworkTitle := "MLC_3Aw"
+    }
+    NETWORK
+        RUNG
+            { S7_Templates := "SrcType := Int" }
+            GT_Contact(
+                in1 := #Num1,
+                in2 := #Num2
+            )
+            Coil( #S1 )
+        END_RUNG
+    END_NETWORK
+    {
+        S7_Language := "FBD";
+        S7_NetworkTitle := "MLC_3WQ"
+    }
+    NETWORK
+        RUNG
+            { S7_Templates := "SrcType := Int" }
+            LT_Contact(
+                in1 := #Num1,
+                in2 := #Num2
+            )
+            Coil( #S1 )
+        END_RUNG
+    END_NETWORK
+    {
+        S7_Language := "FBD";
+        S7_NetworkTitle := "MLC_3aX"
+    }
+    NETWORK
+        RUNG
+            { S7_Templates := "SrcType := Int" }
+            InRange(
+                min := #Num1,
+                in := #Num2,
+                max := #Num3
+            )
+            Coil( #S1 )
+        END_RUNG
+    END_NETWORK
+    {
+        S7_Language := "FBD";
+        S7_NetworkTitle := "MLC_3vg"
+    }
+    NETWORK
+        RUNG
+            { S7_Templates := "SrcType := Int" }
+            OutRange(
+                min := #Num1,
+                in := #Num2,
+                max := #Num3
+            )
+            Coil( #S1 )
+        END_RUNG
+    END_NETWORK
+    {
+        S7_Language := "FBD";
+        S7_NetworkComment := "MLC_3B7";
+        S7_NetworkTitle := "MLC_49F"
+    }
+    NETWORK
+        RUNG
+            OK( #Real1 )
+            Coil( #S1 )
+        END_RUNG
+    END_NETWORK
+    {
+        S7_Language := "FBD";
+        S7_NetworkComment := "MLC_56f";
+        S7_NetworkTitle := "MLC_3na"
+    }
+    NETWORK
+        RUNG
+            NOK( #Real1 )
+            Coil( #S1 )
+        END_RUNG
+    END_NETWORK
+    { S7_Language := "FBD" }
+    NETWORK
+        RUNG
+        END_RUNG
+    END_NETWORK
+END_FUNCTION_BLOCK

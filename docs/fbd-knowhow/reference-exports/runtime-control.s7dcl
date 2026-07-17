@@ -1,0 +1,61 @@
+﻿{
+    S7_Optimized := "TRUE";
+    S7_PreferredLanguage := "FBD";
+    S7_Version := "0.1"
+}
+FUNCTION_BLOCK "CLAUDE_REF_RUNTIME-CONTROL"
+    { S7_Language := "FBD" }
+    NETWORK
+        RUNG
+            ENDIS_PW(
+                REQ :=  ,
+                F_PWD :=  ,
+                FULL_PWD :=  ,
+                R_PWD :=  ,
+                HMI_PWD :=  ,
+                Ret_Val =>  ,
+                F_PWD_ON =>  ,
+                FULL_PWD_ON =>  ,
+                R_PWD_ON =>  ,
+                HMI_PWD_ON =>  
+            )
+        END_RUNG
+        RUNG
+            RE_TRIGR()
+        END_RUNG
+        RUNG
+            STP()
+        END_RUNG
+        RUNG
+            GetError(error =>  )
+        END_RUNG
+        RUNG
+            GetErrorID(error =>  )
+        END_RUNG
+        RUNG
+            INIT_RD(
+                REQ :=  ,
+                Ret_Val =>  
+            )
+        END_RUNG
+        RUNG
+            WAIT( WT :=   )
+        END_RUNG
+        RUNG
+            Runtime(
+                ret_val =>  ,
+                mem :=  
+            )
+        END_RUNG
+    END_NETWORK
+    { S7_Language := "FBD" }
+    NETWORK
+        RUNG
+        END_RUNG
+    END_NETWORK
+    { S7_Language := "FBD" }
+    NETWORK
+        RUNG
+        END_RUNG
+    END_NETWORK
+END_FUNCTION_BLOCK

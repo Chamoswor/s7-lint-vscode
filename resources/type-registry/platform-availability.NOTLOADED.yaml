@@ -1,0 +1,264 @@
+# Platform availability matrix — "Overview of the valid data types",
+# pasted from Siemens' TIA Portal Information System by the user
+# (2026-07-13). confidence: official-doc.
+#
+# Orthogonal to every other file in type-registry/, the same way
+# section-legality.yaml is: this says WHICH CPU FAMILY a type name is
+# valid on, not what the type IS (base-types.yaml / system-types.yaml) or
+# WHERE it may be declared (section-legality.yaml). Check a type here too
+# when linting against a project's actual target CPU.
+#
+# Column values: true | false | "S7-1500-compatible" — the last one is
+# the source table's "X (S7-1500)" footnote-style entries for the
+# S7-1200 G2 column, meaning G2 supports the type ONLY when running in
+# S7-1500-compatible mode, not its native S7-1200 personality.
+#
+# STANDING CONVENTION (2026-07-13, user-directed): wherever a source
+# table/reference page only distinguishes "S7-1200" vs. "S7-1500" — NO
+# separate S7-1200 G2 column at all, which is the case for nearly every
+# per-INSTRUCTION memory-area/data-type table pasted into
+# instruction-registry/01-bit-logic.yaml, 02-comparators.yaml,
+# 03-counters.yaml, and 04-timers.yaml this session — treat S7-1200 G2 as
+# following the S7-1500 column, NOT the S7-1200 column. E.g. A/O/X's
+# operand memory area (01-bit-logic.yaml: S7-1200 lacks T/C, S7-1500 has
+# T/C) means G2 has T/C too, same as S7-1500, despite G2 nominally being
+# "a kind of S7-1200." This is a project-specific interpretive rule for
+# two-column tables specifically — it does NOT override this FILE's own
+# explicit 4-column data above (which sometimes shows G2 diverging from
+# S7-1500, e.g. HW_DPMASTER: S7-1500 true, S7-1200 G2 false) since this
+# file's rows were transcribed with an actual G2 column, not inferred.
+# This matters because the project's primary targets are S7-1200 G2 and
+# S7-1500 (see tia_target_platforms memory) — the plain-"S7-1200" column
+# in those per-instruction tables is largely out of scope for this
+# project, and G2 should default to the S7-1500 answer when no G2-specific
+# data exists.
+#
+# This directly resolves every `confidence: verify-platform` flag
+# scattered through base-types.yaml (LWord, LInt, ULInt, LTime,
+# LTime_Of_Day) — cross-check the `S7-1200` column here instead of
+# re-guessing; all five are confirmed S7-1500-family-only.
+#
+# Type names match the spelling already used in base-types.yaml /
+# system-types.yaml where an entry exists there. Several rows here have
+# NO matching entry anywhere else yet (Named value data types, anonymous
+# Struct as a top-level concept beyond composition-rules.yaml, Pointer/
+# Any/References, the legacy Parameter types) — flagged individually
+# below; don't invent structural detail for them, just record that the
+# gap exists.
+
+categories:
+  binaryNumbers:
+    Bool: { "S7-300/400": true, "S7-1200": true, "S7-1500": true, "S7-1200 G2": true }
+
+  bitStrings:
+    Byte:  { "S7-300/400": true, "S7-1200": true, "S7-1500": true, "S7-1200 G2": true }
+    Word:  { "S7-300/400": true, "S7-1200": true, "S7-1500": true, "S7-1200 G2": true }
+    DWord: { "S7-300/400": true, "S7-1200": true, "S7-1500": true, "S7-1200 G2": true }
+    LWord: { "S7-300/400": false, "S7-1200": false, "S7-1500": true, "S7-1200 G2": true }
+
+  integers:
+    SInt:  { "S7-300/400": false, "S7-1200": true, "S7-1500": true, "S7-1200 G2": true }
+    Int:   { "S7-300/400": true, "S7-1200": true, "S7-1500": true, "S7-1200 G2": true }
+    DInt:  { "S7-300/400": true, "S7-1200": true, "S7-1500": true, "S7-1200 G2": true }
+    USInt: { "S7-300/400": false, "S7-1200": true, "S7-1500": true, "S7-1200 G2": true }
+    UInt:  { "S7-300/400": false, "S7-1200": true, "S7-1500": true, "S7-1200 G2": true }
+    UDInt: { "S7-300/400": false, "S7-1200": true, "S7-1500": true, "S7-1200 G2": true }
+    LInt:  { "S7-300/400": false, "S7-1200": false, "S7-1500": true, "S7-1200 G2": true }
+    ULInt: { "S7-300/400": false, "S7-1200": false, "S7-1500": true, "S7-1200 G2": true }
+
+  floatingPoint:
+    Real:  { "S7-300/400": true, "S7-1200": true, "S7-1500": true, "S7-1200 G2": true }
+    LReal: { "S7-300/400": false, "S7-1200": true, "S7-1500": true, "S7-1200 G2": true }
+
+  timers:
+    S5Time: { "S7-300/400": true, "S7-1200": false, "S7-1500": true, "S7-1200 G2": "S7-1500-compatible" }
+    Time:   { "S7-300/400": true, "S7-1200": true, "S7-1500": true, "S7-1200 G2": true }
+    LTime:  { "S7-300/400": false, "S7-1200": false, "S7-1500": true, "S7-1200 G2": true }
+
+  dateAndTime:
+    Date:
+      { "S7-300/400": true, "S7-1200": true, "S7-1500": true, "S7-1200 G2": true }
+    Time_Of_Day:
+      aliases: [TOD]
+      "S7-300/400": true
+      "S7-1200": true
+      "S7-1500": true
+      "S7-1200 G2": true
+    LTime_Of_Day:
+      aliases: [LTOD]
+      "S7-300/400": false
+      "S7-1200": false
+      "S7-1500": true
+      "S7-1200 G2": true
+    Date_And_Time:
+      aliases: [DT]
+      "S7-300/400": true
+      "S7-1200": false
+      "S7-1500": true
+      "S7-1200 G2": "S7-1500-compatible"
+    LDT:
+      "S7-300/400": false
+      "S7-1200": false
+      "S7-1500": true
+      "S7-1200 G2": true
+      notes: "Confirms LDT (data-types-ext/All.md row 31 -> section-legality.yaml) is a REAL, separate elementary type on S7-1500 — not a typo for LTOD as earlier suspected. sizeBits/literal-format still not transcribed anywhere in type-registry/; needs its own base-types.yaml entry once sourced from the manual's data-types page (same treatment as DTL got)."
+    DTL:
+      { "S7-300/400": false, "S7-1200": true, "S7-1500": true, "S7-1200 G2": true }
+
+  characterStrings:
+    Char:    { "S7-300/400": true, "S7-1200": true, "S7-1500": true, "S7-1200 G2": true }
+    WChar:   { "S7-300/400": false, "S7-1200": true, "S7-1500": true, "S7-1200 G2": true }
+    String:  { "S7-300/400": true, "S7-1200": true, "S7-1500": true, "S7-1200 G2": true }
+    WString: { "S7-300/400": false, "S7-1200": true, "S7-1500": true, "S7-1200 G2": true }
+
+  plcDataType:
+    "PLC data type (UDT)":
+      { "S7-300/400": true, "S7-1200": true, "S7-1500": true, "S7-1200 G2": true }
+
+  namedValueDataTypes:
+    "Named value data types (NVT)":
+      "S7-300/400": false
+      "S7-1200": false
+      "S7-1500": true
+      "S7-1200 G2": "S7-1500-compatible"
+      notes: "RESOLVED 2026-07-13 — base type constraint (Integers/Bit-strings only), 'not a strict enum' semantics, the in-program `Name#VALUE` literal syntax, and the separate `.nvt` declaration-file format are all in type-registry/named-value-types.NOTLOADED.yaml. That page's own platform statement ('S7-1500 only') matches this row without adding new detail on the G2 question."
+
+  anonymousStructures:
+    Struct:
+      { "S7-300/400": true, "S7-1200": true, "S7-1500": true, "S7-1200 G2": true }
+
+  array:
+    "ARRAY [....] of <data type>":
+      { "S7-300/400": true, "S7-1200": true, "S7-1500": true, "S7-1200 G2": true }
+
+  pointer:
+    References:
+      "S7-300/400": false
+      "S7-1200": false
+      "S7-1500": true
+      "S7-1200 G2": true
+      notes: "RESOLVED 2026-07-13 — base-types.yaml now has a `Reference` entry (REF_TO <Datatype>), full ruleset in type-registry/references.yaml. That page confirms 'S7-1500 series, firmware >= V2.5' as the requirement (no S7-1200 mention at all, consistent with this row's S7-1200:false) and adds the firmware floor as a refinement on top of this row's platform data."
+    Variant:
+      { "S7-300/400": false, "S7-1200": true, "S7-1500": true, "S7-1200 G2": true }
+    Pointer:
+      "S7-300/400": true
+      "S7-1200": false
+      "S7-1500": true
+      "S7-1200 G2": true
+      notes: "Legacy S7 POINTER type. Already a legal name in section-legality.yaml's InOut/Input additionalDatatypes. RESOLVED 2026-07-13 — base-types.yaml now has a `Pointer` entry (6-byte layout), full detail in type-registry/pointer-type.yaml (P# literal grammar, STL prefix-legality rules, memory-area coding table). NOT the same encoding as Any (see any-pointer.yaml) despite both being legacy P#-addressed pointers."
+    Any:
+      "S7-300/400": true
+      "S7-1200": false
+      "S7-1500": true
+      "S7-1200 G2": true
+      notes: "Legacy S7 ANY pointer type — confirms it's a real (if legacy, and NOT available on plain S7-1200) type. This is what system-types.yaml's REMOTE.basicDataType points at. UPDATED 2026-07-13: base-types.yaml now HAS an `Any` entry (full 10-byte layout, P# literal grammar, and coding tables in type-registry/any-pointer.yaml). Still UNRESOLVED: whether this is the same thing section-legality.yaml calls `Any` (InOut/Input additionalDatatypes) — that Any is S7-1200-legal per data-types-ext, this ANY pointer type is not on plain S7-1200 per this table. Possibly two different things sharing a name; the new any-pointer.yaml data didn't settle this either, still needs disambiguation before trusting section-legality.yaml's Any entry as this same pointer type."
+
+  parameterTypes:
+    TIMER:     { "S7-300/400": true, "S7-1200": false, "S7-1500": true, "S7-1200 G2": true }
+    COUNTER:   { "S7-300/400": true, "S7-1200": false, "S7-1500": true, "S7-1200 G2": true }
+    BLOCK_FC:  { "S7-300/400": true, "S7-1200": false, "S7-1500": true, "S7-1200 G2": true }
+    BLOCK_FB:  { "S7-300/400": true, "S7-1200": false, "S7-1500": true, "S7-1200 G2": true }
+    BLOCK_DB:  { "S7-300/400": true, "S7-1200": false, "S7-1500": false, "S7-1200 G2": false }
+    BLOCK_SDB: { "S7-300/400": true, "S7-1200": false, "S7-1500": false, "S7-1200 G2": false }
+    Void:      { "S7-300/400": true, "S7-1200": true, "S7-1500": true, "S7-1200 G2": true }
+    PARAMETER: { "S7-300/400": false, "S7-1200": true, "S7-1500": true, "S7-1200 G2": true }
+    _notes: "TIMER/COUNTER/BLOCK_FC/BLOCK_FB/BLOCK_DB/BLOCK_SDB/PARAMETER are legacy S7-300/400-era formal-parameter types (declare that a VAR_IN_OUT/VAR_INPUT parameter accepts e.g. a timer/counter number or a block reference) — undocumented elsewhere in type-registry/ beyond Void (already in base-types.yaml). Not real storage types; same category as Void. Add a parameter-types.yaml if/when these need linting."
+
+  systemDataTypes:
+    IEC_TIMER:      { "S7-300/400": "represented by TP/TON/TOF (see footnote 1)", "S7-1200": true, "S7-1500": true, "S7-1200 G2": true }
+    IEC_LTIMER:     { "S7-300/400": false, "S7-1200": false, "S7-1500": true, "S7-1200 G2": true }
+    IEC_SCOUNTER:   { "S7-300/400": false, "S7-1200": true, "S7-1500": true, "S7-1200 G2": true }
+    IEC_USCOUNTER:  { "S7-300/400": false, "S7-1200": true, "S7-1500": true, "S7-1200 G2": true }
+    IEC_COUNTER:    { "S7-300/400": "represented by CTU/CTD/CTUD (see footnote 2)", "S7-1200": true, "S7-1500": true, "S7-1200 G2": true }
+    IEC_UCOUNTER:   { "S7-300/400": false, "S7-1200": true, "S7-1500": true, "S7-1200 G2": true }
+    IEC_DCOUNTER:   { "S7-300/400": false, "S7-1200": true, "S7-1500": true, "S7-1200 G2": true }
+    IEC_UDCOUNTER:  { "S7-300/400": false, "S7-1200": true, "S7-1500": true, "S7-1200 G2": true }
+    IEC_LCOUNTER:   { "S7-300/400": false, "S7-1200": false, "S7-1500": true, "S7-1200 G2": true }
+    IEC_ULCOUNTER:  { "S7-300/400": false, "S7-1200": false, "S7-1500": true, "S7-1200 G2": true }
+    ERROR_STRUCT:   { "S7-300/400": false, "S7-1200": true, "S7-1500": true, "S7-1200 G2": true }
+    NREF:           { "S7-300/400": false, "S7-1200": true, "S7-1500": true, "S7-1200 G2": true }
+    CREF:           { "S7-300/400": false, "S7-1200": true, "S7-1500": true, "S7-1200 G2": true }
+    VREF:
+      "S7-300/400": false
+      "S7-1200": true
+      "S7-1500": "unconfirmed — see notes"
+      "S7-1200 G2": false
+      notes: "CORRECTED 2026-07-13 — user directly tried to declare VREF on a real S7-1200 G2 CPU and it's not available, contradicting the 'true' this file originally transcribed for that column. The source table's raw text for this row was only 3 tokens ('- X X') for 4 columns, so encoding it required guessing which columns the merged/trailing X applied to — that guess was wrong here. S7-1500's value is left unconfirmed rather than reusing the same guess. Trust hands-on TIA testing over this table's systemDataTypes section until re-verified row by row — see the section-level note below."
+    SSL_HEADER:
+      "S7-300/400": true
+      "S7-1200": false
+      "S7-1500": false
+      "S7-1200 G2": false
+      notes: "CONFIRMED 2026-07-13 by user — RDSYSST (the instruction that uses this type) is not definable on a real S7-1200 G2 CPU either, consistent with this row. SSL_HEADER/RDSYSST are S7-300/400-legacy-only; both are effectively out of scope for this project's primary targets (S7-1200 G2 / S7-1500 — see tia_target_platforms memory) and don't need further chasing."
+    CONDITIONS:     { "S7-300/400": false, "S7-1200": true, "S7-1500": false, "S7-1200 G2": false }
+    TADDR_Param:    { "S7-300/400": false, "S7-1200": true, "S7-1500": true, "S7-1200 G2": true }
+    TCON_Param:     { "S7-300/400": false, "S7-1200": true, "S7-1500": true, "S7-1200 G2": true }
+    HSC_Period:     { "S7-300/400": false, "S7-1200": true, "S7-1500": false, "S7-1200 G2": false }
+    AssocValues:    { "S7-300/400": false, "S7-1200": true, "S7-1500": true, "S7-1200 G2": true }
+    ResolvedSymbol: { "S7-300/400": false, "S7-1200": false, "S7-1500": true, "S7-1200 G2": true }
+    _footnotes:
+      "1": "For S7-300/400 CPUs, IEC_TIMER is represented by the TP, TON and TOF instructions instead of a directly-declarable type."
+      "2": "For S7-300/400 CPUs, IEC_COUNTER is represented by the CTU, CTD and CTUD instructions instead of a directly-declarable type."
+    _notes: "CAVEAT (2026-07-13): nearly every row in this category was transcribed from a source table row with only 3 tokens (X/-) for 4 platform columns — the original Siemens HTML table apparently merges adjacent cells with equal values, so encoding required guessing which columns a trailing token covered. VREF above is a confirmed-wrong guess (S7-1200 G2 was 'true', actually 'false' per hands-on testing). Treat every OTHER row in this category (IEC_TIMER, IEC_LTIMER, all IEC_*COUNTER, ERROR_STRUCT, NREF, CREF, CONDITIONS, TADDR_Param, TCON_Param, HSC_Period, AssocValues, ResolvedSymbol) as similarly unverified for now, even though only VREF and SSL_HEADER have been hands-on-confirmed so far (SSL_HEADER's guess happened to be right). Prefer real TIA testing over this table when it matters, the same way VREF/SSL_HEADER just got confirmed/corrected — update this note as more rows get verified."
+
+  hardwareDataTypes:
+    REMOTE:        { "S7-300/400": false, "S7-1200": true, "S7-1500": true, "S7-1200 G2": true }
+    HW_ANY:        { "S7-300/400": false, "S7-1200": true, "S7-1500": true, "S7-1200 G2": true }
+    HW_DEVICE:     { "S7-300/400": false, "S7-1200": true, "S7-1500": true, "S7-1200 G2": true }
+    HW_DPMASTER:   { "S7-300/400": false, "S7-1200": false, "S7-1500": true, "S7-1200 G2": false }
+    HW_DPSLAVE:    { "S7-300/400": false, "S7-1200": true, "S7-1500": true, "S7-1200 G2": true }
+    HW_IO:         { "S7-300/400": false, "S7-1200": true, "S7-1500": true, "S7-1200 G2": true }
+    HW_IOSYSTEM:   { "S7-300/400": false, "S7-1200": true, "S7-1500": true, "S7-1200 G2": true }
+    HW_SUBMODULE:  { "S7-300/400": false, "S7-1200": true, "S7-1500": true, "S7-1200 G2": true }
+    HW_MODULE:
+      "S7-300/400": false
+      "S7-1200": false
+      "S7-1500": true
+      "S7-1200 G2": true
+      notes: "RESOLVED 2026-07-13 — user confirmed this table (platform-availability.NOTLOADED.yaml) is correct over section-legality.yaml's allSections list (which lists HW_MODULE as legal in every section, inherited from data-types-ext/All.md without a platform scope). Treat HW_MODULE as S7-1500/S7-1200 G2-only, not universally legal — consistent with the project's primary targets (S7-1200 G2 and S7-1500), where this table's answer applies either way."
+    HW_INTERFACE:  { "S7-300/400": false, "S7-1200": true, "S7-1500": true, "S7-1200 G2": true }
+    HW_IEPORT:     { "S7-300/400": false, "S7-1200": true, "S7-1500": true, "S7-1200 G2": true }
+    HW_HSC:        { "S7-300/400": false, "S7-1200": true, "S7-1500": true, "S7-1200 G2": true }
+    HW_PWM:        { "S7-300/400": false, "S7-1200": true, "S7-1500": true, "S7-1200 G2": true }
+    HW_PTO:        { "S7-300/400": false, "S7-1200": true, "S7-1500": true, "S7-1200 G2": true }
+    EVENT_ANY:     { "S7-300/400": false, "S7-1200": true, "S7-1500": true, "S7-1200 G2": true }
+    EVENT_ATT:     { "S7-300/400": false, "S7-1200": true, "S7-1500": true, "S7-1200 G2": true }
+    EVENT_HWINT:   { "S7-300/400": false, "S7-1200": true, "S7-1500": true, "S7-1200 G2": true }
+    OB_ANY:        { "S7-300/400": false, "S7-1200": true, "S7-1500": true, "S7-1200 G2": true }
+    OB_DELAY:      { "S7-300/400": false, "S7-1200": true, "S7-1500": true, "S7-1200 G2": true }
+    OB_TOD:        { "S7-300/400": false, "S7-1200": true, "S7-1500": true, "S7-1200 G2": true }
+    OB_CYCLIC:     { "S7-300/400": false, "S7-1200": true, "S7-1500": true, "S7-1200 G2": true }
+    OB_ATT:        { "S7-300/400": false, "S7-1200": true, "S7-1500": true, "S7-1200 G2": true }
+    OB_PCYCLE:     { "S7-300/400": false, "S7-1200": true, "S7-1500": true, "S7-1200 G2": true }
+    OB_HWINT:      { "S7-300/400": false, "S7-1200": true, "S7-1500": true, "S7-1200 G2": true }
+    OB_DIAG:       { "S7-300/400": false, "S7-1200": true, "S7-1500": true, "S7-1200 G2": true }
+    OB_TIMEERROR:  { "S7-300/400": false, "S7-1200": true, "S7-1500": true, "S7-1200 G2": true }
+    OB_STARTUP:    { "S7-300/400": false, "S7-1200": true, "S7-1500": true, "S7-1200 G2": true }
+    PORT:          { "S7-300/400": false, "S7-1200": true, "S7-1500": true, "S7-1200 G2": true }
+    RTM:           { "S7-300/400": false, "S7-1200": true, "S7-1500": true, "S7-1200 G2": true }
+    PIP:           { "S7-300/400": false, "S7-1200": false, "S7-1500": true, "S7-1200 G2": false }
+    CONN_ANY:      { "S7-300/400": false, "S7-1200": true, "S7-1500": true, "S7-1200 G2": true }
+    CONN_PRG:      { "S7-300/400": false, "S7-1200": true, "S7-1500": true, "S7-1200 G2": true }
+    CONN_OUC:      { "S7-300/400": false, "S7-1200": true, "S7-1500": true, "S7-1200 G2": true }
+    CONN_R_ID:     { "S7-300/400": false, "S7-1200": false, "S7-1500": true, "S7-1200 G2": false }
+    DB_ANY:        { "S7-300/400": false, "S7-1200": true, "S7-1500": true, "S7-1200 G2": true }
+    DB_WWW:        { "S7-300/400": false, "S7-1200": true, "S7-1500": true, "S7-1200 G2": true }
+    DB_DYN:        { "S7-300/400": false, "S7-1200": true, "S7-1500": true, "S7-1200 G2": true }
+
+notes: |
+  Resolves two open naming questions from system-types.yaml: this table
+  spells EVENT_HWINT / OB_HWINT the same way the Hardware data types page
+  did, agreeing with system-types.yaml and disagreeing with
+  section-legality.yaml's EVENT_HWNT / OB_HWNT (transcribed from
+  data-types-ext). Two independent Siemens sources now agree — treat
+  EVENT_HWINT / OB_HWINT as canonical; section-legality.yaml corrected.
+
+  Also explains most of system-types.yaml's "not present in
+  section-legality.yaml, confirm real gap" notes: HW_DPMASTER and
+  CONN_R_ID are S7-1500-only per this table, so their absence from
+  data-types-ext (presumably S7-1200-scoped) is expected, not a gap.
+  HW_MODULE was the one exception that didn't resolve cleanly from the
+  tables alone — user confirmed (2026-07-13) this file's answer is
+  correct there too. Project's primary target CPUs are S7-1200 G2 and
+  S7-1500, so `S7-1200 G2`/`S7-1500` are the two columns that matter most
+  when deciding whether a gap here is worth chasing down further.

@@ -1,0 +1,1099 @@
+# S7-1500T kinematics, workspace-zone and tool instructions — SCL registry.
+#
+# SCL instruction keys use canonical Siemens capitalization. Pin spelling is
+# retained from the exported interface except for documented casing corrections:
+# ErrorId -> ErrorID, DiagId -> DiagID and TIO_SYNC_DATA -> TIO_SYNC_Data.
+#
+# These are FB/technology-object instance calls, not functions. The instance is
+# called directly in SCL; `result.kind` is therefore `none`. `instance-dot` is
+# retained as the existing registry category for instance calls.
+#
+# Missing dataTypes are intentional: no type is fabricated where the export and
+# a Siemens parameter table did not establish it.
+
+$fileLanguage: [SCL]
+MC_GroupInterrupt:
+  family: technology
+  callShape: instance-dot
+  instanceType: MC_GROUPINTERRUPT
+  pins:
+  - name: AxesGroup
+    dir: in
+    required: false
+    note: ''
+  - name: Execute
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: Mode
+    dir: in
+    required: false
+    note: ''
+  - name: Done
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: Busy
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: Active
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: CommandAborted
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: Error
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: ErrorID
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Word]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: shape-only
+  notes: >-
+    Motion Control FB (interrupt a coordinate-system axes group).
+  source: "anonymized reference fixture (signature only)"
+  result:
+    kind: none
+MC_GroupContinue:
+  family: technology
+  callShape: instance-dot
+  instanceType: MC_GROUPCONTINUE
+  pins:
+  - name: AxesGroup
+    dir: in
+    required: false
+    note: ''
+  - name: Execute
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: Done
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: Busy
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: Error
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: ErrorID
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Word]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: shape-only
+  notes: >-
+    Motion Control FB (continue an interrupted axes group).
+  source: "anonymized reference fixture (signature only)"
+  result:
+    kind: none
+MC_GroupStop:
+  family: technology
+  callShape: instance-dot
+  instanceType: MC_GROUPSTOP
+  pins:
+  - name: AxesGroup
+    dir: in
+    required: false
+    note: ''
+  - name: Execute
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: Mode
+    dir: in
+    required: false
+    note: ''
+  - name: Done
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: Busy
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: Active
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: CommandAborted
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: Error
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: ErrorID
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Word]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: shape-only
+  notes: >-
+    Motion Control FB (stop an axes group).
+  source: "anonymized reference fixture (signature only)"
+  result:
+    kind: none
+MC_MoveLinearAbsolute:
+  family: technology
+  callShape: instance-dot
+  instanceType: MC_MOVELINEARABSOLUTE
+  pins:
+  - name: AxesGroup
+    dir: in
+    required: false
+    note: ''
+  - name: Execute
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: Position
+    dir: in
+    required: false
+    note: ''
+  - name: Velocity
+    dir: in
+    required: false
+    note: ''
+  - name: Acceleration
+    dir: in
+    required: false
+    note: ''
+  - name: Deceleration
+    dir: in
+    required: false
+    note: ''
+  - name: Jerk
+    dir: in
+    required: false
+    note: ''
+  - name: DirectionA
+    dir: in
+    required: false
+    note: ''
+  - name: CoordSystem
+    dir: in
+    required: false
+    note: ''
+  - name: BufferMode
+    dir: in
+    required: false
+    note: ''
+  - name: TransitionParameter
+    dir: in
+    required: false
+    note: ''
+  - name: DynamicAdaption
+    dir: in
+    required: false
+    note: ''
+  - name: Done
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: Busy
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: Active
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: CommandAborted
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: Error
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: ErrorID
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Word]
+  - name: RemainingDistance
+    dir: out
+    required: false
+    note: ''
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: shape-only
+  notes: >-
+    Motion Control FB (linear absolute path motion, axes group).
+  source: "anonymized reference fixture (signature only)"
+  result:
+    kind: none
+MC_MoveLinearRelative:
+  family: technology
+  callShape: instance-dot
+  instanceType: MC_MOVELINEARRELATIVE
+  pins:
+  - name: AxesGroup
+    dir: in
+    required: false
+    note: ''
+  - name: Execute
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: Distance
+    dir: in
+    required: false
+    note: ''
+  - name: Velocity
+    dir: in
+    required: false
+    note: ''
+  - name: Acceleration
+    dir: in
+    required: false
+    note: ''
+  - name: Deceleration
+    dir: in
+    required: false
+    note: ''
+  - name: Jerk
+    dir: in
+    required: false
+    note: ''
+  - name: CoordSystem
+    dir: in
+    required: false
+    note: ''
+  - name: BufferMode
+    dir: in
+    required: false
+    note: ''
+  - name: TransitionParameter
+    dir: in
+    required: false
+    note: ''
+  - name: DynamicAdaption
+    dir: in
+    required: false
+    note: ''
+  - name: Done
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: Busy
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: Active
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: CommandAborted
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: Error
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: ErrorID
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Word]
+  - name: RemainingDistance
+    dir: out
+    required: false
+    note: ''
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: shape-only
+  notes: >-
+    Motion Control FB (linear relative path motion, axes group).
+  source: "anonymized reference fixture (signature only)"
+  result:
+    kind: none
+MC_MoveCircularAbsolute:
+  family: technology
+  callShape: instance-dot
+  instanceType: MC_MOVECIRCULARABSOLUTE
+  pins:
+  - name: AxesGroup
+    dir: in
+    required: false
+    note: ''
+  - name: Execute
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: CircMode
+    dir: in
+    required: false
+    note: ''
+  - name: AuxPoint
+    dir: in
+    required: false
+    note: ''
+  - name: EndPoint
+    dir: in
+    required: false
+    note: ''
+  - name: PathChoice
+    dir: in
+    required: false
+    note: ''
+  - name: CirclePlane
+    dir: in
+    required: false
+    note: ''
+  - name: Radius
+    dir: in
+    required: false
+    note: ''
+  - name: Arc
+    dir: in
+    required: false
+    note: ''
+  - name: Velocity
+    dir: in
+    required: false
+    note: ''
+  - name: Acceleration
+    dir: in
+    required: false
+    note: ''
+  - name: Deceleration
+    dir: in
+    required: false
+    note: ''
+  - name: Jerk
+    dir: in
+    required: false
+    note: ''
+  - name: DirectionA
+    dir: in
+    required: false
+    note: ''
+  - name: CoordSystem
+    dir: in
+    required: false
+    note: ''
+  - name: BufferMode
+    dir: in
+    required: false
+    note: ''
+  - name: TransitionParameter
+    dir: in
+    required: false
+    note: ''
+  - name: DynamicAdaption
+    dir: in
+    required: false
+    note: ''
+  - name: Done
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: Busy
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: Active
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: CommandAborted
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: Error
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: ErrorID
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Word]
+  - name: RemainingDistance
+    dir: out
+    required: false
+    note: ''
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: shape-only
+  notes: >-
+    Motion Control FB (circular absolute path motion, axes group).
+  source: "anonymized reference fixture (signature only)"
+  result:
+    kind: none
+MC_MoveCircularRelative:
+  family: technology
+  callShape: instance-dot
+  instanceType: MC_MOVECIRCULARRELATIVE
+  pins:
+  - name: AxesGroup
+    dir: in
+    required: false
+    note: ''
+  - name: Execute
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: CircMode
+    dir: in
+    required: false
+    note: ''
+  - name: AuxPoint
+    dir: in
+    required: false
+    note: ''
+  - name: EndPoint
+    dir: in
+    required: false
+    note: ''
+  - name: PathChoice
+    dir: in
+    required: false
+    note: ''
+  - name: CirclePlane
+    dir: in
+    required: false
+    note: ''
+  - name: Radius
+    dir: in
+    required: false
+    note: ''
+  - name: Arc
+    dir: in
+    required: false
+    note: ''
+  - name: Velocity
+    dir: in
+    required: false
+    note: ''
+  - name: Acceleration
+    dir: in
+    required: false
+    note: ''
+  - name: Deceleration
+    dir: in
+    required: false
+    note: ''
+  - name: Jerk
+    dir: in
+    required: false
+    note: ''
+  - name: CoordSystem
+    dir: in
+    required: false
+    note: ''
+  - name: BufferMode
+    dir: in
+    required: false
+    note: ''
+  - name: TransitionParameter
+    dir: in
+    required: false
+    note: ''
+  - name: DynamicAdaption
+    dir: in
+    required: false
+    note: ''
+  - name: Done
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: Busy
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: Active
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: CommandAborted
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: Error
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: ErrorID
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Word]
+  - name: RemainingDistance
+    dir: out
+    required: false
+    note: ''
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: shape-only
+  notes: >-
+    Motion Control FB (circular relative path motion, axes group).
+  source: "anonymized reference fixture (signature only)"
+  result:
+    kind: none
+MC_MoveDirectAbsolute:
+  family: technology
+  callShape: instance-dot
+  instanceType: MC_MOVEDIRECTABSOLUTE
+  pins:
+  - name: AxesGroup
+    dir: in
+    required: false
+    note: ''
+  - name: Execute
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: Position
+    dir: in
+    required: false
+    note: ''
+  - name: VelocityFactor
+    dir: in
+    required: false
+    note: ''
+  - name: AccelerationFactor
+    dir: in
+    required: false
+    note: ''
+  - name: DecelerationFactor
+    dir: in
+    required: false
+    note: ''
+  - name: JerkFactor
+    dir: in
+    required: false
+    note: ''
+  - name: LinkConstellation
+    dir: in
+    required: false
+    note: ''
+  - name: CoordSystem
+    dir: in
+    required: false
+    note: ''
+  - name: BufferMode
+    dir: in
+    required: false
+    note: ''
+  - name: TransitionParameter
+    dir: in
+    required: false
+    note: ''
+  - name: PositionMode
+    dir: in
+    required: false
+    note: ''
+  - name: DirectionA
+    dir: in
+    required: false
+    note: ''
+  - name: TurnJoint
+    dir: in
+    required: false
+    note: ''
+  - name: ExecutionTimeStatus
+    dir: out
+    required: false
+    note: ''
+  - name: Done
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: Busy
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: Active
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: CommandAborted
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: Error
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: ErrorID
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Word]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: shape-only
+  notes: >-
+    Motion Control FB (direct-kinematics absolute motion, robotics-style axes group).
+  source: "anonymized reference fixture (signature only)"
+  result:
+    kind: none
+MC_MoveDirectRelative:
+  family: technology
+  callShape: instance-dot
+  instanceType: MC_MOVEDIRECTRELATIVE
+  pins:
+  - name: AxesGroup
+    dir: in
+    required: false
+    note: ''
+  - name: Execute
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: Distance
+    dir: in
+    required: false
+    note: ''
+  - name: VelocityFactor
+    dir: in
+    required: false
+    note: ''
+  - name: AccelerationFactor
+    dir: in
+    required: false
+    note: ''
+  - name: DecelerationFactor
+    dir: in
+    required: false
+    note: ''
+  - name: JerkFactor
+    dir: in
+    required: false
+    note: ''
+  - name: LinkConstellation
+    dir: in
+    required: false
+    note: ''
+  - name: CoordSystem
+    dir: in
+    required: false
+    note: ''
+  - name: BufferMode
+    dir: in
+    required: false
+    note: ''
+  - name: TransitionParameter
+    dir: in
+    required: false
+    note: ''
+  - name: TurnJoint
+    dir: in
+    required: false
+    note: ''
+  - name: ExecutionTimeStatus
+    dir: out
+    required: false
+    note: ''
+  - name: Done
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: Busy
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: Active
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: CommandAborted
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: Error
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: ErrorID
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Word]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: shape-only
+  notes: >-
+    Motion Control FB (direct-kinematics relative motion, robotics-style axes group).
+  source: "anonymized reference fixture (signature only)"
+  result:
+    kind: none
+MC_DefineWorkspaceZone:
+  family: technology
+  callShape: instance-dot
+  instanceType: MC_DEFINEWORKSPACEZONE
+  pins:
+  - name: AxesGroup
+    dir: in
+    required: false
+    note: ''
+  - name: Execute
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: ZoneType
+    dir: in
+    required: false
+    note: ''
+  - name: ZoneNumber
+    dir: in
+    required: false
+    note: ''
+  - name: ReferenceSystem
+    dir: in
+    required: false
+    note: ''
+  - name: Frame
+    dir: in
+    required: false
+    note: ''
+  - name: GeometryType
+    dir: in
+    required: false
+    note: ''
+  - name: GeometryParameter
+    dir: in
+    required: false
+    note: ''
+  - name: Done
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: Busy
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: CommandAborted
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: Error
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: ErrorID
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Word]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: shape-only
+  notes: >-
+    Motion Control FB (define a workspace monitoring zone).
+  source: "anonymized reference fixture (signature only)"
+  result:
+    kind: none
+MC_SetWorkspaceZoneActive:
+  family: technology
+  callShape: instance-dot
+  instanceType: MC_SETWORKSPACEZONEACTIVE
+  pins:
+  - name: AxesGroup
+    dir: in
+    required: false
+    note: ''
+  - name: Execute
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: ZoneNumber
+    dir: in
+    required: false
+    note: ''
+  - name: Done
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: Busy
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: CommandAborted
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: Error
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: ErrorID
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Word]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: shape-only
+  notes: >-
+    Motion Control FB (activate a workspace zone).
+  source: "anonymized reference fixture (signature only)"
+  result:
+    kind: none
+MC_SetWorkspaceZoneInactive:
+  family: technology
+  callShape: instance-dot
+  instanceType: MC_SETWORKSPACEZONEINACTIVE
+  pins:
+  - name: AxesGroup
+    dir: in
+    required: false
+    note: ''
+  - name: Execute
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: ZoneNumber
+    dir: in
+    required: false
+    note: ''
+  - name: Mode
+    dir: in
+    required: false
+    note: ''
+  - name: Done
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: Busy
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: CommandAborted
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: Error
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: ErrorID
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Word]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: shape-only
+  notes: >-
+    Motion Control FB (deactivate a workspace zone).
+  source: "anonymized reference fixture (signature only)"
+  result:
+    kind: none
+MC_DefineTool:
+  family: technology
+  callShape: instance-dot
+  instanceType: MC_DEFINETOOL
+  pins:
+  - name: AxesGroup
+    dir: in
+    required: false
+    note: ''
+  - name: Execute
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: Frame
+    dir: in
+    required: false
+    note: ''
+  - name: Done
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: Busy
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: CommandAborted
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: Error
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: ErrorID
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Word]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: shape-only
+  notes: >-
+    Motion Control FB (define a tool frame).
+  source: "anonymized reference fixture (signature only)"
+  result:
+    kind: none
+MC_SetTool:
+  family: technology
+  callShape: instance-dot
+  instanceType: MC_SETTOOL
+  pins:
+  - name: AxesGroup
+    dir: in
+    required: false
+    note: ''
+  - name: Execute
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: ToolNumber
+    dir: in
+    required: false
+    note: ''
+  - name: Done
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: Busy
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: CommandAborted
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: Error
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: ErrorID
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Word]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: shape-only
+  notes: >-
+    Motion Control FB (activate a defined tool).
+  source: "anonymized reference fixture (signature only)"
+  result:
+    kind: none

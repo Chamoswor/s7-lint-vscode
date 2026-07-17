@@ -1,0 +1,523 @@
+# SINAMICS BasicPosControl and time-based I/O technology instructions — SCL registry.
+#
+# SCL instruction keys use canonical Siemens capitalization. Pin spelling is
+# retained from the exported interface except for documented casing corrections:
+# ErrorId -> ErrorID, DiagId -> DiagID and TIO_SYNC_DATA -> TIO_SYNC_Data.
+#
+# These are FB/technology-object instance calls, not functions. The instance is
+# called directly in SCL; `result.kind` is therefore `none`. `instance-dot` is
+# retained as the existing registry category for instance calls.
+#
+# Missing dataTypes are intentional: no type is fabricated where the export and
+# a Siemens parameter table did not establish it.
+
+$fileLanguage: [SCL]
+BasicPosControl:
+  family: technology
+  callShape: instance-dot
+  instanceType: BasicPosControl
+  pins:
+  - name: ModePos
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [Int]
+  - name: EnableAxis
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: CancelTraversing
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: IntermediateStop
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: Positive
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: Negative
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: Jog1
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: Jog2
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: FlyRef
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: AckError
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: ExecuteMode
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: Position
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [LReal]
+  - name: Velocity
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [LReal]
+  - name: OverV
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [Int]
+  - name: Acceleration
+    dir: in
+    required: false
+    note: ''
+  - name: Deceleration
+    dir: in
+    required: false
+    note: ''
+  - name: HomePosition
+    dir: in
+    required: false
+    note: ''
+  - name: ConfigEPos
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [DWord]
+  - name: UserSetPZD
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [Word]
+  - name: AxisEnabled
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: AxisPosOk
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: AxisSpFixed
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: AxisRef
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: AxisWarn
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: AxisError
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: Lockout
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: ActVelocity
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [LReal]
+  - name: ActPosition
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [LReal]
+  - name: ActMode
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Int]
+  - name: EPosZSW1
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Word]
+  - name: EPosZSW2
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Word]
+  - name: ActWarn
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Word]
+  - name: ActFault
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Word]
+  - name: Error
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: Status
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Int]
+  - name: DiagID
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Word]
+  - name: UserReceivePZD
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Word]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: shape-only
+  notes: >-
+    Drive-integrated basic positioning control FB (SINAMICS EPOS-style). NOTE the VAR declaration in the
+    source export is `BasicPosControl : BasicPosControl` — instance name equals the type name exactly
+    (unlike every other instance in this file, which append `_Instance`); transcribed faithfully, not an
+    error.
+  source: "anonymized reference fixture (signature only)"
+  result:
+    kind: none
+TIO_SYNC:
+  family: technology
+  callShape: instance-dot
+  instanceType: TIO_SYNC
+  pins:
+  - name: HWID_1
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [HW_IO]
+  - name: HWID_2
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [HW_IO]
+  - name: HWID_3
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [HW_IO]
+  - name: HWID_4
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [HW_IO]
+  - name: HWID_5
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [HW_IO]
+  - name: HWID_6
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [HW_IO]
+  - name: HWID_7
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [HW_IO]
+  - name: HWID_8
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [HW_IO]
+  - name: PIP_Mode
+    dir: in
+    required: false
+    note: ''
+  - name: PIP_PART
+    dir: in
+    required: false
+    note: ''
+  - name: TIO_SYNC_Data
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [PLC data type]
+  - name: Status
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [DWord]
+  - name: Error
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: shape-only
+  notes: >-
+    TIO (Technology I/O, isochronous) synchronization FB — up to 8 hardware-ID inputs.
+  source: "anonymized reference fixture (signature only)"
+  result:
+    kind: none
+TIO_DI:
+  family: technology
+  callShape: instance-dot
+  instanceType: TIO_DI
+  pins:
+  - name: HWID
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [HW_IO]
+  - name: Channel
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [UInt]
+  - name: EdgeSel
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [UInt]
+  - name: DI
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: TimeStampRE
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [LTime]
+  - name: TimeStampFE
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [LTime]
+  - name: EventCountRE
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [UInt]
+  - name: EventCountFE
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [UInt]
+  - name: LEC
+    dir: out
+    required: false
+    note: ''
+  - name: Status
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [DWord]
+  - name: Error
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: TIO_SYNC_Data
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [PLC data type]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: shape-only
+  notes: >-
+    TIO digital-input FB (isochronous, timestamped edges).
+  source: "anonymized reference fixture (signature only)"
+  result:
+    kind: none
+TIO_DI_ONCE:
+  family: technology
+  callShape: instance-dot
+  instanceType: TIO_DI_ONCE
+  pins:
+  - name: REQ
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: HWID
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [HW_IO]
+  - name: Channel
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [UInt]
+  - name: EdgeSel
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [UInt]
+  - name: Done
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: Busy
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: Error
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: Status
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [DWord]
+  - name: DI
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: TimeStampRE
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [LTime]
+  - name: TimeStampFE
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [LTime]
+  - name: LEC
+    dir: out
+    required: false
+    note: ''
+  - name: TIO_SYNC_Data
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [PLC data type]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: shape-only
+  notes: >-
+    TIO digital-input FB, single-shot/non-cyclic variant of TIO_DI (REQ/Done/Busy pattern instead of
+    always-cyclic).
+  source: "anonymized reference fixture (signature only)"
+  result:
+    kind: none
+TIO_DQ:
+  family: technology
+  callShape: instance-dot
+  instanceType: TIO_DQ
+  pins:
+  - name: REQ
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: HWID
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [HW_IO]
+  - name: Channel
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [UInt]
+  - name: Out_Mode
+    dir: in
+    required: false
+    note: ''
+  - name: TimeStampRE
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [LTime]
+  - name: TimeStampFE
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [LTime]
+  - name: StatusDQ
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: DONE
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: BUSY
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: Error
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [Bool]
+  - name: Status
+    dir: out
+    required: false
+    note: ''
+    dataTypes: [DWord]
+  - name: TIO_SYNC_Data
+    dir: in
+    required: false
+    note: ''
+    dataTypes: [PLC data type]
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: shape-only
+  notes: >-
+    TIO digital-output FB (isochronous, scheduled edge output) — note TimeStampRE/TimeStampFE are `dir:
+    in` HERE (scheduling WHEN to switch), unlike TIO_DI's `dir: out` (reporting WHEN an edge occurred) —
+    same pin names, opposite roles, a real and easily-confused distinction, transcribed exactly per each
+    real export.
+  source: "anonymized reference fixture (signature only)"
+  result:
+    kind: none

@@ -1,0 +1,256 @@
+﻿{
+    S7_Optimized := "TRUE";
+    S7_PreferredLanguage := "FBD";
+    S7_Version := "0.1"
+}
+FUNCTION_BLOCK "CLAUDE_REF_BIT-LOGIC-OPERATION"
+    VAR
+        s1 : Bool;
+        {
+            S7_Access := "ReadOnly := External";
+            S7_Setpoint := "False";
+            S7_Visibility := "Hidden := External"
+        }
+        R_TRIG_Instance : R_TRIG;
+        F_TRIG_Instance : F_TRIG;
+    END_VAR
+    VAR_TEMP
+        t1 : Bool;
+        t2 : Bool;
+        t3 : Bool;
+        t4 : Bool;
+        t5 : Bool;
+        t6 : Bool;
+        t7 : Bool;
+    END_VAR
+    VAR CONSTANT
+        const_uint1 : UInt := 5;
+    END_VAR
+
+    {
+        S7_Language := "FBD";
+        S7_NetworkTitle := "MLC_3xn"
+    }
+    NETWORK
+        RUNG #t1
+            A( in2 := #t2 )
+            Coil( #t3 )
+        END_RUNG
+    END_NETWORK
+    {
+        S7_Language := "FBD";
+        S7_NetworkTitle := "MLC_56t"
+    }
+    NETWORK
+        RUNG #t1
+            O( in2 := #t2 )
+            Coil( #t3 )
+        END_RUNG
+    END_NETWORK
+    {
+        S7_Language := "FBD";
+        S7_NetworkTitle := "MLC_UZ"
+    }
+    NETWORK
+        RUNG #t1
+            X( in2 := #t2 )
+            Coil( #t3 )
+        END_RUNG
+    END_NETWORK
+    {
+        S7_Language := "FBD";
+        S7_NetworkTitle := "MLC_3KL"
+    }
+    NETWORK
+        RUNG
+            Coil( #t1 )
+        END_RUNG
+        RUNG
+            NOT Coil( #t2 )
+        END_RUNG
+    END_NETWORK
+    {
+        S7_Language := "FBD";
+        S7_NetworkTitle := "MLC_4Sa"
+    }
+    NETWORK
+        RUNG
+            Coil( #t1 )
+        END_RUNG
+    END_NETWORK
+    {
+        S7_Language := "FBD";
+        S7_NetworkTitle := "MLC_hY"
+    }
+    NETWORK
+        RUNG
+            I_Coil( #t1 )
+        END_RUNG
+    END_NETWORK
+    {
+        S7_Language := "FBD";
+        S7_NetworkTitle := "MLC_4ja"
+    }
+    NETWORK
+        RUNG
+            R_Coil( #s1 )
+        END_RUNG
+    END_NETWORK
+    {
+        S7_Language := "FBD";
+        S7_NetworkTitle := "MLC_3Hd"
+    }
+    NETWORK
+        RUNG
+            S_Coil( #s1 )
+        END_RUNG
+    END_NETWORK
+    {
+        S7_Language := "FBD";
+        S7_NetworkComment := "MLC_4Cx";
+        S7_NetworkTitle := "MLC_Uq"
+    }
+    NETWORK
+        RUNG
+            S_BitfieldCoil(
+                operand => "CLAUDE_DB_REF".array_bool[0],
+                n := #const_uint1
+            )
+        END_RUNG
+    END_NETWORK
+    {
+        S7_Language := "FBD";
+        S7_NetworkTitle := "MLC_42t"
+    }
+    NETWORK
+        RUNG
+            R_BitfieldCoil(
+                operand => "CLAUDE_DB_REF".array_bool[0],
+                n := #const_uint1
+            )
+        END_RUNG
+    END_NETWORK
+    {
+        S7_Language := "FBD";
+        S7_NetworkTitle := "MLC_bZ"
+    }
+    NETWORK
+        RUNG #t1
+            S_SR(
+                operand := #s1,
+                r1 :=  
+            )
+        END_RUNG
+    END_NETWORK
+    {
+        S7_Language := "FBD";
+        S7_NetworkTitle := "MLC_38G"
+    }
+    NETWORK
+        RUNG #t1
+            S_RS(
+                operand := #s1,
+                s1 :=  
+            )
+        END_RUNG
+    END_NETWORK
+    {
+        S7_Language := "FBD";
+        S7_NetworkTitle := "MLC_42P"
+    }
+    NETWORK
+        RUNG
+            P_Contact(
+                operand := #t1,
+                bit := #s1
+            )
+            Coil( #t2 )
+        END_RUNG
+    END_NETWORK
+    {
+        S7_Language := "FBD";
+        S7_NetworkTitle := "MLC_NX"
+    }
+    NETWORK
+        RUNG
+            N_Contact(
+                operand := #t1,
+                bit := #s1
+            )
+            Coil( #t2 )
+        END_RUNG
+    END_NETWORK
+    {
+        S7_Language := "FBD";
+        S7_NetworkTitle := "MLC_xc"
+    }
+    NETWORK
+        RUNG #t1
+            P_Coil(
+                operand => #t2,
+                bit := #s1
+            )
+            Coil( #t3 )
+        END_RUNG
+    END_NETWORK
+    {
+        S7_Language := "FBD";
+        S7_NetworkTitle := "MLC_4EE"
+    }
+    NETWORK
+        RUNG #t1
+            N_Coil(
+                operand => #t2,
+                bit := #s1
+            )
+            Coil( #t3 )
+        END_RUNG
+    END_NETWORK
+    {
+        S7_Language := "FBD";
+        S7_NetworkTitle := "MLC_4P6"
+    }
+    NETWORK
+        RUNG #t1
+            P_Trig( #s1 )
+        END_RUNG
+    END_NETWORK
+    {
+        S7_Language := "FBD";
+        S7_NetworkTitle := "MLC_3Zn"
+    }
+    NETWORK
+        RUNG #t1
+            N_Trig( #s1 )
+        END_RUNG
+    END_NETWORK
+    {
+        S7_Language := "FBD";
+        S7_NetworkTitle := "MLC_3ma"
+    }
+    NETWORK
+        RUNG TRUE
+            #R_TRIG_Instance.R_TRIG(
+                clk := #t1,
+                q => #t2
+            )
+        END_RUNG
+    END_NETWORK
+    {
+        S7_Language := "FBD";
+        S7_NetworkTitle := "MLC_Na"
+    }
+    NETWORK
+        RUNG TRUE
+            #F_TRIG_Instance.F_TRIG(
+                clk := #t1,
+                q => #t2
+            )
+        END_RUNG
+    END_NETWORK
+    { S7_Language := "FBD" }
+    NETWORK
+        RUNG
+        END_RUNG
+    END_NETWORK
+END_FUNCTION_BLOCK

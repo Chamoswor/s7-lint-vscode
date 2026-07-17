@@ -1,0 +1,40 @@
+# Codes emitted by linter/exprTypeChecks.ts -- SCL assignment-expression
+# type checking (arithmetic/logical/comparison operand domain compatibility,
+# implicit numeric conversion, explicit-conversion argument types). See that
+# file's own header, and type-registry/expression-operators.yaml for the
+# domain-compatibility data these checks consult.
+
+expr-implicit-numeric-conversion:
+  severity: warning
+  message: "'{rightType}' is implicitly converted to '{leftType}' for this '{op}' -- consider an explicit conversion (e.g. {rightType}_TO_{leftType}) to make the intent clear."
+  notes: "Only within the SAME domain (numeric-vs-numeric, e.g. Int + Real) -- a cross-domain mismatch (numeric vs time, bool vs anything) is expr-arithmetic-domain-mismatch/expr-comparison-domain-mismatch instead, never this code."
+
+expr-arithmetic-domain-mismatch:
+  severity: error
+  message: "'{op}' is not a valid arithmetic operator between '{leftType}' and '{rightType}'."
+  notes: "leftType/rightType are the two operands' own resolved types; the domains they belong to (numeric/time/bool/bit-string) are what expression-operators.yaml's arithmetic.allowedDomainPairs actually checks, not the concrete type names themselves."
+
+expr-logical-domain-mismatch:
+  severity: error
+  message: "'{op}' is not valid between '{leftType}' and '{rightType}' -- AND/OR/XOR require two BOOL operands or two matching bit-string operands (Word/DWord/...)."
+
+expr-bitstring-width-mismatch:
+  severity: error
+  message: "'{op}' requires matching bit-string types -- '{leftType}' and '{rightType}' are different widths."
+
+expr-comparison-domain-mismatch:
+  severity: error
+  message: "'{leftType}' and '{rightType}' are not comparable with '{op}'."
+
+expr-conversion-arg-type-mismatch:
+  severity: error
+  message: "'{name}' expects [{expected}], not '{actualType}'."
+  notes: "expected is the conversion function's own registry pin dataTypes, expanded through rules/literalTypes.ts's expandPinDataTypes the same way a normal instruction pin's dataTypes already are -- not re-derived here."
+
+expr-reference-comparison-illegal:
+  severity: error
+  message: "A reference is comparable with '{op}' ONLY against NULL -- references.yaml's comparison section."
+
+expr-ref-illegal-target-section:
+  severity: error
+  message: "REF({tagName}) is illegal -- '#{tagName}' is declared {section}, but REF()'s target must be a global DB tag or a Static-section tag (references.yaml's refInstruction.legalTargets)."
