@@ -1,5 +1,7 @@
 # S7 Lint for VS Code
 
+[![Download from VS Code Marketplace](https://img.shields.io/badge/VS%20Code-Marketplace-blue?logo=visualstudiocode)](https://marketplace.visualstudio.com/items?itemName=Chamoswor.s7-lint)
+
 S7 Lint for VS Code is an extension for static analysis and editor
 support for Siemens TIA Portal source and export formats.
 
