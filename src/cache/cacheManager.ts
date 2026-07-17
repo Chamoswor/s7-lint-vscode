@@ -113,7 +113,7 @@ export class CacheManager {
     this.result = buildTypeCache(this.ruleSet, files);
     this.blockIndex.rebuild(blockFiles);
     this.output.appendLine(
-      `[TIA Lint] Type cache rebuilt: ${this.result.types.size} known types (${files.length} UDT source file(s) scanned), ${this.result.diagnostics.length} diagnostic(s). ` +
+      `[S7 Lint] Type cache rebuilt: ${this.result.types.size} known types (${files.length} UDT source file(s) scanned), ${this.result.diagnostics.length} diagnostic(s). ` +
         `Block index: ${this.blockIndex.size} block(s) scanned.`
     );
     this.onDidRebuildEmitter.fire();

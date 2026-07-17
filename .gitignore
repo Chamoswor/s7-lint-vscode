@@ -7,6 +7,7 @@
 
 # Test and tooling output
 /out/
+/dist/
 coverage/
 .nyc_output/
 *.tsbuildinfo

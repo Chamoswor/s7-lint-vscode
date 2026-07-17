@@ -41,19 +41,19 @@ const SEVERITY_MAP: Record<LintSeverity, vscode.DiagnosticSeverity> = {
 };
 
 export async function activate(context: vscode.ExtensionContext): Promise<void> {
-  output = vscode.window.createOutputChannel("TIA Lint");
+  output = vscode.window.createOutputChannel("S7 Lint");
   context.subscriptions.push(output);
 
   const resourcesDir = path.join(context.extensionPath, "resources");
   try {
     ruleSet = loadRuleSet(resourcesDir);
   } catch (err) {
-    output.appendLine(`[TIA Lint] Failed to load bundled rules from ${resourcesDir}: ${String(err)}`);
-    vscode.window.showErrorMessage('TIA Lint: failed to load its bundled rule set -- see the "TIA Lint" output channel.');
+    output.appendLine(`[S7 Lint] Failed to load bundled rules from ${resourcesDir}: ${String(err)}`);
+    vscode.window.showErrorMessage('S7 Lint: failed to load its bundled rule set -- see the "S7 Lint" output channel.');
     return;
   }
   output.appendLine(
-    `[TIA Lint] Loaded ${Object.keys(ruleSet.instructions).length} instructions, ` +
+    `[S7 Lint] Loaded ${Object.keys(ruleSet.instructions).length} instructions, ` +
       `${Object.keys(ruleSet.baseTypes).length} base types, ${Object.keys(ruleSet.systemTypes).length} system types, ` +
       `${ruleSet.opaqueSectionNames.size} opaque section-legality names.`
   );
@@ -135,19 +135,19 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     vscode.commands.registerCommand("tiaLint.rebuildCache", async () => {
       await cacheManager.rebuild();
       relintAllOpen();
-      vscode.window.showInformationMessage("TIA Lint: type cache rebuilt.");
+      vscode.window.showInformationMessage("S7 Lint: type cache rebuilt.");
     })
   );
   context.subscriptions.push(
     vscode.commands.registerCommand("tiaLint.relintWorkspace", () => {
       relintAllOpen();
-      vscode.window.showInformationMessage("TIA Lint: re-linted all open documents.");
+      vscode.window.showInformationMessage("S7 Lint: re-linted all open documents.");
     })
   );
   context.subscriptions.push(
     vscode.commands.registerCommand("tiaLint.showRuleStats", () => {
       vscode.window.showInformationMessage(
-        `TIA Lint rules: ${Object.keys(ruleSet.instructions).length} instructions, ` +
+        `S7 Lint rules: ${Object.keys(ruleSet.instructions).length} instructions, ` +
           `${Object.keys(ruleSet.baseTypes).length} base types, ${Object.keys(ruleSet.systemTypes).length} system types.`
       );
     })

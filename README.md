@@ -1,6 +1,6 @@
-# TIA S7 Lint Server
+# S7 Lint for VS Code
 
-TIA S7 Lint Server is a VS Code extension for static analysis and editor
+S7 Lint for VS Code is an extension for static analysis and editor
 support for Siemens TIA Portal source and export formats.
 
 This is an independent open-source project. It is not an official Siemens
@@ -103,12 +103,13 @@ The diagnostic fixtures and their assertion contracts are documented in
 [`scripts/fixtures/scl-diagnostics/`](scripts/fixtures/scl-diagnostics/README.md).
 
 Press **F5** in VS Code with this directory open to launch an Extension
-Development Host. The launch configuration compiles the extension first.
+Development Host. The launch configuration compiles and bundles the extension
+first.
 
 ## Package a VSIX
 
 ```text
-npm run compile
+npm run bundle
 npx @vscode/vsce package
 ```
 
@@ -116,9 +117,9 @@ npx @vscode/vsce package
 
 The extension contributes these commands:
 
-- **TIA Lint: Rebuild Type Cache**
-- **TIA Lint: Re-lint All Open Files**
-- **TIA Lint: Show Loaded Rule Stats**
+- **S7 Lint: Rebuild Type Cache**
+- **S7 Lint: Re-lint All Open Files**
+- **S7 Lint: Show Loaded Rule Stats**
 
 `tiaLint.mlcLocale` selects the preferred locale for multilingual resource
 resolution. Resolution falls back to `en-US` and then to an available locale.

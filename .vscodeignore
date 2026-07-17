@@ -1,8 +1,12 @@
-.vscode/**
 src/**
 scripts/**
-out/**/*.map
+out/**
+dist/**/*.map
+node_modules/**
 .gitignore
 tsconfig.json
 **/*.ts
-!out/**/*.js
+.agents/**
+.claude/**
+.codex/**
+.tia/**

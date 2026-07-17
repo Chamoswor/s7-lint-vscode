@@ -1,17 +1,32 @@
 {
-  "name": "tia-lint-server",
-  "displayName": "TIA S7 Lint Server",
+  "name": "s7-lint",
+  "displayName": "S7 Lint for VS Code",
   "description": "Static analysis, code completion, navigation, and quick fixes for Siemens TIA Portal SCL, LAD/FBD declaration exports, PLC data types, and multilingual resources.",
   "version": "0.1.0",
-  "publisher": "tia-tooling",
+  "publisher": "s7-tooling",
   "license": "Apache-2.0",
   "private": true,
+  "icon": "assets/icon.png",
+  "keywords": [
+    "S7",
+    "PLC",
+    "SCL",
+    "LAD",
+    "FBD",
+    "TIA Portal",
+    "industrial automation",
+    "linting"
+  ],
   "engines": {
     "vscode": "^1.85.0"
   },
   "repository": {
     "type": "git",
     "url": "https://github.com/Chamoswor/s7-lint-vscode.git"
+  },
+  "homepage": "https://github.com/Chamoswor/s7-lint-vscode#readme",
+  "bugs": {
+    "url": "https://github.com/Chamoswor/s7-lint-vscode/issues"
   },
   "categories": [
     "Linters"
@@ -22,7 +37,7 @@
     "workspaceContains:**/*.s7res",
     "workspaceContains:**/*.scl"
   ],
-  "main": "./out/extension.js",
+  "main": "./dist/extension.js",
   "contributes": {
     "languages": [
       {
@@ -82,15 +97,15 @@
     "commands": [
       {
         "command": "tiaLint.rebuildCache",
-        "title": "TIA Lint: Rebuild Type Cache"
+        "title": "S7 Lint: Rebuild Type Cache"
       },
       {
         "command": "tiaLint.relintWorkspace",
-        "title": "TIA Lint: Re-lint All Open Files"
+        "title": "S7 Lint: Re-lint All Open Files"
       },
       {
         "command": "tiaLint.showRuleStats",
-        "title": "TIA Lint: Show Loaded Rule Stats"
+        "title": "S7 Lint: Show Loaded Rule Stats"
       }
     ],
     "semanticTokenTypes": [
@@ -123,13 +138,13 @@
     ],
     "themes": [
       {
-        "label": "TIA S7 Dark",
+        "label": "S7 Dark",
         "uiTheme": "vs-dark",
         "path": "./themes/tia-dark-color-theme.json"
       }
     ],
     "configuration": {
-      "title": "TIA S7 Lint Server",
+      "title": "S7 Lint",
       "properties": {
         "tiaLint.mlcLocale": {
           "type": "string",
@@ -140,8 +155,9 @@
     }
   },
   "scripts": {
-    "vscode:prepublish": "npm run compile",
+    "vscode:prepublish": "npm run bundle",
     "compile": "tsc -p ./",
+    "bundle": "npm run compile && esbuild src/extension.ts --bundle --platform=node --format=cjs --external:vscode --outfile=dist/extension.js --sourcemap",
     "watch": "tsc -watch -p ./",
     "test": "npm run compile && npm run test:completion && npm run test:quickfix && npm run test:manifest && npm run test:annotated && npm run test:smoke",
     "test:completion": "node scripts/test-completion-context.js",
@@ -149,7 +165,7 @@
     "test:manifest": "node scripts/run-manifest-smoke-tests.js",
     "test:annotated": "node scripts/run-annotated-diagnostic-tests.js",
     "test:smoke": "node scripts/smoke-test.js",
-    "package": "npm run compile"
+    "package": "npm run bundle"
   },
   "dependencies": {
     "fast-xml-parser": "^5.10.0",
@@ -159,6 +175,7 @@
     "@types/js-yaml": "^4.0.9",
     "@types/node": "^20.19.43",
     "@types/vscode": "^1.85.0",
+    "esbuild": "^0.28.1",
     "typescript": "^5.4.0"
   }
 }
