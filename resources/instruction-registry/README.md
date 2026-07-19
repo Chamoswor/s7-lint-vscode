@@ -20,6 +20,18 @@ The maps are separate because SCL can use different capitalization, parameter
 names, explicit pins, or instruction names. SCL lookup checks the SCL map first
 and then falls back to the general map when no dedicated SCL entry exists.
 
+### Subfolders
+
+The loader walks this directory **recursively**, so `*.yaml` files can be
+sorted into subfolders (e.g. `motion/12c-motion-axis-LAD-FBD.yaml`) for
+organization without changing how they load. Only the file's basename is
+meaningful: the `-SCL.yaml`/`-LAD-FBD.yaml`/etc. suffix rules, the
+`_template.yaml` exclusion, and the merge order into `RuleSet.instructions` /
+`RuleSet.sclInstructions` all apply the same way regardless of which
+subfolder a file lives in. There is no naming requirement on subfolder
+names themselves, and duplicate instruction keys are still not a supported
+override mechanism across subfolders (see above).
+
 `$fileLanguage` can set the default `language` for every entry in one file. An
 entry-level `language` value overrides the file default.
 

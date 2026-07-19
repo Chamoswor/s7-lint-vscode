@@ -53,12 +53,31 @@ const SCL_ONLY_SUFFIX = "-SCL.yaml";
  * independently of the real registry entries. */
 const TEMPLATE_FILE = "_template.yaml";
 
+/** Recursively lists every file under `dir`, so instruction-registry entries
+ * can be sorted into subfolders (e.g. `motion/12c-motion-axis-LAD-FBD.yaml`)
+ * without changing how they load -- see instruction-registry/README.md's
+ * "Subfolders" section. Only the file's basename (not its subfolder path)
+ * is meaningful to callers, matching the flat layout's naming rules. */
+function listFilesRecursive(dir: string): string[] {
+  const results: string[] = [];
+  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+    const full = path.join(dir, entry.name);
+    if (entry.isDirectory()) {
+      results.push(...listFilesRecursive(full));
+    } else {
+      results.push(full);
+    }
+  }
+  return results;
+}
+
 function loadInstructionRegistry(dir: string, includeFile: (fileName: string) => boolean): InstructionRegistry {
   const merged: InstructionRegistry = {};
-  for (const file of fs.readdirSync(dir)) {
+  for (const filePath of listFilesRecursive(dir)) {
+    const file = path.basename(filePath);
     if (file === TEMPLATE_FILE) continue;
     if (!file.endsWith(".yaml") || !includeFile(file)) continue;
-    const parsed = readYaml<Record<string, unknown>>(path.join(dir, file));
+    const parsed = readYaml<Record<string, unknown>>(filePath);
     const fileLanguage = parsed[FILE_LANGUAGE_KEY] as string[] | undefined;
     for (const [name, value] of Object.entries(parsed)) {
       if (name === FILE_LANGUAGE_KEY) continue;
