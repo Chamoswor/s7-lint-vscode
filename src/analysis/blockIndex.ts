@@ -19,6 +19,12 @@ export interface BlockInfo {
   file: string;
   declLine: number;
   vars: Map<string, BlockVar>;
+  /** For a DATA_BLOCK: the type it is an instance of -- an instruction/system
+   * type (unquoted) or a user FUNCTION_BLOCK/UDT (quoted). See
+   * ParsedBlockFile.instanceOf. */
+  instanceOf?: ParsedBlockFile["instanceOf"];
+  /** A DATA_BLOCK header pragma's `InstructionName`, when present. */
+  instructionName?: string;
 }
 
 function flattenVars(sections: VarSection[]): Map<string, BlockVar> {
@@ -52,10 +58,18 @@ export function scanBlockFile(fsPath: string, text: string): BlockInfo[] {
     file: fsPath,
     declLine: 1,
     vars: flattenVars(parsed.varSections),
+    instanceOf: parsed.instanceOf,
+    instructionName: parsed.instructionName,
   }));
 }
 
 export class BlockIndex {
+  /** Blocks scanned from files ON DISK (the workspace rebuild). */
+  private diskBlocks = new Map<string, BlockInfo>();
+  /** Blocks parsed from currently-OPEN editor buffers, keyed by file path --
+   * see `setDocumentOverlay`. */
+  private overlays = new Map<string, BlockInfo[]>();
+  /** `diskBlocks` with every overlay applied on top; what lookups read. */
   private blocks = new Map<string, BlockInfo>();
 
   rebuild(files: { path: string; text: string }[]): void {
@@ -65,7 +79,44 @@ export class BlockIndex {
         next.set(info.name, info);
       }
     }
-    this.blocks = next;
+    this.diskBlocks = next;
+    this.recompute();
+  }
+
+  /**
+   * Register (or refresh) the blocks declared in an OPEN editor buffer.
+   *
+   * The workspace index is rebuilt from files on DISK, so a block declared in
+   * the document being edited is invisible until that file is saved AND the
+   * watcher-driven rebuild lands. That breaks TIA's "external source"
+   * convention, where one `.scl` commonly declares an instance DB next to the
+   * FUNCTION_BLOCK that calls it (`DATA_BLOCK "R_TRIG_DB" ... R_TRIG` +
+   * `"R_TRIG_DB"();`) -- the buffer's own DB gets reported as
+   * `external-symbol-not-found` while typing.
+   *
+   * Overlays live on the SHARED index rather than being applied per-caller, so
+   * every consumer agrees: not just the lint pass, but hover, definition,
+   * rename and completion too (a per-lint overlay left hover still saying
+   * "not found in workspace" for a symbol the linter had just accepted).
+   */
+  setDocumentOverlay(path: string, text: string): void {
+    this.overlays.set(path, scanBlockFile(path, text));
+    this.recompute();
+  }
+
+  /** Drop a closed document's overlay, falling back to its on-disk version. */
+  clearDocumentOverlay(path: string): void {
+    if (this.overlays.delete(path)) this.recompute();
+  }
+
+  /** Disk blocks first, then open buffers on top (a buffer's own, possibly
+   * unsaved, definition wins over the stale on-disk one). */
+  private recompute(): void {
+    const merged = new Map(this.diskBlocks);
+    for (const infos of this.overlays.values()) {
+      for (const info of infos) merged.set(info.name, info);
+    }
+    this.blocks = merged;
   }
 
   get(name: string): BlockInfo | undefined {

@@ -544,13 +544,24 @@ export function isDotAccessLegal(blockType: string | null, section: string): boo
  * completion-list counterpart to `resolveInstanceMember` (which finds one
  * specific name). Standalone/exported since providers/completion.ts needs
  * it outside `buildDocumentIndex`'s closure. */
-export function listInstanceMembers(ruleSet: RuleSet, instanceTypeName: string): { name: string; dataTypes: string[]; source: string }[] {
+/** `preferScl` picks the dedicated `*-SCL` registry entry when one exists, so
+ * members are offered with SCL's own parameter spelling (`CLK`/`Q`) rather
+ * than the graphical entry's (`clk`/`q`). Off by default -- a LAD/FBD context
+ * wants the graphical names -- and passed only where the syntax is SCL-only,
+ * e.g. a quoted instance-DB reference (`"R_TRIG_DB".Q`), which has no
+ * graphical equivalent. Falls back to the graphical entry when the SCL map
+ * has no entry for that instruction. */
+export function listInstanceMembers(
+  ruleSet: RuleSet,
+  instanceTypeName: string,
+  preferScl = false
+): { name: string; dataTypes: string[]; source: string }[] {
   const instrNames = resolveInstanceTypeToInstructionNames(ruleSet, instanceTypeName);
 
   const result: { name: string; dataTypes: string[]; source: string }[] = [];
   const seen = new Set<string>();
   for (const instrName of instrNames) {
-    const entry = ruleSet.instructions[instrName];
+    const entry = (preferScl ? ruleSet.sclInstructions[instrName] : undefined) ?? ruleSet.instructions[instrName];
     if (!entry) continue;
     for (const pin of entry.pins) {
       if (!pin.name || seen.has(pin.name.toLowerCase())) continue;
@@ -747,6 +758,25 @@ export function buildDocumentIndex(text: string, ruleSet: RuleSet, blockIndex: B
     }
   }
 
+  /** Every type name some instruction declares as its `instanceType` with
+   * `callShape: instance-dot` (both the graphical and SCL maps) -- i.e. the
+   * instruction instance structures. Built once per document walk, lazily, so
+   * documents that declare no such type never pay for it. */
+  let instanceTypeNamesCache: Set<string> | null = null;
+  function isInstructionInstanceType(name: string): boolean {
+    if (!instanceTypeNamesCache) {
+      instanceTypeNamesCache = new Set<string>();
+      for (const registry of [ruleSet.instructions, ruleSet.sclInstructions]) {
+        for (const entry of Object.values(registry)) {
+          if (entry?.callShape === "instance-dot" && typeof entry.instanceType === "string" && entry.instanceType) {
+            instanceTypeNamesCache.add(entry.instanceType);
+          }
+        }
+      }
+    }
+    return instanceTypeNamesCache.has(name);
+  }
+
   /** VAR_* section keyword -> section-legality.yaml's own section key. */
   const VAR_SECTION_TO_LEGALITY_SECTION: Record<string, string> = {
     VAR_INPUT: "Input",
@@ -778,16 +808,43 @@ export function buildDocumentIndex(text: string, ruleSet: RuleSet, blockIndex: B
    * name is `unknown-type`'s job to flag, not this one's, and reporting
    * both would misleadingly double-diagnose the same root cause. */
   function checkSectionLegality(nameTok: Token, topLevelName: string | null, section: string): void {
-    if (section === "STRUCT" || !topLevelName || topLevelName === "Reference") return;
+    if (!topLevelName || topLevelName === "Reference") return;
     const legalitySection = VAR_SECTION_TO_LEGALITY_SECTION[section];
-    if (!legalitySection) return;
-    if (ruleSet.sectionLegality.allSections.datatypes.includes(topLevelName)) return;
-    const additional = ruleSet.sectionLegality.sections[legalitySection]?.additionalDatatypes ?? [];
+    const inAllSections = ruleSet.sectionLegality.allSections.datatypes.includes(topLevelName);
+    const additional = legalitySection ? ruleSet.sectionLegality.sections[legalitySection]?.additionalDatatypes ?? [] : [];
     // "Array[0..1] of" is section-legality.yaml's own placeholder meaning
     // "any array type is permitted here" -- never a literal type name to
     // match `topLevelName` against directly (see that file's own trailing note).
-    const legal = topLevelName === "Array" ? additional.includes("Array[0..1] of") : additional.includes(topLevelName);
-    if (legal) return;
+    const listedForSection = topLevelName === "Array" ? additional.includes("Array[0..1] of") : additional.includes(topLevelName);
+
+    // An instruction INSTANCE type (some entry's `instanceType`, callShape:
+    // instance-dot) is that instruction's own instance structure, so it is
+    // declarable ONLY as FUNCTION_BLOCK instance data -- verified in TIA
+    // Portal, where the same declaration in a plain DATA_BLOCK or in a
+    // UDT/STRUCT is rejected. That is a per-BLOCK-TYPE rule, a different axis
+    // than section-legality.yaml (sourced per VAR section), which is why these
+    // names are intentionally absent from that file. Checked only for names
+    // section-legality doesn't already cover, so types it DOES list (e.g.
+    // IEC_TIMER, legal in InOut/Input/Static and passable to an FC) keep their
+    // existing, separately-sourced handling.
+    if (!inAllSections && !listedForSection && isInstructionInstanceType(topLevelName)) {
+      if (currentBlockType === "FUNCTION_BLOCK" && section !== "STRUCT") return;
+      const context =
+        section === "STRUCT"
+          ? "a STRUCT/UDT member"
+          : currentBlockType
+          ? `a ${currentBlockType}`
+          : "this context";
+      diagnostics.push(
+        formatDiagnostic(ruleSet, "instance-type-illegal-context", nameTok.line, nameTok.col, { typeName: topLevelName, context })
+      );
+      return;
+    }
+
+    if (section === "STRUCT") return;
+    if (!legalitySection) return;
+    if (inAllSections) return;
+    if (listedForSection) return;
     if (!ruleSet.baseTypes[topLevelName] && !ruleSet.systemTypes[topLevelName] && !ruleSet.opaqueSectionNames.has(topLevelName)) return;
     diagnostics.push(formatDiagnostic(ruleSet, "type-illegal-section", nameTok.line, nameTok.col, { typeName: topLevelName, section }));
   }
@@ -1002,6 +1059,68 @@ export function buildDocumentIndex(text: string, ruleSet: RuleSet, blockIndex: B
     if (scl) return adaptEntryForScl(scl, "scl");
     const shared = ruleSet.instructions[name];
     return shared ? adaptEntryForScl(shared, "shared") : undefined;
+  }
+
+  /** Hover markdown for a quoted external block reference (`"Name"(...)` /
+   * `"Name".member`).
+   *
+   * An INSTANCE DATA_BLOCK additionally resolves WHAT it is an instance of, so
+   * hovering `"R_TRIG_DB"()` shows R_TRIG's own signature from the instruction
+   * registry instead of just "(data block)":
+   *   - an `InstructionName := 'R_TRIG'` header pragma, or an unquoted
+   *     instance-of line, resolves against the instruction registry;
+   *   - a quoted instance-of line is a user FUNCTION_BLOCK single-instance DB
+   *     (or a PLC-data-type-based DB), resolved against the workspace index.
+   * See parser/s7dclParser.ts's `ParsedBlockFile.instanceOf` for both shapes. */
+  function renderExternalBlockHover(extName: string, ownerBlock: BlockInfo | undefined): string {
+    if (!ownerBlock) return `**"${extName}"** — not found in workspace`;
+    const kindOf = (t: string) => t.replace(/_/g, " ").toLowerCase();
+    const lines = [`**"${extName}"** _(${kindOf(ownerBlock.blockType)})_`, "", `declared in \`${ownerBlock.file}\``];
+    const inst = ownerBlock.instanceOf;
+    if (ownerBlock.blockType === "DATA_BLOCK" && inst) {
+      // The InstructionName pragma is authoritative when present; otherwise an
+      // unquoted instance-of line names the instruction/system type directly.
+      const instrName = ownerBlock.instructionName ?? (inst.quoted ? undefined : inst.name);
+      const entry = instrName ? findSclInstruction(instrName) : undefined;
+      if (instrName && entry) {
+        lines.push("", "---", "", `instance of instruction:`, "", renderInstructionHover(instrName, entry, true));
+      } else if (inst.quoted) {
+        const target = blockIndex.get(inst.name);
+        lines.push(
+          "",
+          "---",
+          "",
+          target
+            ? `single instance of **"${inst.name}"** _(${kindOf(target.blockType)})_\n\ndeclared in \`${target.file}\``
+            : `instance of **"${inst.name}"** — not found in workspace`
+        );
+      } else if (instrName) {
+        lines.push("", "---", "", `instance of \`${instrName}\` — not in instruction-registry`);
+      }
+    }
+    return lines.join("\n");
+  }
+
+  /** For an FB single-instance DB (`DATA_BLOCK "Pump_DB" ... "FB_Pump"`), the
+   * FUNCTION_BLOCK whose interface supplies the DB's members -- the DB itself
+   * has no VAR section to resolve `"Pump_DB".q_y` against. */
+  function instanceTargetBlock(blk: BlockInfo): BlockInfo | undefined {
+    if (blk.blockType !== "DATA_BLOCK" || !blk.instanceOf?.quoted) return undefined;
+    const target = blockIndex.get(blk.instanceOf.name);
+    return target && target.name !== blk.name ? target : undefined;
+  }
+
+  /** For an instruction instance DB (`DATA_BLOCK "R_TRIG_DB" ... R_TRIG`), the
+   * named member of the instruction it instances -- its pins plus the implicit
+   * instance members, exactly what `#inst.member` resolution already uses.
+   * Matched case-insensitively: the registry's graphical entry may spell a pin
+   * `q` while SCL writes `Q`. */
+  function instanceDbInstructionMember(blk: BlockInfo, member: string): { name: string; dataTypes: string[]; source: string } | undefined {
+    if (blk.blockType !== "DATA_BLOCK") return undefined;
+    const instanceType = blk.instructionName ?? (blk.instanceOf && !blk.instanceOf.quoted ? blk.instanceOf.name : undefined);
+    if (!instanceType) return undefined;
+    const wanted = member.toLowerCase();
+    return listInstanceMembers(ruleSet, instanceType, true).find((m) => m.name.toLowerCase() === wanted);
   }
 
   function typeDefinition(name: string): Location | undefined {
@@ -1318,9 +1437,7 @@ export function buildDocumentIndex(text: string, ruleSet: RuleSet, blockIndex: B
       const nameTok = cur.next();
       const extName = nameTok.value ?? "";
       const ownerBlock = blockIndex.get(extName);
-      const hover = ownerBlock
-        ? `**"${extName}"** _(${ownerBlock.blockType.replace(/_/g, " ").toLowerCase()})_\n\ndeclared in \`${ownerBlock.file}\``
-        : `**"${extName}"** — not found in workspace`;
+      const hover = renderExternalBlockHover(extName, ownerBlock);
       push(nameTok, "variable", [], hover, ownerBlock ? { file: ownerBlock.file, line: ownerBlock.declLine } : undefined);
       return { topLevelName: ownerBlock?.name ?? null, derefTopLevelName: null, ownerBlock, display: nameTok.text, tok: nameTok };
     }
@@ -1418,14 +1535,31 @@ export function buildDocumentIndex(text: string, ruleSet: RuleSet, blockIndex: B
 
         let memberRenameKeyForDot: string | undefined;
         if (ownerBlock) {
-          const memberVar = ownerBlock.vars.get(memberTok.text);
-          hover = memberVar
-            ? `**.${memberTok.text}** : \`${typeRefToText(memberVar.member.typeRef)}\`  \n_(${memberVar.section} of ${ownerBlock.name})_`
-            : `**.${memberTok.text}** — not found on \`${ownerBlock.name}\``;
-          definition = memberVar ? { file: ownerBlock.file, line: memberVar.member.line ?? ownerBlock.declLine } : undefined;
-          nextTopLevelName = memberVar ? typeRefTopLevelName(memberVar.member.typeRef) : null;
-          nextDerefTopLevelName = memberVar ? typeRefDereferencedTopLevelName(memberVar.member.typeRef) : null;
-          if (memberVar && isExternallyReachable(ownerBlock.blockType, memberVar.section)) memberRenameKeyForDot = `member:${ownerBlock.name}:${memberTok.text}`;
+          // An INSTANCE DATA_BLOCK owns no VAR members: its members come from
+          // whatever it instances -- a FUNCTION_BLOCK's interface, or an
+          // instruction's pins. Resolving through to that source makes
+          // `"Pump_DB".q_y` / `"R_TRIG_DB".Q` behave like `#inst.member`,
+          // instead of reporting every member as "not found on" the DB.
+          const memberSource = instanceTargetBlock(ownerBlock) ?? ownerBlock;
+          const memberVar = memberSource.vars.get(memberTok.text);
+          const pinMember = memberVar ? undefined : instanceDbInstructionMember(ownerBlock, memberTok.text);
+          if (memberVar) {
+            hover = `**.${memberTok.text}** : \`${typeRefToText(memberVar.member.typeRef)}\`  \n_(${memberVar.section} of ${memberSource.name})_`;
+            definition = { file: memberSource.file, line: memberVar.member.line ?? memberSource.declLine };
+            nextTopLevelName = typeRefTopLevelName(memberVar.member.typeRef);
+            nextDerefTopLevelName = typeRefDereferencedTopLevelName(memberVar.member.typeRef);
+            if (isExternallyReachable(memberSource.blockType, memberVar.section)) {
+              memberRenameKeyForDot = `member:${memberSource.name}:${memberTok.text}`;
+            }
+          } else if (pinMember) {
+            const types = pinMember.dataTypes.length > 0 ? pinMember.dataTypes.join(" | ") : "not established";
+            hover = `**.${memberTok.text}** : \`${types}\`  \n_(${pinMember.source} instance member, via \`${ownerBlock.name}\`)_`;
+            // Only a single unambiguous type can carry a further `.member`/
+            // slice access -- don't guess when the registry lists several.
+            if (pinMember.dataTypes.length === 1) nextTopLevelName = pinMember.dataTypes[0];
+          } else {
+            hover = `**.${memberTok.text}** — not found on \`${ownerBlock.name}\``;
+          }
         } else if (topLevelName) {
           // slice-access.md: `.xn`/`.bn`/`.wn` bit/byte/word slicing of an
           // elementary-typed tag -- tried before instance-member
@@ -1659,9 +1793,7 @@ export function buildDocumentIndex(text: string, ruleSet: RuleSet, blockIndex: B
       const nameTok = cur.next(); // "Name"
       const extName = nameTok.value ?? "";
       const ownerBlock = blockIndex.get(extName);
-      const hover = ownerBlock
-        ? `**"${extName}"** _(${ownerBlock.blockType.replace(/_/g, " ").toLowerCase()})_\n\ndeclared in \`${ownerBlock.file}\``
-        : `**"${extName}"** — not found in workspace`;
+      const hover = renderExternalBlockHover(extName, ownerBlock);
       push(nameTok, "variable", [], hover, ownerBlock ? { file: ownerBlock.file, line: ownerBlock.declLine } : undefined);
       walkCallArgs(undefined, extName, ownerBlock);
       return true;

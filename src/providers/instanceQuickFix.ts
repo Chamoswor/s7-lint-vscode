@@ -101,6 +101,39 @@ export interface BlockInstanceContext {
  * `box`/`coil-ref` instruction is already directly callable and never needs
  * a declared instance at all, so there's nothing for this feature to offer
  * for one. */
+/**
+ * What a generated instance is an instance OF. Two shapes, because TIA writes
+ * them differently:
+ *   - a catalog instruction (`TON_TIME`) -- declared UNQUOTED and carrying an
+ *     `InstructionName` pragma (on the multi-instance member, and in the
+ *     single-instance DB's header);
+ *   - a user FUNCTION_BLOCK (`"FB_Pump"`) -- declared QUOTED, with no
+ *     `InstructionName` pragma, since it isn't a catalog instruction.
+ * Keeping this as its own descriptor lets both builders below serve either
+ * case instead of being tied to an `InstructionEntry`.
+ */
+export interface InstanceTypeRef {
+  /** The bare name, never including quotes. */
+  name: string;
+  /** True for a user FUNCTION_BLOCK (written quoted in a declaration). */
+  quoted: boolean;
+}
+
+/** The instance type of a catalog `instance-dot` instruction, if confirmed. */
+export function instructionInstanceRef(entry: InstructionEntry): InstanceTypeRef | undefined {
+  return entry.instanceType ? { name: entry.instanceType, quoted: false } : undefined;
+}
+
+/** A user FUNCTION_BLOCK as an instance type. */
+export function fbInstanceRef(fbName: string): InstanceTypeRef {
+  return { name: fbName, quoted: true };
+}
+
+/** How the type is written in a declaration -- quoted for an FB. */
+function instanceTypeText(ref: InstanceTypeRef): string {
+  return ref.quoted ? `"${ref.name}"` : ref.name;
+}
+
 export function findInstanceDotEntry(ruleSet: RuleSet, name: string): InstructionEntry | undefined {
   const scl = ruleSet.sclInstructions[name];
   if (scl && scl.callShape === "instance-dot") return scl;
@@ -277,13 +310,15 @@ export function resolveBlockInstanceContext(document: vscode.TextDocument, atLin
  * section a multi-instance could live in -- never generated for either,
  * regardless of whether a plain VAR section happens to already exist), or
  * `entry` has no confirmed `instanceType` to declare the member AS. */
-export function buildInstanceDeclarationEdit(document: vscode.TextDocument, ctx: BlockInstanceContext, entry: InstructionEntry): InstanceDeclarationPlan | undefined {
-  if (ctx.span.blockType !== "FUNCTION_BLOCK" || !entry.instanceType) return undefined;
+export function buildInstanceDeclarationEdit(document: vscode.TextDocument, ctx: BlockInstanceContext, ref: InstanceTypeRef): InstanceDeclarationPlan | undefined {
+  if (ctx.span.blockType !== "FUNCTION_BLOCK") return undefined;
 
   const eol = documentEol(document);
-  const instanceType = entry.instanceType;
-  const instanceName = uniqueInstanceName(document, ctx.span.startLine, ctx.span.endLine, `${instanceType}_Instance`);
-  const memberLine = `\t${instanceName} {InstructionName := '${instanceType}'} : ${instanceType};`;
+  const instanceName = uniqueInstanceName(document, ctx.span.startLine, ctx.span.endLine, `${ref.name}_Instance`);
+  // Only a catalog instruction carries the InstructionName pragma; an FB
+  // multi-instance is a plain `name : "FB_X";` member.
+  const pragma = ref.quoted ? "" : ` {InstructionName := '${ref.name}'}`;
+  const memberLine = `\t${instanceName}${pragma} : ${instanceTypeText(ref)};`;
 
   const edit = ctx.existing
     ? vscode.TextEdit.insert(new vscode.Position(ctx.existing.varEndLine, 0), memberLine + eol)
@@ -296,10 +331,10 @@ export function buildInstanceDeclarationEdit(document: vscode.TextDocument, ctx:
  * single-shot caller (the Quick Fix provider, which only ever handles one
  * diagnostic/entry at a time) that has no reason to keep the intermediate
  * `BlockInstanceContext` around itself. */
-export function computeInstanceDeclarationEdit(document: vscode.TextDocument, atLine: number, entry: InstructionEntry): InstanceDeclarationPlan | undefined {
+export function computeInstanceDeclarationEdit(document: vscode.TextDocument, atLine: number, ref: InstanceTypeRef): InstanceDeclarationPlan | undefined {
   const ctx = resolveBlockInstanceContext(document, atLine);
   if (!ctx) return undefined;
-  return buildInstanceDeclarationEdit(document, ctx, entry);
+  return buildInstanceDeclarationEdit(document, ctx, ref);
 }
 
 /** One `{ Key := 'value'; ... }` pragma block in TIA Portal's own
@@ -342,11 +377,16 @@ function formatPragmaBlock(props: [string, string][], eol: string): string {
  * empty string joined by `eol`) so a following top-level declaration this
  * is inserted before keeps its own separating blank line, exactly as
  * the fixture shows between `END_DATA_BLOCK` and the next `FUNCTION`. */
-function buildSingleInstanceDbText(dbName: string, instanceType: string, s7OptimizedAccess: "TRUE" | "FALSE" | undefined, eol: string): string {
-  const props: [string, string][] = [["InstructionName", instanceType]];
+function buildSingleInstanceDbText(dbName: string, ref: InstanceTypeRef, s7OptimizedAccess: "TRUE" | "FALSE" | undefined, eol: string): string {
+  // InstructionName identifies a CATALOG instruction; an FB instance DB has no
+  // such pragma and names its FUNCTION_BLOCK quoted instead.
+  const props: [string, string][] = ref.quoted ? [] : [["InstructionName", ref.name]];
   if (s7OptimizedAccess) props.push(["S7_Optimized_Access", s7OptimizedAccess]);
-  const pragma = formatPragmaBlock(props, eol);
-  return [`DATA_BLOCK "${dbName}"`, pragma, instanceType, "", "BEGIN", "", "END_DATA_BLOCK", "", ""].join(eol);
+  const pragma = props.length > 0 ? formatPragmaBlock(props, eol) : undefined;
+  const lines = [`DATA_BLOCK "${dbName}"`];
+  if (pragma) lines.push(pragma);
+  lines.push(instanceTypeText(ref), "", "BEGIN", "", "END_DATA_BLOCK", "", "");
+  return lines.join(eol);
 }
 
 /** Builds the single edit that declares a fresh top-level single-instance
@@ -365,16 +405,14 @@ function buildSingleInstanceDbText(dbName: string, instanceType: string, s7Optim
 export function buildSingleInstanceDbEdit(
   document: vscode.TextDocument,
   ctx: BlockInstanceContext,
-  entry: InstructionEntry,
+  ref: InstanceTypeRef,
   blockIndex: BlockIndex,
   typeCache: TypeCacheResult
 ): SingleInstanceDeclarationPlan | undefined {
-  if (!entry.instanceType) return undefined;
-
   const eol = documentEol(document);
-  const dbName = uniqueGlobalName(document, blockIndex, typeCache, `${entry.instanceType}_DB`);
+  const dbName = uniqueGlobalName(document, blockIndex, typeCache, `${ref.name}_DB`);
   const s7OptimizedAccess = readEnclosingS7OptimizedAccess(document, ctx.span);
-  const dbText = buildSingleInstanceDbText(dbName, entry.instanceType, s7OptimizedAccess, eol);
+  const dbText = buildSingleInstanceDbText(dbName, ref, s7OptimizedAccess, eol);
   const edit = vscode.TextEdit.insert(new vscode.Position(ctx.span.startLine, 0), dbText);
 
   return { dbName, edit };
@@ -386,13 +424,13 @@ export function buildSingleInstanceDbEdit(
 export function computeSingleInstanceDbEdit(
   document: vscode.TextDocument,
   atLine: number,
-  entry: InstructionEntry,
+  ref: InstanceTypeRef,
   blockIndex: BlockIndex,
   typeCache: TypeCacheResult
 ): SingleInstanceDeclarationPlan | undefined {
   const ctx = resolveBlockInstanceContext(document, atLine);
   if (!ctx) return undefined;
-  return buildSingleInstanceDbEdit(document, ctx, entry, blockIndex, typeCache);
+  return buildSingleInstanceDbEdit(document, ctx, ref, blockIndex, typeCache);
 }
 
 /** The identifier `document`'s text starts with at `position` -- used to
@@ -404,6 +442,21 @@ export function computeSingleInstanceDbEdit(
  * position not immediately followed by an identifier character (shouldn't
  * happen for a real `instruction-needs-instance` diagnostic's own start
  * position, but never guessed). */
+/** The QUOTED external reference `document`'s text starts with at `position`
+ * (e.g. `"FB_Pump"` in `"FB_Pump".member`), including both quotes -- the
+ * `dot-access-needs-instance` diagnostic points at the opening quote, and its
+ * fix must replace the whole quoted token (with `#instance` or a new DB's
+ * quoted name). `undefined` when the position isn't at one. */
+export function quotedNameRangeAt(document: vscode.TextDocument, position: vscode.Position): { range: vscode.Range; name: string } | undefined {
+  const rest = document.lineAt(position.line).text.slice(position.character);
+  const m = /^"([A-Za-z_][A-Za-z0-9_]*)"/.exec(rest);
+  if (!m) return undefined;
+  return {
+    range: new vscode.Range(position, position.translate(0, m[0].length)),
+    name: m[1],
+  };
+}
+
 export function identifierRangeAt(document: vscode.TextDocument, position: vscode.Position): vscode.Range | undefined {
   const rest = document.lineAt(position.line).text.slice(position.character);
   const m = /^[A-Za-z_][A-Za-z0-9_]*/.exec(rest);

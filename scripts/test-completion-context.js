@@ -158,6 +158,116 @@ test("context: inside BEGIN body -> executable", () => {
   assert.equal(ctx.kind, "executable");
 });
 
+// Regression: statement closers share the `END_` prefix with the real
+// top-level closers. Treating one as a block closer ended the block early, so
+// everything after the first `END_IF;` in a body was misread as the source-file
+// ROOT -- offering FUNCTION_BLOCK/DATA_BLOCK/TYPE templates mid-code and
+// suppressing the body's own instruction/tag completions.
+for (const [closer, body] of [
+  ["END_IF", "IF #a THEN\n      #b := 1;\n   END_IF;"],
+  ["END_CASE", "CASE #a OF\n      1: #b := 1;\n   END_CASE;"],
+  ["END_FOR", "FOR #i := 1 TO 3 DO\n      #b := 1;\n   END_FOR;"],
+  ["END_WHILE", "WHILE #a DO\n      #b := 1;\n   END_WHILE;"],
+  ["END_REPEAT", "REPEAT\n      #b := 1;\n   UNTIL #a END_REPEAT;"],
+]) {
+  test(`context: still executable after a ${closer} statement closer`, () => {
+    const text = `FUNCTION_BLOCK "X"\nVAR\nEND_VAR\nBEGIN\n   ${body}\n   D\nEND_FUNCTION_BLOCK\n`;
+    const offset = text.indexOf("\n   D") + "\n   D".length;
+    const ctx = resolveSclCompletionContext(text, offset);
+    assert.equal(ctx.kind, "executable");
+  });
+}
+
+// Member completion after a QUOTED external base (`"R_TRIG_DB".`). Only
+// `#tag.` chains were handled before, so a global instance DB -- the one way
+// to reach an instance-dot instruction's members from outside a
+// FUNCTION_BLOCK -- offered nothing at all.
+{
+  const q = "'";
+  const dbBlockIndex = new BlockIndex();
+  dbBlockIndex.rebuild([
+    { path: "rt.scl", text: `DATA_BLOCK "R_TRIG_DB"\n{InstructionName := ${q}R_TRIG${q} }\nR_TRIG\nBEGIN\nEND_DATA_BLOCK\n` },
+    { path: "ton.scl", text: `DATA_BLOCK "TON_DB"\n{InstructionName := ${q}TON_TIME${q} }\nTON_TIME\nBEGIN\nEND_DATA_BLOCK\n` },
+    { path: "pdb.scl", text: `DATA_BLOCK "Pump_DB"\n{ }\nNON_RETAIN\n"FB_Pump"\nBEGIN\nEND_DATA_BLOCK\n` },
+    { path: "fb.scl", text: 'FUNCTION_BLOCK "FB_Pump"\nVAR_INPUT\n  i_x : Bool;\nEND_VAR\nBEGIN\nEND_FUNCTION_BLOCK\n' },
+  ]);
+  const dbProvider = new S7dclCompletionProvider(ruleSet, dbBlockIndex, () => typeCache);
+  const labelsAfter = (base) => {
+    const body = `  ${base}`;
+    const { document, position } = withCursor(`FUNCTION_BLOCK "C"\nVAR\nEND_VAR\nBEGIN\n${body}|\nEND_FUNCTION_BLOCK\n`, "s7scl");
+    const items = dbProvider.provideCompletionItems(document, position);
+    return (items ?? []).map((i) => i.label);
+  };
+
+  test("completion: instruction instance DB offers the instruction's members", () => {
+    const labels = labelsAfter('"R_TRIG_DB".');
+    // SCL spelling (CLK/Q), not the graphical registry's clk/q -- a quoted
+    // instance-DB reference is SCL-only syntax.
+    assert.deepEqual(labels, ["CLK", "Q"]);
+  });
+
+  test("completion: instance DB members use the SCL registry's parameter names", () => {
+    assert.deepEqual(labelsAfter('"TON_DB".').sort(), ["ET", "IN", "PT", "Q"]);
+  });
+
+  test("completion: FB single-instance DB offers the FUNCTION_BLOCK's interface", () => {
+    assert.deepEqual(labelsAfter('"Pump_DB".'), ["i_x"]);
+  });
+
+  test("completion: an unknown quoted base offers nothing", () => {
+    assert.deepEqual(labelsAfter('"Nope_DB".'), []);
+  });
+
+  // Dotting into a BARE FUNCTION_BLOCK is illegal (dot-access-needs-instance).
+  // Members are still offered, but accepting one must ALSO create an instance
+  // and repoint the reference -- otherwise completion would hand the user code
+  // TIA rejects.
+  {
+    const fbBase = '  "FB_Pump".';
+    const src = `FUNCTION_BLOCK "Caller"\n{ S7_Optimized_Access := 'TRUE' }\nVAR\nEND_VAR\nBEGIN\n${fbBase}|\nEND_FUNCTION_BLOCK\n`;
+    const { document, position } = withCursor(src, "s7scl");
+    const items = dbProvider.provideCompletionItems(document, position) ?? [];
+
+    test("completion: a bare FUNCTION_BLOCK still lists its members", () => {
+      assert.deepEqual(items.map((i) => i.label), ["i_x"]);
+    });
+
+    test("completion: accepting a bare-FB member also generates a single-instance DB", () => {
+      const edits = items[0].additionalTextEdits ?? [];
+      assert.strictEqual(edits.length, 2, "one DB insertion + one base rewrite");
+      assert.match(edits[0].newText, /DATA_BLOCK "FB_Pump_DB"/);
+      assert.match(edits[0].newText, /^"FB_Pump"$/m, "the instance-of line is the quoted FB name");
+      assert.ok(!edits[0].newText.includes("InstructionName"), "an FB instance DB has no InstructionName pragma");
+      // S7_Optimized_Access mirrors the CALLING block's own header.
+      assert.match(edits[0].newText, /S7_Optimized_Access := 'TRUE'/);
+    });
+
+    test("completion: the base reference is rewritten to the generated instance DB", () => {
+      const rewrite = (items[0].additionalTextEdits ?? [])[1];
+      assert.strictEqual(rewrite.newText, '"FB_Pump_DB"');
+      // The replaced range must cover exactly the `"FB_Pump"` token.
+      const replaced = document.getText(rewrite.range);
+      assert.strictEqual(replaced, '"FB_Pump"');
+    });
+
+    test("completion: an instance DB base needs no auto-create edits", () => {
+      const { document: d2, position: p2 } = withCursor(
+        `FUNCTION_BLOCK "Caller"\nVAR\nEND_VAR\nBEGIN\n  "Pump_DB".|\nEND_FUNCTION_BLOCK\n`,
+        "s7scl"
+      );
+      const dbItems = dbProvider.provideCompletionItems(d2, p2) ?? [];
+      assert.ok(dbItems.length > 0, "an instance DB still offers members");
+      assert.ok(!dbItems[0].additionalTextEdits, "already an instance -- nothing to create");
+    });
+  }
+}
+
+test("context: a real END_FUNCTION_BLOCK still returns to root", () => {
+  const text = 'FUNCTION_BLOCK "X"\nVAR\nEND_VAR\nBEGIN\n   IF #a THEN\n      #b := 1;\n   END_IF;\nEND_FUNCTION_BLOCK\n\n';
+  const ctx = resolveSclCompletionContext(text, text.length);
+  assert.equal(ctx.kind, "root");
+});
+
 test("context: after a completed declaration ending in ';' -> name (fresh)", () => {
   const text = "FUNCTION_BLOCK \"X\"\nVAR_TEMP\n   a : Int;\n   \nEND_VAR\nBEGIN\nEND_FUNCTION_BLOCK\n";
   const offset = text.indexOf("a : Int;") + "a : Int;\n   ".length;

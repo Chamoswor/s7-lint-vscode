@@ -11,9 +11,21 @@ import * as vscode from "vscode";
 import { BlockIndex } from "../analysis/blockIndex";
 import { TypeCacheResult } from "../cache/typeCache";
 import { RuleSet } from "../rules/types";
-import { buildInstanceDeclarationEdit, buildSingleInstanceDbEdit, findInstanceDotEntry, identifierRangeAt, resolveBlockInstanceContext } from "./instanceQuickFix";
+import {
+  buildInstanceDeclarationEdit,
+  buildSingleInstanceDbEdit,
+  fbInstanceRef,
+  findInstanceDotEntry,
+  identifierRangeAt,
+  instructionInstanceRef,
+  quotedNameRangeAt,
+  resolveBlockInstanceContext,
+} from "./instanceQuickFix";
 
 const NEEDS_INSTANCE_CODE = "instruction-needs-instance";
+/** Dotting into a bare FUNCTION_BLOCK type (linter/symbolChecks.ts) -- fixed
+ * by creating an instance of it, exactly as TIA Portal offers. */
+const DOT_ACCESS_NEEDS_INSTANCE_CODE = "dot-access-needs-instance";
 
 export class InstanceQuickFixProvider implements vscode.CodeActionProvider {
   public static readonly metadata: vscode.CodeActionProviderMetadata = {
@@ -42,7 +54,9 @@ export class InstanceQuickFixProvider implements vscode.CodeActionProvider {
       const ctx = resolveBlockInstanceContext(document, diagnostic.range.start.line);
       if (!ctx) continue;
 
-      const multiPlan = buildInstanceDeclarationEdit(document, ctx, entry);
+      const instRef = instructionInstanceRef(entry);
+      if (!instRef) continue;
+      const multiPlan = buildInstanceDeclarationEdit(document, ctx, instRef);
       if (multiPlan) {
         const action = new vscode.CodeAction(`Generate local multi-instance '${multiPlan.instanceName} : ${entry.instanceType}'`, vscode.CodeActionKind.QuickFix);
         action.diagnostics = [diagnostic];
@@ -53,7 +67,7 @@ export class InstanceQuickFixProvider implements vscode.CodeActionProvider {
         actions.push(action);
       }
 
-      const singlePlan = buildSingleInstanceDbEdit(document, ctx, entry, this.blockIndex, this.getTypeCache());
+      const singlePlan = buildSingleInstanceDbEdit(document, ctx, instRef, this.blockIndex, this.getTypeCache());
       if (singlePlan) {
         const action = new vscode.CodeAction(`Generate single-instance DATA_BLOCK "${singlePlan.dbName}"`, vscode.CodeActionKind.QuickFix);
         action.diagnostics = [diagnostic];
@@ -65,6 +79,59 @@ export class InstanceQuickFixProvider implements vscode.CodeActionProvider {
       }
     }
 
+    actions.push(...this.fbInstanceActions(document, context));
+    return actions;
+  }
+
+  /**
+   * Fixes for `dot-access-needs-instance` -- dotting into a bare FUNCTION_BLOCK
+   * (`"FB_Pump".member`), which TIA Portal itself refuses. A FUNCTION_BLOCK's
+   * members are only reachable through an INSTANCE of it, so the same two
+   * actions the instruction case offers apply, just with the FB as the instance
+   * type (declared quoted, and with no `InstructionName` pragma -- see
+   * `InstanceTypeRef`). Each rewrites the offending base reference to point at
+   * the instance it just created.
+   */
+  private fbInstanceActions(document: vscode.TextDocument, context: vscode.CodeActionContext): vscode.CodeAction[] {
+    const actions: vscode.CodeAction[] = [];
+    for (const diagnostic of context.diagnostics) {
+      if (diagnostic.code !== DOT_ACCESS_NEEDS_INSTANCE_CODE) continue;
+
+      const quoted = quotedNameRangeAt(document, diagnostic.range.start);
+      if (!quoted) continue;
+      // Only a real workspace FUNCTION_BLOCK can be instantiated.
+      const block = this.blockIndex.get(quoted.name);
+      if (!block || block.blockType !== "FUNCTION_BLOCK") continue;
+
+      const ctx = resolveBlockInstanceContext(document, diagnostic.range.start.line);
+      if (!ctx) continue;
+      const ref = fbInstanceRef(block.name);
+
+      const multiPlan = buildInstanceDeclarationEdit(document, ctx, ref);
+      if (multiPlan) {
+        const action = new vscode.CodeAction(
+          `Generate local multi-instance '${multiPlan.instanceName} : "${block.name}"'`,
+          vscode.CodeActionKind.QuickFix
+        );
+        action.diagnostics = [diagnostic];
+        action.isPreferred = true;
+        const edit = new vscode.WorkspaceEdit();
+        edit.set(document.uri, [multiPlan.edit, vscode.TextEdit.replace(quoted.range, `#${multiPlan.instanceName}`)]);
+        action.edit = edit;
+        actions.push(action);
+      }
+
+      const singlePlan = buildSingleInstanceDbEdit(document, ctx, ref, this.blockIndex, this.getTypeCache());
+      if (singlePlan) {
+        const action = new vscode.CodeAction(`Generate single-instance DATA_BLOCK "${singlePlan.dbName}"`, vscode.CodeActionKind.QuickFix);
+        action.diagnostics = [diagnostic];
+        action.isPreferred = !multiPlan;
+        const edit = new vscode.WorkspaceEdit();
+        edit.set(document.uri, [singlePlan.edit, vscode.TextEdit.replace(quoted.range, `"${singlePlan.dbName}"`)]);
+        action.edit = edit;
+        actions.push(action);
+      }
+    }
     return actions;
   }
 }

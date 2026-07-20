@@ -81,6 +81,18 @@ type-illegal-section:
   severity: error
   message: "'{typeName}' is not legal in a {section} section -- section-legality.yaml's per-section additionalDatatypes list doesn't include it there."
 
+instance-type-illegal-context:
+  severity: error
+  message: "'{typeName}' is an instruction instance type -- it can only be declared in a FUNCTION_BLOCK's VAR sections, not in {context}."
+  notes: >-
+    A type named as some instruction's `instanceType` (callShape: instance-dot)
+    is the instruction's own instance structure, so declaring one only makes
+    sense as FUNCTION_BLOCK instance data. Verified against TIA Portal: the
+    same declaration in a plain DATA_BLOCK or in a UDT/STRUCT is rejected.
+    This is a different axis than section-legality.yaml (which is sourced
+    per-VAR-section, not per-block-type), so these types are intentionally
+    absent from that file and are checked here instead.
+
 for-loop-variable-modified:
   severity: error
   message: "'#{name}' is this FOR loop's own run variable -- it cannot be modified from inside the loop body (Siemens' SCL FOR reference)."

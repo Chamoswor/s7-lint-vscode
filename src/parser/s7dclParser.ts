@@ -168,6 +168,23 @@ export interface VarSection {
 export interface ParsedBlockFile {
   blockType: "FUNCTION_BLOCK" | "FUNCTION" | "ORGANIZATION_BLOCK" | "DATA_BLOCK";
   name: string;
+  /** For a DATA_BLOCK: the type this DB is an INSTANCE of, written as a bare
+   * line in the header between the pragma and `BEGIN`. Two shapes, told apart
+   * by `quoted`:
+   *   - unquoted -- an instruction/system instance type, e.g.
+   *     `DATA_BLOCK "R_TRIG_DB" {InstructionName := 'R_TRIG'} R_TRIG` (the
+   *     exact shape providers/instanceQuickFix.ts generates, confirmed by
+   *     scripts/fixtures/quick-fix/single-instance-db.scl);
+   *   - quoted -- a user FUNCTION_BLOCK single-instance DB (or a
+   *     PLC-data-type-based DB), e.g. `DATA_BLOCK "Pump_DB" ... "FB_Pump"`,
+   *     since user block/UDT names are always quoted in this grammar.
+   * Undefined for a global DB (one with its own VAR section instead) and for
+   * every non-DATA_BLOCK. */
+  instanceOf?: { name: string; quoted: boolean };
+  /** A DATA_BLOCK header pragma's `InstructionName` value, when present --
+   * the authoritative instruction identity for an instruction instance DB
+   * (TIA writes it alongside the unquoted `instanceOf` line). */
+  instructionName?: string;
   varSections: VarSection[];
   networks: NetworkNode[];
   /** Instruction/instance calls found in a `BEGIN ... END_xxx` SCL statement
@@ -204,6 +221,13 @@ export interface ParsedBlockFile {
 }
 
 const BLOCK_KEYWORDS = ["FUNCTION_BLOCK", "FUNCTION", "ORGANIZATION_BLOCK", "DATA_BLOCK"] as const;
+
+/** Standalone header markers that are NOT a DATA_BLOCK's instance-of type --
+ * everything else bare in a DB header is that type (see
+ * `ParsedBlockFile.instanceOf`). Entries written as `KEY : value` / `KEY =
+ * value` (VERSION/TITLE/AUTHOR/...) are excluded by shape instead, so this
+ * only needs the keywords that appear alone on a line. */
+const DB_HEADER_KEYWORDS = new Set(["NON_RETAIN", "RETAIN", "READ_ONLY", "UNLINKED", "BEGIN"]);
 const VAR_KEYWORDS = ["VAR_INPUT", "VAR_OUTPUT", "VAR_IN_OUT", "VAR_TEMP", "VAR_CONSTANT", "VAR"];
 
 /** SCL's own reserved statement/operator keywords -- a real instruction
@@ -1166,7 +1190,14 @@ function parseBlockDeclaration(cur: TokenCursor): ParsedBlockFile | null {
   const nameTok = cur.next();
   const name = nameTok.kind === "string" ? (nameTok.value ?? nameTok.text) : nameTok.text;
 
-  if (cur.isPunct("{")) parsePragmaBlock(cur); // block-level attributes, e.g. S7_Language
+  // Block-level attributes, e.g. S7_Language / S7_Optimized_Access, and (on an
+  // instruction instance DB) InstructionName -- see ParsedBlockFile.
+  const headerPragma = cur.isPunct("{") ? parsePragmaBlock(cur) : null;
+  const instructionName = headerPragma?.InstructionName;
+  let instanceOf: { name: string; quoted: boolean } | undefined;
+  // Only the HEADER region can carry the instance-of line; once a VAR section
+  // or the body starts, anything left is data/statements.
+  let headerDone = false;
 
   const varSections: VarSection[] = [];
   const networks: NetworkNode[] = [];
@@ -1193,6 +1224,7 @@ function parseBlockDeclaration(cur: TokenCursor): ParsedBlockFile | null {
       }
       cur.tryIdent("END_VAR");
       varSections.push({ kind: varKw, members });
+      headerDone = true;
       continue;
     }
 
@@ -1210,6 +1242,7 @@ function parseBlockDeclaration(cur: TokenCursor): ParsedBlockFile | null {
     }
 
     if (cur.isIdent("BEGIN")) {
+      headerDone = true;
       const body = parseSclBody(cur, endKeyword);
       sclCalls.push(...body.calls);
       sclOperandRefs.push(...body.operandRefs);
@@ -1219,11 +1252,27 @@ function parseBlockDeclaration(cur: TokenCursor): ParsedBlockFile | null {
       continue;
     }
 
+    // A DATA_BLOCK's instance-of line lives here, among the header tokens this
+    // loop otherwise skips. Told apart from the other header entries by shape:
+    // `VERSION : 0.1` / `TITLE = '...'` / `AUTHOR : x` are all followed by
+    // `:`/`=`, and the standalone markers (NON_RETAIN, ...) are known
+    // keywords -- what remains is the type name. See ParsedBlockFile.
+    if (blockType === "DATA_BLOCK" && !headerDone && !instanceOf) {
+      const t = cur.peek();
+      if (t.kind === "string" && t.text.startsWith('"')) {
+        instanceOf = { name: t.value ?? t.text, quoted: true };
+      } else if (t.kind === "ident" && !DB_HEADER_KEYWORDS.has(t.text.toUpperCase())) {
+        const nxt = cur.peek(1);
+        const isLabelled = !!nxt && ((nxt.kind === "punct" && (nxt.text === ":" || nxt.text === "=")) || (nxt.kind === "op" && nxt.text === "="));
+        if (!isLabelled) instanceOf = { name: t.text, quoted: false };
+      }
+    }
+
     cur.next(); // defensive skip: VERSION, NON_RETAIN, TITLE = '...', etc.
   }
   cur.tryIdent(endKeyword);
 
-  return { blockType, name, varSections, networks, sclCalls, sclOperandRefs, sclConditionChecks, sclAssignments, sclMissingSemicolons };
+  return { blockType, name, varSections, networks, sclCalls, sclOperandRefs, sclConditionChecks, sclAssignments, sclMissingSemicolons, instanceOf, instructionName };
 }
 
 /** Skips one `TYPE "Name" ... END_TYPE` declaration wholesale -- parsing its

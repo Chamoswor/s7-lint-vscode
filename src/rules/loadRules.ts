@@ -3,6 +3,7 @@
 import * as fs from "fs";
 import * as path from "path";
 import * as yaml from "js-yaml";
+import { isSclFile } from "./fileLanguage";
 import {
   AnyPointerRegistry,
   BaseTypeRegistry,
@@ -36,16 +37,14 @@ function readYaml<T>(filePath: string): T {
  * entry's OWN `language` field (if it sets one) always wins over this. */
 const FILE_LANGUAGE_KEY = "$fileLanguage";
 
-/** Naming convention for a dedicated SCL-casing sibling file (e.g.
- * `04-timers-SCL.yaml` next to `04-timers.yaml`) -- a FULL standalone
- * entry per instruction, in SCL's own calling convention (real SCL
- * parameter-name casing, every FBD-implicit pin made explicit), loaded
- * into `RuleSet.sclInstructions` -- a SEPARATE map from `RuleSet.
- * instructions`, so e.g. `TP`'s SCL-cased entry here doesn't collide
- * with (overwrite) `04-timers.yaml`'s own FBD-cased `TP` entry in the
- * shared map. See instruction-registry/README.md's "SCL as a third
- * language" section. */
-const SCL_ONLY_SUFFIX = "-SCL.yaml";
+// SCL files are routed into `RuleSet.sclInstructions` (a SEPARATE map from
+// `RuleSet.instructions`) so e.g. an SCL-cased `TP` entry doesn't collide with
+// the graphical (LAD/FBD) `TP` entry in the shared map. Which files are "SCL"
+// is decided by `isSclFile` (basename prefix `SCL-*.yaml` OR suffix
+// `*-SCL.yaml`) -- see rules/fileLanguage.ts. (Previously this keyed only off
+// the `-SCL.yaml` suffix, which matched none of the repo's prefix-named files,
+// so every SCL entry fell into the general map and silently collided with its
+// LAD/FBD namesake.)
 
 /** A reference/copy-me schema file, not real registry data -- never a real
  * instruction name (all of those are plain PLC identifiers), so it can't
@@ -145,8 +144,8 @@ export function loadRuleSet(resourcesDir: string): RuleSet {
   const composition = readYaml<CompositionRules>(path.join(typeDir, "composition-rules.yaml"));
   const categoryIndex = readYaml<CategoryIndex>(path.join(typeDir, "category-index.yaml"));
   const bcdFormats = readYaml<BcdFormatRegistry>(path.join(typeDir, "bcd-formats.yaml"));
-  const instructions = loadInstructionRegistry(instrDir, (f) => !f.endsWith(SCL_ONLY_SUFFIX));
-  const sclInstructions = loadInstructionRegistry(instrDir, (f) => f.endsWith(SCL_ONLY_SUFFIX));
+  const instructions = loadInstructionRegistry(instrDir, (f) => !isSclFile(f));
+  const sclInstructions = loadInstructionRegistry(instrDir, (f) => isSclFile(f));
   const anyPointer = readYaml<AnyPointerRegistry>(path.join(typeDir, "any-pointer.yaml"));
   const pointerType = readYaml<PointerTypeRegistry>(path.join(typeDir, "pointer-type.yaml"));
   const references = readYaml<ReferencesRegistry>(path.join(typeDir, "references.yaml"));

@@ -33,6 +33,7 @@
   ],
   "activationEvents": [
     "workspaceContains:**/*.s7dcl",
+    "workspaceContains:**/*.db",
     "workspaceContains:**/*.udt",
     "workspaceContains:**/*.s7res",
     "workspaceContains:**/*.scl"
@@ -43,7 +44,8 @@
       {
         "id": "s7dcl",
         "extensions": [
-          ".s7dcl"
+          ".s7dcl",
+          ".db"
         ],
         "aliases": [
           "S7 Declaration (LAD/FBD)"
@@ -106,6 +108,10 @@
       {
         "command": "tiaLint.showRuleStats",
         "title": "S7 Lint: Show Loaded Rule Stats"
+      },
+      {
+        "command": "tiaLint.openInstructionEditor",
+        "title": "S7 Lint: Open Instruction Registry Editor"
       }
     ],
     "semanticTokenTypes": [
@@ -157,9 +163,15 @@
   "scripts": {
     "vscode:prepublish": "npm run bundle",
     "compile": "tsc -p ./",
-    "bundle": "npm run compile && esbuild src/extension.ts --bundle --platform=node --format=cjs --external:vscode --outfile=dist/extension.js --sourcemap",
+    "typecheck:webview": "tsc -p tsconfig.webview.json",
+    "bundle": "npm run compile && npm run bundle:ext && npm run bundle:webview",
+    "bundle:ext": "esbuild src/extension.ts --bundle --platform=node --format=cjs --external:vscode --outfile=dist/extension.js --sourcemap",
+    "bundle:webview": "esbuild src/instructionEditor/webview/main.ts --bundle --format=iife --platform=browser --outfile=dist/instructionEditor.webview.js --sourcemap",
     "watch": "tsc -watch -p ./",
-    "test": "npm run compile && npm run test:completion && npm run test:quickfix && npm run test:manifest && npm run test:annotated && npm run test:smoke",
+    "test": "npm run compile && npm run typecheck:webview && npm run test:completion && npm run test:quickfix && npm run test:manifest && npm run test:annotated && npm run test:instance-context && npm run test:editor && npm run test:editor-service && npm run test:smoke",
+    "test:instance-context": "node scripts/test-instance-type-context.js",
+    "test:editor": "node scripts/test-instruction-editor.js",
+    "test:editor-service": "node scripts/test-editor-service.js",
     "test:completion": "node scripts/test-completion-context.js",
     "test:quickfix": "node scripts/test-instance-quickfix.js",
     "test:manifest": "node scripts/run-manifest-smoke-tests.js",
@@ -169,7 +181,10 @@
   },
   "dependencies": {
     "fast-xml-parser": "^5.10.0",
-    "js-yaml": "^4.1.0"
+    "htm": "^3.1.1",
+    "js-yaml": "^4.1.0",
+    "preact": "^10.29.7",
+    "yaml": "^2.9.0"
   },
   "devDependencies": {
     "@types/js-yaml": "^4.0.9",

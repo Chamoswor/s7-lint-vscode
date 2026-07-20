@@ -24,6 +24,7 @@ import { S7ResDefinitionProvider } from "./providers/s7resDefinition";
 import { S7ResRenameProvider } from "./providers/s7resRename";
 import { loadRuleSet } from "./rules/loadRules";
 import { RuleSet } from "./rules/types";
+import { RegistryEditorPanel } from "./instructionEditor/panel";
 
 const S7DCL_SELECTOR: vscode.DocumentSelector = [{ language: "s7dcl" }, { language: "s7udt" }, { language: "s7scl" }];
 const S7RES_SELECTOR: vscode.DocumentSelector = [{ pattern: "**/*.s7res" }];
@@ -99,6 +100,23 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     await cacheManager.rebuild();
   });
 
+  // Keep open buffers visible to the shared block index, so hover/definition/
+  // rename/completion resolve a block declared in an UNSAVED document exactly
+  // as the lint pass does (see BlockIndex.setDocumentOverlay). Open/close are
+  // handled here; edits refresh the overlay via lintDocument's debounced pass.
+  const isBlockBearing = (doc: vscode.TextDocument): boolean => {
+    const p = doc.uri.fsPath.toLowerCase();
+    return p.endsWith(".scl") || p.endsWith(".s7dcl") || p.endsWith(".db");
+  };
+  const syncBlockOverlay = (doc: vscode.TextDocument): void => {
+    if (isBlockBearing(doc)) cacheManager.getBlockIndex().setDocumentOverlay(doc.uri.fsPath, doc.getText());
+  };
+  for (const doc of vscode.workspace.textDocuments) syncBlockOverlay(doc);
+  context.subscriptions.push(vscode.workspace.onDidOpenTextDocument(syncBlockOverlay));
+  context.subscriptions.push(
+    vscode.workspace.onDidCloseTextDocument((doc) => cacheManager.getBlockIndex().clearDocumentOverlay(doc.uri.fsPath))
+  );
+
   context.subscriptions.push(vscode.workspace.onDidOpenTextDocument(lintDocument));
   context.subscriptions.push(vscode.workspace.onDidSaveTextDocument(lintDocument));
 
@@ -152,6 +170,11 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
       );
     })
   );
+  context.subscriptions.push(
+    vscode.commands.registerCommand("tiaLint.openInstructionEditor", () => {
+      RegistryEditorPanel.createOrShow(context, resourcesDir, output);
+    })
+  );
 }
 
 function lintDocument(doc: vscode.TextDocument): void {
@@ -169,20 +192,25 @@ function lintDocument(doc: vscode.TextDocument): void {
     // parseS7dclFile. Each one gets its own SCL instruction-call check;
     // there's no NETWORK/RUNG wire-rooting or LAD/FBD-style AST here.
     const text = doc.getText();
+    // Keep this buffer's own blocks in the shared index before checking it,
+    // so an unsaved declaration resolves for the lint pass AND for hover/
+    // definition/completion alike -- see BlockIndex.setDocumentOverlay.
+    cacheManager.getBlockIndex().setDocumentOverlay(fsPath, text);
+    const blockIndex = cacheManager.getBlockIndex();
     for (const block of parseS7dclFile(text)) {
-      for (const d of checkSclInstructions(block, ruleSet, cacheManager.getBlockIndex(), cacheManager.getTypeCacheResult())) {
+      for (const d of checkSclInstructions(block, ruleSet, blockIndex, cacheManager.getTypeCacheResult())) {
         diagnostics.push(toVscodeDiagnostic(doc, d));
       }
-      for (const d of checkUndeclaredIdentifiers(block, cacheManager.getBlockIndex(), cacheManager.getTypeCacheResult(), ruleSet)) {
+      for (const d of checkUndeclaredIdentifiers(block, blockIndex, cacheManager.getTypeCacheResult(), ruleSet)) {
         diagnostics.push(toVscodeDiagnostic(doc, d));
       }
-      for (const d of checkIllegalDotAccess(block, cacheManager.getBlockIndex(), cacheManager.getTypeCacheResult(), ruleSet)) {
+      for (const d of checkIllegalDotAccess(block, blockIndex, cacheManager.getTypeCacheResult(), ruleSet)) {
         diagnostics.push(toVscodeDiagnostic(doc, d));
       }
-      for (const d of checkSclConditionTypes(block, cacheManager.getBlockIndex(), cacheManager.getTypeCacheResult(), ruleSet)) {
+      for (const d of checkSclConditionTypes(block, blockIndex, cacheManager.getTypeCacheResult(), ruleSet)) {
         diagnostics.push(toVscodeDiagnostic(doc, d));
       }
-      for (const d of checkSclExpressionTypes(block, ruleSet, cacheManager.getBlockIndex(), cacheManager.getTypeCacheResult())) {
+      for (const d of checkSclExpressionTypes(block, ruleSet, blockIndex, cacheManager.getTypeCacheResult())) {
         diagnostics.push(toVscodeDiagnostic(doc, d));
       }
     }
@@ -192,11 +220,16 @@ function lintDocument(doc: vscode.TextDocument): void {
     // Literal-vs-declared-type checks + UDT-cache-relevant spans -- covers
     // every declaration in the file (see analysis/documentIndex.ts's own
     // multi-declaration top-level walk).
-    for (const d of buildDocumentIndex(text, ruleSet, cacheManager.getBlockIndex(), fsPath, getMlcLocale(doc.uri)).diagnostics) {
+    for (const d of buildDocumentIndex(text, ruleSet, blockIndex, fsPath, getMlcLocale(doc.uri)).diagnostics) {
       diagnostics.push(toVscodeDiagnostic(doc, d));
     }
   } else if (isS7dcl) {
     const text = doc.getText();
+    // Keep this buffer's own blocks in the shared index before checking it,
+    // so an unsaved declaration resolves for the lint pass AND for hover/
+    // definition/completion alike -- see BlockIndex.setDocumentOverlay.
+    cacheManager.getBlockIndex().setDocumentOverlay(fsPath, text);
+    const blockIndex = cacheManager.getBlockIndex();
     if (detectS7dclKind(text) === "block") {
       const block = parseS7dclBlock(text);
       if (block) {
@@ -206,10 +239,10 @@ function lintDocument(doc: vscode.TextDocument): void {
         for (const d of checkLadWiring(block, ruleSet)) {
           diagnostics.push(toVscodeDiagnostic(doc, d));
         }
-        for (const d of checkUndeclaredIdentifiers(block, cacheManager.getBlockIndex(), cacheManager.getTypeCacheResult(), ruleSet)) {
+        for (const d of checkUndeclaredIdentifiers(block, blockIndex, cacheManager.getTypeCacheResult(), ruleSet)) {
           diagnostics.push(toVscodeDiagnostic(doc, d));
         }
-        for (const d of checkIllegalDotAccess(block, cacheManager.getBlockIndex(), cacheManager.getTypeCacheResult(), ruleSet)) {
+        for (const d of checkIllegalDotAccess(block, blockIndex, cacheManager.getTypeCacheResult(), ruleSet)) {
           diagnostics.push(toVscodeDiagnostic(doc, d));
         }
         for (const d of checkStructCountPerDataBlock(block, ruleSet)) {
@@ -223,7 +256,7 @@ function lintDocument(doc: vscode.TextDocument): void {
     // Literal-vs-declared-type checks (VAR defaults, instruction pin
     // arguments) -- see analysis/documentIndex.ts. Runs for both "block"
     // and "type"-kind files; independent of the AST-based checks above.
-    for (const d of buildDocumentIndex(text, ruleSet, cacheManager.getBlockIndex(), fsPath, getMlcLocale(doc.uri)).diagnostics) {
+    for (const d of buildDocumentIndex(text, ruleSet, blockIndex, fsPath, getMlcLocale(doc.uri)).diagnostics) {
       diagnostics.push(toVscodeDiagnostic(doc, d));
     }
   }

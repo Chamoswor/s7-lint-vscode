@@ -22,6 +22,12 @@ const S7DCL_GLOB = "**/*.s7dcl";
 // rather than picking one based on the file's very first keyword the way
 // S7DCL_GLOB's files do.
 const SCL_GLOB = "**/*.scl";
+// TIA DATA_BLOCK exports (see docs/fbd-knowhow/reference-exports/*.db). These
+// declare program blocks, not UDTs, so they feed ONLY the block index -- which
+// is what lets a global instance-DB call like `"R_TRIG_DB"();` resolve.
+// Without them an instance DB is invisible to the workspace and every such
+// call is wrongly reported as `external-symbol-not-found`.
+const DB_GLOB = "**/*.db";
 // Not part of the type cache itself (analysis/documentIndex.ts reads each
 // document's sibling `.s7res` on demand, uncached) -- watched here anyway
 // so editing an MLC comment's text triggers a relint + inline-hint refresh
@@ -110,6 +116,15 @@ export class CacheManager {
       blockFiles.push({ path: uri.fsPath, text });
     }
 
+    // `.db` exports are always program blocks (a DATA_BLOCK declaration),
+    // never UDT sources -- so they go straight to the block index without the
+    // detectS7dclKind branch `.s7dcl` needs.
+    const dbUris = await vscode.workspace.findFiles(DB_GLOB, EXCLUDE_GLOB);
+    for (const uri of dbUris) {
+      const text = Buffer.from(await vscode.workspace.fs.readFile(uri)).toString("utf-8");
+      blockFiles.push({ path: uri.fsPath, text });
+    }
+
     this.result = buildTypeCache(this.ruleSet, files);
     this.blockIndex.rebuild(blockFiles);
     this.output.appendLine(
@@ -120,7 +135,7 @@ export class CacheManager {
   }
 
   watch(context: vscode.ExtensionContext, onChange: () => void): void {
-    for (const glob of [UDT_GLOB, XML_GLOB, S7DCL_GLOB, S7RES_GLOB, SCL_GLOB]) {
+    for (const glob of [UDT_GLOB, XML_GLOB, S7DCL_GLOB, S7RES_GLOB, SCL_GLOB, DB_GLOB]) {
       const watcher = vscode.workspace.createFileSystemWatcher(glob);
       watcher.onDidChange(onChange);
       watcher.onDidCreate(onChange);

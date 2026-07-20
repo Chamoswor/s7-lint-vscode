@@ -28,9 +28,22 @@ import { TypeCacheResult } from "../cache/typeCache";
 import { Lexer } from "../parser/lexer";
 import { typeRefLeafName, typeRefToText, typeRefTopLevelName } from "../parser/typeRef";
 import { InstructionEntry, RuleSet } from "../rules/types";
-import { buildInstanceDeclarationEdit, buildSingleInstanceDbEdit, resolveBlockInstanceContext } from "./instanceQuickFix";
+import {
+  buildInstanceDeclarationEdit,
+  buildSingleInstanceDbEdit,
+  fbInstanceRef,
+  instructionInstanceRef,
+  resolveBlockInstanceContext,
+} from "./instanceQuickFix";
 
 const CHAIN_BEFORE_DOT_RE = /(#[A-Za-z_][A-Za-z0-9_]*(?:\.[A-Za-z_][A-Za-z0-9_]*)*)\.$/;
+/** The same member-chain trigger, but rooted at a QUOTED external block
+ * reference (`"R_TRIG_DB".` / `"Pump_DB".member.`) instead of a `#tag`.
+ * Siemens' own convention for referencing a workspace block -- including a
+ * global instance DB, which is the only way to reach an `instance-dot`
+ * instruction's members from outside a FUNCTION_BLOCK. Capture 1 is the
+ * quoted name, capture 2 the already-typed `.member` chain (possibly empty). */
+const QUOTED_CHAIN_BEFORE_DOT_RE = /"([A-Za-z_][A-Za-z0-9_]*)"((?:\.[A-Za-z_][A-Za-z0-9_]*)*)\.$/;
 const HASH_TAG_RE = /#[A-Za-z0-9_]*$/;
 // A bare double-quote, or one with some identifier characters already
 // typed after it -- e.g. `"` or `"Test_D` -- the start of an external
@@ -79,6 +92,27 @@ export class S7dclCompletionProvider implements vscode.CompletionItemProvider {
   private executableCompletions(document: vscode.TextDocument, position: vscode.Position, text: string, offset: number): vscode.CompletionItem[] | undefined {
     const before = text.slice(0, offset);
 
+    // A quoted external base (`"R_TRIG_DB".`) resolves its members from the
+    // referenced BLOCK rather than a local declaration -- and when that block
+    // is an instance DB, from whatever it instances (see `instanceMemberRoot`).
+    const quotedMatch = QUOTED_CHAIN_BEFORE_DOT_RE.exec(before);
+    if (quotedMatch) {
+      const baseBlock = this.blockIndex.get(quotedMatch[1]);
+      const root = this.instanceMemberRoot(baseBlock);
+      if (!root) return undefined;
+      const rest = quotedMatch[2] ? quotedMatch[2].split(".").filter(Boolean) : [];
+      const items = this.memberCompletions(root.ownerBlock, root.topLevelName, rest, root.preferScl);
+      // Dotting into a BARE FUNCTION_BLOCK type is illegal (TIA refuses it --
+      // see the `dot-access-needs-instance` diagnostic). Still offer its
+      // members, but make accepting one ALSO create a single-instance DB and
+      // repoint the reference at it, so one keystroke yields legal code --
+      // the same auto-import mechanism the instruction completion uses.
+      if (items && baseBlock?.blockType === "FUNCTION_BLOCK") {
+        return this.withInstanceAutoCreate(document, position, items, baseBlock, quotedMatch.index);
+      }
+      return items;
+    }
+
     const match = CHAIN_BEFORE_DOT_RE.exec(before);
     if (!match) {
       if (HASH_TAG_RE.test(before)) {
@@ -102,20 +136,99 @@ export class S7dclCompletionProvider implements vscode.CompletionItemProvider {
     const decl = localDecls.get(baseTag);
     if (!decl) return undefined;
 
-    let ownerBlock: BlockInfo | undefined = this.blockIndex.get(decl.leafName ?? "");
-    let topLevelName: string | null = decl.topLevelName;
+    return this.memberCompletions(this.blockIndex.get(decl.leafName ?? ""), decl.topLevelName, chainRest);
+  }
 
-    // Walk any already-typed `.member` segments before the trigger dot
-    // (e.g. completing the SECOND dot in `#fbX.someInstance.`), same
-    // one-level-per-hop resolution as the hover/definition providers.
+  /**
+   * Attaches "create the instance too" edits to every member completion for a
+   * BARE FUNCTION_BLOCK base.
+   *
+   * `"FB_Pump".x` is illegal on its own -- a FUNCTION_BLOCK's members are only
+   * reachable through an instance. Accepting any of these items therefore also
+   * inserts a single-instance DATA_BLOCK and rewrites the base reference to it,
+   * turning `"FB_Pump".x` into `"FB_Pump_DB".x` in one action. The
+   * single-instance DB (rather than a local multi-instance) is used because it
+   * is legal from every calling block type -- an FC/OB has no Static section.
+   *
+   * Returns the items unchanged if no instance could be planned, so completion
+   * still works (just without the auto-fix) rather than disappearing.
+   */
+  private withInstanceAutoCreate(
+    document: vscode.TextDocument,
+    position: vscode.Position,
+    items: vscode.CompletionItem[],
+    fb: BlockInfo,
+    baseStartOffset: number
+  ): vscode.CompletionItem[] {
+    const ctx = resolveBlockInstanceContext(document, position.line);
+    if (!ctx) return items;
+    const plan = buildSingleInstanceDbEdit(document, ctx, fbInstanceRef(fb.name), this.blockIndex, this.getTypeCache());
+    if (!plan) return items;
+
+    // The base token spans both quotes: `"FB_Pump"`.
+    const baseRange = new vscode.Range(
+      document.positionAt(baseStartOffset),
+      document.positionAt(baseStartOffset + fb.name.length + 2)
+    );
+    const instanceEdits = [plan.edit, vscode.TextEdit.replace(baseRange, `"${plan.dbName}"`)];
+    return items.map((item) => {
+      item.additionalTextEdits = instanceEdits;
+      item.detail = `${item.detail ?? ""} — creates "${plan.dbName}"`.trim();
+      item.documentation = new vscode.MarkdownString(
+        `\`"${fb.name}"\` is a FUNCTION_BLOCK type, not an instance.\n\n` +
+          `Accepting this also generates \`DATA_BLOCK "${plan.dbName}"\` and points the reference at it.`
+      );
+      return item;
+    });
+  }
+
+  /** Where a block reference's members come from.
+   *
+   * An INSTANCE DATA_BLOCK has no VAR section of its own, so `"R_TRIG_DB".`
+   * must offer what it is an INSTANCE OF: a FUNCTION_BLOCK's interface (quoted
+   * instance-of line) or an instruction's pins (unquoted / `InstructionName`
+   * pragma, resolved via `listInstanceMembers` like `#inst.` already is).
+   * Any other block just contributes its own vars. Mirrors the hover
+   * resolution in analysis/documentIndex.ts. */
+  private instanceMemberRoot(
+    block: BlockInfo | undefined
+  ): { ownerBlock: BlockInfo | undefined; topLevelName: string | null; preferScl?: boolean } | undefined {
+    if (!block) return undefined;
+    if (block.blockType === "DATA_BLOCK" && block.instanceOf) {
+      if (block.instanceOf.quoted) {
+        const target = this.blockIndex.get(block.instanceOf.name);
+        return target ? { ownerBlock: target, topLevelName: null } : undefined;
+      }
+      return { ownerBlock: undefined, topLevelName: block.instructionName ?? block.instanceOf.name, preferScl: true };
+    }
+    return { ownerBlock: block, topLevelName: null };
+  }
+
+  /** Walks any already-typed `.member` segments before the trigger dot (e.g.
+   * the SECOND dot in `#fbX.someInstance.`), then emits the member list for
+   * whatever it lands on -- a block's VAR members, or an instance type's
+   * pins. Shared by the `#tag.` and `"Quoted".` entry points. */
+  private memberCompletions(
+    startBlock: BlockInfo | undefined,
+    startTopLevelName: string | null,
+    chainRest: string[],
+    preferScl = false
+  ): vscode.CompletionItem[] | undefined {
+    let ownerBlock = startBlock;
+    let topLevelName = startTopLevelName;
+
     for (const segment of chainRest) {
       if (ownerBlock) {
         const memberVar = ownerBlock.vars.get(segment);
         if (!memberVar) return undefined;
         topLevelName = typeRefTopLevelName(memberVar.member.typeRef);
-        ownerBlock = this.blockIndex.get(typeRefLeafName(memberVar.member.typeRef) ?? "");
+        const next = this.blockIndex.get(typeRefLeafName(memberVar.member.typeRef) ?? "");
+        // A member typed as an instance DB hops through to what it instances.
+        const root = next ? this.instanceMemberRoot(next) : undefined;
+        ownerBlock = root ? root.ownerBlock : next;
+        if (root?.topLevelName) topLevelName = root.topLevelName;
       } else if (topLevelName) {
-        const found = listInstanceMembers(this.ruleSet, topLevelName).find((m) => m.name.toLowerCase() === segment.toLowerCase());
+        const found = listInstanceMembers(this.ruleSet, topLevelName, preferScl).find((m) => m.name.toLowerCase() === segment.toLowerCase());
         if (!found) return undefined;
         topLevelName = found.dataTypes.length === 1 ? found.dataTypes[0] : null;
         ownerBlock = undefined;
@@ -134,7 +247,7 @@ export class S7dclCompletionProvider implements vscode.CompletionItemProvider {
       });
     }
     if (topLevelName) {
-      const members = listInstanceMembers(this.ruleSet, topLevelName);
+      const members = listInstanceMembers(this.ruleSet, topLevelName, preferScl);
       if (members.length === 0) return undefined;
       return members.map((m) => {
         const item = new vscode.CompletionItem(m.name, vscode.CompletionItemKind.Property);
@@ -699,9 +812,10 @@ export class S7dclCompletionProvider implements vscode.CompletionItemProvider {
       item.detail = entry.family;
       item.documentation = new vscode.MarkdownString(renderInstructionHover(name, entry, isScl));
 
-      if (instanceCtx && entry.callShape === "instance-dot") {
-        const multiPlan = buildInstanceDeclarationEdit(document, instanceCtx, entry);
-        const singlePlan = buildSingleInstanceDbEdit(document, instanceCtx, entry, this.blockIndex, this.getTypeCache());
+      const instRef = instructionInstanceRef(entry);
+      if (instanceCtx && instRef && entry.callShape === "instance-dot") {
+        const multiPlan = buildInstanceDeclarationEdit(document, instanceCtx, instRef);
+        const singlePlan = buildSingleInstanceDbEdit(document, instanceCtx, instRef, this.blockIndex, this.getTypeCache());
 
         if (multiPlan) {
           item.kind = vscode.CompletionItemKind.Constructor;

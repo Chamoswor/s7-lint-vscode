@@ -25,6 +25,8 @@ const { BlockIndex } = require("../out/analysis/blockIndex");
 const { buildTypeCache } = require("../out/cache/typeCache");
 const {
   findInstanceDotEntry,
+  instructionInstanceRef,
+  fbInstanceRef,
   resolveBlockInstanceContext,
   buildInstanceDeclarationEdit,
   buildSingleInstanceDbEdit,
@@ -77,6 +79,10 @@ function test(name, fn) {
 
 const mcPowerEntry = findInstanceDotEntry(ruleSet, "MC_Power");
 assert.ok(mcPowerEntry, "fixture precondition: MC_Power must resolve as an instance-dot entry");
+// The builders take an InstanceTypeRef (instruction OR user FB), not the
+// raw registry entry -- see instanceQuickFix.ts's InstanceTypeRef.
+const mcPowerRef = instructionInstanceRef(mcPowerEntry);
+assert.ok(mcPowerRef, "fixture precondition: MC_Power must have a confirmed instanceType");
 
 // --- 1. FB without a plain VAR section ---------------------------------
 {
@@ -86,7 +92,7 @@ assert.ok(mcPowerEntry, "fixture precondition: MC_Power must resolve as an insta
 
   test("1a. FB without VAR section -> multi-instance creates a new VAR section", () => {
     assert.ok(ctx);
-    const plan = buildInstanceDeclarationEdit(doc, ctx, mcPowerEntry);
+    const plan = buildInstanceDeclarationEdit(doc, ctx, mcPowerRef);
     assert.ok(plan, "multi-instance plan should be produced inside a FUNCTION_BLOCK");
     assert.ok(plan.edit.newText.startsWith("VAR\n"), "should create a brand-new VAR section");
     assert.ok(plan.edit.newText.includes("END_VAR"));
@@ -94,7 +100,7 @@ assert.ok(mcPowerEntry, "fixture precondition: MC_Power must resolve as an insta
   });
 
   test("1b. FB without VAR section -> single-instance DB is available", () => {
-    const plan = buildSingleInstanceDbEdit(doc, ctx, mcPowerEntry, emptyBlockIndex(), emptyTypeCache());
+    const plan = buildSingleInstanceDbEdit(doc, ctx, mcPowerRef, emptyBlockIndex(), emptyTypeCache());
     assert.ok(plan, "single-instance plan should be produced");
     assert.ok(plan.edit.newText.startsWith(`DATA_BLOCK "${plan.dbName}"`));
   });
@@ -107,14 +113,14 @@ assert.ok(mcPowerEntry, "fixture precondition: MC_Power must resolve as an insta
   const ctx = resolveBlockInstanceContext(doc, 5);
 
   test("2a. FB with existing VAR section -> multi-instance member is appended, not a new section", () => {
-    const plan = buildInstanceDeclarationEdit(doc, ctx, mcPowerEntry);
+    const plan = buildInstanceDeclarationEdit(doc, ctx, mcPowerRef);
     assert.ok(plan);
     assert.ok(!plan.edit.newText.startsWith("VAR"), "must not create a second VAR section");
     assert.strictEqual(plan.edit.position.line, 3, "must insert right before the existing END_VAR line");
   });
 
   test("2b. FB with existing VAR section -> single-instance remains a separate, available action", () => {
-    const plan = buildSingleInstanceDbEdit(doc, ctx, mcPowerEntry, emptyBlockIndex(), emptyTypeCache());
+    const plan = buildSingleInstanceDbEdit(doc, ctx, mcPowerRef, emptyBlockIndex(), emptyTypeCache());
     assert.ok(plan);
   });
 }
@@ -128,12 +134,12 @@ assert.ok(mcPowerEntry, "fixture precondition: MC_Power must resolve as an insta
   test("3a. FC -> multi-instance is NOT available", () => {
     assert.ok(ctx);
     assert.strictEqual(ctx.span.blockType, "FUNCTION");
-    const plan = buildInstanceDeclarationEdit(doc, ctx, mcPowerEntry);
+    const plan = buildInstanceDeclarationEdit(doc, ctx, mcPowerRef);
     assert.strictEqual(plan, undefined, "a FUNCTION has no Static section -- must never offer a multi-instance");
   });
 
   test("3b. FC -> single-instance DB generation IS available", () => {
-    const plan = buildSingleInstanceDbEdit(doc, ctx, mcPowerEntry, emptyBlockIndex(), emptyTypeCache());
+    const plan = buildSingleInstanceDbEdit(doc, ctx, mcPowerRef, emptyBlockIndex(), emptyTypeCache());
     assert.ok(plan);
   });
 }
@@ -147,12 +153,12 @@ assert.ok(mcPowerEntry, "fixture precondition: MC_Power must resolve as an insta
   test("4a. OB -> multi-instance is NOT available", () => {
     assert.ok(ctx);
     assert.strictEqual(ctx.span.blockType, "ORGANIZATION_BLOCK");
-    const plan = buildInstanceDeclarationEdit(doc, ctx, mcPowerEntry);
+    const plan = buildInstanceDeclarationEdit(doc, ctx, mcPowerRef);
     assert.strictEqual(plan, undefined, "an ORGANIZATION_BLOCK has no Static section -- must never offer a multi-instance");
   });
 
   test("4b. OB -> single-instance DB generation IS available", () => {
-    const plan = buildSingleInstanceDbEdit(doc, ctx, mcPowerEntry, emptyBlockIndex(), emptyTypeCache());
+    const plan = buildSingleInstanceDbEdit(doc, ctx, mcPowerRef, emptyBlockIndex(), emptyTypeCache());
     assert.ok(plan);
   });
 }
@@ -169,7 +175,7 @@ assert.ok(mcPowerEntry, "fixture precondition: MC_Power must resolve as an insta
     );
     const doc = makeDocument(src, EndOfLine.LF);
     const ctx = resolveBlockInstanceContext(doc, 6);
-    const plan = buildSingleInstanceDbEdit(doc, ctx, mcPowerEntry, emptyBlockIndex(), emptyTypeCache());
+    const plan = buildSingleInstanceDbEdit(doc, ctx, mcPowerRef, emptyBlockIndex(), emptyTypeCache());
     assert.ok(plan);
     assert.ok(plan.edit.newText.includes("S7_Optimized_Access := 'TRUE'"));
   });
@@ -180,7 +186,7 @@ assert.ok(mcPowerEntry, "fixture precondition: MC_Power must resolve as an insta
     );
     const doc = makeDocument(src, EndOfLine.LF);
     const ctx = resolveBlockInstanceContext(doc, 6);
-    const plan = buildSingleInstanceDbEdit(doc, ctx, mcPowerEntry, emptyBlockIndex(), emptyTypeCache());
+    const plan = buildSingleInstanceDbEdit(doc, ctx, mcPowerRef, emptyBlockIndex(), emptyTypeCache());
     assert.ok(plan);
     assert.ok(plan.edit.newText.includes("S7_Optimized_Access := 'FALSE'"));
     assert.ok(!plan.edit.newText.includes("'TRUE'"), "must not default to TRUE");
@@ -190,7 +196,7 @@ assert.ok(mcPowerEntry, "fixture precondition: MC_Power must resolve as an insta
     const src = ['FUNCTION_BLOCK "T7"', "{}", "VAR_TEMP", "  ok : Bool;", "END_VAR", "BEGIN", "  MC_Power(Enable := TRUE);", "END_FUNCTION_BLOCK", ""].join("\n");
     const doc = makeDocument(src, EndOfLine.LF);
     const ctx = resolveBlockInstanceContext(doc, 6);
-    const plan = buildSingleInstanceDbEdit(doc, ctx, mcPowerEntry, emptyBlockIndex(), emptyTypeCache());
+    const plan = buildSingleInstanceDbEdit(doc, ctx, mcPowerRef, emptyBlockIndex(), emptyTypeCache());
     assert.ok(plan);
     assert.ok(!plan.edit.newText.includes("S7_Optimized_Access"));
   });
@@ -199,7 +205,7 @@ assert.ok(mcPowerEntry, "fixture precondition: MC_Power must resolve as an insta
     const src = ['FUNCTION_BLOCK "T8"', "VAR_TEMP", "  ok : Bool;", "END_VAR", "BEGIN", "  MC_Power(Enable := TRUE);", "END_FUNCTION_BLOCK", ""].join("\n");
     const doc = makeDocument(src, EndOfLine.LF);
     const ctx = resolveBlockInstanceContext(doc, 5);
-    const plan = buildSingleInstanceDbEdit(doc, ctx, mcPowerEntry, emptyBlockIndex(), emptyTypeCache());
+    const plan = buildSingleInstanceDbEdit(doc, ctx, mcPowerRef, emptyBlockIndex(), emptyTypeCache());
     assert.ok(plan);
     assert.ok(!plan.edit.newText.includes("S7_Optimized_Access"));
   });
@@ -208,14 +214,14 @@ assert.ok(mcPowerEntry, "fixture precondition: MC_Power must resolve as an insta
     const srcFalseCaller = ['FUNCTION_BLOCK "T9a"', "{ S7_Optimized_Access := 'FALSE' }", "BEGIN", "  MC_Power(Enable := TRUE);", "END_FUNCTION_BLOCK", ""].join("\n");
     const docA = makeDocument(srcFalseCaller, EndOfLine.LF);
     const ctxA = resolveBlockInstanceContext(docA, 3);
-    const planA = buildSingleInstanceDbEdit(docA, ctxA, mcPowerEntry, emptyBlockIndex(), emptyTypeCache());
+    const planA = buildSingleInstanceDbEdit(docA, ctxA, mcPowerRef, emptyBlockIndex(), emptyTypeCache());
     assert.ok(planA.edit.newText.includes("'FALSE'"));
     assert.ok(!planA.edit.newText.includes("'TRUE'"));
 
     const srcTrueCaller = ['FUNCTION_BLOCK "T9b"', "{ S7_Optimized_Access := 'TRUE' }", "BEGIN", "  MC_Power(Enable := TRUE);", "END_FUNCTION_BLOCK", ""].join("\n");
     const docB = makeDocument(srcTrueCaller, EndOfLine.LF);
     const ctxB = resolveBlockInstanceContext(docB, 3);
-    const planB = buildSingleInstanceDbEdit(docB, ctxB, mcPowerEntry, emptyBlockIndex(), emptyTypeCache());
+    const planB = buildSingleInstanceDbEdit(docB, ctxB, mcPowerRef, emptyBlockIndex(), emptyTypeCache());
     assert.ok(planB.edit.newText.includes("'TRUE'"));
     assert.ok(!planB.edit.newText.includes("'FALSE'"));
   });
@@ -232,7 +238,7 @@ assert.ok(mcPowerEntry, "fixture precondition: MC_Power must resolve as an insta
     ].join("\n");
     const doc = makeDocument(src, EndOfLine.LF);
     const ctx = resolveBlockInstanceContext(doc, 4);
-    const plan = buildSingleInstanceDbEdit(doc, ctx, mcPowerEntry, emptyBlockIndex(), emptyTypeCache());
+    const plan = buildSingleInstanceDbEdit(doc, ctx, mcPowerRef, emptyBlockIndex(), emptyTypeCache());
     assert.ok(plan);
     assert.ok(plan.edit.newText.includes("S7_Optimized_Access := 'FALSE'"));
   });
@@ -244,7 +250,7 @@ assert.ok(mcPowerEntry, "fixture precondition: MC_Power must resolve as an insta
     const src = ['FUNCTION_BLOCK "T10"', "VAR", "  MC_POWER_Instance : Int;", "END_VAR", "BEGIN", "  MC_Power(Enable := TRUE);", "END_FUNCTION_BLOCK", ""].join("\n");
     const doc = makeDocument(src, EndOfLine.LF);
     const ctx = resolveBlockInstanceContext(doc, 5);
-    const plan = buildInstanceDeclarationEdit(doc, ctx, mcPowerEntry);
+    const plan = buildInstanceDeclarationEdit(doc, ctx, mcPowerRef);
     assert.ok(plan);
     assert.strictEqual(plan.instanceName, "MC_POWER_Instance_1");
   });
@@ -258,7 +264,7 @@ assert.ok(mcPowerEntry, "fixture precondition: MC_Power must resolve as an insta
     const ctx = resolveBlockInstanceContext(doc, 2);
     const blockIndex = new BlockIndex();
     blockIndex.rebuild([{ path: "other.scl", text: 'DATA_BLOCK "MC_POWER_DB"\nBEGIN\nEND_DATA_BLOCK\n' }]);
-    const plan = buildSingleInstanceDbEdit(doc, ctx, mcPowerEntry, blockIndex, emptyTypeCache());
+    const plan = buildSingleInstanceDbEdit(doc, ctx, mcPowerRef, blockIndex, emptyTypeCache());
     assert.ok(plan);
     assert.strictEqual(plan.dbName, "MC_POWER_DB_1");
   });
@@ -270,7 +276,7 @@ assert.ok(mcPowerEntry, "fixture precondition: MC_Power must resolve as an insta
     const src = ['FUNCTION_BLOCK "T12"', "VAR", "  mc_power_instance : Int;", "END_VAR", "BEGIN", "  MC_Power(Enable := TRUE);", "END_FUNCTION_BLOCK", ""].join("\n");
     const doc = makeDocument(src, EndOfLine.LF);
     const ctx = resolveBlockInstanceContext(doc, 5);
-    const plan = buildInstanceDeclarationEdit(doc, ctx, mcPowerEntry);
+    const plan = buildInstanceDeclarationEdit(doc, ctx, mcPowerRef);
     assert.ok(plan);
     assert.strictEqual(plan.instanceName, "MC_POWER_Instance_1", "must detect the collision despite differing case");
   });
@@ -281,7 +287,7 @@ assert.ok(mcPowerEntry, "fixture precondition: MC_Power must resolve as an insta
     const ctx = resolveBlockInstanceContext(doc, 2);
     const blockIndex = new BlockIndex();
     blockIndex.rebuild([{ path: "other.scl", text: 'DATA_BLOCK "mc_power_db"\nBEGIN\nEND_DATA_BLOCK\n' }]);
-    const plan = buildSingleInstanceDbEdit(doc, ctx, mcPowerEntry, blockIndex, emptyTypeCache());
+    const plan = buildSingleInstanceDbEdit(doc, ctx, mcPowerRef, blockIndex, emptyTypeCache());
     assert.ok(plan);
     assert.strictEqual(plan.dbName, "MC_POWER_DB_1");
   });
@@ -294,7 +300,7 @@ assert.ok(mcPowerEntry, "fixture precondition: MC_Power must resolve as an insta
   test("13a. LF document -> generated edit uses LF only", () => {
     const doc = makeDocument(lines.join("\n"), EndOfLine.LF);
     const ctx = resolveBlockInstanceContext(doc, 5);
-    const plan = buildInstanceDeclarationEdit(doc, ctx, mcPowerEntry);
+    const plan = buildInstanceDeclarationEdit(doc, ctx, mcPowerRef);
     assert.ok(plan);
     assert.ok(plan.edit.newText.includes("\n"));
     assert.ok(!plan.edit.newText.includes("\r\n"), "must not introduce CRLF into an LF document");
@@ -303,7 +309,7 @@ assert.ok(mcPowerEntry, "fixture precondition: MC_Power must resolve as an insta
   test("13b. CRLF document -> generated edit uses CRLF throughout", () => {
     const doc = makeDocument(lines.join("\r\n"), EndOfLine.CRLF);
     const ctx = resolveBlockInstanceContext(doc, 5);
-    const plan = buildInstanceDeclarationEdit(doc, ctx, mcPowerEntry);
+    const plan = buildInstanceDeclarationEdit(doc, ctx, mcPowerRef);
     assert.ok(plan);
     assert.ok(plan.edit.newText.includes("\r\n"));
     assert.ok(!/[^\r]\n/.test(plan.edit.newText), "every newline in the generated text must be preceded by \\r");
@@ -324,13 +330,45 @@ assert.ok(mcPowerEntry, "fixture precondition: MC_Power must resolve as an insta
     assert.ok(plan, "single-instance generation is legal for ANY instance-dot entry with a confirmed instanceType");
   });
 
-  test("14b. Entry with no instanceType -> neither action is offered", () => {
+  test("14b. Entry with no instanceType -> no instance type to declare, so no action", () => {
+    // The "is there an instanceType at all" gate lives in
+    // `instructionInstanceRef` now (the builders take an already-resolved
+    // InstanceTypeRef, which also serves user FUNCTION_BLOCKs). Both callers
+    // -- the Quick Fix provider and the instruction completion -- skip
+    // offering anything when it returns undefined.
     const brokenEntry = { ...mcPowerEntry, instanceType: null };
-    const src = ['FUNCTION_BLOCK "T14b"', "BEGIN", "  Whatever(Enable := TRUE);", "END_FUNCTION_BLOCK", ""].join("\n");
+    assert.strictEqual(instructionInstanceRef(brokenEntry), undefined);
+  });
+}
+
+// --- 14c/d. A user FUNCTION_BLOCK as the instance type ---------------------
+// Dotting into a bare FUNCTION_BLOCK (`"FB_Pump".member`) is illegal in TIA;
+// the fix is to create an INSTANCE of it. An FB instance differs from an
+// instruction instance in exactly two ways: the type is written QUOTED, and
+// there is no `InstructionName` pragma (it isn't a catalog instruction).
+{
+  const fbRef = fbInstanceRef("FB_Pump");
+
+  test("14c. FB multi-instance member is declared with a quoted type and no InstructionName pragma", () => {
+    const src = ['FUNCTION_BLOCK "T14c"', "BEGIN", '  "FB_Pump".x;', "END_FUNCTION_BLOCK", ""].join("\n");
     const doc = makeDocument(src, EndOfLine.LF);
     const ctx = resolveBlockInstanceContext(doc, 2);
-    assert.strictEqual(buildInstanceDeclarationEdit(doc, ctx, brokenEntry), undefined);
-    assert.strictEqual(buildSingleInstanceDbEdit(doc, ctx, brokenEntry, emptyBlockIndex(), emptyTypeCache()), undefined);
+    const plan = buildInstanceDeclarationEdit(doc, ctx, fbRef);
+    assert.ok(plan, "a multi-instance is legal inside a FUNCTION_BLOCK");
+    assert.match(plan.edit.newText, /FB_Pump_Instance : "FB_Pump";/);
+    assert.ok(!plan.edit.newText.includes("InstructionName"), "an FB member carries no InstructionName pragma");
+  });
+
+  test("14d. FB single-instance DB names the FUNCTION_BLOCK quoted, with no InstructionName pragma", () => {
+    const src = ['FUNCTION "T14d" : Void', "BEGIN", '  "FB_Pump".x;', "END_FUNCTION", ""].join("\n");
+    const doc = makeDocument(src, EndOfLine.LF);
+    const ctx = resolveBlockInstanceContext(doc, 2);
+    const plan = buildSingleInstanceDbEdit(doc, ctx, fbRef, emptyBlockIndex(), emptyTypeCache());
+    assert.ok(plan, "single-instance DB generation is legal from a FUNCTION too");
+    assert.strictEqual(plan.dbName, "FB_Pump_DB");
+    assert.match(plan.edit.newText, /DATA_BLOCK "FB_Pump_DB"/);
+    assert.match(plan.edit.newText, /^"FB_Pump"$/m, "the instance-of line is the quoted FB name");
+    assert.ok(!plan.edit.newText.includes("InstructionName"), "an FB instance DB carries no InstructionName pragma");
   });
 }
 
@@ -353,7 +391,7 @@ assert.ok(mcPowerEntry, "fixture precondition: MC_Power must resolve as an insta
     );
     const doc = makeDocument(src, EndOfLine.LF);
     const ctx = resolveBlockInstanceContext(doc, 6);
-    const plan = buildSingleInstanceDbEdit(doc, ctx, mcPowerEntry, emptyBlockIndex(), emptyTypeCache());
+    const plan = buildSingleInstanceDbEdit(doc, ctx, mcPowerRef, emptyBlockIndex(), emptyTypeCache());
     assert.ok(plan);
     assert.strictEqual(plan.dbName, "MC_POWER_DB", "DB name must match the fixture exactly");
 

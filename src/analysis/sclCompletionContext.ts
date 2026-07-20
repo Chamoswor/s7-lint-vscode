@@ -30,6 +30,16 @@ import { RuleSet } from "../rules/types";
  * `findBlockSpan` already makes), so a plain open/close toggle -- not a
  * depth counter -- is enough to track "are we currently inside one". */
 const TOP_LEVEL_KEYWORDS = ["FUNCTION_BLOCK", "FUNCTION", "ORGANIZATION_BLOCK", "DATA_BLOCK", "TYPE"];
+
+/** The matching closers for `TOP_LEVEL_KEYWORDS` -- and ONLY those. This must
+ * be an explicit list, never an `END_`-prefix test: an executable body is full
+ * of STATEMENT closers that share that prefix (`END_IF`, `END_CASE`, `END_FOR`,
+ * `END_WHILE`, `END_REPEAT`, `END_REGION`). Treating one of those as a
+ * top-level closer ends the block early, which made every position after the
+ * first `END_IF;` in a body look like the source-file ROOT -- offering
+ * FUNCTION_BLOCK/DATA_BLOCK/TYPE templates mid-code and, worse, suppressing the
+ * body's own instruction/tag completions. */
+const TOP_LEVEL_CLOSERS = ["END_FUNCTION_BLOCK", "END_FUNCTION", "END_ORGANIZATION_BLOCK", "END_DATA_BLOCK", "END_TYPE"];
 export const VAR_SECTION_KEYWORDS = ["VAR_INPUT", "VAR_OUTPUT", "VAR_IN_OUT", "VAR_TEMP", "VAR_CONSTANT", "VAR"] as const;
 export type SclSection = (typeof VAR_SECTION_KEYWORDS)[number];
 
@@ -372,10 +382,12 @@ export function resolveSclCompletionContext(text: string, offset: number): SclCo
       dataBlockHeaderStart = -1;
       continue;
     }
-    if (up.startsWith("END_")) {
-      // END_FUNCTION_BLOCK/END_FUNCTION/END_ORGANIZATION_BLOCK/END_DATA_BLOCK/
-      // END_TYPE (END_VAR/END_STRUCT already handled above, so this is
-      // always a TOP-LEVEL closer) -- back at the source-file root.
+    if (TOP_LEVEL_CLOSERS.includes(up)) {
+      // A real top-level block closer -- back at the source-file root.
+      // Statement closers (END_IF/END_CASE/END_FOR/END_WHILE/END_REPEAT/
+      // END_REGION) deliberately do NOT match here; they are ordinary body
+      // tokens and must leave `inBody`/`atRoot` untouched. See
+      // TOP_LEVEL_CLOSERS' own comment.
       inBody = false;
       atRoot = true;
       functionHeaderStart = -1;

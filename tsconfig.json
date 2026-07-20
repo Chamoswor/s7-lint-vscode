@@ -16,5 +16,6 @@
     "types": ["node"]
   },
   "include": ["src/**/*.ts"],
-  "exclude": ["node_modules", ".vscode-test", "out"]
+  "// exclude webview": "The webview UI targets the browser (DOM globals, preact/htm) and is bundled by esbuild, not compiled by this Node-targeted tsc build. It is type-checked separately via tsconfig.webview.json.",
+  "exclude": ["node_modules", ".vscode-test", "out", "src/instructionEditor/webview"]
 }

@@ -1,0 +1,18 @@
+{
+  "// purpose": "Type-checks the browser webview UI (DOM globals + preact/htm) separately from the Node-targeted host build in tsconfig.json. Emits nothing; esbuild produces the actual bundle. Run via `npm run typecheck:webview`.",
+  "compilerOptions": {
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "target": "ES2022",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "jsx": "react-jsx",
+    "jsxImportSource": "preact",
+    "strict": true,
+    "noEmit": true,
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "types": ["node"]
+  },
+  "// note": "types:[node] is only so type-checking can resolve the fs/path references reached transitively through type-only host imports (messages.ts -> registryIndex etc.). esbuild bundles main.ts for the browser and elides those type-only imports.",
+  "include": ["src/instructionEditor/webview/**/*.ts", "src/instructionEditor/messages.ts"]
+}
