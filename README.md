@@ -10,7 +10,7 @@ product and is not affiliated with, endorsed by, sponsored by, or maintained by
 Siemens AG. Siemens, SIMATIC, TIA Portal, and other product names are trademarks
 of their respective owners.
 
-The extension is currently version `0.1.0` and under active development. It is
+The extension is currently version `0.1.1` and under active development. It is
 intended to catch common structural, type, symbol, and instruction-call errors
 before code is imported or compiled in TIA Portal. It is not a replacement for
 the target CPU and TIA Portal compiler.
@@ -48,11 +48,20 @@ expression cannot be resolved confidently, the extension avoids guessing.
 ### Editor support
 
 - Context-aware completion for declarations, types, instructions, symbols, and
-  top-level block templates.
-- Hover, definition, rename, and semantic-token providers.
+  top-level block templates, including dotted member completion on instance
+  DATA_BLOCKs and quoted external block references.
+- Hover, definition, rename, and semantic-token providers, including instance
+  DATA_BLOCK hovers that resolve to their instruction or FUNCTION_BLOCK type.
 - Definition and rename support for `.s7res` multilingual resources.
-- Quick fixes for explicit expression conversions and instruction instances.
+- Quick fixes for explicit expression conversions and instruction/FUNCTION_BLOCK
+  instances, including auto-creating a single-instance DATA_BLOCK when
+  completing a member on a bare FUNCTION_BLOCK type.
 - Inline multilingual-text hints with configurable locale fallback.
+- A visual **Instruction Registry Editor** (`S7 Lint: Open Instruction Registry
+  Editor`) for creating, editing, moving, and deleting instruction and
+  system-type entries across the registry's YAML files, with schema-driven
+  validation, drag-and-drop reordering, undo/redo, and comment/formatting-
+  preserving atomic saves.
 
 ## Knowledge bases
 
@@ -99,6 +108,9 @@ npm test
 | `npm run test:quickfix` | instance-generation quick fixes |
 | `npm run test:manifest` | manifest-driven parser and semantic diagnostics |
 | `npm run test:annotated` | exact line-annotated expression diagnostics |
+| `npm run test:instance-context` | instance-type context legality (VAR sections, call shapes) |
+| `npm run test:editor` | instruction registry editor's YAML document model |
+| `npm run test:editor-service` | instruction registry editor's service/workspace layer |
 | `npm run test:smoke` | anonymized SCL and graphical-control fixtures |
 
 The diagnostic fixtures and their assertion contracts are documented in
@@ -122,6 +134,7 @@ The extension contributes these commands:
 - **S7 Lint: Rebuild Type Cache**
 - **S7 Lint: Re-lint All Open Files**
 - **S7 Lint: Show Loaded Rule Stats**
+- **S7 Lint: Open Instruction Registry Editor**
 
 `tiaLint.mlcLocale` selects the preferred locale for multilingual resource
 resolution. Resolution falls back to `en-US` and then to an available locale.
