@@ -20,10 +20,12 @@ the target CPU and TIA Portal compiler.
 - `.scl`: authored SCL files containing one or more block or type declarations.
 - `.s7dcl`: LAD/FBD declaration exports, program blocks, and `TYPE` declarations.
 - `.udt`: text-format PLC data type declarations.
-- `**/*.xml`: TIA XML exports. PLC data type exports feed the workspace type
-  cache; DATA_BLOCK exports (`SW.Blocks.InstanceDB`/`GlobalDB`) feed the block
-  index, so references to an instance DB resolve even though TIA writes it in a
-  different format from the FUNCTION_BLOCK it instances.
+- `**/*.xml`: TIA XML exports, anywhere in the workspace. PLC data type exports
+  feed the workspace type cache; DATA_BLOCK exports (`SW.Blocks.InstanceDB`/
+  `GlobalDB`) feed the block index, so references to an instance DB resolve even
+  though TIA writes it in a different format from the FUNCTION_BLOCK it
+  instances. Every file is offered to both parsers -- they key off different
+  root elements -- because export layout does not reliably separate the two.
 - `.s7res`: multilingual resources used by definition, rename, and inline-hint
   support.
 

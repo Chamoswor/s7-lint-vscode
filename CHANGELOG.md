@@ -28,6 +28,12 @@ Cross-file references:
 - DATA_BLOCKs exported as XML are now indexed. TIA writes instance DBs in that
   format even when the FUNCTION_BLOCK they instance is text, so every reference
   to one previously resolved to nothing.
+- XML exports are now discovered anywhere in the workspace. The scan was scoped
+  to a `PLC data types/` folder, which a real export does not follow: DATA_BLOCK
+  exports sit next to their own block, and UDT exports sit next to the code that
+  uses them just as often. The narrow glob lost both -- instance DBs never
+  reached the block index, and in one 96-file project 44 of the UDT exports
+  never reached the type cache either.
 - A LAD/FBD call to a workspace block (`"Some_DB"(...)`) is resolved against the
   workspace instead of the instruction registry, which was searched for the
   empty string and reported `Unknown instruction ''`.

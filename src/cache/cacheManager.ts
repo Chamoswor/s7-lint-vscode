@@ -13,7 +13,19 @@ import { CacheDiagnostic, TypeCacheResult, UdtSourceFile, buildTypeCache } from 
 import { BlockIndex } from "../analysis/blockIndex";
 
 const UDT_GLOB = "**/*.udt";
-const XML_GLOB = "**/PLC data types/**/*.xml";
+// EVERY XML export, wherever it sits. This was scoped to
+// `**/PLC data types/**/*.xml`, on the assumption that TIA files UDT exports
+// under that folder -- but a real project export keeps UDT XML alongside the
+// code that uses it just as often, and a DATA_BLOCK export always lands next
+// to its own block. The narrow glob therefore lost BOTH: instance DBs were
+// invisible to the block index (every reference to one reported as an unknown
+// block) and a large share of the UDT exports never reached the type cache.
+//
+// Each file is offered to both parsers. They key off different root elements
+// (`SW.Types.PlcStruct` vs `SW.Blocks.*DB`) and each returns nothing for the
+// other's format, so this can't misclassify anything -- the only cost is one
+// read per XML in the workspace.
+const XML_GLOB = "**/*.xml";
 const S7DCL_GLOB = "**/*.s7dcl";
 // Authored SCL source, as opposed to a TIA `.s7dcl` EXPORT -- often bundles
 // several TYPE/FUNCTION_BLOCK/... declarations in one file (unlike a
