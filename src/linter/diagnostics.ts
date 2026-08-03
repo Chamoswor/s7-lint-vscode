@@ -9,12 +9,39 @@ import { DiagnosticSpec, LintSeverity, RuleSet } from "../rules/types";
 
 export type { LintSeverity } from "../rules/types";
 
+/**
+ * What a Quick Fix needs to repair the instruction REGISTRY itself, for the
+ * two diagnostics whose usual cause is a gap or a transcription slip in the
+ * YAML rather than a mistake in the checked source. Carried structurally
+ * (same discipline as `implicitConversionFix`) so no consumer has to parse
+ * a name back out of the diagnostic's own prose.
+ *
+ * `scl` picks WHICH registry half the entry lives in: a dedicated
+ * `SCL-*.yaml` file (`RuleSet.sclInstructions`) or the shared LAD/FBD one
+ * (`RuleSet.instructions`). The two can hold entries under the same name
+ * with genuinely different pin data -- see `RuleSet.sclInstructions`'s own
+ * comment -- so editing the wrong one would silently do nothing.
+ */
+export type RegistryFix =
+  /** A pin the registry marks `required: true` but the call didn't fill.
+   * Offered as "mark it optional" because a mis-transcribed `required`
+   * flag is the far more common cause than a genuinely wrong call. */
+  | { kind: "pin-required"; instructionName: string; pinName: string; scl: boolean }
+  /** A call whose name isn't in the registry at all. `pinNames` are the
+   * NAMED arguments the call site actually passes, usable to seed a
+   * scaffold entry. Only set for a plain `Name(...)` call shape -- an
+   * instance call would also need an `instanceType` and a matching system
+   * type, which can't be derived from a call site. */
+  | { kind: "unknown-instruction"; instructionName: string; scl: boolean; pinNames: string[] };
+
 export interface LintDiagnostic {
   line: number;
   col: number;
   severity: LintSeverity;
   message: string;
   code: string;
+  /** See `RegistryFix`. Undefined for every other diagnostic. */
+  registryFix?: RegistryFix;
   /** For `expr-implicit-numeric-conversion` only: the exact source span of
    * the right-hand operand a Quick Fix should wrap in an explicit
    * `{rightType}_TO_{leftType}(...)` conversion call, carried structurally

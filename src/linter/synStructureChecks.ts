@@ -17,6 +17,7 @@
 // caller loop's own defensive `cur.next()` fallback that guarantees forward
 // progress regardless of how confused the recovery gets).
 import { Lexer, Token, TokenCursor } from "../parser/lexer";
+import { literalRunLength as sharedLiteralRunLength } from "../parser/literalRun";
 import { parseTypeRefFromCursor } from "../parser/typeRef";
 import { RuleSet } from "../rules/types";
 import { formatDiagnostic, LintDiagnostic } from "./diagnostics";
@@ -69,16 +70,6 @@ const UNMATCHED_CLOSER_CODE: Record<string, string> = {
   END_FOR: "syn-unmatched-end-for",
 };
 
-const LITERAL_LETTER_PREFIXES = new Set([
-  "T", "TIME", "LT", "LTIME", "S5T", "S5TIME",
-  "D", "DATE", "DT", "DATE_AND_TIME", "DTL",
-  "TOD", "TIME_OF_DAY", "LTOD", "B", "W", "DW", "P",
-]);
-
-function tokensAdjacent(a: Token, b: Token): boolean {
-  return a.line === b.line && b.offset === a.offset + a.text.length;
-}
-
 /** Checks a syntax-checker file for structural defects a real SCL parser
  * would report (missing THEN/DO/OF/semicolon, unclosed paren/bracket,
  * wrong or unmatched END_xxx, EXIT/CONTINUE outside a loop, ...), plus the
@@ -105,50 +96,7 @@ export function checkSclSyntaxStructure(text: string, ruleSet: RuleSet): LintDia
   // --- shared small helpers -------------------------------------------
 
   function literalRunLength(offset: number): number {
-    const t0 = cur.peek(offset);
-    if (t0.kind === "number") {
-      let n = 1;
-      let prev = t0;
-      for (;;) {
-        const nxt = cur.peek(offset + n);
-        if (!tokensAdjacent(prev, nxt)) break;
-        if (nxt.kind === "ident" && nxt.text.startsWith("#")) {
-          n++;
-          prev = nxt;
-          continue;
-        }
-        if (nxt.kind === "punct" && nxt.text === ".") {
-          const after = cur.peek(offset + n + 1);
-          if (tokensAdjacent(nxt, after) && after.kind === "number") {
-            n += 2;
-            prev = after;
-            continue;
-          }
-        }
-        break;
-      }
-      return n;
-    }
-    if (t0.kind === "ident" && LITERAL_LETTER_PREFIXES.has(t0.text.toUpperCase())) {
-      const t1 = cur.peek(offset + 1);
-      if (tokensAdjacent(t0, t1) && t1.kind === "ident" && t1.text.startsWith("#")) {
-        let n = 2;
-        let prev = t1;
-        for (;;) {
-          const nxt = cur.peek(offset + n);
-          if (!tokensAdjacent(prev, nxt)) break;
-          if (nxt.kind === "ident" && nxt.text.startsWith("#")) {
-            n++;
-            prev = nxt;
-            continue;
-          }
-          break;
-        }
-        return n;
-      }
-    }
-    if (t0.kind === "ident" && /^(TRUE|FALSE|NULL|ZERO)$/i.test(t0.text)) return 1;
-    return 0;
+    return sharedLiteralRunLength(cur, offset, { keywordLiterals: true });
   }
 
   function isOperandRefStart(): boolean {

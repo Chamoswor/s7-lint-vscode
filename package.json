@@ -2,7 +2,7 @@
   "name": "s7-lint",
   "displayName": "S7 Lint for VS Code",
   "description": "Static analysis, code completion, navigation, and quick fixes for Siemens TIA Portal SCL, LAD/FBD declaration exports, PLC data types, and multilingual resources.",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "publisher": "chamoswor",
   "license": "Apache-2.0",
   "private": true,
@@ -112,8 +112,28 @@
       {
         "command": "tiaLint.openInstructionEditor",
         "title": "S7 Lint: Open Instruction Registry Editor"
+      },
+      {
+        "command": "tiaLint.registryMarkPinOptional",
+        "title": "S7 Lint: Mark Instruction Pin as Optional in the Registry"
+      },
+      {
+        "command": "tiaLint.registryScaffoldInstruction",
+        "title": "S7 Lint: Add Instruction to the Registry"
       }
     ],
+    "menus": {
+      "commandPalette": [
+        {
+          "command": "tiaLint.registryMarkPinOptional",
+          "when": "false"
+        },
+        {
+          "command": "tiaLint.registryScaffoldInstruction",
+          "when": "false"
+        }
+      ]
+    },
     "semanticTokenTypes": [
       {
         "id": "charLiteral",

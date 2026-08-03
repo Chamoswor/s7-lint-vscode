@@ -118,7 +118,7 @@ import { typeRefTopLevelName } from "../parser/typeRef";
 import { expandPinDataTypes, resolveTypeAlias } from "../rules/literalTypes";
 import { InstructionEntry, InstructionPin, RuleSet } from "../rules/types";
 import { formatDiagnostic, LintDiagnostic, LintSeverity } from "./diagnostics";
-import { checkCall } from "./instructionChecks";
+import { checkCall, unknownInstructionFix } from "./instructionChecks";
 
 const SCL_LANGUAGE = "SCL";
 
@@ -702,7 +702,13 @@ function resolveCallEntry(call: CallNode, ruleSet: RuleSet, blockIndex: BlockInd
     const shown = isBareInstanceCall ? `#${call.instancePrefix} (declared as '${lookupName}')` : `'${lookupName}'`;
     return {
       kind: "error",
-      diag: formatDiagnostic(ruleSet, "unknown-instruction", call.line, call.col, { shown }, { variant: "scl" }),
+      diag: {
+        ...formatDiagnostic(ruleSet, "unknown-instruction", call.line, call.col, { shown }, { variant: "scl" }),
+        // `unknownInstructionFix` returns undefined for the bare-instance
+        // shape, so this correctly offers a scaffold only for a plain
+        // `Name(...)` SCL call.
+        registryFix: unknownInstructionFix(call, true),
+      },
     };
   }
 

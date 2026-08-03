@@ -8,6 +8,7 @@
 // instead of three independently-drifting implementations.
 import { formatDiagnostic, LintDiagnostic, LintSeverity } from "../linter/diagnostics";
 import { Lexer, Token, TokenCursor } from "../parser/lexer";
+import { literalRunLength, tokensAdjacent } from "../parser/literalRun";
 import { SCL_RESERVED_KEYWORDS } from "../parser/s7dclParser";
 import { loadSiblingS7Res, MLC_ID_PRAGMA_KEYS, resolveMlcText, siblingS7ResPath, S7ResEntry } from "../parser/s7resParser";
 import { typeRefDereferencedTopLevelName, typeRefToText, typeRefTopLevelName } from "../parser/typeRef";
@@ -220,10 +221,6 @@ function renderSystemTypeHover(name: string, entry: SystemTypeEntry): string {
   return lines.join("\n");
 }
 
-function tokensAdjacent(a: Token, b: Token): boolean {
-  return a.line === b.line && b.offset === a.offset + a.text.length;
-}
-
 /** Finds the `]` matching a `[` at lookahead offset `openIdx` (i.e.
  * `cur.peek(openIdx)` must itself be that `[`), handling nested brackets.
  * Returns the matching `]`'s own lookahead offset, or `null` if unbalanced
@@ -246,77 +243,12 @@ function findMatchingBracketClose(cur: TokenCursor, openIdx: number): number | n
 }
 
 /** Looks ahead (without consuming) for a contiguous run of tokens that
- * together form a typed/radix literal the lexer had to split up because
- * `#` only continues an identifier, never starts a bare number -- e.g.
- * `T#10S` lexes as ident("T") + ident("#10S"); `B#16#F` as three idents;
- * `16#FF` as number("16") + ident("#FF"). Returns the run length, or 0 if
- * the current position isn't the start of such a run. */
-
-/** Recognized letter prefixes for a `<prefix>#...` typed/radix literal
- * (time/date/duration prefixes, plus B/W/DW size hints and the P pointer
- * prefix). An explicit whitelist rather than "any short word" -- a bare
- * `wire#w1` branch label (see analysis/blockIndex.ts's sibling
- * walkOperandRef) must NOT be mistaken for a literal just because "wire"
- * happens to be <=5 letters. */
-const LITERAL_LETTER_PREFIXES = new Set(["T", "TIME", "LT", "LTIME", "S5T", "S5TIME", "D", "DATE", "DT", "DATE_AND_TIME", "DTL", "TOD", "TIME_OF_DAY", "LTOD", "B", "W", "DW", "P"]);
-
+ * together form a typed/radix literal the lexer had to split up -- see
+ * parser/literalRun.ts for the shape and the Siemens grammar behind it.
+ * `TRUE`/`FALSE`/`NULL`/`ZERO` are excluded: `consumeLiteralValue` handles
+ * those keywords itself, before it gets here. */
 function scanLiteralRun(cur: TokenCursor): number {
-  const t0 = cur.peek();
-  if (t0.kind === "number") {
-    let n = 1;
-    let prev = t0;
-    for (;;) {
-      const nxt = cur.peek(n);
-      if (!tokensAdjacent(prev, nxt)) break;
-      if (nxt.kind === "ident" && nxt.text.startsWith("#")) {
-        n++;
-        prev = nxt;
-        continue;
-      }
-      if (nxt.kind === "punct" && nxt.text === ".") {
-        const after = cur.peek(n + 1);
-        if (tokensAdjacent(nxt, after) && after.kind === "number") {
-          n += 2;
-          prev = after;
-          continue;
-        }
-      }
-      break;
-    }
-    return n;
-  }
-  if (t0.kind === "ident" && LITERAL_LETTER_PREFIXES.has(t0.text.toUpperCase())) {
-    const t1 = cur.peek(1);
-    if (tokensAdjacent(t0, t1) && t1.kind === "ident" && t1.text.startsWith("#")) {
-      let n = 2;
-      let prev = t1;
-      const isPointerPrefix = /^P$/i.test(t0.text);
-      for (;;) {
-        const nxt = cur.peek(n);
-        if (!tokensAdjacent(prev, nxt)) break;
-        if (nxt.kind === "ident" && nxt.text.startsWith("#")) {
-          n++;
-          prev = nxt;
-          continue;
-        }
-        // P#-pointer address tail, e.g. `P#DB10.DBX20.0` -- keep consuming
-        // alternating '.' + (ident|number) address segments. Scoped to a
-        // literal "P" prefix only, to avoid over-merging unrelated `.`
-        // chains (e.g. `wire#w1.foo`) elsewhere.
-        if (isPointerPrefix && nxt.kind === "punct" && nxt.text === ".") {
-          const after = cur.peek(n + 1);
-          if (tokensAdjacent(nxt, after) && (after.kind === "ident" || after.kind === "number")) {
-            n += 2;
-            prev = after;
-            continue;
-          }
-        }
-        break;
-      }
-      return n;
-    }
-  }
-  return 0;
+  return literalRunLength(cur, 0, { pointerTail: true });
 }
 
 /** Looks ahead (without consuming) for an absolute/direct-address operand

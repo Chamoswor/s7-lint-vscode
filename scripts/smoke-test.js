@@ -102,7 +102,12 @@ console.log(`\nTotals across graphical-control fixtures: ${totalCalls} instructi
 // SCL instruction-name lookup, and the BlockIndex fallback for custom FB
 // instance calls -- see linter/sclInstructionChecks.ts.
 console.log("\n=== .scl instruction checks (anonymized SCL fixtures) ===");
-const sclFiles = [path.join(__dirname, "fixtures", "smoke", "distributed-process-control.scl")];
+const sclFiles = [
+  path.join(__dirname, "fixtures", "smoke", "distributed-process-control.scl"),
+  // Regression guard for the split-across-tokens `<prefix>#<value>` literal
+  // forms (parser/literalRun.ts) -- see that fixture's own header.
+  path.join(__dirname, "fixtures", "smoke", "constant-notations.scl"),
+];
 const sclBlockIndex = new BlockIndex();
 sclBlockIndex.rebuild(sclFiles.map((p) => ({ path: p, text: readText(p) })));
 

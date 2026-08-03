@@ -2,6 +2,49 @@
 
 All notable changes to S7 Lint for VS Code will be documented in this file.
 
+## 0.1.2
+
+- Fixed typed and radix literals being misread as tag references. The lexer
+  splits `<prefix>#<value>` across several tokens (`16#EFEF` becomes
+  `16` + `#EFEF`), and the guard that told a literal tail from a real `#tag`
+  only recognised a small set of letter prefixes, so `16#EFEF`,
+  `2#1111_0000`, `BYTE#2#1111_0000` and the second half of `W#16#00FF` were
+  each reported as undeclared identifiers, and the surrounding statements
+  were misparsed. Literal recognition now covers the full S7-SCL "Notation
+  for Constants" grammar: bare `2#`/`8#`/`16#`, spelled-out type prefixes
+  (`BOOL#`, `BYTE#`, `WORD#`, `DWORD#`, `INT#`, `DINT#`, `REAL#`, `CHAR#`,
+  and the S7-1500 additions) stacked with a radix prefix, signed and quoted
+  values, exponent floats (`4e2`, `3.0E+10`), dates, durations with unit
+  suffixes, and times of day.
+- Consolidated the three drifted copies of that literal-scanning logic into
+  one shared module, and added a fixture covering the whole notation grammar
+  so it cannot drift again.
+- Added a quick fix for `missing-required-pin` that marks a pin optional in
+  the instruction registry, individually or all unfilled pins on a call at
+  once, for when a pin table was transcribed as required but the parameter
+  is not.
+- Added a quick fix for `unknown-instruction` that scaffolds a registry entry
+  for the call, seeding its pin names from the call site. Scaffolds are
+  written as `confidence: shape-only` with every pin optional and no data
+  types, so they never assert more than the call site proves.
+- Saving in the Instruction Registry Editor now reloads the rule set and
+  re-lints open files immediately; previously the change only took effect
+  after reloading the window. A `system-types.yaml` save also rebuilds the
+  workspace type cache.
+- Both registry quick fixes, and the editor opened from their confirmation,
+  land directly on the affected entry with the tree expanded to it.
+- Fixed the pin **Name** field being unusable in the Instruction Registry
+  Editor: a `width: 100%` control rule collapsed it inside the flex header
+  row. The field is now labelled alongside **Dir**, and the same header row
+  used by Template extra pragmas and system-type members, which had lost its
+  flex layout entirely, lays out correctly again.
+- Reduced editor save churn: an edited entry re-serialises in the registry's
+  own sequence-indent and quote style, so a small change no longer rewrites
+  every line of the entry.
+- Corrected `GET`/`PUT` in the SCL registry: only the `ADDR_1`/`SD_1` pair is
+  required, not `ADDR_2..4`/`SD_2..4`.
+- Added the SCL `PEEK`/`POKE` family.
+
 ## 0.1.1
 
 - Added a visual Instruction Registry Editor (`S7 Lint: Open Instruction Registry Editor`):

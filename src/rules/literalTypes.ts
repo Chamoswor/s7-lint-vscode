@@ -50,6 +50,18 @@ interface ParsedRadixLiteral {
   value: number;
 }
 
+/** A fully typed constant's `<DataType>#` prefix -- the S7-SCL "Notation
+ * for Constants" grammar (SIMATIC S7-SCL V5.3 manual A5E00324650-01,
+ * 9.1.3.1-9.1.3.4) lets an elementary type name spell out what the `B#`/
+ * `W#`/`DW#` short forms abbreviate, and stack a radix prefix on top of
+ * it: `BYTE#2#1111_0000`, `WORD#8#177777`, `INT#16#3f_ff`, `int#-32768`,
+ * `BOOL#TRUE`, `char#'B'`, `real#1.5`. See parser/literalRun.ts for the
+ * full prefix list and the token-level handling.
+ *
+ * Used for SHAPE detection only -- `classifyLiteral` deliberately does NOT
+ * resolve these to their named type, see its own comment. */
+const TYPED_CONSTANT_PREFIX_RE = /^(BOOL|BYTE|WORD|DWORD|LWORD|SINT|INT|DINT|LINT|USINT|UINT|UDINT|ULINT|REAL|LREAL|CHAR|WCHAR)#/i;
+
 /** `16#FF` / `2#0101` / `8#377` / `B#16#0F` / `W#16#F1C0` / `DW#16#20_F30A`. */
 function parseRadixLiteral(text: string): ParsedRadixLiteral | null {
   const m = /^(B|W|DW)?#?(\d+)#([0-9A-Fa-f_]+)$/i.exec(text);
@@ -182,6 +194,19 @@ export function classifyLiteral(raw: string, ruleSet: RuleSet): Set<string> | nu
   for (const [re, typeName] of DURATION_PREFIXES) if (re.test(text)) return new Set([typeName]);
   if (DATE_BARE_RE.test(text)) return new Set(["Date"]);
 
+  // A fully typed constant (`BYTE#2#1111_0000`, `WORD#8#177777`,
+  // `INT#-32768`) falls through to `null` on purpose -- "recognized, but
+  // don't validate," not an oversight. Siemens' own rule is that the
+  // prefix names a MINIMUM, not an exact match: "a Word tag permits the
+  // usage of byte or word constants, such as BYTE#2 or WORD#2", so
+  // resolving `BYTE#2` to just {Byte} would flag a perfectly legal
+  // assignment to a Word. Pinning down the exact widening lattice needs
+  // more than base-types.yaml currently records, and this module's
+  // contract is to skip rather than guess. (The `B#`/`W#`/`DW#` short
+  // forms below predate this note and DO resolve to one type -- narrower
+  // than Siemens allows, but long-standing and fixture-covered.)
+  if (TYPED_CONSTANT_PREFIX_RE.test(text)) return null;
+
   const radix = parseRadixLiteral(text);
   if (radix) {
     if (radix.sizeHint) {
@@ -249,6 +274,13 @@ export function detectLiteralShape(raw: string): LiteralShapeKind | null {
   for (const [re] of DURATION_PREFIXES) if (re.test(text)) return "time";
 
   if (parseRadixLiteral(text)) return "radix";
+
+  // A fully typed constant (`BYTE#2#1111_0000`, `INT#-32768`, `BOOL#TRUE`,
+  // `char#'B'`) styles as whatever its VALUE half is -- the type prefix
+  // says what it's assignable to, not what notation the author wrote.
+  const typedPrefix = TYPED_CONSTANT_PREFIX_RE.exec(text);
+  if (typedPrefix) return detectLiteralShape(text.slice(typedPrefix[0].length));
+
   if (/^[+-]?\d[\d_]*$/.test(text)) return "decimal";
   if (/^[+-]?\d[\d_]*(\.\d+)?[eE][+-]?\d+$/.test(text) || /^[+-]?\d[\d_]*\.\d+$/.test(text)) return "float";
 

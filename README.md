@@ -56,12 +56,19 @@ expression cannot be resolved confidently, the extension avoids guessing.
 - Quick fixes for explicit expression conversions and instruction/FUNCTION_BLOCK
   instances, including auto-creating a single-instance DATA_BLOCK when
   completing a member on a bare FUNCTION_BLOCK type.
+- Quick fixes that repair the instruction registry itself, for the two
+  diagnostics usually caused by a gap or a transcription slip in the YAML
+  rather than by the checked source: marking a pin optional
+  (`missing-required-pin`) and scaffolding a missing entry from its call site
+  (`unknown-instruction`). Both reload the rule set and re-lint immediately,
+  and can open the registry editor directly on the affected entry.
 - Inline multilingual-text hints with configurable locale fallback.
 - A visual **Instruction Registry Editor** (`S7 Lint: Open Instruction Registry
   Editor`) for creating, editing, moving, and deleting instruction and
   system-type entries across the registry's YAML files, with schema-driven
   validation, drag-and-drop reordering, undo/redo, and comment/formatting-
-  preserving atomic saves.
+  preserving atomic saves. Saving reloads the rule set and re-lints open files
+  in place, so an edited entry takes effect without reloading the window.
 
 ## Knowledge bases
 
@@ -136,6 +143,11 @@ The extension contributes these commands:
 - **S7 Lint: Show Loaded Rule Stats**
 - **S7 Lint: Open Instruction Registry Editor**
 
+Two further commands back the registry quick fixes
+(`tiaLint.registryMarkPinOptional`, `tiaLint.registryScaffoldInstruction`).
+They take arguments supplied by the diagnostic, so they are hidden from the
+command palette and are invoked from the lightbulb only.
+
 `tiaLint.mlcLocale` selects the preferred locale for multilingual resource
 resolution. Resolution falls back to `en-US` and then to an available locale.
 
@@ -146,6 +158,9 @@ resolution. Resolution falls back to `en-US` and then to an available locale.
   is reference data and is intentionally not loaded.
 - Type checks skip unresolved symbols and expression shapes for which a safe,
   single result type cannot be inferred.
+- A `+` or `-` written with no space before a digit is lexed as part of the
+  number, so unspaced arithmetic (`4-1`) has no operator token left to parse
+  and is reported as a missing semicolon. Spaced (`4 - 1`) parses correctly.
 - XML UDT parsing has no per-member source positions, so XML cache diagnostics
   are reported on line 1.
 - The workspace type and block caches rebuild in full after relevant file

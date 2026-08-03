@@ -48,17 +48,17 @@ GET:
     dataTypes: [Remote]
   - name: ADDR_2
     dir: inout
-    required: true
+    required: false
     note: ''
     dataTypes: [Remote]
   - name: ADDR_3
     dir: inout
-    required: true
+    required: false
     note: ''
     dataTypes: [Remote]
   - name: ADDR_4
     dir: inout
-    required: true
+    required: false
     note: ''
     dataTypes: [Remote]
   - name: RD_1
@@ -68,17 +68,17 @@ GET:
     dataTypes: [Variant]
   - name: RD_2
     dir: inout
-    required: true
+    required: false
     note: ''
     dataTypes: [Variant]
   - name: RD_3
     dir: inout
-    required: true
+    required: false
     note: ''
     dataTypes: [Variant]
   - name: RD_4
     dir: inout
-    required: true
+    required: false
     note: ''
     dataTypes: [Variant]
   template:
@@ -128,17 +128,17 @@ PUT:
     dataTypes: [Remote]
   - name: ADDR_2
     dir: inout
-    required: true
+    required: false
     note: ''
     dataTypes: [Remote]
   - name: ADDR_3
     dir: inout
-    required: true
+    required: false
     note: ''
     dataTypes: [Remote]
   - name: ADDR_4
     dir: inout
-    required: true
+    required: false
     note: ''
     dataTypes: [Remote]
   - name: SD_1
@@ -148,17 +148,17 @@ PUT:
     dataTypes: [Variant]
   - name: SD_2
     dir: inout
-    required: true
+    required: false
     note: ''
     dataTypes: [Variant]
   - name: SD_3
     dir: inout
-    required: true
+    required: false
     note: ''
     dataTypes: [Variant]
   - name: SD_4
     dir: inout
-    required: true
+    required: false
     note: ''
     dataTypes: [Variant]
   template:

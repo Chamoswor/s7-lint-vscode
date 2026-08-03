@@ -1,0 +1,102 @@
+// Every constant notation the S7-SCL "Notation for Constants" grammar
+// allows (SIMATIC S7-SCL V5.3 manual A5E00324650-01, section 9.1.3), plus
+// the S7-1200/1500 types TIA added on top of it. Nothing here is a lint
+// finding -- the whole file must stay at ZERO diagnostics.
+//
+// This guards a specific regression: the lexer splits `<prefix>#<value>`
+// across several tokens (`16#EFEF` -> number("16") + ident("#EFEF")), so
+// every token-walking checker has to re-join the run before it can tell a
+// literal from a real `#tag`. When it doesn't, the literal's tail is
+// reported as an undeclared identifier ("'#EFEF' isn't declared anywhere
+// in this block's VAR sections") and the statement stream shifts by one.
+// See parser/literalRun.ts.
+
+FUNCTION_BLOCK "ConstantNotations"
+VAR
+   MyBool : Bool;
+   MyByte : Byte;
+   MyWord : Word;
+   MyDWord : DWord;
+   MyInt : Int;
+   MyDInt : DInt;
+   MyReal : Real;
+   MyChar : Char;
+   MyTime : Time;
+   MyS5Time : S5Time;
+   MyDate : Date;
+   MyTod : Time_Of_Day;
+   MyDt : Date_And_Time;
+END_VAR
+
+BEGIN
+   // 9.1.3 -- bare radix prefixes (no type prefix)
+   #MyWord := 2#1111_0000;
+   #MyWord := 8#177_777;
+   #MyWord := 16#EFEF;
+   #MyInt := 15;
+   #MyInt := -32768;
+
+   // 9.1.3.1 -- bit constants, short and spelled-out type prefixes
+   #MyBool := BOOL#TRUE;
+   #MyBool := Bool#false;
+   #MyByte := B#16#0F;
+   #MyByte := BYTE#0;
+   #MyByte := BYTE#2#1111_0000;
+   #MyByte := b#16#f;
+   #MyWord := W#16#F1C0;
+   #MyWord := W#2#1001_0100;
+   #MyWord := WORD#8#177777;
+   #MyWord := word#16#f;
+   #MyWord := WORD#32768;
+   #MyDWord := DW#16#FFFF_FFFF;
+   #MyDWord := DW#2#1111_0000_1111_0000;
+   #MyDWord := Dword#8#37777777777;
+   #MyDWord := dword#32768;
+
+   // 9.1.3.2 -- integer constants
+   #MyInt := INT#16#3f_ff;
+   #MyInt := int#-32768;
+   #MyInt := Int#2#1111_0000;
+   #MyInt := inT#8#77777;
+   #MyDInt := DINT#16#3fff_ffff;
+   #MyDInt := dint#-65000;
+   #MyDInt := Dint#2#1111_0000;
+
+   // 9.1.3.3 -- real constants, decimal and exponential
+   #MyReal := -3.4;
+   #MyReal := 4e2;
+   #MyReal := REAL#1;
+   #MyReal := real#1.5;
+   #MyReal := real#2e4;
+   #MyReal := 3.0E+10;
+   #MyReal := 3E10;
+   #MyReal := 0.3e11;
+   #MyReal := 30e9;
+
+   // Ordinary arithmetic must NOT be swallowed into a literal run.
+   // (Spaced on purpose: the lexer folds a `-`/`+` that hugs a digit into
+   // the number token, so `4-1` has no operator token left to parse at
+   // all -- a separate, pre-existing gap that has nothing to do with the
+   // `<prefix>#<value>` runs this fixture is guarding.)
+   #MyInt := 4 - 1;
+   #MyInt := 16#FF - 1;
+   #MyReal := 1.5 + 2.5;
+
+   // 9.1.3.4 -- char constants
+   #MyChar := 'B';
+   #MyChar := char#43;
+   #MyChar := char#'B';
+   #MyChar := CHAR#'$41';
+
+   // 9.1.3.6 - 9.1.3.8 -- date and time constants
+   #MyDate := DATE#1995-11-11;
+   #MyDate := D#1995-05-05;
+   #MyTime := T#0.0s;
+   #MyTime := TIME#24.855134d;
+   #MyTime := T#3D_2S_3MS;
+   #MyS5Time := S5T#0ms;
+   #MyS5Time := S5TIME#2h46m30s;
+   #MyTod := TOD#11:11:11;
+   #MyTod := TIME_OF_DAY#23:59:59.999;
+   #MyDt := DT#95-01-01-12:12:12.2;
+END_FUNCTION_BLOCK

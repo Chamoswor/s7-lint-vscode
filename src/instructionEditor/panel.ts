@@ -9,18 +9,96 @@ import * as vscode from "vscode";
 import { EditorService } from "./editorService";
 import { HostToWebview, WebviewToHost } from "./messages";
 
+/** An entry to select as soon as the editor is showing, addressed the only
+ * way an outside caller can: by instruction NAME plus which half of the
+ * registry it lives in (a `uid` belongs to one EditorService load and means
+ * nothing to the panel's own). See `EditorService.findEntryByName`. */
+export interface RevealEntryTarget {
+  name: string;
+  scl: boolean;
+}
+
+/** Fires after the editor commits registry changes to disk. Module-level (not
+ * per-panel) so a subscriber can be wired once at activation and keep working
+ * across every open/close cycle of the panel. */
+const savedEmitter = new vscode.EventEmitter<string[]>();
+
 export class RegistryEditorPanel {
   public static readonly viewType = "tiaLint.instructionEditor";
   private static current: RegistryEditorPanel | undefined;
 
+  /**
+   * Registry files were just written to disk; the payload is their
+   * registry-relative paths. extension.ts uses this to reload the rule set
+   * and re-lint, so an edit made in the editor takes effect on Save instead
+   * of only after the extension is restarted.
+   */
+  public static readonly onDidSave: vscode.Event<string[]> = savedEmitter.event;
+
+  /** Disposes the module-level emitter. Called from extension deactivation
+   * via the subscription registered in activate(). */
+  public static disposeEmitter(): void {
+    savedEmitter.dispose();
+  }
+
   private readonly panel: vscode.WebviewPanel;
   private readonly service: EditorService;
   private readonly disposables: vscode.Disposable[] = [];
+  /** Set when the panel is opened with a reveal target but the webview hasn't
+   * reported `ready` yet -- posting `openEntry` before its listener exists
+   * would simply be dropped, so it waits for the `init` handshake. */
+  private pendingReveal: RevealEntryTarget | undefined;
 
-  static createOrShow(context: vscode.ExtensionContext, resourcesDir: string, output: vscode.OutputChannel): void {
+  /** True when the editor is open AND holds buffered changes. A registry
+   * Quick Fix (providers/registryQuickFixProvider.ts) refuses to run in that
+   * state: it edits the same YAML through its own short-lived EditorService,
+   * so it would either be clobbered by the panel's next Save or -- worse --
+   * trip the panel's external-change guard and strand the user's pending
+   * work behind a "not overwritten" error. */
+  static hasUnsavedChanges(): boolean {
+    return RegistryEditorPanel.current?.service.hasDirty() ?? false;
+  }
+
+  /** Reload the open panel from disk after a registry Quick Fix wrote to it,
+   * so the editor doesn't keep showing pre-fix data. Safe precisely because
+   * `hasUnsavedChanges()` gated the fix: there is nothing buffered to lose. */
+  static refreshAfterExternalEdit(): void {
+    const panel = RegistryEditorPanel.current;
+    if (!panel) return;
+    panel.service.reload();
+    panel.reinit();
+  }
+
+  /** Selects `target` in the open editor. Resolves the name against THIS
+   * panel's own service (uids are per-load, see `RevealEntryTarget`), then
+   * reuses the existing `openEntry` message the webview already handles for
+   * create/duplicate/move -- which selects the entry, shows its form, and
+   * expands the tree down to it. Silently does nothing if the name isn't
+   * there: a reveal is a convenience, never a reason to show an error. */
+  private revealEntry(target: RevealEntryTarget): void {
+    const found = this.service.findEntryByName(target.name, target.scl);
+    if (!found) return;
+    const entry = this.service.entryData(found.uid);
+    if (entry) this.post({ type: "openEntry", entry });
+  }
+
+  /**
+   * Opens the editor (or reveals the existing one). `reveal` additionally
+   * selects that entry and opens its form, so e.g. the "scaffold this
+   * instruction" Quick Fix can land the user directly on the stub it just
+   * wrote instead of on a collapsed tree they have to go hunting through.
+   */
+  static createOrShow(
+    context: vscode.ExtensionContext,
+    resourcesDir: string,
+    output: vscode.OutputChannel,
+    reveal?: RevealEntryTarget
+  ): void {
     const column = vscode.window.activeTextEditor?.viewColumn ?? vscode.ViewColumn.One;
     if (RegistryEditorPanel.current) {
       RegistryEditorPanel.current.panel.reveal(column);
+      // Already past the `init` handshake, so this lands immediately.
+      if (reveal) RegistryEditorPanel.current.revealEntry(reveal);
       return;
     }
     const panel = vscode.window.createWebviewPanel(
@@ -35,6 +113,7 @@ export class RegistryEditorPanel {
     );
     try {
       RegistryEditorPanel.current = new RegistryEditorPanel(context, panel, resourcesDir, output);
+      RegistryEditorPanel.current.pendingReveal = reveal;
     } catch (err) {
       output.appendLine(`[Instruction Editor] Failed to open: ${String(err)}`);
       vscode.window.showErrorMessage(`Instruction Registry Editor failed to open: ${String(err)}`);
@@ -114,6 +193,13 @@ export class RegistryEditorPanel {
       switch (msg.type) {
         case "ready":
           this.post({ type: "init", snapshot: this.service.snapshot() });
+          // `init` clears the webview's selection, so a pending reveal has to
+          // follow it, never precede it.
+          if (this.pendingReveal) {
+            const target = this.pendingReveal;
+            this.pendingReveal = undefined;
+            this.revealEntry(target);
+          }
           return;
         case "selectEntry": {
           const entry = this.service.entryData(msg.uid);
@@ -151,6 +237,10 @@ export class RegistryEditorPanel {
             this.post({ type: "toast", level: "info", message: `Saved ${result.savedFiles.length} file(s).` });
           }
           this.postStatus();
+          // Fired on a PARTIAL save too: whatever did reach disk is now what
+          // the linter would load, so the rule set must not be left holding a
+          // mix of old and new. Skipped only when nothing was written at all.
+          if (result.savedFiles.length) savedEmitter.fire(result.savedFiles);
           return;
         }
         case "revertAll": {

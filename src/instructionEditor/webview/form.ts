@@ -160,9 +160,13 @@ function PinsSection(props: FormProps, byPath: (p: Path) => ValidationFinding[],
       ${pins.map((pin, i) => html`
         <div class="pin">
           <div class="pin-head">
-            <input class="mono grow" type="text" placeholder="name (blank = positional)" value=${strv(pin.name)}
+            <label class="inline" for=${`pin-name-${i}`}>Name</label>
+            <input class="mono grow" id=${`pin-name-${i}`} type="text" placeholder="blank = positional"
+              title="Pin name as Siemens documents it. Leave blank for an unnamed (positional) parameter."
+              value=${strv(pin.name)}
               onChange=${(e: any) => onField(["pins", i, "name"], e.target.value === "" ? null : e.target.value)} />
-            <select value=${pin.dir ?? "in"} onChange=${(e: any) => onField(["pins", i, "dir"], e.target.value)}>
+            <label class="inline" for=${`pin-dir-${i}`}>Dir</label>
+            <select id=${`pin-dir-${i}`} value=${pin.dir ?? "in"} onChange=${(e: any) => onField(["pins", i, "dir"], e.target.value)}>
               ${catalog.pinDirs.map((d) => html`<option value=${d} selected=${pin.dir === d}>${d}</option>`)}
             </select>
             <label style="font-weight:normal"><input type="checkbox" checked=${pin.required === true}

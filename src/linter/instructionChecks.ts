@@ -14,9 +14,25 @@
 // already covers (a MISSING required pragma), not a duplicate of it.
 import { CallNode, ParsedBlockFile } from "../parser/s7dclParser";
 import { InstructionEntry, RuleSet } from "../rules/types";
-import { formatDiagnostic, LintDiagnostic, LintSeverity } from "./diagnostics";
+import { formatDiagnostic, LintDiagnostic, LintSeverity, RegistryFix } from "./diagnostics";
 
 export type { LintDiagnostic, LintSeverity } from "./diagnostics";
+
+/** The `unknown-instruction` Quick Fix payload for `call`, or undefined when
+ * this call shape can't be scaffolded from its call site alone. Only a plain
+ * `Name(...)` box call qualifies: an instance call (`#inst.Name(...)`, a
+ * quoted `"Name"(...)` external) additionally needs an `instanceType` and a
+ * matching system-types.yaml entry, neither of which a call site reveals --
+ * offering a half-filled scaffold there would just trade one diagnostic for
+ * another. See `RegistryFix`. */
+export function unknownInstructionFix(call: CallNode, isScl: boolean): RegistryFix | undefined {
+  if (!call.name || call.instancePrefix || call.externalName !== undefined) return undefined;
+  const pinNames: string[] = [];
+  for (const p of call.pins) {
+    if (p.name && !pinNames.includes(p.name)) pinNames.push(p.name);
+  }
+  return { kind: "unknown-instruction", instructionName: call.name, scl: isScl, pinNames };
+}
 
 interface ParsedTemplateValue {
   shape: "single" | "bracketed";
@@ -173,7 +189,10 @@ export function checkCall(call: CallNode, ruleSet: RuleSet, networkLanguage: str
   const isScl = networkLanguage === "SCL";
   const entry = ruleSet.instructions[call.name];
   if (!entry) {
-    diags.push(formatDiagnostic(ruleSet, "unknown-instruction", call.line, call.col, { callName: call.name }, { variant: "catalog" }));
+    diags.push({
+      ...formatDiagnostic(ruleSet, "unknown-instruction", call.line, call.col, { callName: call.name }, { variant: "catalog" }),
+      registryFix: unknownInstructionFix(call, isScl),
+    });
     return diags;
   }
 
@@ -230,9 +249,14 @@ export function checkCall(call: CallNode, ruleSet: RuleSet, networkLanguage: str
     // such allowance, so this is gated to SCL only.
     const positionallyFilled = isScl && positionalCallPins.length > entry.pins.indexOf(rp);
     if (!found && !positionallyFilled) {
-      diags.push(
-        formatDiagnostic(ruleSet, "missing-required-pin", call.line, call.col, { pinName: rp.name!, callName: call.name }, { variant: isScl ? "scl" : "named" })
-      );
+      diags.push({
+        ...formatDiagnostic(ruleSet, "missing-required-pin", call.line, call.col, { pinName: rp.name!, callName: call.name }, { variant: isScl ? "scl" : "named" }),
+        // A `required: true` that was never actually required is a common
+        // transcription slip (e.g. PUT's ADDR_2..4/SD_2..4 -- Siemens
+        // documents only the _1 pair as mandatory), so this one carries a
+        // "mark it optional" Quick Fix -- see `RegistryFix`.
+        registryFix: { kind: "pin-required", instructionName: call.name, pinName: rp.name!, scl: isScl },
+      });
     }
   }
 

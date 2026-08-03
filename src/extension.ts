@@ -17,6 +17,13 @@ import { S7dclDefinitionProvider } from "./providers/definition";
 import { S7dclHoverProvider } from "./providers/hover";
 import { ExprConversionQuickFixProvider } from "./providers/exprConversionQuickFixProvider";
 import { InstanceQuickFixProvider } from "./providers/instanceQuickFixProvider";
+import {
+  MARK_PIN_OPTIONAL_COMMAND,
+  MarkPinOptionalArgs,
+  RegistryQuickFixProvider,
+  SCAFFOLD_INSTRUCTION_COMMAND,
+  ScaffoldInstructionArgs,
+} from "./providers/registryQuickFixProvider";
 import { MlcHintsController } from "./providers/mlcHints";
 import { S7dclRenameProvider } from "./providers/rename";
 import { S7dclSemanticTokensProvider, semanticTokensLegend } from "./providers/semanticTokens";
@@ -24,7 +31,10 @@ import { S7ResDefinitionProvider } from "./providers/s7resDefinition";
 import { S7ResRenameProvider } from "./providers/s7resRename";
 import { loadRuleSet } from "./rules/loadRules";
 import { RuleSet } from "./rules/types";
-import { RegistryEditorPanel } from "./instructionEditor/panel";
+import { RegistryEditorPanel, RevealEntryTarget } from "./instructionEditor/panel";
+import { RegistryEditResult, scaffoldInstruction, setPinsRequired } from "./instructionEditor/registryQuickFixEdits";
+import { EXTERNAL_REGISTRY_FILES } from "./instructionEditor/registryPaths";
+import { KNOWN_FAMILIES } from "./instructionEditor/schemaEnums";
 
 const S7DCL_SELECTOR: vscode.DocumentSelector = [{ language: "s7dcl" }, { language: "s7udt" }, { language: "s7scl" }];
 const S7RES_SELECTOR: vscode.DocumentSelector = [{ pattern: "**/*.s7res" }];
@@ -87,6 +97,11 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
       S7DCL_SELECTOR,
       new ExprConversionQuickFixProvider(ruleSet, cacheManager.getBlockIndex(), () => cacheManager.getTypeCacheResult()),
       ExprConversionQuickFixProvider.metadata
+    ),
+    vscode.languages.registerCodeActionsProvider(
+      S7DCL_SELECTOR,
+      new RegistryQuickFixProvider(ruleSet, cacheManager.getBlockIndex(), () => cacheManager.getTypeCacheResult()),
+      RegistryQuickFixProvider.metadata
     )
   );
 
@@ -173,6 +188,114 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
   context.subscriptions.push(
     vscode.commands.registerCommand("tiaLint.openInstructionEditor", () => {
       RegistryEditorPanel.createOrShow(context, resourcesDir, output);
+    })
+  );
+
+  // --- reacting to registry edits -----------------------------------------
+
+  /** Re-reads the registry from disk after something wrote to it. Every
+   * provider, the cache manager and this module's own `lintDocument` captured
+   * `ruleSet` BY REFERENCE when they were constructed, so the fresh data is
+   * copied ONTO that same object rather than rebound -- rebinding would leave
+   * every one of them pointing at the stale set. */
+  const reloadRuleSet = (): boolean => {
+    try {
+      Object.assign(ruleSet, loadRuleSet(resourcesDir));
+      return true;
+    } catch (err) {
+      output.appendLine(`[S7 Lint] Failed to reload rules after a registry edit: ${String(err)}`);
+      vscode.window.showErrorMessage('S7 Lint: the registry was written but could not be reloaded -- see the "S7 Lint" output channel.');
+      return false;
+    }
+  };
+
+  // Saving in the Instruction Registry Editor takes effect immediately:
+  // without this the linter kept serving the rule set loaded at activation,
+  // so a corrected entry only showed up after reloading the window.
+  context.subscriptions.push(
+    RegistryEditorPanel.onDidSave(async (savedFiles) => {
+      if (!reloadRuleSet()) return;
+      // The UDT/type cache is built FROM the rule set (see CacheManager's own
+      // `buildTypeCache(this.ruleSet, files)`), so a system-types.yaml change
+      // needs the cache rebuilt too -- reloading the rule set alone would
+      // leave symbol resolution using the old type table. Gated on that file
+      // actually having been written, because a rebuild re-parses every UDT
+      // and block file in the workspace and the common case (an
+      // instruction-registry edit) doesn't affect the cache at all.
+      if (savedFiles.includes(EXTERNAL_REGISTRY_FILES.systemTypes)) {
+        await cacheManager.rebuild(); // fires onDidRebuild -> relintAllOpen
+      } else {
+        relintAllOpen();
+      }
+      output.appendLine(
+        `[S7 Lint] Registry saved (${savedFiles.length} file(s)); reloaded ` +
+          `${Object.keys(ruleSet.instructions).length} instructions, ${Object.keys(ruleSet.sclInstructions).length} SCL instructions, ` +
+          `${Object.keys(ruleSet.systemTypes).length} system types.`
+      );
+    }),
+    new vscode.Disposable(() => RegistryEditorPanel.disposeEmitter())
+  );
+
+  /** Shared tail of both registry Quick Fixes: refuse while the editor panel
+   * holds unsaved work, run the edit, then reload rules + re-lint so the
+   * diagnostic disappears without the user having to touch the file. The
+   * offered "Open registry editor" lands directly ON `reveal`'s entry, so
+   * finishing a scaffold (or double-checking a flipped flag) doesn't start
+   * with hunting through a collapsed tree. */
+  const applyRegistryEdit = (
+    run: () => RegistryEditResult,
+    successMessage: (relPath: string) => string,
+    reveal: RevealEntryTarget
+  ): void => {
+    if (RegistryEditorPanel.hasUnsavedChanges()) {
+      void vscode.window.showWarningMessage(
+        "S7 Lint: the Instruction Registry Editor has unsaved changes. Save or revert them first, then apply this fix."
+      );
+      return;
+    }
+    const result = run();
+    if (!result.ok) {
+      void vscode.window.showErrorMessage(`S7 Lint: ${result.reason ?? "the registry edit failed."}`);
+      return;
+    }
+    if (!reloadRuleSet()) return;
+    RegistryEditorPanel.refreshAfterExternalEdit();
+    relintAllOpen();
+    void vscode.window
+      .showInformationMessage(successMessage(result.relPath ?? ""), `Open '${reveal.name}' in registry editor`)
+      .then((choice) => {
+        if (choice) RegistryEditorPanel.createOrShow(context, resourcesDir, output, reveal);
+      });
+  };
+
+  context.subscriptions.push(
+    vscode.commands.registerCommand(MARK_PIN_OPTIONAL_COMMAND, (args: MarkPinOptionalArgs) => {
+      const pins = args.pinNames.join(", ");
+      applyRegistryEdit(
+        () => setPinsRequired(resourcesDir, args.instructionName, args.pinNames, false, args.scl),
+        (relPath) => `S7 Lint: marked ${pins} optional on '${args.instructionName}' in ${relPath}.`,
+        { name: args.instructionName, scl: args.scl }
+      );
+    })
+  );
+
+  context.subscriptions.push(
+    vscode.commands.registerCommand(SCAFFOLD_INSTRUCTION_COMMAND, async (args: ScaffoldInstructionArgs) => {
+      // The one thing a call site genuinely cannot reveal -- it decides which
+      // family file the entry is filed in, so it has to be asked rather than
+      // defaulted to whatever happens to be first.
+      const family = await vscode.window.showQuickPick(KNOWN_FAMILIES, {
+        title: `Add '${args.instructionName}' to the instruction registry`,
+        placeHolder: "Which instruction family does it belong to?",
+      });
+      if (!family) return;
+      applyRegistryEdit(
+        () => scaffoldInstruction(resourcesDir, { instructionName: args.instructionName, family, scl: args.scl, pinNames: args.pinNames }),
+        (relPath) =>
+          `S7 Lint: scaffolded '${args.instructionName}' in ${relPath} (confidence: shape-only). ` +
+          "Complete its pin directions and data types against Siemens' documentation.",
+        { name: args.instructionName, scl: args.scl }
+      );
     })
   );
 }

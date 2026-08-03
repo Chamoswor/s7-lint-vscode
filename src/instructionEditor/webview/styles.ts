@@ -98,8 +98,23 @@ select { cursor: pointer; }
 .section > .body { padding: 10px; }
 
 .pin { border: 1px solid var(--vscode-panel-border); border-radius: 4px; padding: 8px; margin: 8px 0; }
-.pin .pin-head { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
-.pin .pin-head .grow { flex: 1; }
+/* NOT scoped to '.pin' -- the same header row is reused outside a pin, by the
+   Template "Extra pragmas" rows and the system-type member rows. While this
+   was '.pin .pin-head', both of those lost their flex layout entirely and
+   stacked their controls vertically at full width. */
+.pin-head { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+/* The generic control rule above sets 'width: 100%', which as a flex BASE
+   makes every control in this row demand the row's entire width. The row then
+   has no positive free space left, so '.grow's flex-grow distributes nothing
+   and the field it is on -- the pin NAME -- collapses to its minimum while the
+   rest of the row overflows. Inside these header rows a control sizes from
+   flex instead. */
+.pin-head input[type=text], .pin-head select { width: auto; }
+.pin-head .grow { flex: 1 1 0; min-width: 0; }
+/* A short inline caption for a control that lives in a header row rather than
+   in a '.field' block, so it reads as a labelled, editable field instead of a
+   bare box ('display: block' on '.field > label' would break the row). */
+.pin-head > label.inline { font-weight: 600; white-space: nowrap; flex: none; }
 
 /* Searchable multiselect / tag control */
 .ms { position: relative; }

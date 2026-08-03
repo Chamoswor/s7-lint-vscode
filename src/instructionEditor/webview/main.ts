@@ -69,6 +69,18 @@ function App() {
           setSelectedUid(m.entry.uid);
           setEntry(m.entry);
           setSysType(null);
+          // Selecting an entry the tree has collapsed away would show its
+          // form with nothing highlighted anywhere -- expand its file and
+          // every folder above it so the selection is actually visible. Only
+          // the root starts expanded, so this matters most when the panel was
+          // just opened straight onto an entry (a registry Quick Fix's
+          // "Open registry editor"), but it is equally right for a create or
+          // cross-file move into a folder the user had closed.
+          setExpanded((prev) => {
+            const next = new Set(prev);
+            for (const id of ancestorNodeIds(m.entry.filePath)) next.add(id);
+            return next;
+          });
           break;
         case "systemTypeData":
           setSysType(m.data);
@@ -550,6 +562,17 @@ function folderHasMatch(node: FolderNode, filter: string): boolean {
 }
 function indent(depth: number): string {
   return `padding-left:${6 + depth * 12}px`;
+}
+
+/** Every tree-node id that must be expanded for a file's entries to be
+ * visible: the file itself plus each folder above it, up to the root. Node
+ * ids ARE relPaths (`""` for the root) -- see registryIndex.ts's FolderNode/
+ * FileNode -- so the chain is just the path's own prefixes. */
+function ancestorNodeIds(fileRelPath: string): string[] {
+  const ids = [""];
+  const parts = fileRelPath.split("/");
+  for (let i = 1; i <= parts.length; i++) ids.push(parts.slice(0, i).join("/"));
+  return ids;
 }
 
 // --- problems panel -----------------------------------------------------

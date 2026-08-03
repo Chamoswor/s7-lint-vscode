@@ -78,8 +78,7 @@ MOVE_BLK:
     extra: {}
   confidence: official-doc
   notes: >-
-    Copies COUNT consecutive ARRAY elements from IN to OUT. Source and destination element datatypes
-    must match.
+    Copies COUNT consecutive ARRAY elements from IN to OUT. Source and destination element datatypes must match.
   source: "official instruction documentation (paraphrased)"
 MOVE_BLK_VARIANT:
   family: move
@@ -150,8 +149,7 @@ MOVE_BLK_VARIANT:
     extra: {}
   confidence: official-doc
   notes: >-
-    Copies a complete ARRAY or selected ARRAY range through VARIANT operands. BOOL and ARRAY of BOOL are
-    not valid SRC values.
+    Copies a complete ARRAY or selected ARRAY range through VARIANT operands. BOOL and ARRAY of BOOL are not valid SRC values.
   source: "official instruction documentation (paraphrased)"
 UMOVE_BLK:
   family: move
@@ -216,8 +214,7 @@ UMOVE_BLK:
     extra: {}
   confidence: official-doc
   notes: >-
-    Uninterruptible MOVE_BLK variant. It increases interrupt reaction time during execution and is
-    limited to the documented maximum transfer size.
+    Uninterruptible MOVE_BLK variant. It increases interrupt reaction time during execution and is limited to the documented maximum transfer size.
   source: "official instruction documentation (paraphrased)"
 FILL_BLK:
   family: move
@@ -355,8 +352,7 @@ UFILL_BLK:
     extra: {}
   confidence: official-doc
   notes: >-
-    Writes IN to COUNT consecutive target elements. The operation is uninterruptible and subject to the
-    documented transfer-size limit.
+    Writes IN to COUNT consecutive target elements. The operation is uninterruptible and subject to the documented transfer-size limit.
   source: "official instruction documentation (paraphrased)"
 SCATTER:
   family: move
@@ -400,8 +396,7 @@ SCATTER:
     extra: {}
   confidence: official-doc
   notes: >-
-    Splits one bit sequence into BOOL members. The destination must contain exactly 8, 16, 32 or 64 BOOL
-    elements and may not be a multidimensional ARRAY.
+    Splits one bit sequence into BOOL members. The destination must contain exactly 8, 16, 32 or 64 BOOL elements and may not be a multidimensional ARRAY.
   source: "official instruction documentation (paraphrased)"
 SCATTER_BLK:
   family: move
@@ -460,8 +455,7 @@ SCATTER_BLK:
     extra: {}
   confidence: official-doc
   notes: >-
-    Splits COUNT_IN consecutive bit-sequence ARRAY elements into BOOL storage. The destination index
-    must satisfy the documented bit-width alignment rule.
+    Splits COUNT_IN consecutive bit-sequence ARRAY elements into BOOL storage. The destination index must satisfy the documented bit-width alignment rule.
   source: "official instruction documentation (paraphrased)"
 GATHER:
   family: move
@@ -505,8 +499,7 @@ GATHER:
     extra: {}
   confidence: official-doc
   notes: >-
-    Merges BOOL members into one bit sequence. The source must contain exactly 8, 16, 32 or 64 BOOL
-    elements and may not be a multidimensional ARRAY.
+    Merges BOOL members into one bit sequence. The source must contain exactly 8, 16, 32 or 64 BOOL elements and may not be a multidimensional ARRAY.
   source: "official instruction documentation (paraphrased)"
 GATHER_BLK:
   family: move
@@ -565,8 +558,7 @@ GATHER_BLK:
     extra: {}
   confidence: official-doc
   notes: >-
-    Merges BOOL storage into COUNT_OUT consecutive bit-sequence ARRAY elements. The source index must
-    satisfy the documented alignment rule.
+    Merges BOOL storage into COUNT_OUT consecutive bit-sequence ARRAY elements. The source index must satisfy the documented alignment rule.
   source: "official instruction documentation (paraphrased)"
 SWAP:
   family: move
@@ -652,8 +644,7 @@ Deserialize:
     extra: {}
   confidence: official-doc
   notes: >-
-    Deserializes one PLC datatype, STRUCT or ARRAY from a BYTE/CHAR stream. Optimized buffers require
-    the documented firmware versions.
+    Deserializes one PLC datatype, STRUCT or ARRAY from a BYTE/CHAR stream. Optimized buffers require the documented firmware versions.
   source: "official instruction documentation (paraphrased)"
 Serialize:
   family: move
@@ -705,8 +696,7 @@ Serialize:
     extra: {}
   confidence: official-doc
   notes: >-
-    Serializes one PLC datatype, STRUCT or ARRAY into a BYTE/CHAR stream. Padding content is not
-    application data.
+    Serializes one PLC datatype, STRUCT or ARRAY into a BYTE/CHAR stream. Padding content is not application data.
   source: "official instruction documentation (paraphrased)"
 VariantGet:
   family: move
@@ -748,8 +738,7 @@ VariantGet:
     extra: {}
   confidence: official-doc
   notes: >-
-    Reads the value referenced by SRC into DST. The destination datatype must match the referenced
-    datatype.
+    Reads the value referenced by SRC into DST. The destination datatype must match the referenced datatype.
   source: "official instruction documentation (paraphrased)"
 VariantPut:
   family: move
@@ -791,8 +780,7 @@ VariantPut:
     extra: {}
   confidence: official-doc
   notes: >-
-    Writes SRC into the storage referenced by DST. The source datatype must match the referenced
-    datatype.
+    Writes SRC into the storage referenced by DST. The source datatype must match the referenced datatype.
   source: "official instruction documentation (paraphrased)"
 CountOfElements:
   family: move
@@ -812,16 +800,14 @@ CountOfElements:
     kind: value
     dataTypes:
     - UDInt
-    notes: ARRAY element count, or number of dimensions for a multidimensional ARRAY; assignable to I, Q, M, D or
-      L.
+    notes: ARRAY element count, or number of dimensions for a multidimensional ARRAY; assignable to I, Q, M, D or L.
   template:
     shape: none
     keys: []
     extra: {}
   confidence: official-doc
   notes: >-
-    Returns zero when the operand does not reference an ARRAY. BOOL ARRAY padding elements are included
-    in the documented count.
+    Returns zero when the operand does not reference an ARRAY. BOOL ARRAY padding elements are included in the documented count.
   source: "official instruction documentation (paraphrased)"
 LOWER_BOUND:
   family: move
@@ -1018,8 +1004,7 @@ ResolveSymbols:
     extra: {}
   confidence: official-doc
   notes: >-
-    S7-1500 asynchronous instance call. nameList and referenceList must have identical ARRAY limits;
-    referenceList must be in an optimized global DB.
+    S7-1500 asynchronous instance call. nameList and referenceList must have identical ARRAY limits; referenceList must be in an optimized global DB.
   source: "official instruction documentation (paraphrased)"
 MoveResolvedSymbolsToBuffer:
   family: move
@@ -1115,8 +1100,7 @@ MoveResolvedSymbolsToBuffer:
     extra: {}
   confidence: official-doc
   notes: >-
-    S7-1500 function that reads values through ResolvedSymbol references and packs them into a BYTE
-    buffer. src, dstOffsets and status require matching ARRAY limits.
+    S7-1500 function that reads values through ResolvedSymbol references and packs them into a BYTE buffer. src, dstOffsets and status require matching ARRAY limits.
   source: "official instruction documentation (paraphrased)"
 MoveResolvedSymbolsFromBuffer:
   family: move
@@ -1209,6 +1193,398 @@ MoveResolvedSymbolsFromBuffer:
     extra: {}
   confidence: official-doc
   notes: >-
-    S7-1500 function that unpacks values from a BYTE buffer and writes them through ResolvedSymbol
-    references. dst, srcOffsets and status require matching ARRAY limits.
+    S7-1500 function that unpacks values from a BYTE buffer and writes them through ResolvedSymbol references. dst, srcOffsets and status require matching ARRAY limits.
   source: "official instruction documentation (paraphrased)"
+
+PEEK_WORD:
+  family: move
+  callShape: box
+  pins:
+  - {name: area, dir: in, required: true, note: '', allowedDeclarations: [], memoryAreas: [I, Q, M, D, constant], dataTypes: [Byte]}
+  - {name: dbNumber, dir: in, required: true, note: 'Number of the data block if AREA = DB, otherwise "0"', allowedDeclarations: [], memoryAreas: [D, L], dataTypes: [DInt, DB_ANY]}
+  - {name: byteOffset, dir: in, required: true, note: Only the 16 least significant bits are used., allowedDeclarations: [], dataTypes: [DInt], memoryAreas: [I, Q, M, D, L, constant]}
+  template: {shape: none, keys: [], extra: {}}
+  confidence: official-doc
+  notes: |-
+    The "Read memory address" instruction is used to read a memory address from a standard memory area without specifying a data type.
+
+    Use the following syntax to change the data type of the instruction:
+
+    PEEK_<data type>();
+  language: [SCL]
+  result: {kind: value, dataTypes: [Word]}
+
+PEEK:
+  family: move
+  callShape: box
+  pins:
+  - name: area
+    dir: in
+    required: true
+    note: ''
+    allowedDeclarations: []
+    memoryAreas: [I, Q, M, D, constant]
+    dataTypes: [Byte]
+  - name: dbNumber
+    dir: in
+    required: true
+    note: Number of the data block if AREA = DB, otherwise "0"
+    allowedDeclarations: []
+    memoryAreas: [D, L]
+    dataTypes: [DInt, DB_ANY]
+  - name: byteOffset
+    dir: in
+    required: true
+    note: Only the 16 least significant bits are used.
+    allowedDeclarations: []
+    dataTypes: [DInt]
+    memoryAreas: [I, Q, M, D, L, constant]
+  template: {shape: none, keys: [], extra: {}}
+  confidence: official-doc
+  notes: |-
+    The "Read memory address" instruction is used to read a memory address from a standard memory area without specifying a data type.
+
+    Use the following syntax to change the data type of the instruction:
+
+    PEEK_<data type>();
+
+    If you read the memory address from the input, output or bit memory areas, you must assign the DBNUMBER parameter the value "0", as the instruction is invalid otherwise.
+  language: [SCL]
+  result:
+    kind: value
+    dataTypes: [Word]
+
+PEEK_BYTE:
+  family: move
+  callShape: box
+  pins:
+  - name: area
+    dir: in
+    required: true
+    note: ''
+    allowedDeclarations: []
+    memoryAreas: [I, Q, M, D, constant]
+    dataTypes: [Byte]
+  - name: dbNumber
+    dir: in
+    required: true
+    note: Number of the data block if AREA = DB, otherwise "0"
+    allowedDeclarations: []
+    memoryAreas: [D, L]
+    dataTypes: [DInt, DB_ANY]
+  - name: byteOffset
+    dir: in
+    required: true
+    note: Only the 16 least significant bits are used.
+    allowedDeclarations: []
+    dataTypes: [DInt]
+    memoryAreas: [I, Q, M, D, L, constant]
+  template: {shape: none, keys: [], extra: {}}
+  confidence: official-doc
+  notes: |-
+    The "Read memory address" instruction is used to read a memory address from a standard memory area without specifying a data type.
+
+    Use the following syntax to change the data type of the instruction:
+
+    PEEK_<data type>();
+
+    If you read the memory address from the input, output or bit memory areas, you must assign the DBNUMBER parameter the value "0", as the instruction is invalid otherwise.
+  language: [SCL]
+  result:
+    kind: value
+    dataTypes: [Byte]
+
+PEEK_DWORD:
+  family: move
+  callShape: box
+  pins:
+  - name: area
+    dir: in
+    required: true
+    note: ''
+    allowedDeclarations: []
+    memoryAreas: [I, Q, M, D, constant]
+    dataTypes: [Byte]
+  - name: dbNumber
+    dir: in
+    required: true
+    note: Number of the data block if AREA = DB, otherwise "0"
+    allowedDeclarations: []
+    memoryAreas: [D, L]
+    dataTypes: [DInt, DB_ANY]
+  - name: byteOffset
+    dir: in
+    required: true
+    note: Only the 16 least significant bits are used.
+    allowedDeclarations: []
+    dataTypes: [DInt]
+    memoryAreas: [I, Q, M, D, constant]
+  template: {shape: none, keys: [], extra: {}}
+  confidence: official-doc
+  notes: |-
+    The "Read memory address" instruction is used to read a memory address from a standard memory area without specifying a data type.
+
+    Use the following syntax to change the data type of the instruction:
+
+    PEEK_<data type>();
+
+    If you read the memory address from the input, output or bit memory areas, you must assign the DBNUMBER parameter the value "0", as the instruction is invalid otherwise.
+  language: [SCL]
+  result:
+    kind: value
+    dataTypes: [DWord]
+
+PEEK_LWORD:
+  family: move
+  callShape: box
+  pins:
+  - name: area
+    dir: in
+    required: true
+    note: ''
+    allowedDeclarations: []
+    memoryAreas: [I, Q, M, D, constant]
+    dataTypes: [Byte]
+  - name: dbNumber
+    dir: in
+    required: true
+    note: Number of the data block if AREA = DB, otherwise "0"
+    allowedDeclarations: []
+    memoryAreas: [D, L]
+    dataTypes: [DInt, DB_ANY]
+  - name: byteOffset
+    dir: in
+    required: true
+    note: Only the 16 least significant bits are used.
+    allowedDeclarations: []
+    dataTypes: [DInt]
+    memoryAreas: [I, Q, M, D, L, constant]
+  template: {shape: none, keys: [], extra: {}}
+  confidence: official-doc
+  notes: |-
+    The "Read memory address" instruction is used to read a memory address from a standard memory area without specifying a data type.
+
+    Use the following syntax to change the data type of the instruction:
+
+    PEEK_<data type>();
+
+    If you read the memory address from the input, output or bit memory areas, you must assign the DBNUMBER parameter the value "0", as the instruction is invalid otherwise.
+  language: [SCL]
+  result:
+    kind: value
+    dataTypes: [LWord]
+
+PEEK_BOOL:
+  family: move
+  callShape: box
+  pins:
+  - name: area
+    dir: in
+    required: true
+    note: ''
+    allowedDeclarations: []
+    memoryAreas: [I, Q, M, D, constant]
+    dataTypes: [Byte]
+  - name: dbNumber
+    dir: in
+    required: true
+    note: Number of the data block if AREA = DB, otherwise "0"
+    allowedDeclarations: []
+    memoryAreas: [D, L]
+    dataTypes: [DInt, DB_ANY]
+  - name: byteOffset
+    dir: in
+    required: true
+    note: Only the 16 least significant bits are used.
+    allowedDeclarations: []
+    dataTypes: [DInt]
+    memoryAreas: [I, Q, M, D, L, constant]
+  - {name: bitOffset, dir: in, required: true, dataTypes: [Int], memoryAreas: [I, Q, M, D, L, constant], allowedDeclarations: []}
+  template: {shape: none, keys: [], extra: {}}
+  confidence: official-doc
+  notes: |-
+    The "Read memory address" instruction is used to read a memory address from a standard memory area without specifying a data type.
+
+    Use the following syntax to change the data type of the instruction:
+
+    PEEK_<data type>();
+
+    If you read the memory address from the input, output or bit memory areas, you must assign the DBNUMBER parameter the value "0", as the instruction is invalid otherwise.
+  language: [SCL]
+  result:
+    kind: value
+    dataTypes: [Bool]
+
+POKE_BOOL:
+  family: move
+  callShape: box
+  pins:
+  - {name: area, dir: in, required: true, note: '', memoryAreas: [I, Q, M, D, constant, L], dataTypes: [Byte]}
+  - {name: dbNumber, dir: in, required: true, note: 'Number of the data block if AREA = DB, otherwise "0"', memoryAreas: [D, L], dataTypes: [DInt, DB_ANY]}
+  - {name: byteOffset, dir: in, required: true, note: '', memoryAreas: [I, Q, D, constant, M, L], dataTypes: [DInt]}
+  - {name: bitOffset, dir: in, required: true, note: '', memoryAreas: [I, Q, D, constant, M, L], dataTypes: [Int]}
+  - {name: value, dir: in, required: true, note: '', memoryAreas: [I, Q, D, constant, M, L], dataTypes: [Bool]}
+  template: {shape: none, keys: [], extra: {}}
+  confidence: official-doc
+  notes: The "Write memory bit" instruction is used to write a memory bit to a standard memory area without specifying a data type.
+  language: [SCL]
+POKE:
+  family: move
+  callShape: box
+  pins:
+  - name: area
+    dir: in
+    required: true
+    note: ''
+    memoryAreas: [I, Q, M, D, constant]
+    dataTypes: [Byte]
+  - name: dbNumber
+    dir: in
+    required: true
+    note: Number of the data block if AREA = DB, otherwise "0"
+    memoryAreas: [D, L]
+    dataTypes: [DInt, DB_ANY]
+  - name: byteOffset
+    dir: in
+    required: true
+    note: ''
+    memoryAreas: [I, Q, D, constant]
+    dataTypes: [DInt]
+  - name: value
+    dir: in
+    required: true
+    note: ''
+    memoryAreas: [I, Q, D, constant]
+    dataTypes: [Word, DWord, LWord, Byte]
+  template: {shape: none, keys: [], extra: {}}
+  confidence: official-doc
+  notes: The "Write memory bit" instruction is used to write a memory bit to a standard memory area without specifying a data type.
+  language: [SCL]
+POKE_BYTE:
+  family: move
+  callShape: box
+  pins:
+  - name: area
+    dir: in
+    required: true
+    note: ''
+    memoryAreas: [I, Q, M, D, constant]
+    dataTypes: [Byte]
+  - name: dbNumber
+    dir: in
+    required: true
+    note: Number of the data block if AREA = DB, otherwise "0"
+    memoryAreas: [D, L]
+    dataTypes: [DInt, DB_ANY]
+  - name: byteOffset
+    dir: in
+    required: true
+    note: ''
+    memoryAreas: [I, Q, D, constant]
+    dataTypes: [DInt]
+  - name: value
+    dir: in
+    required: true
+    note: ''
+    memoryAreas: [I, Q, D, constant]
+    dataTypes: [Byte]
+  template: {shape: none, keys: [], extra: {}}
+  confidence: official-doc
+  notes: The "Write memory bit" instruction is used to write a memory bit to a standard memory area without specifying a data type.
+  language: [SCL]
+POKE_WORD:
+  family: move
+  callShape: box
+  pins:
+  - name: area
+    dir: in
+    required: true
+    note: ''
+    memoryAreas: [I, Q, M, D, constant]
+    dataTypes: [Byte]
+  - name: dbNumber
+    dir: in
+    required: true
+    note: Number of the data block if AREA = DB, otherwise "0"
+    memoryAreas: [D, L]
+    dataTypes: [DInt, DB_ANY]
+  - name: byteOffset
+    dir: in
+    required: true
+    note: ''
+    memoryAreas: [I, Q, D, constant]
+    dataTypes: [DInt]
+  - name: value
+    dir: in
+    required: true
+    note: ''
+    memoryAreas: [I, Q, D, constant]
+    dataTypes: [Word]
+  template: {shape: none, keys: [], extra: {}}
+  confidence: official-doc
+  notes: The "Write memory bit" instruction is used to write a memory bit to a standard memory area without specifying a data type.
+  language: [SCL]
+POKE_DWORD:
+  family: move
+  callShape: box
+  pins:
+  - name: area
+    dir: in
+    required: true
+    note: ''
+    memoryAreas: [I, Q, M, D, constant]
+    dataTypes: [Byte]
+  - name: dbNumber
+    dir: in
+    required: true
+    note: Number of the data block if AREA = DB, otherwise "0"
+    memoryAreas: [D, L]
+    dataTypes: [DInt, DB_ANY]
+  - name: byteOffset
+    dir: in
+    required: true
+    note: ''
+    memoryAreas: [I, Q, D, constant]
+    dataTypes: [DInt]
+  - name: value
+    dir: in
+    required: true
+    note: ''
+    memoryAreas: [I, Q, D, constant]
+    dataTypes: [DWord]
+  template: {shape: none, keys: [], extra: {}}
+  confidence: official-doc
+  notes: The "Write memory bit" instruction is used to write a memory bit to a standard memory area without specifying a data type.
+  language: [SCL]
+POKE_LWORD:
+  family: move
+  callShape: box
+  pins:
+  - name: area
+    dir: in
+    required: true
+    note: ''
+    memoryAreas: [I, Q, M, D, constant]
+    dataTypes: [Byte]
+  - name: dbNumber
+    dir: in
+    required: true
+    note: Number of the data block if AREA = DB, otherwise "0"
+    memoryAreas: [D, L]
+    dataTypes: [DInt, DB_ANY]
+  - name: byteOffset
+    dir: in
+    required: true
+    note: ''
+    memoryAreas: [I, Q, D, constant]
+    dataTypes: [DInt]
+  - name: value
+    dir: in
+    required: true
+    note: ''
+    memoryAreas: [I, Q, D, constant]
+    dataTypes: [LWord]
+  template: {shape: none, keys: [], extra: {}}
+  confidence: official-doc
+  notes: The "Write memory bit" instruction is used to write a memory bit to a standard memory area without specifying a data type.
+  language: [SCL]

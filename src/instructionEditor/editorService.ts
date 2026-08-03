@@ -205,6 +205,30 @@ export class EditorService {
     return { doc, relPath: found.relPath, name: found.name };
   }
 
+  /**
+   * Finds an entry by its instruction NAME within one half of the registry,
+   * the way an outside caller (a Quick Fix, a reveal request) has to address
+   * it -- a `uid` is per-load and meaningless across EditorService instances,
+   * but a name plus which half it lives in is stable.
+   *
+   * `scl` is not optional guesswork: rules/loadRules.ts routes `SCL-*.yaml`
+   * into `RuleSet.sclInstructions` and everything else into
+   * `RuleSet.instructions`, and the two can legitimately hold same-named
+   * entries with different pin data (see that field's own comment), so
+   * searching both would pick an arbitrary one of the pair.
+   */
+  findEntryByName(name: string, scl: boolean): { uid: string; relPath: string } | undefined {
+    for (const relPath of this.ws.fileRelPaths()) {
+      if (isSclOf(relPath) !== scl) continue;
+      const doc = this.ws.document(relPath);
+      if (!doc) continue;
+      for (const entry of doc.entries()) {
+        if (entry.name === name) return { uid: entry.uid, relPath };
+      }
+    }
+    return undefined;
+  }
+
   entryData(uid: string): EntryData | undefined {
     const loc = this.locate(uid);
     if (!loc) return undefined;

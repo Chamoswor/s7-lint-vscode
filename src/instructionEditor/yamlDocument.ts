@@ -33,10 +33,18 @@ import { FILE_LANGUAGE_KEY } from "./registryPaths";
  *    (`[Bool]`, `[I, Q, M]`, `[]`, `{}` -- unpadded), instead of eemeli's
  *    default `[ Bool ]`. The only remaining normalization is non-empty flow
  *    maps (`{ shape: none }` -> `{shape: none}`), which are rare.
+ *  - `indentSeq: false` keeps a block sequence flush under its own key
+ *    (`pins:` then `  - name: REQ`), the style every registry file is
+ *    written in. eemeli's default indents it one extra level, which
+ *    re-rendered EVERY line of an entry's pin list on any edit -- a
+ *    six-word change to PUT's `required` flags produced a 65-line diff.
+ *  - `singleQuote: true` matches the files' own `note: ''` over eemeli's
+ *    default `""`. Only affects nodes this editor CREATES: a parsed scalar
+ *    keeps whatever quote style it was written with.
  * True byte-for-byte preservation of untouched regions is a save-path
  * refinement (CST-level surgical edits) tracked for the save phase; today the
  * dirty-flag gate already ensures unchanged FILES are never rewritten at all. */
-const STRINGIFY_OPTS = { lineWidth: 0, flowCollectionPadding: false } as const;
+const STRINGIFY_OPTS = { lineWidth: 0, flowCollectionPadding: false, indentSeq: false, singleQuote: true } as const;
 
 /** Non-enumerable marker holding a top-level entry Pair's stable uid, so it
  * survives being moved between Documents but never leaks into serialization. */

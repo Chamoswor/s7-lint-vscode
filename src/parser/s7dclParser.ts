@@ -12,6 +12,7 @@
 // (e.g. `wire#` branch labels after RUNG, GRAPH-only constructs) instead
 // of losing every diagnostic in the file.
 import { Lexer, Token, TokenCursor } from "./lexer";
+import { isLiteralOrWireTail, literalRunLength } from "./literalRun";
 import { Pragma, parsePragmaBlock } from "./pragma";
 import { MemberRef, parseTypeRefFromCursor } from "./typeRef";
 
@@ -250,40 +251,6 @@ export const SCL_RESERVED_KEYWORDS = new Set([
   "REGION", "END_REGION",
   "AND", "OR", "XOR", "NOT", "MOD",
 ]);
-
-/** Recognized letter prefixes for a `<prefix>#...` typed/radix literal
- * (time/date/duration prefixes, plus B/W/DW size hints and the P pointer
- * prefix) -- same list analysis/documentIndex.ts's own
- * `LITERAL_LETTER_PREFIXES` uses (kept as a separate small copy here
- * rather than an import, since this parser has no dependency on
- * analysis/ today and this list is small and stable). An explicit
- * whitelist rather than "any short word" -- `wire#w1` is excluded below
- * by name instead of by this list, same reasoning documentIndex.ts's own
- * comment gives. */
-const LITERAL_LETTER_PREFIXES = new Set([
-  "T", "TIME", "LT", "LTIME", "S5T", "S5TIME",
-  "D", "DATE", "DT", "DATE_AND_TIME", "DTL",
-  "TOD", "TIME_OF_DAY", "LTOD", "B", "W", "DW", "P",
-]);
-
-function tokensAdjacent(a: Token, b: Token): boolean {
-  return a.line === b.line && b.offset === a.offset + a.text.length;
-}
-
-/** True if `hashToken` (a `#...`-shaped ident) is actually the tail half
- * of a `<prefix>#...` typed/radix literal (e.g. `T#500MS`) or a
- * `wire#label` branch-tap label, given the token immediately before it
- * -- NOT a real tag/operand reference. Both share the exact same token
- * shape a real `#tag` has (the lexer has no separate "literal" token
- * kind for these, see lexer.ts's own ident rule matching `#` as a
- * regular identifier start character) -- without this check, `T#0S`
- * inside a pin's value or an SCL expression would misparse as a
- * reference to a tag literally named "0S". */
-function isLiteralOrWireTail(prevToken: Token | null, hashToken: Token): boolean {
-  if (!prevToken || prevToken.kind !== "ident" || !tokensAdjacent(prevToken, hashToken)) return false;
-  const upper = prevToken.text.toUpperCase();
-  return upper === "WIRE" || LITERAL_LETTER_PREFIXES.has(upper);
-}
 
 function skipToSemicolon(cur: TokenCursor): void {
   let depth = 0;
@@ -778,64 +745,12 @@ export interface SclAssignmentExpr {
 
 /** Every token length (peek-offset-relative) this run of adjacent tokens
  * forming ONE literal spans, starting at `offset` -- 0 if `offset` isn't
- * the start of a recognizable literal at all. Mirrors
- * analysis/documentIndex.ts's own `scanLiteralRun` (a numeric literal
- * optionally chained with adjacent `#`/`.number` segments, or a
- * letter-prefixed typed literal like `T#10ms`/`W#16#00FF` -- see this
- * file's own `LITERAL_LETTER_PREFIXES`/`tokensAdjacent`), reimplemented
- * peek-only here rather than imported (that function is `documentIndex.ts`-
- * private, and this file has no dependency on that module -- avoids the
- * documentIndex.ts <-> s7dclParser.ts import direction this project
- * already avoids elsewhere). The P#-pointer dotted-address tail
- * `scanLiteralRun` also handles is deliberately NOT reproduced here -- a
- * pointer literal is never a legal arithmetic/logical/comparison operand,
- * so this feature has no use for recognizing one; don't guess syntax this
- * checker will never need. */
+ * the start of a recognizable literal at all. The P#-pointer dotted-address
+ * tail `literalRunLength` can also consume is deliberately left OFF here --
+ * a pointer literal is never a legal arithmetic/logical/comparison operand,
+ * so this feature has no use for recognizing one. */
 function peekLiteralRunLength(cur: TokenCursor, offset: number): number {
-  const t0 = cur.peek(offset);
-  if (t0.kind === "number") {
-    let n = 1;
-    let prev = t0;
-    for (;;) {
-      const nxt = cur.peek(offset + n);
-      if (!tokensAdjacent(prev, nxt)) break;
-      if (nxt.kind === "ident" && nxt.text.startsWith("#")) {
-        n++;
-        prev = nxt;
-        continue;
-      }
-      if (nxt.kind === "punct" && nxt.text === ".") {
-        const after = cur.peek(offset + n + 1);
-        if (tokensAdjacent(nxt, after) && after.kind === "number") {
-          n += 2;
-          prev = after;
-          continue;
-        }
-      }
-      break;
-    }
-    return n;
-  }
-  if (t0.kind === "ident" && LITERAL_LETTER_PREFIXES.has(t0.text.toUpperCase())) {
-    const t1 = cur.peek(offset + 1);
-    if (tokensAdjacent(t0, t1) && t1.kind === "ident" && t1.text.startsWith("#")) {
-      let n = 2;
-      let prev = t1;
-      for (;;) {
-        const nxt = cur.peek(offset + n);
-        if (!tokensAdjacent(prev, nxt)) break;
-        if (nxt.kind === "ident" && nxt.text.startsWith("#")) {
-          n++;
-          prev = nxt;
-          continue;
-        }
-        break;
-      }
-      return n;
-    }
-  }
-  if (t0.kind === "ident" && /^(TRUE|FALSE|NULL|ZERO)$/i.test(t0.text)) return 1;
-  return 0;
+  return literalRunLength(cur, offset, { keywordLiterals: true });
 }
 
 /** SCL binary operator precedence (higher binds tighter), IEC 61131-3
