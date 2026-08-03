@@ -20,3 +20,5 @@ Thumbs.db
 
 # Node
 node_modules/
+
+*.vsix
