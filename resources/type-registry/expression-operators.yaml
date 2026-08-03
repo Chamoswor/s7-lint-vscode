@@ -28,6 +28,18 @@ arithmetic:
   allowedDomainPairs:
     - [numeric, numeric]
     - [time, time]
+    # Arithmetic on a bit string (e.g. a Word counter incremented with
+    # `#w := #w + 1`) is rejected by strict IEC 61131-3, but TIA only
+    # enforces that when a block's "IEC check" property is ON -- with it off
+    # (the default a great deal of real project code is written against) the
+    # compiler converts and accepts it. That property lives in the block's
+    # project settings, NOT in any exported artefact this linter can read,
+    # so flagging the pair would report a hard error on code that genuinely
+    # compiles, with nothing the author could do about it. Confirmed against
+    # a compiling S7-1500 project. `requireExactTypeMatch` is deliberately
+    # NOT extended to arithmetic: mixing two DIFFERENT bit-string widths is
+    # a separate question this corpus gives no evidence about.
+    - [bit-string, bit-string]
   # Within an allowed pair, warn (rather than stay silent) when the two
   # operands' CONCRETE types differ -- e.g. Int + Real (implicit
   # conversion) -- but only for domains listed here. `time` isn't listed:

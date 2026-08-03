@@ -57,7 +57,7 @@ array-index-out-of-range:
 array-index-expression:
   severity: error
   message: "Array index on '{arrayName}' looks like an expression, not a bare constant or variable -- composition-rules.yaml's array.index.actualParameterRule says a variable EXPRESSION (e.g. '#i + 1') isn't a legal index, only either of those two bare forms is."
-  notes: "Confirmed as a real compile error (not just a style warning) via scripts/fixtures/scl-diagnostics/manifest.yaml's SEM-ARRAY-005 -- was 'warning' before that was cross-checked."
+  notes: "NO LONGER EMITTED. The earlier confirmation was circular: it cited manifest.yaml's SEM-ARRAY-005, whose own entry asked for the rule to be validated against the TIA compiler -- which never happened. A compiling S7-1500 project uses variable-expression indices freely. Kept registered so the code stays reserved and the history is findable; see composition-rules.yaml's actualParameterRuleScopeNote."
 
 array-nested-illegal:
   severity: error

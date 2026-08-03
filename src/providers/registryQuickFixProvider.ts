@@ -142,7 +142,7 @@ export class RegistryQuickFixProvider implements vscode.CodeActionProvider {
         }
       } else if (detectS7dclKind(text) === "block") {
         const block = parseS7dclBlock(text);
-        if (block) record(checkInstructions(block, this.ruleSet));
+        if (block) record(checkInstructions(block, this.ruleSet, this.blockIndex));
       }
     } catch {
       // A Quick Fix must never surface a parse/check failure as an error --

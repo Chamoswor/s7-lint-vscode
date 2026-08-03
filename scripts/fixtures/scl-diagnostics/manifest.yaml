@@ -17,6 +17,13 @@ positive:
 - id: SYN-POS-001
   file: positive/SYN-POS-001-general-valid.scl
   expectedDiagnostics: 0
+- id: SEM-ARRAY-005
+  file: positive/SEM-ARRAY-005-variable-index-expression.scl
+  expectedDiagnostics: 0
+  notes: Was a NEGATIVE case asserting that a variable-expression array index is a
+    compile error. It is not - a compiling S7-1500 project indexes arrays this way
+    in several places, and the original entry's own note asked for a compiler check
+    that was never done. Kept as a positive case so the construct stays covered.
 negative:
 - id: SYN-STMT-001
   file: negative/parser/SYN-STMT-001-missing-assignment-semicolon.scl
@@ -250,16 +257,6 @@ negative:
   rule: Array index values must be within -32768..32767.
   registrySource: composition-rules.yaml
   targetPlatform: S7-1200/S7-1500
-- id: SEM-ARRAY-005
-  file: negative/semantic/SEM-ARRAY-005-variable-index-expression.scl
-  severity: error
-  layer: semantic
-  rule: Variable expressions are not legal as an ARRAY index; a variable or constant
-    expression is legal.
-  registrySource: composition-rules.yaml
-  targetPlatform: S7-1200/S7-1500
-  notes: Registry-sourced rule; validate against TIA compiler because this is stricter
-    than many IEC ST implementations.
 - id: SEM-ARRAY-006
   file: negative/semantic/SEM-ARRAY-006-dynamic-array-in-fb-input.scl
   severity: error

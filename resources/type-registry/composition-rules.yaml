@@ -22,6 +22,7 @@ array:
     valueLimits: { min: -32768, max: 32767 }
     valueLimitsNote: "This ±32767 limit applies to the INDEX VALUE regardless of which of the six index types is declared for lo/hi — e.g. declaring UDInt bounds doesn't grant a larger effective range than an Int would. A linter should flag any lo/hi literal outside [-32768, 32767] even on a UDInt/DInt-bounded array."
     actualParameterRule: "Mixed constants and variables are valid for indexing; constant expressions are valid; VARIABLE expressions (e.g. #i + 1) are NOT valid as an index."
+    actualParameterRuleScopeNote: "CONTRADICTED for SCL and NOT enforced. A compiling S7-1500 project indexes arrays with variable expressions (#i + #lowerBound - 1) in several places, so this cannot hold as a general indexing rule. The key name points at the LAD/FBD ACTUAL-PARAMETER context it was transcribed from, where an operand box index field genuinely cannot hold an expression; that narrower claim is unverified here. The linter therefore consumes such an index without flagging it -- re-enable only against a confirmed compiler error, not against this text alone."
   elementType:
     rule: "All elements of one array must be the same data type."
     nestedArraysForbidden: true

@@ -20,8 +20,10 @@ the target CPU and TIA Portal compiler.
 - `.scl`: authored SCL files containing one or more block or type declarations.
 - `.s7dcl`: LAD/FBD declaration exports, program blocks, and `TYPE` declarations.
 - `.udt`: text-format PLC data type declarations.
-- `PLC data types/**/*.xml`: XML PLC data type exports used by the workspace type
-  cache.
+- `**/*.xml`: TIA XML exports. PLC data type exports feed the workspace type
+  cache; DATA_BLOCK exports (`SW.Blocks.InstanceDB`/`GlobalDB`) feed the block
+  index, so references to an instance DB resolve even though TIA writes it in a
+  different format from the FUNCTION_BLOCK it instances.
 - `.s7res`: multilingual resources used by definition, rename, and inline-hint
   support.
 
@@ -156,6 +158,13 @@ resolution. Resolution falls back to `en-US` and then to an available locale.
 - Target CPU family and firmware are not project configuration inputs yet.
   [`platform-availability.NOTLOADED.yaml`](resources/type-registry/platform-availability.NOTLOADED.yaml)
   is reference data and is intentionally not loaded.
+- A block's "IEC check" property is not visible in any export, so rules it
+  toggles cannot be enforced by target. Where the two readings conflict, the
+  permissive one is used, because reporting a hard error on code that compiles
+  leaves the author nothing to act on. Bit-string arithmetic is the current
+  example (see `expression-operators.yaml`).
+- A FUNCTION's declared return type is not parsed, so assignments to its result
+  variable are recognised but not type-checked.
 - Type checks skip unresolved symbols and expression shapes for which a safe,
   single result type cannot be inferred.
 - A `+` or `-` written with no space before a digit is lexed as part of the

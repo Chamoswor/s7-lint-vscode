@@ -761,6 +761,13 @@ export function buildDocumentIndex(text: string, ruleSet: RuleSet, blockIndex: B
     // existing, separately-sourced handling.
     if (!inAllSections && !listedForSection && isInstructionInstanceType(topLevelName)) {
       if (currentBlockType === "FUNCTION_BLOCK" && section !== "STRUCT") return;
+      // VAR_IN_OUT passes BY REFERENCE, so the declaring block never owns the
+      // instance data -- it borrows an instance the caller already owns. That
+      // is the standard way to hand an instruction instance to a FUNCTION,
+      // which otherwise has no static area to keep one in, and it compiles.
+      // The rule this check enforces is about OWNING instance data, so it has
+      // nothing to say about an InOut parameter in any block type.
+      if (section === "VAR_IN_OUT") return;
       const context =
         section === "STRUCT"
           ? "a STRUCT/UDT member"
@@ -943,8 +950,16 @@ export function buildDocumentIndex(text: string, ruleSet: RuleSet, blockIndex: B
     }
   }
 
-  function pushRun(startTok: Token, length: number, tokenType: string, tokenModifiers: string[]): void {
-    spans.push({ line: startTok.line, startCol: startTok.col, length, tokenType, tokenModifiers });
+  function pushRun(
+    startTok: Token,
+    length: number,
+    tokenType: string,
+    tokenModifiers: string[],
+    hoverMarkdown?: string,
+    definition?: Location,
+    renameKey?: string
+  ): void {
+    spans.push({ line: startTok.line, startCol: startTok.col, length, tokenType, tokenModifiers, hoverMarkdown, definition, renameKey });
   }
 
   function typeHover(name: string): string | undefined {
@@ -1303,7 +1318,6 @@ export function buildDocumentIndex(text: string, ruleSet: RuleSet, blockIndex: B
     let text = cur.next().text; // '['
     let dim = 0;
     while (!cur.isPunct("]") && !cur.atEnd()) {
-      const dimStart = cur.peek();
       const operand = walkOperandRef();
       if (operand) {
         text += operand.display;
@@ -1328,15 +1342,20 @@ export function buildDocumentIndex(text: string, ruleSet: RuleSet, blockIndex: B
             }
           }
         } else if (!cur.isPunct(",") && !cur.isPunct("]")) {
-          let tokenCount = 0;
+          // An index that isn't a bare literal (a variable, or an
+          // expression like `#i + 1`) is consumed but NOT flagged.
+          //
+          // composition-rules.yaml's `array.index.actualParameterRule` says a
+          // variable expression isn't a legal index, and this used to report
+          // it as an error. That was wrong for SCL: a compiling S7-1500
+          // project indexes arrays with `#i + #lowerBound - 1` and similar in
+          // several places. The rule's own key names the ACTUAL-PARAMETER
+          // context it was transcribed from, and the fixture that "confirmed"
+          // it carried a `validate against TIA compiler` caveat that was
+          // never discharged -- so the confirmation was circular. See that
+          // rule's own corrected note.
           while (!cur.isPunct(",") && !cur.isPunct("]") && !cur.atEnd()) {
             text += cur.next().text;
-            tokenCount++;
-          }
-          if (tokenCount > 1) {
-            diagnostics.push(
-              formatDiagnostic(ruleSet, "array-index-expression", dimStart.line, dimStart.col, { arrayName: arrayTok.text })
-            );
           }
         }
       }
@@ -1345,6 +1364,31 @@ export function buildDocumentIndex(text: string, ruleSet: RuleSet, blockIndex: B
     }
     if (cur.isPunct("]")) text += cur.next().text;
     return text;
+  }
+
+  /**
+   * The local-tag head at peek-offset `offset`, or undefined if there isn't
+   * one. Pure lookahead. Two spellings of the same thing:
+   *
+   *   - `#Tag` -- one ident token;
+   *   - `#"Tag"` -- TWO tokens, because a name that isn't a legal bare
+   *     identifier (starting with a digit, colliding with a reserved word,
+   *     containing punctuation) has to be quoted, and the lexer can only
+   *     read `#` as an identifier start, never as part of the quoted name.
+   *
+   * Recognising only the first spelling made a quoted local tag parse as a
+   * bare `#` followed by an unrelated string -- which then matched the
+   * `"Name".member` EXTERNAL-reference shape and was reported as a missing
+   * workspace block, and hid the `#"Inst".Instruction(...)` call shape
+   * entirely.
+   */
+  function peekLocalTagHead(offset = 0): { name: string; span: number } | undefined {
+    const t0 = cur.peek(offset);
+    if (t0.kind !== "ident" || !t0.text.startsWith("#")) return undefined;
+    if (t0.text.length > 1) return { name: t0.text.slice(1), span: 1 };
+    const t1 = cur.peek(offset + 1);
+    if (t1.kind === "string" && t1.text.startsWith('"') && tokensAdjacent(t0, t1)) return { name: t1.value ?? "", span: 2 };
+    return undefined;
   }
 
   /** Consumes `#Instance` or `wire#label` PLUS an optional single `[...]`
@@ -1380,12 +1424,19 @@ export function buildDocumentIndex(text: string, ruleSet: RuleSet, blockIndex: B
       // A wire# branch tap always carries a boolean RLO signal in FBD/LAD.
       return { topLevelName: "Bool", derefTopLevelName: null, ownerBlock: undefined, display: wireTok.text + labelTok.text, tok: wireTok };
     }
-    if (t0.kind === "ident" && t0.text.startsWith("#")) {
+    const localHead = peekLocalTagHead();
+    if (localHead) {
       const nameTok = cur.next();
-      const varName = nameTok.text.slice(1);
+      let headLength = nameTok.text.length;
+      // The quoted spelling is two tokens (`#` + `"Name"`); consume the
+      // second so the semantic-token run and `display` cover the whole
+      // reference rather than stopping after the `#`.
+      if (localHead.span === 2) headLength += cur.next().text.length;
+      const varName = localHead.name;
       const decl = localDecls.get(varName);
-      push(
+      pushRun(
         nameTok,
+        headLength,
         "variable",
         [],
         decl ? `**#${varName}** : \`${decl.typeText}\`` : undefined,
@@ -1396,7 +1447,7 @@ export function buildDocumentIndex(text: string, ruleSet: RuleSet, blockIndex: B
       let ownerBlock: BlockInfo | undefined = decl ? blockIndex.get(decl.leafName ?? "") : undefined;
       let topLevelName: string | null = decl?.topLevelName ?? null;
       let derefTopLevelName: string | null = decl?.derefTopLevelName ?? null;
-      let display = nameTok.text;
+      let display = `#${varName}`;
 
       // Dereference operator directly on the base tag: `#myRef^` -- the
       // effective type for pin-checking purposes becomes whatever the
@@ -1456,9 +1507,20 @@ export function buildDocumentIndex(text: string, ruleSet: RuleSet, blockIndex: B
     const nameTok = base.tok;
 
     while (cur.isPunct(".")) {
-        cur.next();
-        if (cur.peek().kind !== "ident") break;
+        // A member name is normally a plain ident, but Siemens QUOTES any
+        // member whose name isn't a legal bare identifier -- one starting
+        // with a digit, or colliding with a reserved word. Both spellings
+        // address the same member, so the quoted form is accepted here and
+        // unquoted (via `Token.value`) before any lookup, matching how
+        // `parseVarMember` already stores the declaration side. Without this
+        // the dot-chain broke at the quote and left the rest of the chain to
+        // be re-read as separate arguments.
+        const nextTok = cur.peek(1);
+        const isQuotedMember = nextTok.kind === "string" && nextTok.text.startsWith('"');
+        if (nextTok.kind !== "ident" && !isQuotedMember) break;
+        cur.next(); // the `.`
         const memberTok = cur.next();
+        const memberName = isQuotedMember ? memberTok.value ?? "" : memberTok.text;
         display += `.${memberTok.text}`;
         let hover: string | undefined;
         let definition: Location | undefined;
@@ -1473,24 +1535,24 @@ export function buildDocumentIndex(text: string, ruleSet: RuleSet, blockIndex: B
           // `"Pump_DB".q_y` / `"R_TRIG_DB".Q` behave like `#inst.member`,
           // instead of reporting every member as "not found on" the DB.
           const memberSource = instanceTargetBlock(ownerBlock) ?? ownerBlock;
-          const memberVar = memberSource.vars.get(memberTok.text);
-          const pinMember = memberVar ? undefined : instanceDbInstructionMember(ownerBlock, memberTok.text);
+          const memberVar = memberSource.vars.get(memberName);
+          const pinMember = memberVar ? undefined : instanceDbInstructionMember(ownerBlock, memberName);
           if (memberVar) {
-            hover = `**.${memberTok.text}** : \`${typeRefToText(memberVar.member.typeRef)}\`  \n_(${memberVar.section} of ${memberSource.name})_`;
+            hover = `**.${memberName}** : \`${typeRefToText(memberVar.member.typeRef)}\`  \n_(${memberVar.section} of ${memberSource.name})_`;
             definition = { file: memberSource.file, line: memberVar.member.line ?? memberSource.declLine };
             nextTopLevelName = typeRefTopLevelName(memberVar.member.typeRef);
             nextDerefTopLevelName = typeRefDereferencedTopLevelName(memberVar.member.typeRef);
             if (isExternallyReachable(memberSource.blockType, memberVar.section)) {
-              memberRenameKeyForDot = `member:${memberSource.name}:${memberTok.text}`;
+              memberRenameKeyForDot = `member:${memberSource.name}:${memberName}`;
             }
           } else if (pinMember) {
             const types = pinMember.dataTypes.length > 0 ? pinMember.dataTypes.join(" | ") : "not established";
-            hover = `**.${memberTok.text}** : \`${types}\`  \n_(${pinMember.source} instance member, via \`${ownerBlock.name}\`)_`;
+            hover = `**.${memberName}** : \`${types}\`  \n_(${pinMember.source} instance member, via \`${ownerBlock.name}\`)_`;
             // Only a single unambiguous type can carry a further `.member`/
             // slice access -- don't guess when the registry lists several.
             if (pinMember.dataTypes.length === 1) nextTopLevelName = pinMember.dataTypes[0];
           } else {
-            hover = `**.${memberTok.text}** — not found on \`${ownerBlock.name}\``;
+            hover = `**.${memberName}** — not found on \`${ownerBlock.name}\``;
           }
         } else if (topLevelName) {
           // slice-access.md: `.xn`/`.bn`/`.wn` bit/byte/word slicing of an
@@ -1499,16 +1561,16 @@ export function buildDocumentIndex(text: string, ruleSet: RuleSet, blockIndex: B
           // member name.
           const sliceType = resolveSliceAccess(topLevelName, memberTok);
           if (sliceType) {
-            hover = `**.${memberTok.text}** : \`${sliceType}\`  \n_(bit/byte/word slice of '${topLevelName}', slice-access.md)_`;
+            hover = `**.${memberName}** : \`${sliceType}\`  \n_(bit/byte/word slice of '${topLevelName}', slice-access.md)_`;
             nextTopLevelName = sliceType;
           } else {
             // Not a user FB/UDT -- try a timer/counter/edge-detection
             // SYSTEM instance type instead (e.g. `#tonX.ET`,
             // `#trigStart.Q`, `#myCtr.CV`), derived from the owning
             // instruction's own pins plus IMPLICIT_INSTANCE_MEMBERS.
-            const resolved = resolveInstanceMember(topLevelName, memberTok.text);
+            const resolved = resolveInstanceMember(topLevelName, memberName);
             if (resolved) {
-              hover = `**.${memberTok.text}** : \`${resolved.dataTypes.join("/")}\`  \n_(via ${resolved.source})_`;
+              hover = `**.${memberName}** : \`${resolved.dataTypes.join("/")}\`  \n_(via ${resolved.source})_`;
               nextTopLevelName = resolved.dataTypes.length === 1 ? resolved.dataTypes[0] : null;
             }
           }
@@ -1529,6 +1591,19 @@ export function buildDocumentIndex(text: string, ruleSet: RuleSet, blockIndex: B
             diagnostics.push(formatDiagnostic(ruleSet, "reference-dereference-non-reference", caretTok.line, caretTok.col, { typeName: topLevelName }));
           }
         }
+
+        // An ARRAY member is indexed exactly like an array BASE tag is
+        // (`"DB".Units[1]`, `"DB".A[1].B[2]`) -- only the base case was
+        // handled, so the `[` of any indexed member was left for the caller
+        // to choke on, and every remaining token of the chain (and often of
+        // the whole argument list) cascaded into `unexpected-token`. Bounds
+        // aren't checked here: those come from a LOCAL declaration, and this
+        // is a member of some other block's type, which `localDecls` doesn't
+        // describe -- consuming the index without validating it is the
+        // "recognized, not yet checked" case, not a skipped check.
+        if (cur.isPunct("[")) {
+          display += consumeArrayIndex(memberTok, null);
+        }
       }
     return { topLevelName, display, tok: nameTok };
   }
@@ -1541,9 +1616,9 @@ export function buildDocumentIndex(text: string, ruleSet: RuleSet, blockIndex: B
   // are checked here, mirroring instructionChecks.ts's unknown-pin/
   // pin-case-mismatch checks for catalog instructions.
   const FB_PIN_SECTIONS = new Set(["VAR_INPUT", "VAR_OUTPUT", "VAR_IN_OUT"]);
-  function checkFbInstancePin(nameTok: Token, opTok: Token, ownerBlock: BlockInfo, callName: string): void {
-    const exact = ownerBlock.vars.get(nameTok.text);
-    const match = exact ?? [...ownerBlock.vars.values()].find((v) => v.name.toLowerCase() === nameTok.text.toLowerCase());
+  function checkFbInstancePin(nameTok: Token, pinName: string, opTok: Token, ownerBlock: BlockInfo, callName: string): void {
+    const exact = ownerBlock.vars.get(pinName);
+    const match = exact ?? [...ownerBlock.vars.values()].find((v) => v.name.toLowerCase() === pinName.toLowerCase());
     if (!match || !FB_PIN_SECTIONS.has(match.section)) {
       diagnostics.push(
         formatDiagnostic(
@@ -1551,7 +1626,7 @@ export function buildDocumentIndex(text: string, ruleSet: RuleSet, blockIndex: B
           "unknown-pin",
           nameTok.line,
           nameTok.col,
-          { pinName: nameTok.text, callName, ownerBlock: ownerBlock.name },
+          { pinName, callName, ownerBlock: ownerBlock.name },
           { variant: "fb-instance" }
         )
       );
@@ -1564,7 +1639,7 @@ export function buildDocumentIndex(text: string, ruleSet: RuleSet, blockIndex: B
           "pin-case-mismatch",
           nameTok.line,
           nameTok.col,
-          { pinName: nameTok.text, ownerBlock: ownerBlock.name, matchName: match.name, callName },
+          { pinName, ownerBlock: ownerBlock.name, matchName: match.name, callName },
           { variant: "fb-instance" }
         )
       );
@@ -1581,7 +1656,7 @@ export function buildDocumentIndex(text: string, ruleSet: RuleSet, blockIndex: B
           "pin-direction-mismatch",
           nameTok.line,
           nameTok.col,
-          { pinName: nameTok.text, callName, ownerBlock: ownerBlock.name },
+          { pinName, callName, ownerBlock: ownerBlock.name },
           { variant: "output-wired-in" }
         )
       );
@@ -1592,7 +1667,7 @@ export function buildDocumentIndex(text: string, ruleSet: RuleSet, blockIndex: B
           "pin-direction-mismatch",
           nameTok.line,
           nameTok.col,
-          { pinName: nameTok.text, callName, ownerBlock: ownerBlock.name },
+          { pinName, callName, ownerBlock: ownerBlock.name },
           { variant: "input-wired-out" }
         )
       );
@@ -1612,13 +1687,23 @@ export function buildDocumentIndex(text: string, ruleSet: RuleSet, blockIndex: B
     let nameListTok: Token | undefined;
 
     while (!cur.isPunct(")") && !cur.atEnd()) {
-      const isNamed = cur.peek().kind === "ident" && cur.peek(1).kind === "op" && (cur.peek(1).text === ":=" || cur.peek(1).text === "=>");
+      // A pin name is quoted whenever it isn't a legal bare identifier (one
+      // starting with a digit, or colliding with a reserved word) -- the same
+      // rule that applies to a member name, see `walkOperandRef`. Recognising
+      // only the `ident` spelling meant a quoted pin fell through to the
+      // value path, where its own `:=`/`=>` was then reported as an
+      // unexpected token and the rest of the argument list cascaded.
+      const nameCandidate = cur.peek();
+      const isQuotedName = nameCandidate.kind === "string" && nameCandidate.text.startsWith('"');
+      const isNamed =
+        (nameCandidate.kind === "ident" || isQuotedName) && cur.peek(1).kind === "op" && (cur.peek(1).text === ":=" || cur.peek(1).text === "=>");
       let pin: InstructionPin | undefined;
       if (isNamed) {
         const nameTok = cur.next();
+        const pinName = isQuotedName ? nameTok.value ?? "" : nameTok.text;
         const opTok = cur.next(); // := or =>
-        pin = instructionEntry?.pins.find((p) => p.name === nameTok.text || p.name?.toLowerCase() === nameTok.text.toLowerCase());
-        const fbVar = ownerBlock?.vars.get(nameTok.text);
+        pin = instructionEntry?.pins.find((p) => p.name === pinName || p.name?.toLowerCase() === pinName.toLowerCase());
+        const fbVar = ownerBlock?.vars.get(pinName);
         const hover = pin
           ? `**${nameTok.text}** (${pin.dir === "in" ? ":=" : "=>"}, ${pin.required ? "required" : "optional"})${pin.dataTypes?.length ? `\n\ntypes: ${pin.dataTypes.join(", ")}` : ""}${pin.note ? `\n\n${pin.note}` : ""}`
           : fbVar
@@ -1629,9 +1714,9 @@ export function buildDocumentIndex(text: string, ruleSet: RuleSet, blockIndex: B
         // instruction-registry, not renameable; a custom FB's named pin IS
         // just its VAR_INPUT/VAR_OUTPUT member name, so it shares that
         // member's `member:` key exactly like the dot-access case above.
-        const pinRenameKey = !pin && fbVar && ownerBlock && isExternallyReachable(ownerBlock.blockType, fbVar.section) ? `member:${ownerBlock.name}:${nameTok.text}` : undefined;
+        const pinRenameKey = !pin && fbVar && ownerBlock && isExternallyReachable(ownerBlock.blockType, fbVar.section) ? `member:${ownerBlock.name}:${pinName}` : undefined;
         push(nameTok, "parameter", [], hover, definition, pinRenameKey);
-        if (!instructionEntry && ownerBlock) checkFbInstancePin(nameTok, opTok, ownerBlock, callName);
+        if (!instructionEntry && ownerBlock) checkFbInstancePin(nameTok, pinName, opTok, ownerBlock, callName);
       }
       if (cur.isIdent("NOT")) push(cur.next(), "keyword", []); // e.g. `in3 := NOT #tag`
       // value expression -- single operand/literal in every real export seen.
@@ -1730,18 +1815,24 @@ export function buildDocumentIndex(text: string, ruleSet: RuleSet, blockIndex: B
       walkCallArgs(undefined, extName, ownerBlock);
       return true;
     }
-    if (t0.kind === "ident" && t0.text.startsWith("#")) {
-      const t1 = cur.peek(1);
-      const t2 = cur.peek(2);
-      const t3 = cur.peek(3);
+    const callHead = peekLocalTagHead();
+    if (callHead) {
+      // Offsets are relative to the head, which is one token for `#Inst` and
+      // two for the quoted `#"Inst"` spelling -- see `peekLocalTagHead`.
+      const t1 = cur.peek(callHead.span);
+      const t2 = cur.peek(callHead.span + 1);
+      const t3 = cur.peek(callHead.span + 2);
       if (t1.kind === "punct" && t1.text === "." && t2.kind === "ident" && t3.kind === "punct" && t3.text === "(") {
-        const instTok = cur.next(); // #Instance
+        const instTok = cur.next(); // `#` or `#Instance`
+        let instLength = instTok.text.length;
+        if (callHead.span === 2) instLength += cur.next().text.length; // the quoted name
         cur.next(); // .
         const nameTok = cur.next(); // Name
-        const instName = instTok.text.slice(1);
+        const instName = callHead.name;
         const decl = localDecls.get(instName);
-        push(
+        pushRun(
           instTok,
+          instLength,
           "variable",
           [],
           decl ? `**#${instName}** : \`${decl.typeText}\`` : undefined,
@@ -1765,8 +1856,10 @@ export function buildDocumentIndex(text: string, ruleSet: RuleSet, blockIndex: B
         // resolver -- sclInstructionChecks.ts already imports
         // resolveInstanceTypeToInstructionNames FROM this file, so the
         // reverse import would be circular.
-        const instTok = cur.next(); // #Instance
-        const instName = instTok.text.slice(1);
+        const instTok = cur.next(); // `#` or `#Instance`
+        let instLength = instTok.text.length;
+        if (callHead.span === 2) instLength += cur.next().text.length; // the quoted name
+        const instName = callHead.name;
         const decl = localDecls.get(instName);
         let instructionEntry: InstructionEntry | undefined;
         let registryKey: string | undefined;
@@ -1787,7 +1880,7 @@ export function buildDocumentIndex(text: string, ruleSet: RuleSet, blockIndex: B
           : undefined;
         // Still the instance TAG, not a function name -- tokenType stays
         // "variable" regardless of whether registry resolution succeeded.
-        push(instTok, "variable", [], hover, decl ? { line: decl.line, col: decl.col } : undefined, decl ? memberRenameKey(instName, decl.section) : undefined);
+        pushRun(instTok, instLength, "variable", [], hover, decl ? { line: decl.line, col: decl.col } : undefined, decl ? memberRenameKey(instName, decl.section) : undefined);
         walkCallArgs(instructionEntry, registryKey ?? instName, ownerBlock);
         return true;
       }

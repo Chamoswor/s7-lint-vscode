@@ -296,9 +296,21 @@ function evalBinary(node: Extract<SclExprNode, { kind: "binary" }>, ctx: EvalCon
 
   if (!left.typeName || !right.typeName) return { typeName: null };
 
-  const leftDomain = domainOf(left.typeName, ctx.ruleSet);
-  const rightDomain = domainOf(right.typeName, ctx.ruleSet);
-  if (!leftDomain || !rightDomain) return { typeName: null }; // an operand's domain can't be classified -- don't guess
+  const rawLeftDomain = domainOf(left.typeName, ctx.ruleSet);
+  const rawRightDomain = domainOf(right.typeName, ctx.ruleSet);
+  if (!rawLeftDomain || !rawRightDomain) return { typeName: null }; // an operand's domain can't be classified -- don't guess
+
+  // A bare integer literal is an UNTYPED constant: it has no domain of its
+  // own and takes the one its first operation gives it (Siemens' own typed-
+  // vs-non-typed constant rule, and the same S7-SCL grammar that lists a
+  // plain decimal digit string as a legal BYTE/WORD/DWORD bit constant). So
+  // `#someWord + 1` and `(#bits AND #mask) <> 0` are ordinary code, not the
+  // domain mismatches a fixed `Int` typing made them look like. Limited to
+  // numeric and bit-string: a bare integer next to a Bool or a Time operand
+  // has no such reading and stays a real mismatch.
+  const ADOPTABLE = ["numeric", "bit-string"];
+  const leftDomain = left.looseIntLiteral && ADOPTABLE.includes(rawRightDomain) ? rawRightDomain : rawLeftDomain;
+  const rightDomain = right.looseIntLiteral && ADOPTABLE.includes(rawLeftDomain) ? rawLeftDomain : rawRightDomain;
 
   const ops = ctx.ruleSet.exprOperators;
   const op = node.op;

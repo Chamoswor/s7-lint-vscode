@@ -93,12 +93,12 @@ MB_CLIENT:
     dataTypes: [Variant]
   - name: RD_MB_DATA_PTR
     dir: inout
-    required: true
+    required: false
     note: ''
     dataTypes: [Variant]
   - name: WR_MB_DATA_PTR
     dir: inout
-    required: true
+    required: false
     note: ''
     dataTypes: [Variant]
   template:

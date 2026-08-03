@@ -84,11 +84,17 @@ export class CacheManager {
       if (decls.length > 0) files.push({ path: uri.fsPath, decls });
     }
 
+    // One XML export is either a UDT (feeding the type cache) or a block --
+    // TIA writes DATA_BLOCKs in this format even when the FUNCTION_BLOCK they
+    // instance is exported as text -- so each file is offered to both parsers
+    // and whichever recognises it claims it.
+    const xmlBlockFiles: { path: string; text: string }[] = [];
     const xmlUris = await vscode.workspace.findFiles(XML_GLOB, EXCLUDE_GLOB);
     for (const uri of xmlUris) {
       const text = Buffer.from(await vscode.workspace.fs.readFile(uri)).toString("utf-8");
       const decls = parseUdtXml(text);
       if (decls.length > 0) files.push({ path: uri.fsPath, decls });
+      xmlBlockFiles.push({ path: uri.fsPath, text });
     }
 
     // .s7dcl files are either a TYPE (UDT) declaration or a program block --
@@ -126,7 +132,7 @@ export class CacheManager {
     }
 
     this.result = buildTypeCache(this.ruleSet, files);
-    this.blockIndex.rebuild(blockFiles);
+    this.blockIndex.rebuild(blockFiles, xmlBlockFiles);
     this.output.appendLine(
       `[S7 Lint] Type cache rebuilt: ${this.result.types.size} known types (${files.length} UDT source file(s) scanned), ${this.result.diagnostics.length} diagnostic(s). ` +
         `Block index: ${this.blockIndex.size} block(s) scanned.`

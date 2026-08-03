@@ -1318,7 +1318,7 @@ PEEK_DWORD:
     note: Only the 16 least significant bits are used.
     allowedDeclarations: []
     dataTypes: [DInt]
-    memoryAreas: [I, Q, M, D, constant]
+    memoryAreas: [I, Q, M, D, L, constant]
   template: {shape: none, keys: [], extra: {}}
   confidence: official-doc
   notes: |-
@@ -1448,13 +1448,13 @@ POKE:
     dir: in
     required: true
     note: ''
-    memoryAreas: [I, Q, D, constant]
+    memoryAreas: [I, Q, D, L, constant]
     dataTypes: [DInt]
   - name: value
     dir: in
     required: true
     note: ''
-    memoryAreas: [I, Q, D, constant]
+    memoryAreas: [I, Q, D, L, constant]
     dataTypes: [Word, DWord, LWord, Byte]
   template: {shape: none, keys: [], extra: {}}
   confidence: official-doc
@@ -1480,13 +1480,13 @@ POKE_BYTE:
     dir: in
     required: true
     note: ''
-    memoryAreas: [I, Q, D, constant]
+    memoryAreas: [I, Q, D, L, constant]
     dataTypes: [DInt]
   - name: value
     dir: in
     required: true
     note: ''
-    memoryAreas: [I, Q, D, constant]
+    memoryAreas: [I, Q, D, L, constant]
     dataTypes: [Byte]
   template: {shape: none, keys: [], extra: {}}
   confidence: official-doc
@@ -1512,13 +1512,13 @@ POKE_WORD:
     dir: in
     required: true
     note: ''
-    memoryAreas: [I, Q, D, constant]
+    memoryAreas: [I, Q, D, L, constant]
     dataTypes: [DInt]
   - name: value
     dir: in
     required: true
     note: ''
-    memoryAreas: [I, Q, D, constant]
+    memoryAreas: [I, Q, D, L, constant]
     dataTypes: [Word]
   template: {shape: none, keys: [], extra: {}}
   confidence: official-doc
@@ -1544,13 +1544,13 @@ POKE_DWORD:
     dir: in
     required: true
     note: ''
-    memoryAreas: [I, Q, D, constant]
+    memoryAreas: [I, Q, D, L, constant]
     dataTypes: [DInt]
   - name: value
     dir: in
     required: true
     note: ''
-    memoryAreas: [I, Q, D, constant]
+    memoryAreas: [I, Q, D, L, constant]
     dataTypes: [DWord]
   template: {shape: none, keys: [], extra: {}}
   confidence: official-doc
@@ -1576,13 +1576,13 @@ POKE_LWORD:
     dir: in
     required: true
     note: ''
-    memoryAreas: [I, Q, D, constant]
+    memoryAreas: [I, Q, D, L, constant]
     dataTypes: [DInt]
   - name: value
     dir: in
     required: true
     note: ''
-    memoryAreas: [I, Q, D, constant]
+    memoryAreas: [I, Q, D, L, constant]
     dataTypes: [LWord]
   template: {shape: none, keys: [], extra: {}}
   confidence: official-doc

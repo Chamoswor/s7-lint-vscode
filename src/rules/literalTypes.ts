@@ -298,8 +298,20 @@ export function detectLiteralShape(raw: string): LiteralShapeKind | null {
  * needs a per-block symbol table richer than what's checked here -- don't
  * flag a UDT-accepting pin just because we can't enumerate its full
  * membership). */
+/** Type-ERASED containers: a pin declared as one of these carries whatever it
+ * is handed, resolved at runtime, so comparing an operand's or literal's own
+ * type against the container name can only ever produce a false mismatch. A
+ * `Variant`-typed `CONNECT` pin taking a quoted connection-DB name is the
+ * motivating case -- the name reads as a WString and "WString isn't Variant"
+ * is not a defect, it is the check asking the wrong question. Distinct from
+ * the "not transcribed yet" skips above: these are known and deliberate. */
+const TYPE_ERASED_PIN_TYPES = new Set(["Variant", "Any", "Pointer"]);
+
 export function expandPinDataTypes(dataTypes: string[], ruleSet: RuleSet): { skip: boolean; types: Set<string> } {
   if (dataTypes.length === 0 || dataTypes.includes("*") || dataTypes.includes("PLC data type")) {
+    return { skip: true, types: new Set() };
+  }
+  if (dataTypes.some((dt) => TYPE_ERASED_PIN_TYPES.has(dt))) {
     return { skip: true, types: new Set() };
   }
   const types = new Set<string>();

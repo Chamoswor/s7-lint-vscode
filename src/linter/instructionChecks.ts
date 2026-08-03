@@ -12,6 +12,7 @@
 // structurally has no ENO output at all) -- see that function's own
 // comment for why this is the complementary half of what `checkTemplate`
 // already covers (a MISSING required pragma), not a duplicate of it.
+import { BlockIndex } from "../analysis/blockIndex";
 import { CallNode, ParsedBlockFile } from "../parser/s7dclParser";
 import { InstructionEntry, RuleSet } from "../rules/types";
 import { formatDiagnostic, LintDiagnostic, LintSeverity, RegistryFix } from "./diagnostics";
@@ -154,6 +155,25 @@ function checkTemplate(call: CallNode, entry: InstructionEntry, ruleSet: RuleSet
   return diags;
 }
 
+/**
+ * True if `pinName` is the universal enable input / enable output rather than
+ * one of the instruction's own parameters.
+ *
+ * `EN`/`ENO` belong to the CALL, not to the instruction: they are available on
+ * essentially every box call and are modelled by the entry's `enEno` field, so
+ * no entry lists them among its `pins` -- which made every `EN := ...` a
+ * reported `unknown-pin`. Only rejected when the entry has explicitly recorded
+ * that side as absent (`present: false`); a missing `enEno`, or a missing
+ * side within it, means "not transcribed either way" and is never guessed
+ * against, the same discipline `checkEnEno` below already applies.
+ */
+function isEnEnoParameter(pinName: string | null, entry: InstructionEntry): boolean {
+  const upper = pinName?.toUpperCase();
+  if (upper === "EN") return entry.enEno?.en?.present !== false;
+  if (upper === "ENO") return entry.enEno?.eno?.present !== false;
+  return false;
+}
+
 /** Cross-checks a call's own pragma against its registry entry's `enEno.
  * eno.present` -- the one EN/ENO fact that's actually independent of
  * `template`/`S7_Templates` (a MISSING required `S7_GenerateENO` pragma is
@@ -215,6 +235,7 @@ export function checkCall(call: CallNode, ruleSet: RuleSet, networkLanguage: str
   const positionalCallPins = call.pins.filter((p) => p.name === null);
 
   for (const cp of namedCallPins) {
+    if (isEnEnoParameter(cp.name, entry)) continue;
     const exact = namedRegPins.find((rp) => rp.name === cp.name);
     if (exact) continue;
     const caseInsensitive = namedRegPins.find((rp) => rp.name!.toLowerCase() === cp.name!.toLowerCase());
@@ -279,15 +300,51 @@ export function checkCall(call: CallNode, ruleSet: RuleSet, networkLanguage: str
   return diags;
 }
 
-export function checkInstructions(block: ParsedBlockFile, ruleSet: RuleSet): LintDiagnostic[] {
+/**
+ * `blockIndex` resolves a call whose target is a QUOTED workspace block
+ * (`"Some_FB_DB"(...)`, `"Some_FC"(...)`) rather than a catalog instruction.
+ * The parser records that shape with `externalName` set and `name` left
+ * EMPTY (there is no instruction name to record), so without this the
+ * registry was searched for the empty string and every such call -- the
+ * normal way LAD/FBD invokes a project's own blocks -- was reported as
+ * `Unknown instruction ''`.
+ *
+ * Optional so the existing callers that have no index still type-check;
+ * passing one only ever removes false positives.
+ */
+export function checkInstructions(block: ParsedBlockFile, ruleSet: RuleSet, blockIndex?: BlockIndex): LintDiagnostic[] {
   const diags: LintDiagnostic[] = [];
   for (const network of block.networks) {
     const networkLanguage = network.pragma?.S7_Language;
     for (const rung of network.rungs) {
       for (const call of rung.calls) {
+        if (call.externalName !== undefined) {
+          diags.push(...checkExternalCall(call, ruleSet, blockIndex));
+          continue;
+        }
         diags.push(...checkCall(call, ruleSet, networkLanguage));
       }
     }
   }
   return diags;
+}
+
+/**
+ * A `"Name"(...)` call target, resolved against the workspace rather than the
+ * instruction registry -- the same precedence linter/sclInstructionChecks.ts's
+ * `resolveCallEntry` applies to the identical shape in SCL.
+ *
+ * A resolved block produces NO diagnostic here: its pins are validated
+ * against the callee's own interface by analysis/documentIndex.ts's
+ * `checkFbInstancePin`, which this module has no access to (a registry entry's
+ * `required`/`dataTypes` metadata, which every check below needs, simply
+ * doesn't exist for a project block). With no index to consult at all, stay
+ * silent rather than guess -- an unresolvable name is `external-symbol-not-found`'s
+ * job when it appears as an operand, and reporting it as an unknown
+ * INSTRUCTION would name the wrong registry to go fix.
+ */
+function checkExternalCall(call: CallNode, ruleSet: RuleSet, blockIndex: BlockIndex | undefined): LintDiagnostic[] {
+  const name = call.externalName ?? "";
+  if (!blockIndex || blockIndex.get(name)) return [];
+  return [formatDiagnostic(ruleSet, "unknown-instruction", call.line, call.col, { shown: `'${name}'` }, { variant: "scl" })];
 }

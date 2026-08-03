@@ -234,7 +234,18 @@ export function resolveOperandRef(
   } else {
     const localDecls = buildLocalDeclMap(block);
     const localTypeRef = localDecls.get(segments[0]);
-    if (!localTypeRef) return { kind: "undeclared" };
+    if (!localTypeRef) {
+      // A FUNCTION's return value is addressed through the function's OWN
+      // name (`#TheFunction := ...`), which is IEC 61131-3's result-variable
+      // convention and is never declared in a VAR section -- so treating it
+      // as an undeclared tag flagged the one legal way to return a value.
+      // Scoped to a FUNCTION: a FUNCTION_BLOCK has no result variable, so a
+      // `#SameNameAsTheFB` there really is undeclared.
+      if (block.blockType === "FUNCTION" && segments[0] === block.name) {
+        return { kind: "unresolved-path" };
+      }
+      return { kind: "undeclared" };
+    }
     currentTypeRef = localTypeRef;
     startIndex = 1;
   }

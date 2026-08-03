@@ -1,0 +1,102 @@
+// Cross-reference and quoted-name syntax that a real TIA export uses freely
+// and that the checkers previously misread. Everything here compiles in TIA;
+// the whole file must stay at ZERO diagnostics.
+//
+// Siemens quotes any identifier that isn't a legal bare one -- a name that
+// starts with a digit, or that collides with a reserved word -- and the quoted
+// spelling can appear in every position an identifier can: a block name, a
+// formal parameter, a struct member, and a local tag. Each of those was a
+// separate place where the walkers stopped at the quote and re-read the rest
+// of the construct as something else, which cascaded into long runs of
+// `unexpected-token` and phantom `external-symbol-not-found` reports.
+//
+// Self-contained on purpose: the DATA_BLOCKs the references resolve against
+// are declared right here, so the fixture needs no sibling files.
+
+TYPE "SlotRecord"
+VERSION : 0.1
+STRUCT
+   "1_Value" : Int;          // quoted member: starts with a digit
+   "Word" : Word;            // quoted member: collides with a reserved word
+   Depth : Real;
+END_STRUCT;
+END_TYPE
+
+FUNCTION_BLOCK "Fb_Unit"
+VAR_INPUT
+   Enable : Bool;
+   UnitName : String[64];    // String with an explicit maximum length
+   Slots : Array[1..4] of "SlotRecord";
+END_VAR
+VAR_OUTPUT
+   Ready : Bool;
+END_VAR
+VAR
+   "2_Retry" : Int;          // quoted static: starts with a digit
+END_VAR
+BEGIN
+   #Ready := #Enable;
+END_FUNCTION_BLOCK
+
+DATA_BLOCK "Fb_Unit_DB" "Fb_Unit"
+BEGIN
+END_DATA_BLOCK
+
+DATA_BLOCK "Store"
+VERSION : 0.1
+NON_RETAIN
+   STRUCT
+      Units : Array[1..4] of "SlotRecord";
+      Rec : Struct
+         "3_Slave" : Int;
+      END_STRUCT;
+   END_STRUCT;
+BEGIN
+END_DATA_BLOCK
+
+FUNCTION "ComputeOffset" : DInt
+VAR_INPUT
+   address : DInt;
+   zeroBased : Bool;
+END_VAR
+BEGIN
+   // A FUNCTION returns its value through its OWN name -- IEC 61131-3's
+   // result variable, which is never declared in a VAR section.
+   IF #zeroBased THEN
+      #ComputeOffset := #address;
+   ELSE
+      #ComputeOffset := #address - 1;
+   END_IF;
+END_FUNCTION
+
+FUNCTION_BLOCK "Fb_Caller"
+VAR_INPUT
+   Source : "SlotRecord";
+END_VAR
+VAR
+   "Wire" : "SlotRecord";    // quoted local tag: collides with a reserved word
+   Inst : "Fb_Unit";
+   value : Int;
+   raw : Word;
+END_VAR
+BEGIN
+   // A quoted LOCAL tag, dotted into -- not an external block reference.
+   #"Wire".Depth := #Source.Depth;
+   #"Wire"."1_Value" := #Source."1_Value";
+
+   // A quoted member reached through a chain that also indexes an array.
+   #value := "Store".Units[1]."1_Value";
+   #value := "Store".Rec."3_Slave";
+   #raw := "Store".Units[2]."Word";
+
+   // A quoted member on a local tag's own array member.
+   #value := #Inst.Slots[3]."1_Value";
+
+   // Calling a workspace block by its quoted name, with a quoted formal
+   // parameter among the arguments.
+   "Fb_Unit_DB"(Enable := TRUE,
+                UnitName := 'unit-1',
+                Ready => #"Wire"."1_Value".%X0);
+
+   #value := DINT_TO_INT("ComputeOffset"(address := 100, zeroBased := FALSE));
+END_FUNCTION_BLOCK

@@ -6,6 +6,7 @@
 // (e.g. `#fbMvA.q_xBlockStart`) across files.
 import { ParsedBlockFile, VarSection, parseS7dclFile } from "../parser/s7dclParser";
 import { MemberRef } from "../parser/typeRef";
+import { parseBlockXml } from "../parser/udtXmlParser";
 
 export interface BlockVar {
   name: string;
@@ -63,6 +64,29 @@ export function scanBlockFile(fsPath: string, text: string): BlockInfo[] {
   }));
 }
 
+/**
+ * Turns one XML block export's declarations into `BlockInfo`s, so a DATA_BLOCK
+ * TIA wrote as XML is indexed exactly like one written as text. Returns `[]`
+ * for XML that declares no blocks (e.g. a UDT export), so callers can offer
+ * every `.xml` file without pre-classifying it.
+ *
+ * `instanceOf.quoted` is set from `InstanceOfType`: TIA's text grammar quotes
+ * a user FUNCTION_BLOCK's name and leaves an instruction/system type bare, and
+ * `instanceTargetBlock`/`instanceDbInstructionMember` rely on that distinction
+ * to decide whether to resolve members through the workspace or through the
+ * instruction registry.
+ */
+export function scanBlockXmlFile(fsPath: string, text: string): BlockInfo[] {
+  return parseBlockXml(text).map((parsed) => ({
+    name: parsed.name,
+    blockType: "DATA_BLOCK" as ParsedBlockFile["blockType"],
+    file: fsPath,
+    declLine: 1,
+    vars: flattenVars(parsed.sections.map((s) => ({ kind: s.kind, members: s.members })) as VarSection[]),
+    instanceOf: parsed.instanceOfName ? { name: parsed.instanceOfName, quoted: parsed.instanceOfType === "FB" } : undefined,
+  }));
+}
+
 export class BlockIndex {
   /** Blocks scanned from files ON DISK (the workspace rebuild). */
   private diskBlocks = new Map<string, BlockInfo>();
@@ -72,8 +96,19 @@ export class BlockIndex {
   /** `diskBlocks` with every overlay applied on top; what lookups read. */
   private blocks = new Map<string, BlockInfo>();
 
-  rebuild(files: { path: string; text: string }[]): void {
+  /**
+   * `files` are the TEXT block sources (`.s7dcl`/`.scl`/`.db`); `xmlFiles`
+   * are `*.xml` exports, which TIA uses for DATA_BLOCKs even when the
+   * FUNCTION_BLOCK they instance is exported as text. Text wins on a name
+   * clash: it is the format the rest of this parser chain models fully, and
+   * a workspace holding both spellings of one block is a re-export artefact
+   * rather than two different blocks.
+   */
+  rebuild(files: { path: string; text: string }[], xmlFiles: { path: string; text: string }[] = []): void {
     const next = new Map<string, BlockInfo>();
+    for (const f of xmlFiles) {
+      for (const info of scanBlockXmlFile(f.path, f.text)) next.set(info.name, info);
+    }
     for (const f of files) {
       for (const info of scanBlockFile(f.path, f.text)) {
         next.set(info.name, info);

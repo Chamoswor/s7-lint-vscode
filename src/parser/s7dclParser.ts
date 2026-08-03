@@ -12,7 +12,7 @@
 // (e.g. `wire#` branch labels after RUNG, GRAPH-only constructs) instead
 // of losing every diagnostic in the file.
 import { Lexer, Token, TokenCursor } from "./lexer";
-import { isLiteralOrWireTail, literalRunLength } from "./literalRun";
+import { isLiteralOrWireTail, literalRunLength, tokensAdjacent } from "./literalRun";
 import { Pragma, parsePragmaBlock } from "./pragma";
 import { MemberRef, parseTypeRefFromCursor } from "./typeRef";
 
@@ -252,6 +252,44 @@ export const SCL_RESERVED_KEYWORDS = new Set([
   "AND", "OR", "XOR", "NOT", "MOD",
 ]);
 
+/**
+ * True if `stringToken` is the NAME half of a quoted LOCAL tag (`#"Tag"`),
+ * i.e. the token before it is a lone, adjacent `#`.
+ *
+ * The token-walking loops below advance one token at a time and record a
+ * reference by PEEKING (`peekOperandRefChain` consumes nothing), so the
+ * quoted name is looked at again on the next iteration -- where, followed by
+ * a `.`, it matches the `"Block".member` EXTERNAL-reference shape exactly.
+ * Without this guard every `#"Tag".member` was recorded twice: once
+ * correctly as a local tag, and once as a reference to a workspace block
+ * that does not exist, which then failed `external-symbol-not-found`.
+ */
+function isQuotedLocalTagName(prevToken: Token | null, stringToken: Token): boolean {
+  return (
+    !!prevToken &&
+    prevToken.kind === "ident" &&
+    prevToken.text === "#" &&
+    stringToken.kind === "string" &&
+    tokensAdjacent(prevToken, stringToken)
+  );
+}
+
+/**
+ * True if `stringToken` is a quoted MEMBER inside a dot-chain (`....."Name"`)
+ * rather than the head of a new `"Block".member` external reference -- told
+ * apart by the `.` immediately before it.
+ *
+ * Same re-examination problem `isQuotedLocalTagName` guards: the chain was
+ * already recorded whole by a peek, but the walking loop still steps over its
+ * inner tokens one by one, and a quoted member followed by a further `.`
+ * matches the external-reference shape exactly. Without this, every quoted
+ * member mid-chain was ALSO recorded as a reference to a workspace block
+ * named after that member.
+ */
+function isQuotedChainMember(prevToken: Token | null, stringToken: Token): boolean {
+  return !!prevToken && prevToken.kind === "punct" && prevToken.text === "." && stringToken.kind === "string";
+}
+
 function skipToSemicolon(cur: TokenCursor): void {
   let depth = 0;
   while (!cur.atEnd()) {
@@ -353,6 +391,22 @@ function looksLikeExternalRefStart(cur: TokenCursor): boolean {
  * never the real cursor) reuse the exact same chain-building logic. Also
  * returns how many tokens the chain consumed, so the caller can advance
  * its own offset past it. */
+/**
+ * The member name `tok` contributes to a `.member` chain, or `null` if it
+ * can't be one. A member is normally a plain ident, but Siemens QUOTES any
+ * name that isn't a legal bare identifier -- one starting with a digit, or
+ * colliding with a reserved word -- and both spellings address the same
+ * member, so the quoted form is decoded to the SAME segment text the
+ * declaration side stores (see `parseVarMember`). Recognising only the ident
+ * spelling truncated the chain at the quote, which then left the quoted token
+ * to be re-read as an unrelated statement.
+ */
+function memberSegmentName(tok: Token): string | null {
+  if (tok.kind === "ident") return tok.text;
+  if (tok.kind === "string" && tok.text.startsWith('"')) return tok.value ?? "";
+  return null;
+}
+
 function peekOperandRefChainAt(cur: TokenCursor, startOffset: number): { ref: OperandRef; length: number } {
   const hashTok = cur.peek(startOffset);
   let offset: number;
@@ -369,12 +423,11 @@ function peekOperandRefChainAt(cur: TokenCursor, startOffset: number): { ref: Op
   for (;;) {
     const dot = cur.peek(offset);
     const member = cur.peek(offset + 1);
-    if (dot.kind === "punct" && dot.text === "." && member.kind === "ident") {
-      segments.push(member.text);
-      offset += 2;
-      continue;
-    }
-    break;
+    if (dot.kind !== "punct" || dot.text !== ".") break;
+    const memberName = memberSegmentName(member);
+    if (memberName === null) break;
+    segments.push(memberName);
+    offset += 2;
   }
   return { ref: { segments, line: hashTok.line, col: hashTok.col }, length: offset - startOffset };
 }
@@ -397,12 +450,11 @@ function peekExternalRefChainAt(cur: TokenCursor, startOffset: number): { ref: O
   for (;;) {
     const dot = cur.peek(offset);
     const member = cur.peek(offset + 1);
-    if (dot.kind === "punct" && dot.text === "." && member.kind === "ident") {
-      segments.push(member.text);
-      offset += 2;
-      continue;
-    }
-    break;
+    if (dot.kind !== "punct" || dot.text !== ".") break;
+    const memberName = memberSegmentName(member);
+    if (memberName === null) break;
+    segments.push(memberName);
+    offset += 2;
   }
   return { ref: { segments, line: nameTok.line, col: nameTok.col, external: true }, length: offset - startOffset };
 }
@@ -462,7 +514,7 @@ function collectArgValue(cur: TokenCursor, operandRefsOut: OperandRef[], nestedC
     }
     if (looksLikeOperandRefStart(cur) && !isLiteralOrWireTail(prevToken, t)) {
       operandRefsOut.push(peekOperandRefChain(cur));
-    } else if (looksLikeExternalRefStart(cur)) {
+    } else if (looksLikeExternalRefStart(cur) && !isQuotedLocalTagName(prevToken, t) && !isQuotedChainMember(prevToken, t)) {
       operandRefsOut.push(peekExternalRefChain(cur));
     }
     prevToken = cur.next();
@@ -477,8 +529,15 @@ function parseCallArgs(cur: TokenCursor, allowBareInstanceCall: boolean): PinArg
   const pins: PinArg[] = [];
   while (!cur.isPunct(")") && !cur.atEnd()) {
     const startTok = cur.peek();
+    // Siemens quotes a formal parameter whose name isn't a legal bare
+    // identifier -- one starting with a digit, or colliding with a reserved
+    // word. That is the same name, just a different spelling, so the pin is
+    // recorded under its UNQUOTED form (matching how `parseVarMember` stores
+    // the declaration it has to match against). Recognising only the `ident`
+    // spelling parsed the whole `name := value` as one positional argument.
+    const isQuotedName = startTok.kind === "string" && startTok.text.startsWith('"');
     const isNamed =
-      startTok.kind === "ident" && (cur.peek(1).text === ":=" || cur.peek(1).text === "=>") && cur.peek(1).kind === "op";
+      (startTok.kind === "ident" || isQuotedName) && (cur.peek(1).text === ":=" || cur.peek(1).text === "=>") && cur.peek(1).kind === "op";
     const operandRefs: OperandRef[] = [];
     const nestedCalls: CallNode[] = [];
     if (isNamed) {
@@ -486,7 +545,7 @@ function parseCallArgs(cur: TokenCursor, allowBareInstanceCall: boolean): PinArg
       const opTok = cur.next();
       const { text: valueText, isSoleCall } = collectArgValue(cur, operandRefs, nestedCalls, allowBareInstanceCall);
       pins.push({
-        name: nameTok.text,
+        name: isQuotedName ? nameTok.value ?? "" : nameTok.text,
         dir: opTok.text === ":=" ? "in" : "out",
         valueText,
         operandRefs,
@@ -1053,7 +1112,7 @@ function parseSclBody(
         lastTopLevelRef = ref;
         lastTopLevelRefIndexed = false;
       }
-    } else if (looksLikeExternalRefStart(cur)) {
+    } else if (looksLikeExternalRefStart(cur) && !isQuotedLocalTagName(prevToken, t0) && !isQuotedChainMember(prevToken, t0)) {
       const ref = peekExternalRefChain(cur);
       operandRefs.push(ref);
       if (bracketDepth === 0) {

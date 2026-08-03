@@ -189,6 +189,19 @@ export function parseTypeRefFromCursor(cur: TokenCursor): TypeRef {
     cur.next();
     parts.push(cur.peek().kind === "string" ? (cur.next().value ?? "") : cur.next().text);
   }
+  // A String/WString declares its maximum length in brackets (`String[64]`).
+  // That is a capacity, not an ARRAY dimension and not part of the type's
+  // identity -- `String[64]` and `String` are the same base type to every
+  // lookup here -- but it MUST be consumed, or the `[` is left mid-declaration
+  // and the caller reports a malformed `name : type;`.
+  if (cur.isPunct("[")) {
+    let depth = 0;
+    do {
+      const t = cur.next();
+      if (t.kind === "punct" && t.text === "[") depth++;
+      else if (t.kind === "punct" && t.text === "]") depth--;
+    } while (depth > 0 && !cur.atEnd());
+  }
   if (parts.length > 1) {
     return { kind: "named", name: parts[parts.length - 1], quoted: false, namespace: parts.slice(0, -1).join(".") };
   }

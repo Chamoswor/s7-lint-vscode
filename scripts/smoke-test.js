@@ -107,6 +107,9 @@ const sclFiles = [
   // Regression guard for the split-across-tokens `<prefix>#<value>` literal
   // forms (parser/literalRun.ts) -- see that fixture's own header.
   path.join(__dirname, "fixtures", "smoke", "constant-notations.scl"),
+  // Regression guard for quoted names and cross-block references -- see that
+  // fixture's own header.
+  path.join(__dirname, "fixtures", "smoke", "cross-reference-syntax.scl"),
 ];
 const sclBlockIndex = new BlockIndex();
 sclBlockIndex.rebuild(sclFiles.map((p) => ({ path: p, text: readText(p) })));

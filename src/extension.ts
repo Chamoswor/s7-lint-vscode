@@ -356,7 +356,7 @@ function lintDocument(doc: vscode.TextDocument): void {
     if (detectS7dclKind(text) === "block") {
       const block = parseS7dclBlock(text);
       if (block) {
-        for (const d of checkInstructions(block, ruleSet)) {
+        for (const d of checkInstructions(block, ruleSet, blockIndex)) {
           diagnostics.push(toVscodeDiagnostic(doc, d));
         }
         for (const d of checkLadWiring(block, ruleSet)) {

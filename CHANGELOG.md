@@ -2,6 +2,69 @@
 
 All notable changes to S7 Lint for VS Code will be documented in this file.
 
+## 0.1.3
+
+Validated against a full, cleanly compiling S7-1500 project export (96 files).
+Every diagnostic it produced was a false positive; this release removes all of
+them. The two biggest causes were quoted identifiers and cross-file references.
+
+Quoted names. Siemens quotes any identifier that isn't a legal bare one, and
+the quoted spelling can appear wherever an identifier can. Each position was
+its own defect, and each cascaded, because a walker that stopped at the quote
+re-read the rest of the construct as something else:
+
+- A quoted member in a dot chain (`"Db".Rec."1_Value"`) broke the chain, in the
+  document index, the parser, and the syntax checker independently.
+- A quoted formal parameter (`"1_Data" := ...`) fell through to the value path,
+  where its own `:=` was then reported as an unexpected token.
+- A quoted local tag (`#"Tag"`) lexes as two tokens; the base read as an empty
+  `#`, and the name then matched the `"Block".member` external-reference shape,
+  producing phantom missing-block reports and hiding the `#"Inst".Instr(...)`
+  call shape entirely. A quoted name was also recorded twice, once correctly
+  and once as an external reference, because the walking loop re-examined it.
+
+Cross-file references:
+
+- DATA_BLOCKs exported as XML are now indexed. TIA writes instance DBs in that
+  format even when the FUNCTION_BLOCK they instance is text, so every reference
+  to one previously resolved to nothing.
+- A LAD/FBD call to a workspace block (`"Some_DB"(...)`) is resolved against the
+  workspace instead of the instruction registry, which was searched for the
+  empty string and reported `Unknown instruction ''`.
+
+Other syntax that was rejected but is valid:
+
+- An array index on a chain member (`"Db".Units[1].Value`). This one cascaded
+  worst: a single unconsumed `[` could produce hundreds of follow-on errors.
+- A FUNCTION's result variable, addressed through the function's own name.
+- `String[64]` and other explicit-length String/WString declarations.
+- `EN`/`ENO`, which belong to the call rather than to the instruction and so
+  are listed by no registry entry.
+- An untyped integer constant against a bit string (`#someWord + 1`,
+  `(#bits AND #mask) <> 0`). Such a constant has no domain of its own and takes
+  the one its first operation gives it.
+- Arithmetic on bit strings, which strict IEC rejects but TIA accepts unless a
+  block's "IEC check" property is on -- a project setting no export carries.
+- An instruction instance type in a `VAR_IN_OUT` section, which passes by
+  reference rather than making the block own instance data.
+- Any literal on a `Variant`/`Any`/`Pointer` pin: these are type-erased, so
+  comparing a concrete type against them can only produce a false mismatch.
+
+Registry corrections, all confirmed against the compiling project:
+
+- `MB_CLIENT` required `MB_DATA_PTR` and the `RD_`/`WR_` pair simultaneously;
+  they are alternative forms, so no call could satisfy all three.
+- `PID_Compact`'s `Mode` is a retained InOut, not something a call must wire.
+- The `POKE` family's parameter pins excluded the `L` memory area, so no block
+  parameter could be passed to them. `PEEK_DWORD` had the same gap.
+
+Retired `array-index-expression`. It claimed a variable expression is not a
+legal array index; the compiling project uses such indices in several places.
+The rule's own key names the LAD/FBD actual-parameter context it came from, and
+the fixture cited as confirming it carried an unresolved "validate against TIA
+compiler" caveat -- so the confirmation was circular. The fixture is now a
+positive case, and both registries record the correction.
+
 ## 0.1.2
 
 - Fixed typed and radix literals being misread as tag references. The lexer

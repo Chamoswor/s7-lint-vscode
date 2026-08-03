@@ -164,7 +164,7 @@ PID_Compact:
     dataTypes: [DWord]
   - name: Mode
     dir: inout
-    required: true
+    required: false
     note: ''
     dataTypes: [Int]
   template:

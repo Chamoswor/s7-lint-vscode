@@ -302,6 +302,15 @@ export function checkSclSyntaxStructure(text: string, ruleSet: RuleSet): LintDia
         cur.next();
         continue;
       }
+      // A member whose name isn't a legal bare identifier is quoted (one
+      // starting with a digit, or colliding with a reserved word). Stopping
+      // the chain at the quote left the rest of it looking like a new
+      // statement, so the enclosing IF/statement was reported as unterminated.
+      if (cur.isPunct(".") && cur.peek(1).kind === "string" && cur.peek(1).text.startsWith('"')) {
+        cur.next();
+        cur.next();
+        continue;
+      }
       if (cur.isPunct(".") && cur.peek(1).kind === "punct" && cur.peek(1).text === "%" && cur.peek(2).kind === "ident") {
         cur.next();
         cur.next();

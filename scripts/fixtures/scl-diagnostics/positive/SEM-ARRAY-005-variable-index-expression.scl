@@ -9,5 +9,5 @@ END_VAR
 
 BEGIN
     #values[#i + 1] := 10;
-    // EXPECT: error[array.variable-expression-index] SEM-ARRAY-005
+    // EXPECT: no diagnostics -- a variable expression IS a legal array index.
 END_FUNCTION_BLOCK
