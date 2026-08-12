@@ -2,6 +2,10 @@
 
 All notable changes to S7 Lint for VS Code will be documented in this file.
 
+## 0.1.4
+
+Bug fixes.
+
 ## 0.1.3
 
 Validated against a full, cleanly compiling S7-1500 project export (96 files).
