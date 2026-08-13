@@ -138,6 +138,62 @@ expectIndexedBlockShape(
   "quoted nested STRUCT member is stored under its symbolic unquoted name"
 );
 
+// A graphical call names an FB's external instance DB, but its named
+// arguments belong to the FUNCTION_BLOCK interface. Regression guard for
+// validating against the DB's empty member map (which reported every real
+// VAR_INPUT/VAR_OUTPUT pin as unknown).
+const externalFbText = [
+  'FUNCTION_BLOCK "FB_ExternalProbe"',
+  "VAR_INPUT",
+  "  i_Enable : Bool;",
+  "END_VAR",
+  "VAR_OUTPUT",
+  "  q_Value : Real;",
+  "END_VAR",
+  "BEGIN",
+  "END_FUNCTION_BLOCK",
+].join("\n");
+const externalDbText = [
+  'DATA_BLOCK "FB_ExternalProbe_DB"',
+  "NON_RETAIN",
+  '"FB_ExternalProbe"',
+  "BEGIN",
+  "END_DATA_BLOCK",
+].join("\n");
+const externalCallText = [
+  'ORGANIZATION_BLOCK "ExternalCallProbe"',
+  "NETWORK",
+  "  RUNG",
+  '    "FB_ExternalProbe_DB"(',
+  "      i_Enable := TRUE,",
+  "      q_Value => ,",
+  "      BadPin := TRUE",
+  "    )",
+  "  END_RUNG",
+  "END_NETWORK",
+  "END_ORGANIZATION_BLOCK",
+].join("\n");
+const externalCallBlockIndex = new BlockIndex();
+externalCallBlockIndex.rebuild([
+  { path: "FB_ExternalProbe.scl", text: externalFbText },
+  { path: "FB_ExternalProbe_DB.db", text: externalDbText },
+  { path: "ExternalCallProbe.s7dcl", text: externalCallText },
+]);
+const externalCallDocumentIndex = buildDocumentIndex(externalCallText, ruleSet, externalCallBlockIndex, "ExternalCallProbe.s7dcl");
+const externalCallUnknownPins = externalCallDocumentIndex.diagnostics.filter((diagnostic) => diagnostic.code === "unknown-pin");
+expectIndexedBlockShape(
+  externalCallUnknownPins.length === 1 && externalCallUnknownPins[0].message.includes("BadPin"),
+  "external FB instance DB calls validate pins against the instanced FUNCTION_BLOCK interface"
+);
+const externalOutputLine = externalCallText.split("\n").findIndex((line) => line.includes("q_Value")) + 1;
+const externalOutputSpan = externalCallDocumentIndex.spans.find(
+  (span) => span.line === externalOutputLine && externalCallText.split("\n")[span.line - 1].substr(span.startCol - 1, span.length) === "q_Value"
+);
+expectIndexedBlockShape(
+  externalOutputSpan?.definition?.file === "FB_ExternalProbe.scl",
+  "external FB instance DB pin definitions resolve to the FUNCTION_BLOCK declaration"
+);
+
 // Real UDT type cache (analysis/symbolTable.ts's cross-type member
 // resolution needs it for checkUndeclaredIdentifiers/checkSclConditionTypes)
 // -- same parseUdtText + buildTypeCache pipeline cache/cacheManager.ts uses.

@@ -2,7 +2,7 @@
   "name": "s7-lint",
   "displayName": "S7 Lint for VS Code",
   "description": "Static analysis, code completion, navigation, and quick fixes for Siemens TIA Portal SCL, LAD/FBD declaration exports, PLC data types, and multilingual resources.",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "publisher": "chamoswor",
   "license": "Apache-2.0",
   "private": true,

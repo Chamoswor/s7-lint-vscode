@@ -2,6 +2,9 @@
 
 All notable changes to S7 Lint for VS Code will be documented in this file.
 
+## 0.1.6
+Bug fixes
+
 ## 0.1.5
 
 Editor intelligence and SCL semantic-highlighting improvements.

@@ -2601,10 +2601,16 @@ export function buildDocumentIndex(
       // same as the bare `#Instance(...)` branch below already gets.
       const nameTok = cur.next(); // "Name"
       const extName = nameTok.value ?? "";
-      const ownerBlock = blockIndex.get(extName);
-      const hover = renderExternalBlockHover(extName, ownerBlock);
-      push(nameTok, "function", [], hover, ownerBlock ? { file: ownerBlock.file, line: ownerBlock.declLine } : undefined);
-      walkCallArgs(undefined, extName, ownerBlock);
+      const referencedBlock = blockIndex.get(extName);
+      // A quoted LAD/FBD call normally names the FB's external instance DB,
+      // whose text declaration has no VAR_INPUT/VAR_OUTPUT members of its
+      // own. Validate and resolve the named arguments against the instanced
+      // FUNCTION_BLOCK interface while keeping the call target's hover and
+      // definition on the DATA_BLOCK itself.
+      const interfaceBlock = referencedBlock ? instanceTargetBlock(referencedBlock) ?? referencedBlock : undefined;
+      const hover = renderExternalBlockHover(extName, referencedBlock);
+      push(nameTok, "function", [], hover, referencedBlock ? { file: referencedBlock.file, line: referencedBlock.declLine } : undefined);
+      walkCallArgs(undefined, extName, interfaceBlock);
       return true;
     }
     const callHead = peekLocalTagHead();

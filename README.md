@@ -10,7 +10,7 @@ product and is not affiliated with, endorsed by, sponsored by, or maintained by
 Siemens AG. Siemens, SIMATIC, TIA Portal, and other product names are trademarks
 of their respective owners.
 
-The extension is currently version `0.1.5` and under active development. It is
+The extension is currently version `0.1.6` and under active development. It is
 intended to catch common structural, type, symbol, and instruction-call errors
 before code is imported or compiled in TIA Portal. It is not a replacement for
 the target CPU and TIA Portal compiler.
