@@ -65,9 +65,10 @@ expression cannot be resolved confidently, the extension avoids guessing.
   local and workspace symbols, including bare SCL names, UDTs, blocks, and
   instance DATA_BLOCKs.
 - **Semantic highlighting:** Distinguishes elementary and project data types,
-  callable types and instances, DATA_BLOCKs, interface members, containers,
-  indexable values, operators, constants, and control-flow keywords. It follows
-  the active VS Code theme, with an optional managed S7 color preset.
+  callable types and instances, DATA_BLOCKs, PLC tags, interface members,
+  containers, indexable values, operators, constants, and control-flow
+  keywords. It follows the active VS Code theme, with an optional managed S7
+  color preset.
 - **Storage layout:** Hover shows calculated size, padding, byte offsets, and
   packed `BOOL` bit positions for resolvable UDT, DATA_BLOCK, array, string, and
   nested-structure layouts.

@@ -89,7 +89,10 @@ try {
   const entry = reloaded.instructions.ESTOP1;
   ok(entry && entry.callShape === "instance-dot", "saved entry has instance-dot callShape");
   ok(entry && entry.instanceType === "ESTOP1", "saved entry has the declared instanceType");
-  ok(entry && entry.pins.some((p) => p.name === "q" && p.dir === "out"), "saved entry retains output direction");
+  ok(
+    entry && entry.pins.some((p) => p.name?.toLowerCase() === "q" && p.dir === "out"),
+    "saved entry retains output direction"
+  );
   ok(
     !checkInstructions(block, reloaded, new BlockIndex()).some((d) => d.code === "unknown-instruction"),
     "reloaded scaffold resolves the original unknown-instruction diagnostic"

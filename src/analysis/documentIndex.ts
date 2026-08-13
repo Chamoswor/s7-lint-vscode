@@ -2082,7 +2082,7 @@ export function buildDocumentIndex(
         const nameTok = cur.next();
         push(
           nameTok,
-          "variable",
+          "s7PlcTag",
           typeRefCapabilities(globalTag.typeRef),
           renderGlobalTagHover(globalTag),
           { file: globalTag.file, line: globalTag.line }

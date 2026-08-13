@@ -88,7 +88,7 @@ for (const name of ["FDI_NS2_E_Stop_NC_FB", "DI_ResetAlarm_CMD", "FDO_Safety_OK_
     return line.substr(candidate.startCol - 1, candidate.length) === `"${name}"`;
   });
   assert.ok(span, `${name} should have a semantic span`);
-  assert.equal(span.tokenType, "variable");
+  assert.equal(span.tokenType, "s7PlcTag");
   assert.equal(span.definition.file, "PLC tags/F-DI.xml");
 }
 const inputSpan = after.spans.find((span) => span.hoverMarkdown?.includes("FDI_NS2_E_Stop_NC_FB"));
@@ -130,7 +130,7 @@ assert.ok(sclBlock.sclAssignments.some((assignment) => assignment.expr.kind === 
 
 const sclIndex = buildDocumentIndex(sclSource, ruleSet, blockIndex, "SclTagConsumer.scl", "nb-NO", emptyTypeCache);
 const sclTagSpan = sclIndex.spans.find((span) => span.hoverMarkdown?.includes("AI_Safety_Count"));
-assert.equal(sclTagSpan.tokenType, "variable");
+assert.equal(sclTagSpan.tokenType, "s7PlcTag");
 assert.equal(sclTagSpan.definition.file, "PLC tags/F-DI.xml");
 const wstringSpan = sclIndex.spans.find((span) => {
   const line = sclSource.split("\n")[span.line - 1] ?? "";

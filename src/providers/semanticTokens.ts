@@ -15,6 +15,9 @@
 // flattening the object, its type, and its calls into one colour. A plain or
 // UDT-backed DATA_BLOCK uses the `s7DataBlock` subtype of `variable`; an
 // FB/instruction instance DB remains `s7CallableInstance`.
+// A workspace PLC tag imported from a tag-table XML uses `s7PlcTag`, also a
+// `variable` subtype, so global I/O/memory symbols remain visually distinct
+// from local variables and DATA_BLOCKs.
 // A scalar field reached through an FB/FC Input/Output/InOut path uses
 // `s7InterfaceMember`, a subtype of the standard `parameter`, so the active
 // theme carries the interface color through nested UDT access. Structural
@@ -64,6 +67,7 @@ export const SEMANTIC_TOKEN_TYPES = [
   "s7CallableType",
   "s7CallableInstance",
   "s7DataBlock",
+  "s7PlcTag",
   "s7InterfaceMember",
 ] as const;
 export const SEMANTIC_TOKEN_MODIFIERS = [

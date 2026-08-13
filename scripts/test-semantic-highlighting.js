@@ -270,6 +270,7 @@ const expectedSupertypes = {
   s7CallableType: "class",
   s7CallableInstance: "variable",
   s7DataBlock: "variable",
+  s7PlcTag: "variable",
   s7InterfaceMember: "parameter",
 };
 for (const [id, expectedSuperType] of Object.entries(expectedSupertypes)) {
@@ -289,7 +290,7 @@ for (const language of ["s7scl", "s7dcl", "s7udt"]) {
   const scopeMap = (manifest.contributes.semanticTokenScopes || []).find((entry) => entry.language === language)?.scopes;
   for (const id of [
     "s7TemporalType", "s7IntegerType", "s7BooleanType", "s7FloatType", "s7GenericType", "s7TextType",
-    "s7UdtType", "s7CallableType", "s7CallableInstance", "s7DataBlock", "s7InterfaceMember",
+    "s7UdtType", "s7CallableType", "s7CallableInstance", "s7DataBlock", "s7PlcTag", "s7InterfaceMember",
   ]) {
     if (!scopeMap?.[id]?.length) {
       failures++;

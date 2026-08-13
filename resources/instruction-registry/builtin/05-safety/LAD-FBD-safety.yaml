@@ -1,0 +1,479 @@
+# STEP 7 Safety instructions — LAD/FBD registry.
+
+$fileLanguage: [LAD, FBD]
+
+ESTOP1:
+  family: safety
+  callShape: instance-dot
+  instanceType: ESTOP1
+  pins:
+  - name: E_STOP
+    dir: in
+    required: true
+    dataTypes: [Bool]
+    note: Emergency-stop/emergency-off signal; signal state 0 requests shutdown.
+  - name: ACK_NEC
+    dir: in
+    required: true
+    dataTypes: [Bool]
+    note: Selects automatic acknowledgment (0) or acknowledgment by a rising edge at ACK (1).
+  - name: ACK
+    dir: in
+    required: true
+    dataTypes: [Bool]
+    note: A rising edge acknowledges the enable when ACK_NEC is 1.
+  - name: TIME_DEL
+    dir: in
+    required: true
+    dataTypes: [Time]
+    note: Delay before Q_DELAY is reset for stop category 1.
+  - name: Q
+    dir: out
+    required: true
+    dataTypes: [Bool]
+    note: Enable output for stop category 0.
+  - name: Q_DELAY
+    dir: out
+    required: true
+    dataTypes: [Bool]
+    note: Off-delayed enable output for stop category 1.
+  - name: ACK_REQ
+    dir: out
+    required: true
+    dataTypes: [Bool]
+    note: Signals that acknowledgment is required at ACK.
+  - name: DIAG
+    dir: out
+    required: true
+    dataTypes: [Byte]
+    note: Non-fail-safe service and status information.
+  enEno:
+    en: {present: false}
+    eno: {present: false}
+  template: {shape: none, keys: [], extra: {}}
+  confidence: official-doc
+  notes: >-
+    Safety FB for an acknowledged emergency-stop/emergency-off shutdown up to
+    stop category 1. Every call requires a single instance DB or multi-instance.
+    EN and ENO cannot be connected, so the instruction is always executed.
+  source: "official instruction documentation (paraphrased)"
+
+TWO_HAND:
+  family: safety
+  callShape: instance-dot
+  instanceType: TWO_HAND
+  pins:
+  - name: IN1
+    dir: in
+    required: true
+    dataTypes: [Bool]
+    note: Signal from pushbutton 1.
+  - name: IN2
+    dir: in
+    required: true
+    dataTypes: [Bool]
+    note: Signal from pushbutton 2.
+  - name: DISCTIME
+    dir: in
+    required: true
+    dataTypes: [Time]
+    note: Permitted discrepancy time from 0 through 500 ms.
+  - name: Q
+    dir: out
+    required: true
+    dataTypes: [Bool]
+    note: Enable output set when both pushbuttons are activated synchronously.
+  enEno:
+    en: {present: false}
+    eno: {present: false}
+  template: {shape: none, keys: [], extra: {}}
+  confidence: official-doc
+  notes: >-
+    Safety FB for two-hand monitoring according to ISO 13851. Every call
+    requires a single instance DB or multi-instance. EN and ENO cannot be
+    connected. Available only for S7-300 and S7-400 F-CPUs; S7-1200/1500
+    F-CPUs use the compatible two-hand monitoring with enable instruction.
+  source: "official instruction documentation (paraphrased)"
+
+TWO_H_EN:
+  family: safety
+  callShape: instance-dot
+  instanceType: TWO_H_EN
+  pins:
+  - name: IN1
+    dir: in
+    required: true
+    dataTypes: [Bool]
+    note: Signal from pushbutton 1.
+  - name: IN2
+    dir: in
+    required: true
+    dataTypes: [Bool]
+    note: Signal from pushbutton 2.
+  - name: ENABLE
+    dir: in
+    required: true
+    dataTypes: [Bool]
+    note: Enables Q when both pushbuttons are activated synchronously.
+  - name: DISCTIME
+    dir: in
+    required: true
+    dataTypes: [Time]
+    note: Permitted discrepancy time from 0 through 500 ms; use a value greater than 0 ms in production.
+  - name: Q
+    dir: out
+    required: true
+    dataTypes: [Bool]
+    note: Enable output set when ENABLE is 1 and both pushbuttons are activated synchronously.
+  - name: DIAG
+    dir: out
+    required: true
+    dataTypes: [Byte]
+    note: Non-fail-safe service and status information.
+  enEno:
+    en: {present: false}
+    eno: {present: false}
+  template: {shape: none, keys: [], extra: {}}
+  confidence: official-doc
+  notes: >-
+    Safety FB for two-hand monitoring with an additional enable condition
+    according to ISO 13851. Every call requires a single instance DB or
+    multi-instance. EN and ENO cannot be connected. CPU-family availability
+    depends on the instruction version; version 1.3 supports the documented
+    S7-300/400, S7-1200 G1/G2 and S7-1500 F-CPU families.
+  source: "official instruction documentation (paraphrased)"
+
+MUT_P:
+  family: safety
+  callShape: instance-dot
+  instanceType: MUT_P
+  pins:
+  - name: MS_11
+    dir: in
+    required: true
+    dataTypes: [Bool]
+    note: Muting sensor 11.
+  - name: MS_12
+    dir: in
+    required: true
+    dataTypes: [Bool]
+    note: Muting sensor 12.
+  - name: MS_21
+    dir: in
+    required: true
+    dataTypes: [Bool]
+    note: Muting sensor 21.
+  - name: MS_22
+    dir: in
+    required: true
+    dataTypes: [Bool]
+    note: Muting sensor 22.
+  - name: STOP
+    dir: in
+    required: true
+    dataTypes: [Bool]
+    note: Signal state 1 indicates that the conveyor system is stopped.
+  - name: FREE
+    dir: in
+    required: true
+    dataTypes: [Bool]
+    note: Signal state 1 indicates that the light curtain is uninterrupted.
+  - name: ENABLE
+    dir: in
+    required: true
+    dataTypes: [Bool]
+    note: Enables the muting function when set to 1.
+  - name: QBAD_MUT
+    dir: in
+    required: true
+    dataTypes: [Bool]
+    note: >-
+      Muting-lamp F-I/O quality signal or inverted channel value status; the
+      operand may be left unconnected when muting-lamp monitoring is not used.
+  - name: ACK
+    dir: in
+    required: true
+    dataTypes: [Bool]
+    note: Acknowledges the restart inhibit.
+  - name: DISCTIM1
+    dir: in
+    required: true
+    dataTypes: [Time]
+    note: Discrepancy time for sensor pair 1, from 0 through 3 s.
+  - name: DISCTIM2
+    dir: in
+    required: true
+    dataTypes: [Time]
+    note: Discrepancy time for sensor pair 2, from 0 through 3 s.
+  - name: TIME_MAX
+    dir: in
+    required: true
+    dataTypes: [Time]
+    note: Maximum muting time, from 0 through 10 min.
+  - name: Q
+    dir: out
+    required: true
+    dataTypes: [Bool]
+    note: Enable output.
+  - name: MUTING
+    dir: out
+    required: true
+    dataTypes: [Bool]
+    note: Indicates that muting is active and controls the muting lamp.
+  - name: ACK_REQ
+    dir: out
+    required: true
+    dataTypes: [Bool]
+    note: Signals that acknowledgment is required.
+  - name: FAULT
+    dir: out
+    required: true
+    dataTypes: [Bool]
+    note: Group-error and restart-inhibit indication.
+  - name: DIAG
+    dir: out
+    required: true
+    dataTypes: [Word]
+    note: Non-fail-safe service and status information.
+  enEno:
+    en: {present: false}
+    eno: {present: false}
+  template: {shape: none, keys: [], extra: {}}
+  confidence: official-doc
+  notes: >-
+    Safety FB for parallel muting with two or four independently wired muting
+    sensors. Every call requires a single instance DB or multi-instance. EN and
+    ENO cannot be connected. CPU-family availability depends on the instruction
+    version; version 1.4 supports the documented S7-300/400, S7-1200 G1/G2 and
+    S7-1500 F-CPU families.
+  source: "official instruction documentation (paraphrased)"
+
+EV1oo2DI:
+  family: safety
+  callShape: instance-dot
+  instanceType: EV1oo2DI
+  pins:
+  - name: IN1
+    dir: in
+    required: true
+    dataTypes: [Bool]
+    note: Sensor 1; the sensor must be wired so its safe state is 0.
+  - name: IN2
+    dir: in
+    required: true
+    dataTypes: [Bool]
+    note: Sensor 2; the sensor must be wired so its safe state is 0.
+  - name: DISCTIME
+    dir: in
+    required: true
+    dataTypes: [Time]
+    note: Discrepancy time from 0 through 60 s; the safety-program call interval must be shorter.
+  - name: ACK_NEC
+    dir: in
+    required: true
+    dataTypes: [Bool]
+    note: Selects automatic acknowledgment (0) or acknowledgment by a rising edge at ACK (1).
+  - name: ACK
+    dir: in
+    required: true
+    dataTypes: [Bool]
+    note: Acknowledges a discrepancy error when ACK_NEC is 1.
+  - name: Q
+    dir: out
+    required: true
+    dataTypes: [Bool]
+    note: Set when both sensor inputs are 1 and no discrepancy error is stored.
+  - name: ACK_REQ
+    dir: out
+    required: true
+    dataTypes: [Bool]
+    note: Signals that acknowledgment of a discrepancy error is required.
+  - name: DISC_FLT
+    dir: out
+    required: true
+    dataTypes: [Bool]
+    note: Indicates a stored discrepancy error and restart inhibit.
+  - name: DIAG
+    dir: out
+    required: true
+    dataTypes: [Byte]
+    note: Non-fail-safe service and status information.
+  enEno:
+    en: {present: false}
+    eno: {present: false}
+  template: {shape: none, keys: [], extra: {}}
+  confidence: official-doc
+  notes: >-
+    Safety FB for 1oo2 evaluation of two single-channel sensors with discrepancy
+    analysis. Every call requires a single instance DB or multi-instance. EN and
+    ENO cannot be connected. ACK_NEC must not be set to 0 unless automatic
+    restart is otherwise excluded. CPU-family availability depends on the
+    instruction version; version 1.3 supports the documented S7-300/400,
+    S7-1200 G1/G2 and S7-1500 F-CPU families.
+  source: "official instruction documentation (paraphrased)"
+
+FDBACK:
+  family: safety
+  callShape: instance-dot
+  instanceType: FDBACK
+  pins:
+  - name: ON
+    dir: in
+    required: true
+    dataTypes: [Bool]
+    note: Requests that output Q be enabled.
+  - name: FEEDBACK
+    dir: in
+    required: true
+    dataTypes: [Bool]
+    note: Feedback signal monitored against the inverse state of output Q.
+  - name: QBAD_FIO
+    dir: in
+    required: true
+    dataTypes: [Bool]
+    note: >-
+      F-I/O quality signal, channel QBAD_O_xx signal or inverted channel value
+      status for the output controlled by Q.
+  - name: ACK_NEC
+    dir: in
+    required: true
+    dataTypes: [Bool]
+    note: Selects automatic acknowledgment (0) or acknowledgment by a rising edge at ACK (1).
+  - name: ACK
+    dir: in
+    required: true
+    dataTypes: [Bool]
+    note: Acknowledges a stored feedback error when ACK_NEC is 1.
+  - name: FDB_TIME
+    dir: in
+    required: true
+    dataTypes: [Time]
+    note: Maximum tolerable feedback time; a negative setting causes a feedback error.
+  - name: Q
+    dir: out
+    required: true
+    dataTypes: [Bool]
+    note: Enable output monitored against FEEDBACK.
+  - name: ERROR
+    dir: out
+    required: true
+    dataTypes: [Bool]
+    note: Indicates a stored feedback error.
+  - name: ACK_REQ
+    dir: out
+    required: true
+    dataTypes: [Bool]
+    note: Signals that acknowledgment of a feedback error is required.
+  - name: DIAG
+    dir: out
+    required: true
+    dataTypes: [Byte]
+    note: Non-fail-safe service and status information.
+  enEno:
+    en: {present: false}
+    eno: {present: false}
+  template: {shape: none, keys: [], extra: {}}
+  confidence: official-doc
+  notes: >-
+    Safety FB for monitoring whether FEEDBACK follows the inverse state of Q
+    within FDB_TIME. Every call requires a single instance DB or multi-instance.
+    EN and ENO cannot be connected. ACK_NEC must not be set to 0 unless
+    automatic restart is otherwise excluded. CPU-family availability depends
+    on the instruction version; version 1.5 supports the documented S7-300/400,
+    S7-1200 G1/G2 and S7-1500 F-CPU families.
+  source: "official instruction documentation (paraphrased)"
+
+SFDOOR:
+  family: safety
+  callShape: instance-dot
+  instanceType: SFDOOR
+  pins:
+  - name: IN1
+    dir: in
+    required: true
+    dataTypes: [Bool]
+    note: Input for the position switch NC contact operated when the safety door is open.
+  - name: IN2
+    dir: in
+    required: true
+    dataTypes: [Bool]
+    note: Input for the position switch NO contact operated when the safety door is closed.
+  - name: QBAD_IN1
+    dir: in
+    required: true
+    dataTypes: [Bool]
+    note: F-I/O quality signal or inverted channel value status associated with IN1.
+  - name: QBAD_IN2
+    dir: in
+    required: true
+    dataTypes: [Bool]
+    note: F-I/O quality signal or inverted channel value status associated with IN2.
+  - name: OPEN_NEC
+    dir: in
+    required: true
+    dataTypes: [Bool]
+    note: Selects whether the safety door must be opened completely after startup.
+  - name: ACK_NEC
+    dir: in
+    required: true
+    dataTypes: [Bool]
+    note: Selects automatic acknowledgment (0) or acknowledgment by a rising edge at ACK (1).
+  - name: ACK
+    dir: in
+    required: true
+    dataTypes: [Bool]
+    note: Acknowledges the enable when required.
+  - name: Q
+    dir: out
+    required: true
+    dataTypes: [Bool]
+    note: Enable output indicating that the safety door is closed.
+  - name: ACK_REQ
+    dir: out
+    required: true
+    dataTypes: [Bool]
+    note: Signals that acknowledgment is required.
+  - name: DIAG
+    dir: out
+    required: true
+    dataTypes: [Byte]
+    note: Non-fail-safe service and status information.
+  enEno:
+    en: {present: false}
+    eno: {present: false}
+  template: {shape: none, keys: [], extra: {}}
+  confidence: official-doc
+  notes: >-
+    Safety FB for safety-door monitoring with passivation-aware F-I/O quality
+    inputs. Every call requires a single instance DB or multi-instance. EN and
+    ENO cannot be connected. ACK_NEC and OPEN_NEC must not be set to 0 unless
+    automatic restart is otherwise excluded. CPU-family availability depends
+    on the instruction version; version 1.3 supports the documented S7-300/400,
+    S7-1200 G1/G2 and S7-1500 F-CPU families.
+  source: "official instruction documentation (paraphrased)"
+
+ACK_GL:
+  family: safety
+  callShape: instance-dot
+  instanceType: ACK_GL
+  pins:
+  - name: ACK_GLOB
+    dir: in
+    required: true
+    dataTypes: [Bool]
+    note: A rising edge acknowledges reintegration for all F-I/O in the F-runtime group.
+  enEno:
+    en: {present: false}
+    eno: {present: false}
+  template: {shape: none, keys: [], extra: {}}
+  confidence: official-doc
+  notes: >-
+    Safety FB for simultaneous acknowledgment and reintegration of all F-I/O or
+    F-I/O channels in one F-runtime group. Every call requires a single instance
+    DB or multi-instance, and the instruction may be called only once per
+    F-runtime group. ACK_GLOB can acknowledge only while every applicable
+    F-I/O DB's ACK_REI tag is 0; ACK_REI can acknowledge only while ACK_GLOB is
+    0. EN and ENO cannot be connected. CPU-family availability depends on the
+    instruction version; version 1.3 supports the documented S7-300/400,
+    S7-1200 G1/G2 and S7-1500 F-CPU families.
+  source: "official instruction documentation (paraphrased)"

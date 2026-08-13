@@ -55,6 +55,18 @@ test("DATA_BLOCK has a distinct preset color in dark and light themes", () => {
   }
 });
 
+test("PLC tags have a distinct rose identity across value capabilities", () => {
+  assert.equal(RECOMMENDED_SEMANTIC_PALETTES.dark.s7PlcTag, "#D16D9E");
+  assert.equal(RECOMMENDED_SEMANTIC_PALETTES.light.s7PlcTag, "#C43E73");
+  for (const palette of Object.values(RECOMMENDED_SEMANTIC_PALETTES)) {
+    assert.notEqual(palette.s7PlcTag, palette.s7DataBlock);
+    assert.notEqual(palette.s7PlcTag, palette.s7CallableInstance);
+    assert.equal(palette["s7PlcTag.s7Container"], palette.s7PlcTag);
+    assert.equal(palette["s7PlcTag.s7Indexable"], palette.s7PlcTag);
+    assert.equal(palette["s7PlcTag.s7Container.s7Indexable"], palette.s7PlcTag);
+  }
+});
+
 test("container, indexable, and combined capability selectors are installed", () => {
   for (const palette of Object.values(RECOMMENDED_SEMANTIC_PALETTES)) {
     for (const tokenType of ["property", "parameter", "variable"]) {
@@ -230,9 +242,12 @@ test("manifest contributes the user-facing command", () => {
     assert.equal(manifest.contributes.configurationDefaults[`[${language}]`]["editor.semanticHighlighting.enabled"], true);
     const scopes = manifest.contributes.semanticTokenScopes.find((entry) => entry.language === language)?.scopes;
     assert.ok(scopes?.s7InterfaceMember?.includes("variable.parameter"), `${language} must map interface members to parameter fallback scope`);
+    assert.ok(scopes?.s7PlcTag?.includes("variable.other.global"), `${language} must map PLC tags to a global-variable fallback scope`);
   }
   const interfaceMember = manifest.contributes.semanticTokenTypes.find((entry) => entry.id === "s7InterfaceMember");
   assert.equal(interfaceMember?.superType, "parameter", "interface members must inherit the active theme's parameter color");
+  const plcTag = manifest.contributes.semanticTokenTypes.find((entry) => entry.id === "s7PlcTag");
+  assert.equal(plcTag?.superType, "variable", "PLC tags must inherit the active theme's variable color");
 });
 
 console.log(`\n${passed} passed, 0 failed.`);

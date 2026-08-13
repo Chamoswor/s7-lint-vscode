@@ -230,6 +230,11 @@
         "description": "A global or PLC-data-type-backed S7 DATA_BLOCK storage object"
       },
       {
+        "id": "s7PlcTag",
+        "superType": "variable",
+        "description": "A global PLC tag resolved from a TIA tag-table XML export"
+      },
+      {
         "id": "s7InterfaceMember",
         "superType": "parameter",
         "description": "A resolved scalar member reached through an FB/FC Input, Output, or InOut interface value"
@@ -315,6 +320,10 @@
             "variable.other.global",
             "variable.other.readwrite"
           ],
+          "s7PlcTag": [
+            "variable.other.global",
+            "variable.other.readwrite"
+          ],
           "s7InterfaceMember": [
             "variable.parameter",
             "variable.other.readwrite"
@@ -379,6 +388,10 @@
             "variable.other.readwrite"
           ],
           "s7DataBlock": [
+            "variable.other.global",
+            "variable.other.readwrite"
+          ],
+          "s7PlcTag": [
             "variable.other.global",
             "variable.other.readwrite"
           ],
@@ -449,6 +462,10 @@
             "variable.other.global",
             "variable.other.readwrite"
           ],
+          "s7PlcTag": [
+            "variable.other.global",
+            "variable.other.readwrite"
+          ],
           "s7InterfaceMember": [
             "variable.parameter",
             "variable.other.readwrite"
@@ -463,7 +480,7 @@
           "type": "boolean",
           "default": true,
           "scope": "window",
-          "markdownDescription": "Automatically install theme-scoped colors for S7 datatype families, UDTs, DATA_BLOCK objects, callable types/instances, structured members, and indexable values when a supported editor is active. Disable this to remove S7 Lint-managed preset rules while preserving unrelated or manually customized semantic color rules."
+          "markdownDescription": "Automatically install theme-scoped colors for S7 datatype families, UDTs, DATA_BLOCK objects, PLC tags, callable types/instances, structured members, and indexable values when a supported editor is active. Disable this to remove S7 Lint-managed preset rules while preserving unrelated or manually customized semantic color rules."
         },
         "tiaLint.mlcLocale": {
           "type": "string",
