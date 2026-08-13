@@ -212,14 +212,10 @@ function resolveMember(
  * overall approach and its deliberate limits.
  *
  * `isExternal` (see `OperandRef.external`) means `segments[0]` is a bare
- * double-quoted `"Name"` reference -- a WORKSPACE BLOCK's own name (a
- * global DATA_BLOCK, a plain FUNCTION, or an FB's own external instance
- * DB), resolved directly via BlockIndex instead of `block`'s own local VAR
- * declarations. The first `.member` step off of it is resolved the exact
- * same section-legality-checked way `resolveMember`'s cross-file-block
- * branch already resolves a LOCAL `#instance.member` step, via the shared
- * `resolveBlockMember` -- so `"External".member` and `#localInstance.member`
- * enforce the identical rule. */
+ * double-quoted `"Name"` reference -- either a PLC tag from a TIA tag-table
+ * XML export, or a WORKSPACE BLOCK's own name (a global DATA_BLOCK, a plain
+ * FUNCTION, or an FB's own external instance DB). Both resolve through the
+ * shared BlockIndex instead of `block`'s own local VAR declarations. */
 export function resolveOperandRef(
   segments: string[],
   block: ParsedBlockFile,
@@ -234,33 +230,39 @@ export function resolveOperandRef(
   let startIndex: number;
 
   if (isExternal) {
-    const target = blockIndex.get(segments[0]);
-    if (!target) return { kind: "undeclared" };
-    if (segments.length === 1) {
-      // A bare external reference with no `.member` at all -- nothing
-      // further to resolve; report its own name as a plain (quoted) named
-      // type, same convention parser/typeRef.ts's own quoted-type-reference
-      // parsing already uses.
-      return { kind: "resolved", typeRef: { kind: "named", name: target.name, quoted: true, namespace: null } };
+    const globalTag = blockIndex.getGlobalTag(segments[0]);
+    if (globalTag) {
+      currentTypeRef = globalTag.typeRef;
+      startIndex = 1;
+    } else {
+      const target = blockIndex.get(segments[0]);
+      if (!target) return { kind: "undeclared" };
+      if (segments.length === 1) {
+        // A bare external reference with no `.member` at all -- nothing
+        // further to resolve; report its own name as a plain (quoted) named
+        // type, same convention parser/typeRef.ts's own quoted-type-reference
+        // parsing already uses.
+        return { kind: "resolved", typeRef: { kind: "named", name: target.name, quoted: true, namespace: null } };
+      }
+      // An external quoted reference can only legitimately dot into a real
+      // DATA_BLOCK instance -- confirmed against TIA Portal's own behavior
+      // (see `illegal-external-block-type`'s own doc comment): a
+      // FUNCTION_BLOCK/FUNCTION/ORGANIZATION_BLOCK resolved here is the
+      // block's OWN type declaration, not a verifiable instance, so dot
+      // access is rejected outright regardless of section -- `#localInstance.
+      // member` (a genuine local instance by construction) is unaffected,
+      // see `resolveMember`'s own cross-file branch below.
+      if (target.blockType !== "DATA_BLOCK") {
+        return { kind: "illegal-external-block-type", blockName: target.name, blockType: target.blockType };
+      }
+      const first = resolveBlockMember(target, segments[1]);
+      if (first.kind === "illegal") {
+        return { kind: "illegal-dot-access", blockName: first.blockName, blockType: first.blockType, section: first.section, memberName: first.memberName };
+      }
+      if (first.kind === "not-found") return { kind: "unresolved-path" };
+      currentTypeRef = first.typeRef;
+      startIndex = 2;
     }
-    // An external quoted reference can only legitimately dot into a real
-    // DATA_BLOCK instance -- confirmed against TIA Portal's own behavior
-    // (see `illegal-external-block-type`'s own doc comment): a
-    // FUNCTION_BLOCK/FUNCTION/ORGANIZATION_BLOCK resolved here is the
-    // block's OWN type declaration, not a verifiable instance, so dot
-    // access is rejected outright regardless of section -- `#localInstance.
-    // member` (a genuine local instance by construction) is unaffected,
-    // see `resolveMember`'s own cross-file branch below.
-    if (target.blockType !== "DATA_BLOCK") {
-      return { kind: "illegal-external-block-type", blockName: target.name, blockType: target.blockType };
-    }
-    const first = resolveBlockMember(target, segments[1]);
-    if (first.kind === "illegal") {
-      return { kind: "illegal-dot-access", blockName: first.blockName, blockType: first.blockType, section: first.section, memberName: first.memberName };
-    }
-    if (first.kind === "not-found") return { kind: "unresolved-path" };
-    currentTypeRef = first.typeRef;
-    startIndex = 2;
   } else {
     const localDecls = buildLocalDeclMap(block);
     const localTypeRef = localDecls.get(segments[0].toLowerCase());

@@ -33,133 +33,52 @@ the target CPU and TIA Portal compiler.
 
 ### Diagnostics
 
-- Parses `.s7res` files as YAML and validates the `MultiLingualTexts` schema,
-  unique IDs, lossy unquoted ` #` text, missing MLC references, and orphaned
-  resource entries before TIA Portal import.
-- Validates LAD/FBD and SCL instruction names, pins or parameters, call shape,
-  language availability, templates, results, and selected memory-area rules
+- **SCL source:** Checks syntax structure, symbols, member access, conditions,
+  expressions, conversions, loops, literals, and instruction-result usage.
+- **Instruction calls:** Validates LAD/FBD and SCL names, pins, parameters, call
+  shapes, templates, result use, language support, and selected memory rules
   against the registries under [`resources/`](resources/).
-- Checks LAD/FBD rung connectivity back to `wire#powerrail`.
-- Checks SCL syntax structure, undeclared identifiers, illegal member access,
-  condition types, expression types, conversions, loop constraints, and
-  instruction-result usage.
-- Checks literals and resolvable operands against declared or expected types.
-- Accepts the two spellings TIA Portal's own external-source importer accepts:
-  a local reference written without its `#` (`IF Active THEN`,
-  `SecondTick(IN := ..., PT := ...)`) when the block declares that name, and
-  any casing of a type name (`BYTE` and `Byte` are one type). Both are checked
-  exactly like their `#`-prefixed / canonically-cased equivalents — a bare word
-  the block does NOT declare is still an error.
-- Builds a workspace type cache for UDT dependencies, duplicate declarations,
-  circular references, array bounds, and nesting limits.
-- Applies declaration-section, reference, pointer, array, and selected
-  cross-parameter rules where the required context is available.
+- **Graphical networks:** Checks LAD/FBD rung connectivity back to
+  `wire#powerrail`.
+- **Workspace symbols and types:** Resolves PLC tags from XML exports in `.scl`
+  and `.s7dcl`, and checks UDT dependencies, duplicate declarations, circular
+  references, array bounds, and nesting limits.
+- **Declarations and data access:** Applies section, reference, pointer, array,
+  operand-type, and selected cross-parameter rules when enough context exists.
+- **Multilingual resources:** Validates `.s7res` structure, IDs, text values,
+  MLC references, and orphaned entries before TIA Portal import.
+
+Bare local names without `#` and differently cased type names are recognized
+the same way as by TIA Portal's external-source importer and receive the same
+validation as their canonical forms.
 
 The parser and checks are deliberately conservative: when a type, target, or
 expression cannot be resolved confidently, the extension avoids guessing.
 
 ### Editor support
 
-- Context-aware completion for declarations, types, instructions, symbols, and
-  top-level block templates, including dotted member completion on instance
-  DATA_BLOCKs and quoted external block references. Datatype completion also
-  works after `:` inside inline, UDT, and DATA_BLOCK `STRUCT ... END_STRUCT`
-  declarations, with or without whitespace around the colon.
-- Dotted member completion off a local tag, written `#tag.` or bare `tag.`,
-  resolving through workspace FUNCTION_BLOCK/DATA_BLOCK interfaces, UDT fields,
-  system-struct fields (`IEC_TIMER`, `ErrorStruct`, …), inline
-  `STRUCT … END_STRUCT` fields, and instruction-instance pins — chained to any
-  depth across all five, and using SCL's own parameter casing in `.scl`
-  (`#edge.CLK`/`edge.Q`, not the graphical `clk`/`q`).
-- Hover, definition, rename, and semantic-token providers, including instance
-  DATA_BLOCK hovers that resolve to their instruction or FUNCTION_BLOCK type.
-  Workspace UDT declarations and their case-insensitive references can be
-  renamed directly from the type name.
-  Highlighting uses standard VS Code semantic families, so the user's active
-  dark or light theme controls every colour. S7-specific semantic subtypes
-  retain normal-theme fallbacks while allowing independent styling. The six
-  elementary families (`s7TemporalType`, `s7IntegerType`, `s7BooleanType`,
-  `s7FloatType`, `s7GenericType`, and `s7TextType`) inherit `type`;
-  `s7UdtType` inherits `struct`, `s7CallableType` inherits `class`, and
-  `s7CallableInstance` and `s7DataBlock` inherit `variable`, while
-  `s7InterfaceMember` inherits `parameter`. Direct call
-  expressions remain `function`; plain/UDT-backed DATA_BLOCK storage uses
-  `s7DataBlock`, while an FB/instruction instance DB uses
-  `s7CallableInstance`. Fields/interface values are `property`/`parameter`;
-  a resolved scalar field below an FB/FC Input, Output, or InOut path is an
-  `s7InterfaceMember`, preserving the theme's parameter color through nested
-  UDT access while containers and indexable segments keep their structural
-  colors.
-  No S7-specific colour theme is required.
-  Two composable capability modifiers refine value occurrences without
-  replacing those roles: `s7Container` means the value exposes structured
-  members through dotted access, and `s7Indexable` means it supports `[...]`
-  (`Array`, `String`, or `WString`). An `ARRAY OF` a UDT/STRUCT carries both;
-  a scalar leaf carries neither. The automatic palette gives container,
-  indexable, and combined members related but distinct colours, while root
-  objects such as DATA_BLOCKs and callable instances keep their identity
-  colour.
-  Keyword-family tokens are split the way most language grammars split them,
-  rather than sharing one colour: control flow (`IF`/`END_IF`/`RETURN`/…),
-  type constructors (`STRUCT`/`END_STRUCT` and generic `ARRAY`/`OF`/`REF_TO`), logical
-  operators (`NOT`/`AND`/`OR`/`XOR`/`MOD`), and language constants
-  (`TRUE`/`FALSE`, `NULL`/`ZERO`). A pragma value is attribute data, not
-  program data, so `'TRUE'` in `{ S7_Optimized_Access := 'TRUE' }` reads as
-  the string it is rather than as the boolean constant.
-- Type names are classified by what the type means for the thing being
-  declared, identically at a declaration and at every reference. Elementary
-  types are grouped as temporal (`Time`, `Date`, `DTL`, …), integer/bit
-  (`Int`, `UInt`, `Byte`, `Word`, …), boolean (`Bool`), floating point
-  (`Real`, `LReal`), generic/reference (`Void`, `Variant`, `Any`, `Pointer`,
-  `REF_TO`, `ARRAY`/`OF`), and text (`String`, `WString`, `Char`, `WChar`).
-  A Siemens record
-  (`IEC_TIMER`) remains `struct.defaultLibrary`, a project PLC data type
-  (`"KDT_Header"`) as `s7UdtType`, and an FB/instruction instance type
-  (`"FB_Pump"`, `TON`) as `s7CallableType`. The declared instance is
-  `s7CallableInstance`, becoming `function` only at a direct call site — so
-  `Pump : "FB_Pump";` and `Pump(...)` read like object construction and
-  invocation in other languages. A global DATA_BLOCK such as
-  `"DB_IPC_Comms"` is `s7DataBlock` at its declaration and every reference,
-  making global structured storage visually distinct from local variables.
-  Composite declarations stay readable through the `ARRAY`/`OF`/`STRUCT`
-  keywords themselves. A FUNCTION's return type is coloured on the same
-  scheme (it previously had no colour at all).
-  Bare, `#`-less local references and unquoted workspace-block calls resolve
-  for hover, Ctrl+click, and rename exactly like their prefixed/quoted
-  equivalents.
-- Hovering a PLC data type or global DATA_BLOCK shows its calculated Siemens
-  standard/non-optimized storage size and included padding. Hovering an
-  individual declaration name in a UDT `STRUCT`, DATA_BLOCK `VAR`, or inline
-  `STRUCT` additionally shows that member's size and container-relative byte
-  offset; packed `BOOL` members use `byte.bit` notation. Arrays, sized
-  `String`/`WString`, nested structures, and referenced UDTs participate in the
-  calculation. If a dependency has no known storage size, the hover lists each
-  unresolved member path instead of presenting a guessed total or offset.
-- Distinct colors for the S7 datatype and object/callable subtypes activate automatically
-  when a supported SCL/declaration/UDT editor becomes active. The preset is
-  scoped to the current dark/light theme in User Settings, preserves unrelated
-  rules, and upgrades recognized older S7 Lint values without overwriting a
-  manually customized S7 selector. High-contrast themes are left unchanged.
-  Run **S7 Lint: Disable Recommended Semantic Colors** (or turn off
-  `tiaLint.recommendedSemanticColors.enabled`) to remove managed preset rules;
-  **Install Recommended Semantic Colors** re-enables/restores the preset.
-- Definition and rename support for `.s7res` multilingual resources.
-- Quick fixes for explicit expression conversions and instruction/FUNCTION_BLOCK
-  instances, including auto-creating a single-instance DATA_BLOCK when
-  completing a member on a bare FUNCTION_BLOCK type.
-- Quick fixes that repair the instruction registry itself, for the two
-  diagnostics usually caused by a gap or a transcription slip in the YAML
-  rather than by the checked source: marking a pin optional
-  (`missing-required-pin`) and scaffolding a missing entry from its call site
-  (`unknown-instruction`). Both reload the rule set and re-lint immediately,
-  and can open the registry editor directly on the affected entry.
-- Inline multilingual-text hints with configurable locale fallback.
-- A visual **Instruction Registry Editor** (`S7 Lint: Open Instruction Registry
-  Editor`) for creating, editing, moving, and deleting instruction and
-  system-type entries across the registry's YAML files, with schema-driven
-  validation, drag-and-drop reordering, undo/redo, and comment/formatting-
-  preserving atomic saves. Saving reloads the rule set and re-lints open files
-  in place, so an edited entry takes effect without reloading the window.
+- **Completion:** Context-aware suggestions for declarations, data types,
+  instructions, symbols, and block templates. Chained member completion works
+  across local tags, UDTs, inline structures, system types, FUNCTION_BLOCKs,
+  DATA_BLOCKs, and instruction instances.
+- **Navigation and refactoring:** Hover, definition, and rename support for
+  local and workspace symbols, including bare SCL names, UDTs, blocks, and
+  instance DATA_BLOCKs.
+- **Semantic highlighting:** Distinguishes elementary and project data types,
+  callable types and instances, DATA_BLOCKs, interface members, containers,
+  indexable values, operators, constants, and control-flow keywords. It follows
+  the active VS Code theme, with an optional managed S7 color preset.
+- **Storage layout:** Hover shows calculated size, padding, byte offsets, and
+  packed `BOOL` bit positions for resolvable UDT, DATA_BLOCK, array, string, and
+  nested-structure layouts.
+- **Quick fixes:** Adds explicit conversions, generates local or single-instance
+  DATA_BLOCKs, creates or repairs sibling `.s7res` files and MLC entries, and
+  fixes supported instruction-registry gaps.
+- **Multilingual resources:** Definition, rename, and inline text hints for
+  `.s7res`, with configurable locale fallback.
+- **Instruction Registry Editor:** A visual editor for instruction and system-
+  type YAML with validation, drag-and-drop ordering, undo/redo, and automatic
+  rule reload and re-lint after saving.
 
 ## Knowledge bases
 
@@ -184,12 +103,17 @@ There is no generated mirror or synchronization step for these registries.
   resources/                   runtime YAML registries
   docs/fbd-knowhow/            LAD/FBD syntax and fixture-derived notes
   docs/source-document-format/ independent source-format interoperability notes
-  scripts/                     test runners and stable fixtures
+  scripts/                     test runners and fixtures (source repository only)
   syntaxes/                    VS Code language grammar and configuration
   themes/                      bundled VS Code theme
 ```
 
 ## Build and test
+
+The published VSIX excludes `scripts/**`. Test commands are development
+workflows and must be run from a source checkout. All test runners and fixtures
+are available in the GitHub repository under
+[`scripts/`](https://github.com/Chamoswor/s7-lint-vscode/tree/main/scripts).
 
 Run commands from the repository root:
 
@@ -198,23 +122,32 @@ npm install
 npm test
 ```
 
-`npm test` compiles the extension and runs all regression suites:
+`npm test` compiles the extension and runs all regression suites. The focused
+commands below link to their test runners in the GitHub repository:
 
-| Command | Scope |
-|---|---|
-| `npm run test:semantic-colors` | automatic palette installation and migration |
-| `npm run test:completion` | completion and context classification |
-| `npm run test:rename` | UDT and symbol rename behavior |
-| `npm run test:quickfix` | instance-generation quick fixes |
-| `npm run test:manifest` | manifest-driven parser and semantic diagnostics |
-| `npm run test:annotated` | exact line-annotated expression diagnostics |
-| `npm run test:instance-context` | instance-type context legality (VAR sections, call shapes) |
-| `npm run test:editor` | instruction registry editor's YAML document model |
-| `npm run test:editor-service` | instruction registry editor's service/workspace layer |
-| `npm run test:smoke` | anonymized SCL and graphical-control fixtures |
+| Command | Scope | Test runner |
+|---|---|---|
+| `npm run test:s7res` | multilingual-resource diagnostics | [`test-s7res-checks.js`](https://github.com/Chamoswor/s7-lint-vscode/blob/main/scripts/test-s7res-checks.js) |
+| `npm run test:s7res-quickfix` | multilingual-resource quick fixes | [`test-s7res-quickfix.js`](https://github.com/Chamoswor/s7-lint-vscode/blob/main/scripts/test-s7res-quickfix.js) |
+| `npm run test:plc-tags` | PLC-tag resolution from XML exports | [`test-plc-tags.js`](https://github.com/Chamoswor/s7-lint-vscode/blob/main/scripts/test-plc-tags.js) |
+| `npm run test:semantic-colors` | automatic palette installation and migration | [`test-semantic-colors.js`](https://github.com/Chamoswor/s7-lint-vscode/blob/main/scripts/test-semantic-colors.js) |
+| `npm run test:completion` | completion and context classification | [`test-completion-context.js`](https://github.com/Chamoswor/s7-lint-vscode/blob/main/scripts/test-completion-context.js) |
+| `npm run test:rename` | UDT and symbol rename behavior | [`test-rename.js`](https://github.com/Chamoswor/s7-lint-vscode/blob/main/scripts/test-rename.js) |
+| `npm run test:quickfix` | instance-generation quick fixes | [`test-instance-quickfix.js`](https://github.com/Chamoswor/s7-lint-vscode/blob/main/scripts/test-instance-quickfix.js) |
+| `npm run test:registry-quickfix` | instruction-registry quick fixes | [`test-registry-quickfix.js`](https://github.com/Chamoswor/s7-lint-vscode/blob/main/scripts/test-registry-quickfix.js) |
+| `npm run test:manifest` | manifest-driven parser and semantic diagnostics | [`run-manifest-smoke-tests.js`](https://github.com/Chamoswor/s7-lint-vscode/blob/main/scripts/run-manifest-smoke-tests.js) |
+| `npm run test:annotated` | exact line-annotated expression diagnostics | [`run-annotated-diagnostic-tests.js`](https://github.com/Chamoswor/s7-lint-vscode/blob/main/scripts/run-annotated-diagnostic-tests.js) |
+| `npm run test:instance-context` | instance-type context legality (VAR sections, call shapes) | [`test-instance-type-context.js`](https://github.com/Chamoswor/s7-lint-vscode/blob/main/scripts/test-instance-type-context.js) |
+| `npm run test:editor` | instruction registry editor's YAML document model | [`test-instruction-editor.js`](https://github.com/Chamoswor/s7-lint-vscode/blob/main/scripts/test-instruction-editor.js) |
+| `npm run test:editor-service` | instruction registry editor's service/workspace layer | [`test-editor-service.js`](https://github.com/Chamoswor/s7-lint-vscode/blob/main/scripts/test-editor-service.js) |
+| `npm run test:smoke` | anonymized SCL and graphical-control fixtures | [`smoke-test.js`](https://github.com/Chamoswor/s7-lint-vscode/blob/main/scripts/smoke-test.js) |
+
+The optional `npm run test:highlight` command uses
+[`test-semantic-highlighting.js`](https://github.com/Chamoswor/s7-lint-vscode/blob/main/scripts/test-semantic-highlighting.js)
+from the same GitHub directory.
 
 The diagnostic fixtures and their assertion contracts are documented in
-[`scripts/fixtures/scl-diagnostics/`](scripts/fixtures/scl-diagnostics/README.md).
+[`scripts/fixtures/scl-diagnostics/`](https://github.com/Chamoswor/s7-lint-vscode/tree/main/scripts/fixtures/scl-diagnostics).
 
 Press **F5** in VS Code with this directory open to launch an Extension
 Development Host. The launch configuration compiles and bundles the extension
@@ -252,27 +185,28 @@ by S7 Lint and preserves unrelated or manually customized semantic colors.
 
 ## Known limitations
 
-- Target CPU family and firmware are not project configuration inputs yet.
+- **Target-specific validation:** CPU family, firmware, and a block's IEC-check
+  setting are not available from the supported project sources. Platform data
+  in
   [`platform-availability.NOTLOADED.yaml`](resources/type-registry/platform-availability.NOTLOADED.yaml)
-  is reference data and is intentionally not loaded.
-- A block's "IEC check" property is not visible in any export, so rules it
-  toggles cannot be enforced by target. Where the two readings conflict, the
-  permissive one is used, because reporting a hard error on code that compiles
-  leaves the author nothing to act on. Bit-string arithmetic is the current
-  example (see `expression-operators.yaml`).
-- A FUNCTION's declared return type is not parsed, so assignments to its result
-  variable are recognised but not type-checked.
-- Type checks skip unresolved symbols and expression shapes for which a safe,
-  single result type cannot be inferred.
-- A `+` or `-` written with no space before a digit is lexed as part of the
-  number, so unspaced arithmetic (`4-1`) has no operator token left to parse
-  and is reported as a missing semicolon. Spaced (`4 - 1`) parses correctly.
-- XML UDT parsing has no per-member source positions, so XML cache diagnostics
-  are reported on line 1.
-- The workspace type and block caches rebuild in full after relevant file
-  changes rather than incrementally.
-- `shape-only` registry entries provide useful call-shape validation but do not
-  justify the same hard-error confidence as `confirmed-compiled` entries.
+  is therefore not loaded. When IEC modes permit different results, the linter
+  uses the permissive interpretation; bit-string arithmetic is one example.
+- **FUNCTION result types:** The result variable is recognized, but its declared
+  return type is not retained by the parser. Assignments to it are therefore
+  not type-checked.
+- **Incomplete type information:** Checks that require an unresolved symbol or
+  an expression without one safely inferred type are skipped instead of
+  guessed.
+- **Operator spacing:** The lexer treats `+` or `-` immediately followed by a
+  digit as part of a signed number. Consequently, `4-1` loses its subtraction
+  operator and can produce a missing-semicolon diagnostic; use `4 - 1`.
+- **XML source locations:** XML UDT members do not retain source positions, so
+  related cache diagnostics point to line 1 instead of the exact member.
+- **Workspace updates:** Relevant file changes rebuild the complete type and
+  block caches rather than updating only the affected entries.
+- **Registry confidence:** Checks based on `shape-only` instruction entries are
+  generally warnings. Hard errors require stronger evidence such as
+  `confirmed-compiled` data.
 
 Source-format scope and attribution are documented separately in
 [`docs/source-document-format/`](docs/source-document-format/README.md).

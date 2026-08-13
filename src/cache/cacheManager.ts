@@ -147,7 +147,7 @@ export class CacheManager {
     this.blockIndex.rebuild(blockFiles, xmlBlockFiles);
     this.output.appendLine(
       `[S7 Lint] Type cache rebuilt: ${this.result.types.size} known types (${files.length} UDT source file(s) scanned), ${this.result.diagnostics.length} diagnostic(s). ` +
-        `Block index: ${this.blockIndex.size} block(s) scanned.`
+        `Workspace index: ${this.blockIndex.size} block(s), ${this.blockIndex.globalTagSize} PLC tag(s) scanned.`
     );
     this.onDidRebuildEmitter.fire();
   }

@@ -31,6 +31,7 @@ import { MlcHintsController } from "./providers/mlcHints";
 import { S7dclRenameProvider } from "./providers/rename";
 import { S7dclSemanticTokensProvider, semanticTokensLegend } from "./providers/semanticTokens";
 import { S7ResDefinitionProvider } from "./providers/s7resDefinition";
+import { S7ResQuickFixProvider } from "./providers/s7resQuickFixProvider";
 import { S7ResRenameProvider } from "./providers/s7resRename";
 import { loadRuleSet } from "./rules/loadRules";
 import { RuleSet } from "./rules/types";
@@ -185,6 +186,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
   cacheManager = new CacheManager(ruleSet, output);
   mlcHints = new MlcHintsController(ruleSet, cacheManager.getBlockIndex());
   await cacheManager.rebuild();
+  const s7resQuickFixProvider = new S7ResQuickFixProvider();
 
   context.subscriptions.push(
     vscode.languages.registerDocumentSemanticTokensProvider(
@@ -225,6 +227,16 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
       S7DCL_SELECTOR,
       new RegistryQuickFixProvider(ruleSet, cacheManager.getBlockIndex(), () => cacheManager.getTypeCacheResult()),
       RegistryQuickFixProvider.metadata
+    ),
+    vscode.languages.registerCodeActionsProvider(
+      S7DCL_SELECTOR,
+      s7resQuickFixProvider,
+      S7ResQuickFixProvider.metadata
+    ),
+    vscode.languages.registerCodeActionsProvider(
+      S7RES_SELECTOR,
+      s7resQuickFixProvider,
+      S7ResQuickFixProvider.metadata
     )
   );
 

@@ -1218,7 +1218,7 @@ export class S7dclCompletionProvider implements vscode.CompletionItemProvider {
    * fitness for whichever shape they're actually typing, rather than the
    * list silently guessing for them. */
   private externalBlockCompletions(): vscode.CompletionItem[] {
-    return this.blockIndex.values().map((block) => {
+    const blocks = this.blockIndex.values().map((block) => {
       const kind =
         block.blockType === "DATA_BLOCK"
           ? vscode.CompletionItemKind.Module
@@ -1233,5 +1233,15 @@ export class S7dclCompletionProvider implements vscode.CompletionItemProvider {
       item.documentation = new vscode.MarkdownString(`**"${block.name}"** _(${typeLabel})_\n\ndeclared in \`${block.file}\``);
       return item;
     });
+    const tags = this.blockIndex.globalTagValues().map((tag) => {
+      const item = new vscode.CompletionItem(tag.name, vscode.CompletionItemKind.Variable);
+      item.detail = `${tag.dataTypeName}${tag.logicalAddress ? ` · ${tag.logicalAddress}` : ""}`;
+      const comment = tag.comments.get("en-US") ?? tag.comments.values().next().value;
+      item.documentation = new vscode.MarkdownString(
+        `**"${tag.name}"** _(PLC tag)_${comment ? `\n\n${comment}` : ""}\n\ndeclared in \`${tag.file}\``
+      );
+      return item;
+    });
+    return [...blocks, ...tags];
   }
 }

@@ -97,11 +97,18 @@ cross-reference.
 
 ## Verification
 
-Run from the `LintServer` directory:
+The test files are available under
+[`scripts/`](https://github.com/Chamoswor/s7-lint-vscode/tree/main/scripts) in
+the GitHub repository and are not included in the published VSIX. Run from the
+root of a source checkout:
 
 ```text
 npm test
 ```
 
-Use `npm run test:manifest` for focused parser and semantic-registry cases, and
-`npm run test:annotated` for strict expression-type diagnostics.
+Use `npm run test:manifest` with
+[`run-manifest-smoke-tests.js`](https://github.com/Chamoswor/s7-lint-vscode/blob/main/scripts/run-manifest-smoke-tests.js)
+for focused parser and semantic-registry cases, and `npm run test:annotated`
+with
+[`run-annotated-diagnostic-tests.js`](https://github.com/Chamoswor/s7-lint-vscode/blob/main/scripts/run-annotated-diagnostic-tests.js)
+for strict expression-type diagnostics.

@@ -15,7 +15,7 @@ import { loadSiblingS7Res, MLC_ID_PRAGMA_KEYS, resolveMlcText, siblingS7ResPath,
 import { TypeRef, typeRefDereferencedTopLevelName, typeRefToText, typeRefTopLevelName } from "../parser/typeRef";
 import { anyDataTypeCodeNames, classifyLiteral, detectLiteralShape, expandPinDataTypes, resolveTypeAlias } from "../rules/literalTypes";
 import { BaseTypeEntry, InstructionEntry, InstructionPin, RuleSet, SystemTypeEntry, SystemTypeMemberTypeRef } from "../rules/types";
-import { BlockIndex, BlockInfo } from "./blockIndex";
+import { BlockIndex, BlockInfo, GlobalTagInfo } from "./blockIndex";
 import {
   calculateStandardMemberLayout,
   calculateStandardUdtLayout,
@@ -1571,6 +1571,16 @@ export function buildDocumentIndex(
     return lines.join("\n");
   }
 
+  function renderGlobalTagHover(tag: GlobalTagInfo): string {
+    const lines = hoverTitle(`"${tag.name}"`, "PLC tag");
+    lines.push(`type: \`${tag.dataTypeName}\``);
+    if (tag.logicalAddress) lines.push(`address: \`${tag.logicalAddress}\``);
+    const comment = tag.comments.get(mlcLocale) ?? tag.comments.get("en-US") ?? tag.comments.values().next().value;
+    if (comment) lines.push("", comment);
+    lines.push("", ...hoverSource(tag.file));
+    return lines.join("\n");
+  }
+
   /** For an FB single-instance DB (`DATA_BLOCK "Pump_DB" ... "FB_Pump"`), the
    * FUNCTION_BLOCK whose interface supplies the DB's members -- the DB itself
    * has no VAR section to resolve `"Pump_DB".q_y` against. */
@@ -2066,6 +2076,28 @@ export function buildDocumentIndex(
    * mistakenly treating the call's instruction name as a member read). */
   function consumeBaseTagOrWire(): { topLevelName: string | null; derefTopLevelName: string | null; typeRef: TypeRef | undefined; ownerBlock: BlockInfo | undefined; interfaceOrigin: boolean; display: string; tok: Token } | undefined {
     const t0 = cur.peek();
+    if (t0.kind === "string" && t0.text.startsWith('"')) {
+      const globalTag = blockIndex.getGlobalTag(t0.value ?? "");
+      if (globalTag) {
+        const nameTok = cur.next();
+        push(
+          nameTok,
+          "variable",
+          typeRefCapabilities(globalTag.typeRef),
+          renderGlobalTagHover(globalTag),
+          { file: globalTag.file, line: globalTag.line }
+        );
+        return {
+          topLevelName: typeRefTopLevelName(globalTag.typeRef),
+          derefTopLevelName: typeRefDereferencedTopLevelName(globalTag.typeRef),
+          typeRef: globalTag.typeRef,
+          ownerBlock: blockForTypeRef(globalTag.typeRef),
+          interfaceOrigin: false,
+          display: nameTok.text,
+          tok: nameTok,
+        };
+      }
+    }
     if (t0.kind === "string" && t0.text.startsWith('"') && cur.peek(1).kind === "punct" && cur.peek(1).text === ".") {
       // Siemens' own external-symbol convention -- a bare double-quoted
       // reference to a workspace block (a global DATA_BLOCK, a plain

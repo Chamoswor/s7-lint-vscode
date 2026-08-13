@@ -32,14 +32,21 @@ export interface OperandRef {
   line: number;
   col: number;
   /** True when `segments[0]` came from a bare double-quoted `"Name"`
-   * reference (Siemens' own external-symbol convention -- a global
-   * DATA_BLOCK, a plain FUNCTION, or an FB's own external instance DB)
+   * reference (Siemens' own external-symbol convention -- a PLC tag, global
+   * DATA_BLOCK, plain FUNCTION, or an FB's own external instance DB)
    * rather than a local `#tag` -- see `looksLikeExternalRefStart`.
    * `segments[0]` is then a WORKSPACE BLOCK name to resolve directly via
    * BlockIndex (`analysis/symbolTable.ts`'s `resolveOperandRef` `isExternal`
    * parameter), not a local VAR declaration. Omitted (falsy) for the
    * ordinary local `#tag(.member)*` shape. */
   external?: boolean;
+  /** A bare double-quoted SCL value with no `.member` suffix is syntactically
+   * ambiguous: it can be a PLC tag (`"DI_Reset"`) or a WSTRING literal
+   * (`"plain text"`). The parser has no workspace index, so it records the
+   * value as an external candidate and lets symbol resolution decide. When
+   * no indexed PLC tag matches, undeclared-symbol checks suppress it and it
+   * retains the old harmless-literal behaviour. */
+  ambiguousStringLiteral?: boolean;
   /** True when this LOCAL reference was written without its `#` -- the
    * spelling TIA's importer resolves against the block's own declarations
    * (see `LocalTagNames`). Resolution is identical either way; this exists
@@ -58,13 +65,12 @@ export interface OperandRef {
  *
  * Two shapes: `kind: "tag"` is a real tag reference -- `#tag(.member)*`, or
  * the equivalent `#`-less spelling of a tag this block itself declares
- * (`LocalTagNames`) -- checked against the symbol table for its resolved
+ * (`LocalTagNames`), or a quoted PLC-tag candidate -- checked against the symbol table for its resolved
  * type. `kind: "bare-identifier"` is a plain word with neither a `#` prefix
  * (a local reference), nor quotes (a global tag reference, e.g.
  * `"PMP_RUN_FB"` -- confirmed real TIA SCL syntax), nor a matching local
- * declaration -- this project has no global PLC tag table to resolve a
- * quoted reference against, so a QUOTED condition is simply never recorded
- * at all (nothing to check), but a word no scope can resolve is invalid
+ * declaration. A quoted condition is recorded as an ambiguous candidate and
+ * only becomes a PLC tag when the workspace XML index resolves it; a word no scope can resolve is invalid
  * operand syntax -- always an error, no type resolution needed. Boolean
  * literals (`TRUE`/`FALSE`) and reserved keywords are excluded from this,
  * and a bare word immediately followed by `(` (a function call) is left
@@ -489,6 +495,21 @@ function peekExternalRefChain(cur: TokenCursor): OperandRef {
   return peekExternalRefChainAt(cur, 0).ref;
 }
 
+/** A double-quoted SCL value without a dot is only a POSSIBLE external PLC
+ * tag until the workspace index resolves its name. See
+ * `OperandRef.ambiguousStringLiteral`. */
+function peekQuotedExternalCandidateAt(cur: TokenCursor, offset: number): OperandRef | null {
+  const tok = cur.peek(offset);
+  if (tok.kind !== "string" || !tok.text.startsWith('"')) return null;
+  return {
+    segments: [tok.value ?? ""],
+    line: tok.line,
+    col: tok.col,
+    external: true,
+    ambiguousStringLiteral: true,
+  };
+}
+
 interface ArgValueResult {
   text: string;
   /** True when this argument's ENTIRE value is exactly one nested call
@@ -548,6 +569,9 @@ function collectArgValue(
       operandRefsOut.push(peekOperandRefChain(cur, localTags));
     } else if (looksLikeExternalRefStart(cur) && !isQuotedLocalTagName(prevToken, t) && !isQuotedChainMember(prevToken, t)) {
       operandRefsOut.push(peekExternalRefChain(cur));
+    } else if (t.kind === "string" && t.text.startsWith('"') && !isQuotedLocalTagName(prevToken, t) && !isQuotedChainMember(prevToken, t)) {
+      const candidate = peekQuotedExternalCandidateAt(cur, 0);
+      if (candidate) operandRefsOut.push(candidate);
     }
     prevToken = cur.next();
     parts.push(prevToken.text);
@@ -844,6 +868,13 @@ function peekSimpleCondition(
     return { kind: "bare-identifier", negated, name: base.text, line: base.line, col: base.col };
   }
 
+  const quotedCandidate = peekQuotedExternalCandidateAt(cur, offset);
+  if (quotedCandidate) {
+    offset += 1;
+    if (!isTerminator(cur.peek(offset))) return null;
+    return { kind: "tag", negated, ref: quotedCandidate };
+  }
+
   return null;
 }
 
@@ -977,6 +1008,18 @@ function peekPrimaryAt(cur: TokenCursor, offset: number, localTags?: LocalTagNam
     const close = cur.peek(inner.nextOffset);
     if (!(close.kind === "punct" && close.text === ")")) return null;
     return { node: inner.node, nextOffset: inner.nextOffset + 1 };
+  }
+
+  // A bare double-quoted value may be a PLC tag or a WSTRING literal. Keep
+  // it as an operand candidate here so the expression checker can resolve a
+  // real tag through BlockIndex; an unknown candidate evaluates to no known
+  // type, which is the same conservative outcome the literal path had.
+  const quotedCandidate = peekQuotedExternalCandidateAt(cur, offset);
+  if (quotedCandidate) {
+    return {
+      node: { kind: "operand", ref: quotedCandidate, line: t0.line, col: t0.col, ...endPosAt(cur, offset) },
+      nextOffset: offset + 1,
+    };
   }
 
   const litLen = peekLiteralRunLength(cur, offset);
@@ -1216,6 +1259,9 @@ function parseSclBody(
         lastTopLevelRef = ref;
         lastTopLevelRefIndexed = false;
       }
+    } else if (t0.kind === "string" && t0.text.startsWith('"') && !isQuotedLocalTagName(prevToken, t0) && !isQuotedChainMember(prevToken, t0)) {
+      const candidate = peekQuotedExternalCandidateAt(cur, 0);
+      if (candidate) operandRefs.push(candidate);
     } else if (t0.kind === "punct" && t0.text === "[" && bracketDepth === 0) {
       lastTopLevelRefIndexed = true; // the pending top-level ref is being indexed, e.g. #arr[#i]
     }

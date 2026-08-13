@@ -88,7 +88,7 @@ END_NETWORK
 Pure authored `.scl` files can contain several top-level declarations. The
 parser therefore iterates over the entire document rather than assuming one
 block per file. The large
-[`distributed-process-control.scl`](../../scripts/fixtures/smoke/distributed-process-control.scl)
+[`distributed-process-control.scl`](https://github.com/Chamoswor/s7-lint-vscode/blob/main/scripts/fixtures/smoke/distributed-process-control.scl)
 fixture exercises that path.
 
 ## Mixed-language blocks
@@ -102,7 +102,7 @@ dispatch on the network attribute, not only on `S7_PreferredLanguage` or
 ## Executable fixtures
 
 The anonymized graphical examples under
-[`graphical-control`](../../scripts/fixtures/smoke/graphical-control/) cover
+[`graphical-control`](https://github.com/Chamoswor/s7-lint-vscode/tree/main/scripts/fixtures/smoke/graphical-control) in the GitHub repository cover
 branches, calls, templates, contacts, coils, conversions, timers, and
 cross-block instance types. Prefer extending those fixtures over pasting
 screenshots or prose from external manuals.

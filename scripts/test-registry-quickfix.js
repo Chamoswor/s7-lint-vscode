@@ -26,12 +26,12 @@ function ok(cond, label) {
 const source = [
   'FUNCTION_BLOCK "Safety"',
   "  VAR",
-  "    fbEStop : ESTOP1;",
+  "    fbEStop : ESTOP1_X;",
   "  END_VAR",
   '  { S7_Language := "FBD" }',
   "  NETWORK",
   "    RUNG",
-  "      #fbEStop.ESTOP1(",
+  "      #fbEStop.ESTOP1_X(",
   "        e_stop := TRUE,",
   "        ack := FALSE,",
   "        q => ,",
@@ -51,7 +51,7 @@ const fix = unknown && unknown.registryFix;
 
 ok(fix && fix.kind === "unknown-instruction", "unknown instance call carries a registry Quick Fix");
 ok(fix && fix.callShape === "instance-dot", "Quick Fix records instance-dot call shape");
-ok(fix && fix.instanceType === "ESTOP1", "Quick Fix resolves instanceType from the VAR declaration");
+ok(fix && fix.instanceType === "ESTOP1_X", "Quick Fix resolves instanceType from the VAR declaration");
 ok(
   fix && JSON.stringify(fix.pins) === JSON.stringify([
     { name: "e_stop", dir: "in" },

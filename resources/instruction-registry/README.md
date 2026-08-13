@@ -186,10 +186,12 @@ map.
    [`type-registry/`](../type-registry/README.md), not in instruction prose.
 4. Put user-facing diagnostic wording in
    [`diagnostic-registry/`](../diagnostic-registry/README.md).
-5. Add or update a fixture and run `npm test` from the repository root.
+5. Add or update a fixture and run `npm test` from a checkout of the GitHub
+   repository. The test source is under
+   [`scripts/`](https://github.com/Chamoswor/s7-lint-vscode/tree/main/scripts).
 
 Focused fixture contracts are documented in
-[`../../scripts/fixtures/scl-diagnostics/`](../../scripts/fixtures/scl-diagnostics/README.md).
+[`scripts/fixtures/scl-diagnostics/`](https://github.com/Chamoswor/s7-lint-vscode/tree/main/scripts/fixtures/scl-diagnostics).
 
 ## Current limitations
 

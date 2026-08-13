@@ -322,8 +322,8 @@ function checkNestedResultUsable(nested: CallNode, nestedEntry: InstructionEntry
  * canonical spelling. Returns `null` for anything this can't confidently
  * resolve to a single name (undeclared, an unresolved path step, an
  * array/inline-struct type with no single top-level name) -- never guessed. */
-function resolveTagTypeName(segments: string[], block: ParsedBlockFile, blockIndex: BlockIndex, typeCache: TypeCacheResult, ruleSet: RuleSet): string | null {
-  const resolved = resolveOperandRef(segments, block, blockIndex, typeCache, ruleSet);
+function resolveTagTypeName(ref: OperandRef, block: ParsedBlockFile, blockIndex: BlockIndex, typeCache: TypeCacheResult, ruleSet: RuleSet): string | null {
+  const resolved = resolveOperandRef(ref.segments, block, blockIndex, typeCache, ruleSet, ref.external);
   if (resolved.kind !== "resolved") return null;
   const name = typeRefTopLevelName(resolved.typeRef);
   return name ? resolveTypeAlias(name, ruleSet) : null;
@@ -346,7 +346,7 @@ function findCallPinForRegistryIndex(call: CallNode, entry: InstructionEntry, id
   return call.pins.filter((p) => p.name === null)[positionalIndex];
 }
 
-/** The one bare `#tag(.member)*` operand this pin's ENTIRE value consists
+/** The one bare local or quoted external operand this pin's ENTIRE value consists
  * of, or `undefined` for anything else (a literal, an expression, several
  * refs) -- same conservative "attribute the whole pin" rule
  * `checkPinMemoryArea` uses, so a source pin like `#a + #b` is silently
@@ -354,7 +354,13 @@ function findCallPinForRegistryIndex(call: CallNode, entry: InstructionEntry, id
 function soleOperandRef(pin: PinArg): OperandRef | undefined {
   if (pin.operandRefs.length !== 1) return undefined;
   const ref = pin.operandRefs[0];
-  return pin.valueText.trim() === `#${ref.segments.join(".")}` ? ref : undefined;
+  const expected = ref.external
+    ? `"${ref.segments[0]}"${ref.segments.slice(1).map((segment) => `.${segment}`).join("")}`
+    : `${ref.bare ? "" : "#"}${ref.segments.join(".")}`;
+  // `collectArgValue` inserts display spaces BETWEEN tokens, including
+  // around `.`, but whitespace INSIDE a quoted PLC-tag name is significant.
+  const actual = pin.valueText.trim().replace(/\s*\.\s*/g, ".");
+  return actual === expected ? ref : undefined;
 }
 
 /** For `#lhs := Call(...)`, checks the receiving variable's declared type
@@ -378,7 +384,7 @@ function checkResultTypeMatch(
   if (result.kind === "none" || result.kind === "type-expression") return [];
 
   const lhsRef = call.assignmentTarget;
-  const lhsTypeName = resolveTagTypeName(lhsRef.segments, block, blockIndex, typeCache, ruleSet);
+  const lhsTypeName = resolveTagTypeName(lhsRef, block, blockIndex, typeCache, ruleSet);
   if (!lhsTypeName) return []; // can't resolve the receiving variable's type -- don't guess
 
   const severity: LintSeverity = entry.confidence === "confirmed-compiled" ? "error" : "warning";
@@ -402,7 +408,7 @@ function checkResultTypeMatch(
     const sourcePin = findCallPinForRegistryIndex(call, entry, result.sourcePins[0]);
     const sourceRef = sourcePin && soleOperandRef(sourcePin);
     if (!sourceRef) return []; // source operand isn't a clean bare tag -- don't guess
-    const sourceTypeName = resolveTagTypeName(sourceRef.segments, block, blockIndex, typeCache, ruleSet);
+    const sourceTypeName = resolveTagTypeName(sourceRef, block, blockIndex, typeCache, ruleSet);
     if (!sourceTypeName || sourceTypeName === lhsTypeName) return [];
     return [
       formatDiagnostic(
@@ -474,7 +480,7 @@ function checkNestedResultAgainstPin(
     const sourcePin = findCallPinForRegistryIndex(nested, nestedEntry, result.sourcePins[0]);
     const sourceRef = sourcePin && soleOperandRef(sourcePin);
     if (!sourceRef) return []; // source operand isn't a clean bare tag -- don't guess
-    const sourceTypeName = resolveTagTypeName(sourceRef.segments, block, blockIndex, typeCache, ruleSet);
+    const sourceTypeName = resolveTagTypeName(sourceRef, block, blockIndex, typeCache, ruleSet);
     if (!sourceTypeName || pinTypes.has(sourceTypeName)) return [];
     return [
       formatDiagnostic(
@@ -500,7 +506,7 @@ function checkNestedResultAgainstPin(
 function resolvePinArrayBounds(pin: PinArg, block: ParsedBlockFile, blockIndex: BlockIndex, typeCache: TypeCacheResult, ruleSet: RuleSet): [number, number][] | undefined {
   const ref = soleOperandRef(pin);
   if (!ref) return undefined;
-  const resolved = resolveOperandRef(ref.segments, block, blockIndex, typeCache, ruleSet);
+  const resolved = resolveOperandRef(ref.segments, block, blockIndex, typeCache, ruleSet, ref.external);
   if (resolved.kind !== "resolved" || resolved.typeRef.kind !== "array" || resolved.typeRef.bounds.length === 0) return undefined;
   return resolved.typeRef.bounds;
 }

@@ -1,4 +1,5 @@
 src/**
+# Development-only test runners and fixtures are available in the GitHub repository.
 scripts/**
 out/**
 dist/**/*.map

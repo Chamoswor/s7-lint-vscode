@@ -4,6 +4,10 @@ This directory contains focused fixtures for syntax recovery and semantic
 diagnostics. It is split into two assertion styles because they answer
 different regression questions.
 
+These fixtures and their runners are development files in the
+[GitHub repository](https://github.com/Chamoswor/s7-lint-vscode/tree/main/scripts/fixtures/scl-diagnostics).
+They are intentionally excluded from the published VSIX.
+
 ## Layout
 
 - `positive/`: complete source files that must produce no diagnostics.
@@ -14,7 +18,8 @@ different regression questions.
 
 ## Manifest suite
 
-Run from the `LintServer` directory:
+Run from the root of a source checkout. The runner is
+[`scripts/run-manifest-smoke-tests.js`](https://github.com/Chamoswor/s7-lint-vscode/blob/main/scripts/run-manifest-smoke-tests.js):
 
 ```text
 npm run test:manifest
@@ -34,7 +39,8 @@ provenance; they are not assertion keys.
 
 ## Annotated expression suite
 
-Run:
+Run from the same source checkout. The runner is
+[`scripts/run-annotated-diagnostic-tests.js`](https://github.com/Chamoswor/s7-lint-vscode/blob/main/scripts/run-annotated-diagnostic-tests.js):
 
 ```text
 npm run test:annotated

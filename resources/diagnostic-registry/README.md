@@ -92,4 +92,7 @@ field and keep a valid default severity in the schema.
    `shared.yaml` when multiple modules describe the same condition.
 2. Call `formatDiagnostic` with every required placeholder and variant.
 3. Add or update a regression fixture.
-4. Run `npm test` from the `LintServer` directory.
+4. Run `npm test` from the root of a checkout of the GitHub repository. The
+   test files are under
+   [`scripts/`](https://github.com/Chamoswor/s7-lint-vscode/tree/main/scripts)
+   and are not included in the published VSIX.

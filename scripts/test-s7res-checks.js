@@ -5,6 +5,13 @@ const path = require("path");
 const { analyzeS7res, parseS7res } = require("../out/parser/s7resParser");
 const { checkMlcReferences, checkS7res } = require("../out/linter/s7resChecks");
 const { loadRuleSet } = require("../out/rules/loadRules");
+const {
+  addMissingEnUs,
+  addS7resEntries,
+  quoteInvalidLocaleScalar,
+  quoteS7resLocaleLine,
+  renderS7res,
+} = require("../out/providers/s7resQuickFix");
 
 const ruleSet = loadRuleSet(path.join(__dirname, "..", "resources"));
 
@@ -75,4 +82,35 @@ assert.deepEqual(checkMlcReferences(sourceText, undefined, ruleSet).map((diagnos
 ]);
 assert.deepEqual(checkMlcReferences(sourceText, importFailure, ruleSet), []);
 
-console.log(".s7res YAML, schema, silent-text-loss, duplicate-ID, and MLC cross-reference checks passed.");
+const generated = renderS7res(["MLC_USED", "MLC_MISSING", "MLC_USED"], "\r\n");
+assert.ok(generated.includes("\r\n"));
+assert.deepEqual([...parseS7res(generated).entries.keys()], ["MLC_USED", "MLC_MISSING"]);
+
+const appended = addS7resEntries(validResource, ["MLC_MISSING"]);
+assert.deepEqual(checkMlcReferences(sourceText, appended, ruleSet), []);
+assert.ok(appended.startsWith(validResource), "adding an ID preserves the existing resource verbatim");
+
+const expandedEmpty = addS7resEntries("MultiLingualTexts: []\n", ["MLC_NEW"]);
+assert.ok(parseS7res(expandedEmpty).entries.has("MLC_NEW"));
+
+const truncatedLines = silentlyTruncated.split("\n");
+truncatedLines[2] = quoteS7resLocaleLine(truncatedLines[2]);
+const quotedHashText = truncatedLines.join("\n");
+assert.deepEqual(checkS7res(quotedHashText, ruleSet), []);
+assert.equal(parseS7res(quotedHashText).entries.get("MLC_HASH").texts.get("en-US").text, "Behold dette # og dette også");
+
+const repairedMissingLocale = addMissingEnUs(invalidSchema, 2);
+assert.deepEqual(checkS7res(repairedMissingLocale, ruleSet), []);
+assert.equal(parseS7res(repairedMissingLocale).entries.get("MLC_NO_TEXT").texts.get("en-US").text, "");
+
+const numericLocale = ["MultiLingualTexts:", "  - id: MLC_NUMBER", "    en-US: 123", ""].join("\n");
+const quotedNumericLocale = quoteInvalidLocaleScalar(numericLocale, 3);
+assert.deepEqual(checkS7res(quotedNumericLocale, ruleSet), []);
+assert.equal(parseS7res(quotedNumericLocale).entries.get("MLC_NUMBER").texts.get("en-US").text, "123");
+
+const nullLocale = ["MultiLingualTexts:", "  - id: MLC_NULL", "    en-US:", ""].join("\n");
+const quotedNullLocale = quoteInvalidLocaleScalar(nullLocale, 3);
+assert.deepEqual(checkS7res(quotedNullLocale, ruleSet), []);
+assert.equal(parseS7res(quotedNullLocale).entries.get("MLC_NULL").texts.get("en-US").text, "");
+
+console.log(".s7res checks and deterministic Quick Fix transformations passed.");

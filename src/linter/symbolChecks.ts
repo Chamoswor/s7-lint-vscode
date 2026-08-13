@@ -72,6 +72,10 @@ export function checkUndeclaredIdentifiers(
   for (const ref of collectAllOperandRefs(block)) {
     const resolved: ResolvedSymbol = resolveOperandRef(ref.segments, block, blockIndex, typeCache, ruleSet, ref.external);
     if (resolved.kind === "undeclared") {
+      // A bare double-quoted SCL value can also be a WSTRING literal. It is
+      // only a PLC-tag reference when the workspace XML index resolves it;
+      // never report an ordinary unmatched string as an unknown symbol.
+      if (ref.ambiguousStringLiteral) continue;
       if (ref.external) {
         diags.push(formatDiagnostic(ruleSet, "external-symbol-not-found", ref.line, ref.col, { name: ref.segments[0] }));
       } else {

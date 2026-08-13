@@ -47,6 +47,15 @@ class WorkspaceEdit {
   replace(uri, range, newText) {
     this.edits.push({ uri, range, newText });
   }
+  insert(uri, position, newText) {
+    this.edits.push({ kind: "insert", uri, position, newText });
+  }
+  createFile(uri, options) {
+    this.edits.push({ kind: "createFile", uri, options });
+  }
+  set(uri, edits) {
+    this.edits.push({ kind: "set", uri, edits });
+  }
 }
 
 const TextEdit = {
@@ -102,6 +111,13 @@ class MarkdownString {
     this.value = value;
   }
 }
+class CodeAction {
+  constructor(title, kind) {
+    this.title = title;
+    this.kind = kind;
+  }
+}
+const CodeActionKind = { QuickFix: "quickfix" };
 
 module.exports = {
   Position,
@@ -117,4 +133,6 @@ module.exports = {
   CompletionItemKind,
   SnippetString,
   MarkdownString,
+  CodeAction,
+  CodeActionKind,
 };

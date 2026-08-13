@@ -15,7 +15,8 @@ generating the repository's `.s7dcl` and `.s7res` fixtures:
 
 For instruction signatures and detailed LAD/FBD call shapes, use
 [FBD know-how](../fbd-knowhow/00-Overview.md). The executable examples live in
-[`scripts/fixtures/smoke`](../../scripts/fixtures/smoke/).
+[`scripts/fixtures/smoke`](https://github.com/Chamoswor/s7-lint-vscode/tree/main/scripts/fixtures/smoke)
+in the GitHub repository; `scripts/**` is not included in the published VSIX.
 
 ## Documents
 
@@ -28,13 +29,17 @@ These notes describe observed syntax, not every feature supported by every
 TIA Portal or controller version. A change is considered supported by this
 project only when a fixture parses and the relevant automated checks pass.
 
-Run the focused verification with:
+From a checkout of the GitHub repository, run the focused verification with:
 
 ```text
 npm run test:smoke
 ```
 
-Run `npm test` before publishing changes to the parser, registries, or fixtures.
+The command uses
+[`scripts/smoke-test.js`](https://github.com/Chamoswor/s7-lint-vscode/blob/main/scripts/smoke-test.js).
+Run `npm test` from the same source checkout before publishing changes to the
+parser, registries, or fixtures; the complete test source is under
+[`scripts/`](https://github.com/Chamoswor/s7-lint-vscode/tree/main/scripts).
 
 ## Independence and attribution
 

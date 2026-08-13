@@ -7,6 +7,7 @@
 import { ParsedBlockFile, VarSection, parseS7dclFile } from "../parser/s7dclParser";
 import { MemberRef } from "../parser/typeRef";
 import { parseBlockXml } from "../parser/udtXmlParser";
+import { ParsedPlcTag, parsePlcTagXml } from "../parser/plcTagXmlParser";
 
 export interface BlockVar {
   name: string;
@@ -28,6 +29,10 @@ export interface BlockInfo {
   instructionName?: string;
   /** Explicit S7_Optimized_Access value; undefined when omitted. */
   optimizedAccess?: boolean;
+}
+
+export interface GlobalTagInfo extends ParsedPlcTag {
+  file: string;
 }
 
 function flattenVars(sections: VarSection[]): Map<string, BlockVar> {
@@ -98,19 +103,31 @@ export class BlockIndex {
   private overlays = new Map<string, BlockInfo[]>();
   /** `diskBlocks` with every overlay applied on top; what lookups read. */
   private blocks = new Map<string, BlockInfo>();
+  /** PLC tags scanned from `SW.Tags.PlcTagTable` XML exports. PLC tags do
+   * not participate in document overlays because TIA exports them as XML,
+   * not as editable SCL declarations. */
+  private globalTags = new Map<string, GlobalTagInfo>();
 
   /**
    * `files` are the TEXT block sources (`.s7dcl`/`.scl`/`.db`); `xmlFiles`
-   * are `*.xml` exports, which TIA uses for DATA_BLOCKs even when the
-   * FUNCTION_BLOCK they instance is exported as text. Text wins on a name
+   * are `*.xml` exports, which TIA uses for DATA_BLOCKs and PLC tag tables
+   * even when program blocks are exported as text. Text wins on a block-name
    * clash: it is the format the rest of this parser chain models fully, and
    * a workspace holding both spellings of one block is a re-export artefact
    * rather than two different blocks.
    */
   rebuild(files: { path: string; text: string }[], xmlFiles: { path: string; text: string }[] = []): void {
     const next = new Map<string, BlockInfo>();
+    const nextGlobalTags = new Map<string, GlobalTagInfo>();
     for (const f of xmlFiles) {
       for (const info of scanBlockXmlFile(f.path, f.text)) next.set(info.name, info);
+      for (const tag of parsePlcTagXml(f.text)) {
+        // PLC identifiers are case-insensitive. First declaration wins so a
+        // duplicate export remains deterministic and points at the first
+        // source file discovered by VS Code's workspace scan.
+        const key = tag.name.toLowerCase();
+        if (!nextGlobalTags.has(key)) nextGlobalTags.set(key, { ...tag, file: f.path });
+      }
     }
     for (const f of files) {
       for (const info of scanBlockFile(f.path, f.text)) {
@@ -118,6 +135,7 @@ export class BlockIndex {
       }
     }
     this.diskBlocks = next;
+    this.globalTags = nextGlobalTags;
     this.recompute();
   }
 
@@ -169,6 +187,18 @@ export class BlockIndex {
 
   get size(): number {
     return this.blocks.size;
+  }
+
+  getGlobalTag(name: string): GlobalTagInfo | undefined {
+    return this.globalTags.get(name.toLowerCase());
+  }
+
+  get globalTagSize(): number {
+    return this.globalTags.size;
+  }
+
+  globalTagValues(): GlobalTagInfo[] {
+    return [...this.globalTags.values()];
   }
 
   /** Every indexed block across the whole workspace -- used by
