@@ -42,6 +42,30 @@ export interface ParsedS7Res {
   entries: Map<string, S7ResEntry>; // keyed by id
 }
 
+export type S7ResIssueKind =
+  | "invalid-yaml"
+  | "unquoted-comment"
+  | "invalid-root"
+  | "invalid-entry"
+  | "duplicate-id";
+
+/** A parser/schema problem with an exact source anchor. Kept independent of
+ * the linter's diagnostic registry so providers can continue using this
+ * parser without depending on linter/. */
+export interface S7ResIssue {
+  kind: S7ResIssueKind;
+  line: number;
+  col: number;
+  reason?: string;
+  id?: string;
+  retainedText?: string;
+}
+
+export interface S7ResAnalysis {
+  parsed?: ParsedS7Res;
+  issues: S7ResIssue[];
+}
+
 export interface ResolvedMlcText {
   text: string;
   locale: string;
@@ -51,33 +75,172 @@ export interface ResolvedMlcText {
 const ID_LINE_RE = /^(\s*-\s*id:\s*)(\S+)\s*$/;
 const LOCALE_LINE_RE = /^\s+([A-Za-z][A-Za-z-]*):\s?/;
 
-/** Scans raw text for each entry's `- id: X` line (always a single-line,
- * unquoted scalar in every real export seen) and, best-effort, each
- * locale's own line -- used only to attach source positions to the values
- * js-yaml parses; never used to parse the VALUES themselves (quoting/block
- * scalars are real YAML, not worth re-implementing here). */
-function scanPositions(text: string): Map<string, { idLine: number; idCol: number; localeLines: Map<string, number> }> {
+interface EntryPosition {
+  line: number;
+  col: number;
+  idLine: number;
+  idCol: number;
+  localeLines: Map<string, number>;
+}
+
+/** Position scan by sequence index. This retains duplicate IDs and malformed
+ * entries so schema diagnostics can point at the offending element. */
+function scanEntryPositions(text: string): EntryPosition[] {
   const lines = text.split(/\r\n|\n/);
-  const result = new Map<string, { idLine: number; idCol: number; localeLines: Map<string, number> }>();
-  let current: { idLine: number; idCol: number; localeLines: Map<string, number> } | undefined;
-  let currentId: string | undefined;
+  const sequenceIndent = lines.reduce<number | undefined>((smallest, line) => {
+    const match = /^( *)-\s+/.exec(line);
+    if (!match) return smallest;
+    return smallest === undefined ? match[1].length : Math.min(smallest, match[1].length);
+  }, undefined);
+  const result: EntryPosition[] = [];
+  let current: EntryPosition | undefined;
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
-    const idMatch = ID_LINE_RE.exec(line);
-    if (idMatch) {
-      currentId = idMatch[2];
-      current = { idLine: i + 1, idCol: idMatch[1].length + 1, localeLines: new Map() };
-      // First declaration wins on a duplicate id -- stay deterministic
-      // rather than throwing (shouldn't happen in a real export).
-      if (!result.has(currentId)) result.set(currentId, current);
+    const entryMatch = /^( *)-\s+/.exec(line);
+    // A bullet in an en-US block scalar is more deeply indented than the
+    // root sequence and therefore cannot shift the element-to-position map.
+    if (entryMatch && entryMatch[1].length === sequenceIndent) {
+      const idMatch = /^(\s*-\s*id:\s*)/.exec(line);
+      current = {
+        line: i + 1,
+        col: entryMatch[0].length + 1,
+        idLine: i + 1,
+        idCol: idMatch ? idMatch[1].length + 1 : entryMatch[0].length + 1,
+        localeLines: new Map(),
+      };
+      result.push(current);
       continue;
     }
-    if (current) {
-      const locMatch = LOCALE_LINE_RE.exec(line);
-      if (locMatch && !current.localeLines.has(locMatch[1])) current.localeLines.set(locMatch[1], i + 1);
+    if (!current) continue;
+    const idMatch = /^(\s+id:\s*)/.exec(line);
+    if (idMatch) {
+      current.idLine = i + 1;
+      current.idCol = idMatch[1].length + 1;
+      continue;
     }
+    const locMatch = LOCALE_LINE_RE.exec(line);
+    if (locMatch && !current.localeLines.has(locMatch[1])) current.localeLines.set(locMatch[1], i + 1);
   }
   return result;
+}
+
+/** Finds the YAML-valid but lossy plain-scalar case. `js-yaml` quite
+ * correctly treats whitespace + `#` as a comment, so parsing alone cannot
+ * tell that a human intended the suffix to be resource text. Quoted and
+ * block scalar values are deliberately excluded; `T#15M` is also safe
+ * because the hash is not preceded by whitespace. */
+function findUnquotedCommentIssues(text: string): S7ResIssue[] {
+  const issues: S7ResIssue[] = [];
+  const lines = text.split(/\r\n|\n/);
+  for (let i = 0; i < lines.length; i++) {
+    const match = /^(\s+[A-Za-z][A-Za-z-]*:\s*)(.*)$/.exec(lines[i]);
+    if (!match) continue;
+    const value = match[2];
+    const trimmed = value.trimStart();
+    if (!trimmed || trimmed.startsWith("'") || trimmed.startsWith('"') || trimmed.startsWith("|") || trimmed.startsWith(">")) continue;
+    const commentAt = value.indexOf(" #");
+    if (commentAt < 0) continue;
+    issues.push({
+      kind: "unquoted-comment",
+      line: i + 1,
+      col: match[1].length + commentAt + 2,
+      retainedText: value.slice(0, commentAt).trimEnd(),
+    });
+  }
+  return issues;
+}
+
+function yamlErrorIssue(error: unknown): S7ResIssue {
+  const yamlError = error as { reason?: unknown; message?: unknown; mark?: { line?: unknown; column?: unknown } };
+  const markedLine = yamlError.mark?.line;
+  const markedColumn = yamlError.mark?.column;
+  return {
+    kind: "invalid-yaml",
+    line: typeof markedLine === "number" ? markedLine + 1 : 1,
+    col: typeof markedColumn === "number" ? markedColumn + 1 : 1,
+    reason: typeof yamlError.reason === "string" ? yamlError.reason : String(yamlError.message ?? error),
+  };
+}
+
+/** Parses YAML and validates the TIA `.s7res` schema. A valid document has
+ * exactly one root key (`MultiLingualTexts`), a sequence of mappings, a
+ * non-empty string `id`, a string `en-US`, string values for any additional
+ * locales, and unique IDs. */
+export function analyzeS7res(text: string): S7ResAnalysis {
+  const issues = findUnquotedCommentIssues(text);
+  let doc: unknown;
+  try {
+    doc = yaml.load(text);
+  } catch (error) {
+    issues.push(yamlErrorIssue(error));
+    return { issues };
+  }
+
+  if (!doc || typeof doc !== "object" || Array.isArray(doc)) {
+    issues.push({ kind: "invalid-root", line: 1, col: 1 });
+    return { issues };
+  }
+  const root = doc as Record<string, unknown>;
+  const rootKeys = Object.keys(root);
+  const list = root.MultiLingualTexts;
+  if (rootKeys.length !== 1 || rootKeys[0] !== "MultiLingualTexts" || !Array.isArray(list)) {
+    issues.push({ kind: "invalid-root", line: 1, col: 1 });
+    return { issues };
+  }
+
+  const positions = scanEntryPositions(text);
+  const entries = new Map<string, S7ResEntry>();
+  for (let i = 0; i < list.length; i++) {
+    const item = list[i];
+    const pos = positions[i] ?? { line: 1, col: 1, idLine: 1, idCol: 1, localeLines: new Map<string, number>() };
+    if (!item || typeof item !== "object" || Array.isArray(item)) {
+      issues.push({ kind: "invalid-entry", line: pos.line, col: pos.col, reason: "the element is not a mapping" });
+      continue;
+    }
+    const record = item as Record<string, unknown>;
+    const id = record.id;
+    if (typeof id !== "string" || id.length === 0) {
+      issues.push({ kind: "invalid-entry", line: pos.idLine, col: pos.idCol, reason: "'id' must be a non-empty string" });
+      continue;
+    }
+    if (typeof record["en-US"] !== "string") {
+      issues.push({
+        kind: "invalid-entry",
+        line: pos.localeLines.get("en-US") ?? pos.idLine,
+        col: pos.localeLines.has("en-US") ? 1 : pos.idCol,
+        reason: "'en-US' must be present and contain text",
+        id,
+      });
+    }
+    const invalidTextField = Object.entries(record).find(
+      ([key, value]) => key !== "id" && key !== "en-US" && typeof value !== "string"
+    );
+    if (invalidTextField) {
+      const [key] = invalidTextField;
+      issues.push({
+        kind: "invalid-entry",
+        line: pos.localeLines.get(key) ?? pos.idLine,
+        col: 1,
+        reason: `'${key}' must contain text`,
+        id,
+      });
+    }
+    if (entries.has(id)) {
+      issues.push({ kind: "duplicate-id", line: pos.idLine, col: pos.idCol, id });
+      continue;
+    }
+    const texts = new Map<string, S7ResText>();
+    for (const [key, value] of Object.entries(record)) {
+      if (key !== "id" && typeof value === "string") texts.set(key, { text: value, line: pos.localeLines.get(key) });
+    }
+    entries.set(id, { id, idLine: pos.idLine, idCol: pos.idCol, texts });
+  }
+
+  // `parsed` means the YAML/root was readable, not necessarily schema-clean.
+  // Keeping the recoverable ID set lets cross-reference checks run after a
+  // rule-2/3 finding. Invalid YAML/root returns earlier without `parsed`, which
+  // is the hard gate that prevents a false "every MLC is missing" cascade.
+  return { parsed: { entries }, issues };
 }
 
 /** Parses `.s7res` text into id -> {locale -> text} entries, or `null` if
@@ -85,31 +248,8 @@ function scanPositions(text: string): Map<string, { idLine: number; idCol: numbe
  * missing/wrong-shaped top-level key) -- don't guess on a file this parser
  * doesn't recognize. */
 export function parseS7res(text: string): ParsedS7Res | null {
-  let doc: unknown;
-  try {
-    doc = yaml.load(text);
-  } catch {
-    return null;
-  }
-  if (!doc || typeof doc !== "object") return null;
-  const list = (doc as Record<string, unknown>).MultiLingualTexts;
-  if (!Array.isArray(list)) return null;
-
-  const positions = scanPositions(text);
-  const entries = new Map<string, S7ResEntry>();
-  for (const item of list) {
-    if (!item || typeof item !== "object" || typeof (item as Record<string, unknown>).id !== "string") continue;
-    const id = (item as Record<string, unknown>).id as string;
-    const pos = positions.get(id);
-    if (!pos) continue; // js-yaml saw it but the line-scan didn't -- don't guess a position
-    const texts = new Map<string, S7ResText>();
-    for (const [key, value] of Object.entries(item as Record<string, unknown>)) {
-      if (key === "id" || typeof value !== "string") continue;
-      texts.set(key, { text: value, line: pos.localeLines.get(key) });
-    }
-    entries.set(id, { id, idLine: pos.idLine, idCol: pos.idCol, texts });
-  }
-  return { entries };
+  const analysis = analyzeS7res(text);
+  return analysis.issues.length === 0 ? analysis.parsed ?? null : null;
 }
 
 /** Resolves one entry's display text for `preferredLocale`, falling back to
@@ -158,14 +298,27 @@ export function siblingSourcePath(resPath: string): string | undefined {
  * S7ResDefinitionProvider (turns hits into jump targets) and
  * providers/rename.ts (turns hits into edits). */
 export function findMlcPragmaUsages(sourceText: string, id: string): Token[] {
+  return findAllMlcPragmaUsages(sourceText)
+    .filter((usage) => usage.id === id)
+    .map((usage) => usage.token);
+}
+
+export interface MlcPragmaUsage {
+  id: string;
+  token: Token;
+}
+
+/** Scans all MLC-family pragma values once. Used by cross-reference linting;
+ * the id-specific wrapper above remains the provider/rename API. */
+export function findAllMlcPragmaUsages(sourceText: string): MlcPragmaUsage[] {
   const tokens = new Lexer(sourceText).tokenize();
   const cur = new TokenCursor(tokens);
-  const hits: Token[] = [];
+  const hits: MlcPragmaUsage[] = [];
   while (!cur.atEnd()) {
     const t0 = cur.peek();
     if (t0.kind === "ident" && MLC_ID_PRAGMA_KEYS.has(t0.text) && cur.peek(1).kind === "op" && cur.peek(1).text === ":=") {
       const valueTok = cur.peek(2);
-      if (valueTok.kind === "string" && (valueTok.value ?? valueTok.text) === id) hits.push(valueTok);
+      if (valueTok.kind === "string") hits.push({ id: valueTok.value ?? valueTok.text, token: valueTok });
     }
     cur.next();
   }

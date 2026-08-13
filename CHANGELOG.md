@@ -5,6 +5,9 @@ All notable changes to S7 Lint for VS Code will be documented in this file.
 ## 0.1.6
 Bug fixes
 
+- Added `.s7res` YAML/schema validation, detection of silent text loss from
+  unquoted ` #`, duplicate-ID checks, and bidirectional MLC cross-references.
+
 ## 0.1.5
 
 Editor intelligence and SCL semantic-highlighting improvements.

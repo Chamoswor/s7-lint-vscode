@@ -1,0 +1,29 @@
+s7res-invalid-yaml:
+  severity: error
+  message: "Invalid .s7res YAML: {reason}. TIA Portal cannot import this resource file."
+
+s7res-unquoted-comment:
+  severity: error
+  message: "Unquoted resource text is truncated at ' #' because YAML treats the suffix as a comment. Retained text: '{retainedText}'. Wrap the complete text in single quotes."
+
+s7res-invalid-root:
+  severity: error
+  message: "The .s7res root must contain exactly one MultiLingualTexts sequence."
+
+s7res-invalid-entry:
+  severity: error
+  message: "Invalid MultiLingualTexts element: {reason}. Every element requires string fields 'id' and 'en-US'."
+
+s7res-duplicate-id:
+  severity: error
+  message: "Duplicate MultiLingualTexts id '{id}'. Each .s7res id must be unique."
+
+s7res-orphaned-id:
+  severity: warning
+  message: "MultiLingualTexts id '{id}' is not referenced by an MLC-family pragma in the sibling source file."
+
+mlc-id-not-found:
+  severity: error
+  variants:
+    missing-resource: "MLC id '{id}' cannot be resolved because the sibling .s7res file is missing."
+    missing-id: "MLC id '{id}' does not exist in the sibling .s7res file."

@@ -26,13 +26,16 @@ the target CPU and TIA Portal compiler.
   though TIA writes it in a different format from the FUNCTION_BLOCK it
   instances. Every file is offered to both parsers -- they key off different
   root elements -- because export layout does not reliably separate the two.
-- `.s7res`: multilingual resources used by definition, rename, and inline-hint
-  support.
+- `.s7res`: multilingual resources with YAML/schema/duplicate-ID validation,
+  MLC cross-reference diagnostics, definition, rename, and inline-hint support.
 
 ## Current capabilities
 
 ### Diagnostics
 
+- Parses `.s7res` files as YAML and validates the `MultiLingualTexts` schema,
+  unique IDs, lossy unquoted ` #` text, missing MLC references, and orphaned
+  resource entries before TIA Portal import.
 - Validates LAD/FBD and SCL instruction names, pins or parameters, call shape,
   language availability, templates, results, and selected memory-area rules
   against the registries under [`resources/`](resources/).

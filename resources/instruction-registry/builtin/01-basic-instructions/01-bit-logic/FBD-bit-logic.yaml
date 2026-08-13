@@ -31,6 +31,90 @@ A:
       memoryAreas: [I, Q, M, D, L, T, C, constant]
       note: >-
         Optional fourth AND operand.
+    - name: in5
+      dir: in
+      required: false
+      dataTypes: [Bool]
+      memoryAreas: [I, Q, M, D, L, T, C, constant]
+      note: >-
+        Optional
+    - name: in6
+      dir: in
+      required: false
+      dataTypes: [Bool]
+      memoryAreas: [I, Q, M, D, L, T, C, constant]
+      note: >-
+        Optional.
+    - name: in7
+      dir: in
+      required: false
+      dataTypes: [Bool]
+      memoryAreas: [I, Q, M, D, L, T, C, constant]
+      note: >-
+        Optional.
+    - name: in8
+      dir: in
+      required: false
+      dataTypes: [Bool]
+      memoryAreas: [I, Q, M, D, L, T, C, constant]
+      note: >-
+        Optional.
+    - name: in9
+      dir: in
+      required: false
+      dataTypes: [Bool]
+      memoryAreas: [I, Q, M, D, L, T, C, constant]
+      note: >-
+        Optional.
+    - name: in10
+      dir: in
+      required: false
+      dataTypes: [Bool]
+      memoryAreas: [I, Q, M, D, L, T, C, constant]
+      note: >-
+        Optional.
+    - name: in11
+      dir: in
+      required: false
+      dataTypes: [Bool]
+      memoryAreas: [I, Q, M, D, L, T, C, constant]
+      note: >-
+        Optional.
+    - name: in12
+      dir: in
+      required: false
+      dataTypes: [Bool]
+      memoryAreas: [I, Q, M, D, L, T, C, constant]
+      note: >-
+        Optional.
+    - name: in13
+      dir: in
+      required: false
+      dataTypes: [Bool]
+      memoryAreas: [I, Q, M, D, L, T, C, constant]
+      note: >-
+        Optional.
+    - name: in14
+      dir: in
+      required: false
+      dataTypes: [Bool]
+      memoryAreas: [I, Q, M, D, L, T, C, constant]
+      note: >-
+        Optional.
+    - name: in15
+      dir: in
+      required: false
+      dataTypes: [Bool]
+      memoryAreas: [I, Q, M, D, L, T, C, constant]
+      note: >-
+        Optional.
+    - name: in16
+      dir: in
+      required: false
+      dataTypes: [Bool]
+      memoryAreas: [I, Q, M, D, L, T, C, constant]
+      note: >-
+        Optional.
   result:
     kind: value
     dataTypes: [Bool]
@@ -80,6 +164,76 @@ O:
       memoryAreas: [I, Q, M, D, L, T, C, constant]
       note: >-
         Optional sixth OR operand.
+    - name: in7
+      dir: in
+      required: false
+      dataTypes: [Bool]
+      memoryAreas: [I, Q, M, D, L, T, C, constant]
+      note: >-
+        Optional seventh OR operand.
+    - name: in8
+      dir: in
+      required: false
+      dataTypes: [Bool]
+      memoryAreas: [I, Q, M, D, L, T, C, constant]
+      note: >-
+        Optional
+    - name: in9
+      dir: in
+      required: false
+      dataTypes: [Bool]
+      memoryAreas: [I, Q, M, D, L, T, C, constant]
+      note: >-
+        Optional
+    - name: in10
+      dir: in
+      required: false
+      dataTypes: [Bool]
+      memoryAreas: [I, Q, M, D, L, T, C, constant]
+      note: >-
+        Optional
+    - name: in11
+      dir: in
+      required: false
+      dataTypes: [Bool]
+      memoryAreas: [I, Q, M, D, L, T, C, constant]
+      note: >-
+        Optional
+    - name: in12
+      dir: in
+      required: false
+      dataTypes: [Bool]
+      memoryAreas: [I, Q, M, D, L, T, C, constant]
+      note: >-
+        Optional
+    - name: in13
+      dir: in
+      required: false
+      dataTypes: [Bool]
+      memoryAreas: [I, Q, M, D, L, T, C, constant]
+      note: >-
+        Optional
+    - name: in14
+      dir: in
+      required: false
+      dataTypes: [Bool]
+      memoryAreas: [I, Q, M, D, L, T, C, constant]
+      note: >-
+        Optional
+    - name: in15
+      dir: in
+      required: false
+      dataTypes: [Bool]
+      memoryAreas: [I, Q, M, D, L, T, C, constant]
+      note: >-
+        Optional
+    - name: in16
+      dir: in
+      required: false
+      dataTypes: [Bool]
+      memoryAreas: [I, Q, M, D, L, T, C, constant]
+      note: >-
+        Optional
   result:
     kind: value
     dataTypes: [Bool]
@@ -108,6 +262,97 @@ X:
       memoryAreas: [I, Q, M, D, L, T, C, constant]
       note: >-
         Optional third EXCLUSIVE OR operand.
+    - name: in4
+      dir: in
+      required: false
+      dataTypes: [Bool]
+      memoryAreas: [I, Q, M, D, L, T, C, constant]
+      note: >-
+        Optional.
+    - name: in5
+      dir: in
+      required: false
+      dataTypes: [Bool]
+      memoryAreas: [I, Q, M, D, L, T, C, constant]
+      note: >-
+        Optional.
+    - name: in6
+      dir: in
+      required: false
+      dataTypes: [Bool]
+      memoryAreas: [I, Q, M, D, L, T, C, constant]
+      note: >-
+        Optional.
+    - name: in7
+      dir: in
+      required: false
+      dataTypes: [Bool]
+      memoryAreas: [I, Q, M, D, L, T, C, constant]
+      note: >-
+        Optional.
+    - name: in8
+      dir: in
+      required: false
+      dataTypes: [Bool]
+      memoryAreas: [I, Q, M, D, L, T, C, constant]
+      note: >-
+        Optional.
+    - name: in9
+      dir: in
+      required: false
+      dataTypes: [Bool]
+      memoryAreas: [I, Q, M, D, L, T, C, constant]
+      note: >-
+        Optional.
+    - name: in10
+      dir: in
+      required: false
+      dataTypes: [Bool]
+      memoryAreas: [I, Q, M, D, L, T, C, constant]
+      note: >-
+        Optional.
+    - name: in11
+      dir: in
+      required: false
+      dataTypes: [Bool]
+      memoryAreas: [I, Q, M, D, L, T, C, constant]
+      note: >-
+        Optional.
+    - name: in12
+      dir: in
+      required: false
+      dataTypes: [Bool]
+      memoryAreas: [I, Q, M, D, L, T, C, constant]
+      note: >-
+        Optional.
+    - name: in13
+      dir: in
+      required: false
+      dataTypes: [Bool]
+      memoryAreas: [I, Q, M, D, L, T, C, constant]
+      note: >-
+        Optional.
+    - name: in14
+      dir: in
+      required: false
+      dataTypes: [Bool]
+      memoryAreas: [I, Q, M, D, L, T, C, constant]
+      note: >-
+        Optional.
+    - name: in15
+      dir: in
+      required: false
+      dataTypes: [Bool]
+      memoryAreas: [I, Q, M, D, L, T, C, constant]
+      note: >-
+        Optional.
+    - name: in16
+      dir: in
+      required: false
+      dataTypes: [Bool]
+      memoryAreas: [I, Q, M, D, L, T, C, constant]
+      note: >-
+        Optional.
   result:
     kind: value
     dataTypes: [Bool]

@@ -19,6 +19,7 @@ no runtime meaning.
 | [symbol-checks.yaml](symbol-checks.yaml) | `src/linter/symbolChecks.ts` |
 | [syntax-structure-checks.yaml](syntax-structure-checks.yaml) | `src/linter/synStructureChecks.ts` |
 | [lad-wiring-checks.yaml](lad-wiring-checks.yaml) | `src/linter/ladWiringChecks.ts` |
+| [s7res-checks.yaml](s7res-checks.yaml) | `src/linter/s7resChecks.ts` |
 | [document-index.yaml](document-index.yaml) | `src/analysis/documentIndex.ts` |
 | [shared.yaml](shared.yaml) | diagnostics emitted from more than one module |
 

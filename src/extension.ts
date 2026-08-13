@@ -1,3 +1,4 @@
+import * as fs from "fs";
 import * as path from "path";
 import * as vscode from "vscode";
 import { buildDocumentIndex } from "./analysis/documentIndex";
@@ -9,9 +10,11 @@ import { checkSclExpressionTypes } from "./linter/exprTypeChecks";
 import { checkLadWiring } from "./linter/ladWiringChecks";
 import { checkInstructions } from "./linter/instructionChecks";
 import { checkSclInstructions } from "./linter/sclInstructionChecks";
+import { checkMlcReferences, checkS7res } from "./linter/s7resChecks";
 import { checkSclSyntaxStructure } from "./linter/synStructureChecks";
 import { checkIllegalDotAccess, checkSclConditionTypes, checkUndeclaredIdentifiers } from "./linter/symbolChecks";
 import { detectS7dclKind, parseS7dclBlock, parseS7dclFile } from "./parser/s7dclParser";
+import { siblingS7ResPath } from "./parser/s7resParser";
 import { S7_COMPLETION_TRIGGER_CHARACTERS, S7dclCompletionProvider } from "./providers/completion";
 import { S7dclDefinitionProvider } from "./providers/definition";
 import { S7dclHoverProvider } from "./providers/hover";
@@ -252,8 +255,8 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     vscode.workspace.onDidCloseTextDocument((doc) => cacheManager.getBlockIndex().clearDocumentOverlay(doc.uri.fsPath))
   );
 
-  context.subscriptions.push(vscode.workspace.onDidOpenTextDocument(lintDocument));
-  context.subscriptions.push(vscode.workspace.onDidSaveTextDocument(lintDocument));
+  context.subscriptions.push(vscode.workspace.onDidOpenTextDocument(lintDocumentAndMlcSibling));
+  context.subscriptions.push(vscode.workspace.onDidSaveTextDocument(lintDocumentAndMlcSibling));
 
   const debounceTimers = new Map<string, ReturnType<typeof setTimeout>>();
   context.subscriptions.push(
@@ -263,7 +266,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
       if (existing) clearTimeout(existing);
       debounceTimers.set(
         key,
-        setTimeout(() => lintDocument(e.document), 400)
+        setTimeout(() => lintDocumentAndMlcSibling(e.document), 400)
       );
     })
   );
@@ -271,6 +274,8 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
   context.subscriptions.push(
     vscode.workspace.onDidCloseTextDocument((doc) => {
       diagnosticCollection.delete(doc.uri);
+      const sibling = findOpenMlcSibling(doc);
+      if (sibling) lintDocument(sibling);
     })
   );
 
@@ -454,16 +459,62 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
   );
 }
 
+function normalizedFsPath(fsPath: string): string {
+  const normalized = path.normalize(fsPath);
+  return process.platform === "win32" ? normalized.toLowerCase() : normalized;
+}
+
+/** Reads a related file from its unsaved open buffer when possible, then
+ * falls back to disk. This keeps both directions of MLC cross-reference
+ * diagnostics accurate while either sibling is being edited. */
+function readDocumentOrFile(fsPath: string): string | undefined {
+  const wanted = normalizedFsPath(fsPath);
+  const open = vscode.workspace.textDocuments.find((doc) => normalizedFsPath(doc.uri.fsPath) === wanted);
+  if (open) return open.getText();
+  try {
+    return fs.readFileSync(fsPath, "utf8");
+  } catch {
+    return undefined;
+  }
+}
+
+function siblingSourceText(resPath: string): string | undefined {
+  const stem = resPath.replace(/\.s7res$/i, "");
+  return readDocumentOrFile(`${stem}.s7dcl`) ?? readDocumentOrFile(`${stem}.udt`);
+}
+
+function findOpenMlcSibling(doc: vscode.TextDocument): vscode.TextDocument | undefined {
+  const fsPath = doc.uri.fsPath;
+  const lower = fsPath.toLowerCase();
+  const candidates = lower.endsWith(".s7res")
+    ? [fsPath.replace(/\.s7res$/i, ".s7dcl"), fsPath.replace(/\.s7res$/i, ".udt")]
+    : /\.(s7dcl|udt)$/i.test(fsPath)
+      ? [siblingS7ResPath(fsPath)]
+      : [];
+  const wanted = new Set(candidates.map(normalizedFsPath));
+  return vscode.workspace.textDocuments.find((candidate) => wanted.has(normalizedFsPath(candidate.uri.fsPath)));
+}
+
+function lintDocumentAndMlcSibling(doc: vscode.TextDocument): void {
+  lintDocument(doc);
+  const sibling = findOpenMlcSibling(doc);
+  if (sibling) lintDocument(sibling);
+}
+
 function lintDocument(doc: vscode.TextDocument): void {
   const fsPath = doc.uri.fsPath;
   const isS7dcl = fsPath.toLowerCase().endsWith(".s7dcl");
   const isScl = fsPath.toLowerCase().endsWith(".scl");
+  const isS7res = fsPath.toLowerCase().endsWith(".s7res");
   const isUdtSource = cacheManager.isUdtSource(fsPath);
-  if (!isS7dcl && !isScl && !isUdtSource) return;
+  if (!isS7dcl && !isScl && !isS7res && !isUdtSource) return;
 
   const diagnostics: vscode.Diagnostic[] = [];
 
-  if (isScl) {
+  if (isS7res) {
+    const sourceText = siblingSourceText(fsPath);
+    for (const d of checkS7res(doc.getText(), ruleSet, sourceText)) diagnostics.push(toVscodeDiagnostic(doc, d));
+  } else if (isScl) {
     // An authored .scl source file may bundle several program-block
     // declarations in one file (unlike a .s7dcl export) -- see
     // parseS7dclFile. Each one gets its own SCL instruction-call check;
@@ -536,6 +587,11 @@ function lintDocument(doc: vscode.TextDocument): void {
     for (const d of buildDocumentIndex(text, ruleSet, blockIndex, fsPath, getMlcLocale(doc.uri)).diagnostics) {
       diagnostics.push(toVscodeDiagnostic(doc, d));
     }
+  }
+
+  if (/\.(s7dcl|udt)$/i.test(fsPath)) {
+    const resourceText = readDocumentOrFile(siblingS7ResPath(fsPath));
+    for (const d of checkMlcReferences(doc.getText(), resourceText, ruleSet)) diagnostics.push(toVscodeDiagnostic(doc, d));
   }
 
   for (const cd of cacheManager.getDiagnosticsForFile(fsPath)) {
