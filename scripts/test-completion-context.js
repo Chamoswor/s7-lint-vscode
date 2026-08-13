@@ -130,6 +130,25 @@ test("context: inside VAR_INPUT, nothing after colon -> bare-type, empty partial
   assert.equal(ctx.decl.identStart, null);
 });
 
+test("context: empty type slot inside an inline VAR Struct remains a declaration", () => {
+  const text = 'FUNCTION_BLOCK "X"\nVAR\n   TestStruct : Struct\n      member : Bool;\n      test:\n';
+  const offset = text.indexOf("test:") + "test:".length;
+  const ctx = resolveSclCompletionContext(text, offset);
+  assert.equal(ctx.kind, "declaration");
+  assert.equal(ctx.section, "VAR");
+  assert.equal(ctx.decl.kind, "bare-type");
+  assert.equal(ctx.decl.identStart, null);
+});
+
+test("context: empty type slot inside a top-level TYPE Struct is a TYPE declaration", () => {
+  const text = 'TYPE "MyUDT"\nVERSION : 0.1\nSTRUCT\n   Member:';
+  const ctx = resolveSclCompletionContext(text, text.length);
+  assert.equal(ctx.kind, "declaration");
+  assert.equal(ctx.section, "TYPE");
+  assert.equal(ctx.decl.kind, "bare-type");
+  assert.equal(ctx.decl.identStart, null);
+});
+
 test("context: still typing the member name -> 'name' (before colon)", () => {
   const text = "FUNCTION_BLOCK \"X\"\nVAR_INPUT\n   inputVal\nEND_VAR\nBEGIN\nEND_FUNCTION_BLOCK\n";
   const offset = text.indexOf("inputVal") + "inputVal".length;
@@ -144,6 +163,38 @@ test("context: inside Array[...] bounds -> array-bounds", () => {
   const ctx = resolveSclCompletionContext(text, offset);
   assert.equal(ctx.kind, "declaration");
   assert.equal(ctx.decl.kind, "array-bounds");
+});
+
+test("completion: empty type slot inside an inline VAR Struct suggests datatypes", () => {
+  const fixture = [
+    'FUNCTION_BLOCK "X"',
+    "VAR",
+    "   TestStruct : Struct",
+    "      member : Bool;",
+    "      test:|",
+    "   END_STRUCT;",
+    "END_VAR",
+    "BEGIN",
+    "END_FUNCTION_BLOCK",
+    "",
+  ].join("\n");
+  const { document, position } = withCursor(fixture, "s7scl");
+  const result = labels(provider.provideCompletionItems(document, position));
+  for (const expected of ["Bool", "Int", "Array", "Struct"]) assert.ok(result.includes(expected), `expected ${expected}`);
+});
+
+test("completion: empty type slot inside a top-level TYPE Struct suggests conservative UDT member datatypes", () => {
+  const fixture = ['TYPE "MyUDT"', "VERSION : 0.1", "", "   STRUCT", "      Member:|", "   END_STRUCT;", "", "END_TYPE", ""].join("\n");
+  const { document, position } = withCursor(fixture, "s7scl");
+  const result = labels(provider.provideCompletionItems(document, position));
+  for (const expected of ["Bool", "Int", "Array", "Struct"]) assert.ok(result.includes(expected), `expected ${expected}`);
+  assert.ok(!result.includes("Variant"), "TYPE members must not borrow unverified VAR-section-only additions");
+});
+
+test("completion: quoted type slot inside a top-level TYPE Struct suggests workspace UDTs", () => {
+  const fixture = ['TYPE "MyUDT"', "VERSION : 0.1", "", "   STRUCT", '      Member: "|', "   END_STRUCT;", "", "END_TYPE", ""].join("\n");
+  const { document, position } = withCursor(fixture, "s7scl");
+  assert.deepEqual(labels(provider.provideCompletionItems(document, position)), ["UserDefined"]);
 });
 
 test("context: after 'of', bare partial -> bare-type, afterArrayOf true", () => {

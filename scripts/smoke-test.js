@@ -114,6 +114,29 @@ const sclFiles = [
 const sclBlockIndex = new BlockIndex();
 sclBlockIndex.rebuild(sclFiles.map((p) => ({ path: p, text: readText(p) })));
 
+function expectIndexedBlockShape(condition, description) {
+  if (condition) {
+    console.log(`-- PASS: ${description} --`);
+    return;
+  }
+  totalFixtureFailures++;
+  console.error(`-- FAIL: ${description} --`);
+}
+
+const fbUnitDb = sclBlockIndex.get("Fb_Unit_DB");
+expectIndexedBlockShape(
+  fbUnitDb?.instanceOf?.name === "Fb_Unit" && fbUnitDb.instanceOf.quoted === true,
+  "typed DATA_BLOCK indexes its quoted FUNCTION_BLOCK instance type"
+);
+const storeDb = sclBlockIndex.get("Store");
+const storeRec = storeDb?.vars.get("Rec")?.member.typeRef;
+expectIndexedBlockShape(storeDb?.instanceOf === undefined, "global DATA_BLOCK outer STRUCT is not mistaken for an instance type");
+expectIndexedBlockShape(storeDb?.vars.has("Units") === true && storeDb.vars.has("Rec") === true, "global DATA_BLOCK outer STRUCT indexes direct members");
+expectIndexedBlockShape(
+  storeRec?.kind === "inline-struct" && storeRec.members.some((member) => member.name === "3_Slave"),
+  "quoted nested STRUCT member is stored under its symbolic unquoted name"
+);
+
 // Real UDT type cache (analysis/symbolTable.ts's cross-type member
 // resolution needs it for checkUndeclaredIdentifiers/checkSclConditionTypes)
 // -- same parseUdtText + buildTypeCache pipeline cache/cacheManager.ts uses.
@@ -174,6 +197,7 @@ const spanFixture = [
   "END_VAR",
   "BEGIN",
   "    T1(IN := (A = B), PT := Limit);",
+  "    A.%X0 := TRUE;",
   "END_FUNCTION_BLOCK",
   "",
 ].join("\n");
@@ -191,16 +215,121 @@ function expectSpan(line, text, tokenType, why) {
   console.error(`-- FAIL: L${line} '${text}' -> ${span ? span.tokenType : "NO SPAN"} (expected ${tokenType}) -- ${why}`);
 }
 
+function expectCapabilities(line, text, expected, why) {
+  const span = spanAt(line, text);
+  const actual = ["s7Container", "s7Indexable"].filter((modifier) => span?.tokenModifiers.includes(modifier));
+  if (span && JSON.stringify(actual) === JSON.stringify(expected)) {
+    console.log(`-- PASS: L${line} '${text}' capabilities -> ${actual.join("+") || "leaf"} --`);
+    return;
+  }
+  totalFixtureFailures++;
+  console.error(`-- FAIL: L${line} '${text}' capabilities -> ${actual.join("+") || "leaf"} (expected ${expected.join("+") || "leaf"}) -- ${why}`);
+}
+
+function expectHover(line, text, expectedText, why) {
+  const span = spanAt(line, text);
+  if (span?.hoverMarkdown?.includes(expectedText)) {
+    console.log(`-- PASS: L${line} '${text}' hover contains '${expectedText}' --`);
+    return;
+  }
+  totalFixtureFailures++;
+  console.error(`-- FAIL: L${line} '${text}' hover -> ${span?.hoverMarkdown ?? "NO HOVER"} -- ${why}`);
+}
+
 // The pin AFTER a parenthesised argument value. `walkCallArgs` used to end
 // its whole argument-list walk at the sub-expression's own `)`, so `PT` got
 // no span at all: no hover, no Ctrl+click, no pin/type validation.
 expectSpan(12, "PT", "parameter", "a pin following a parenthesised value must still resolve");
 expectSpan(12, "IN", "parameter", "the pin before it, as a control");
-expectSpan(12, "Limit", "variable", "that pin's own value");
+expectSpan(12, "Limit", "parameter", "an FB input reads like a function parameter at its use site");
 expectSpan(12, "A", "variable", "operands INSIDE the parenthesised value still resolve");
-expectSpan(12, "T1", "callable", "an instruction instance reads as callable, not as a plain variable");
-expectSpan(7, "TON", "callable", "...and so does its declared type");
-expectSpan(4, "TIME", "type", "a Siemens elementary type");
+expectSpan(12, "T1", "function", "an instruction instance uses the standard callable/function family");
+expectSpan(7, "TON", "s7CallableType", "an instruction instance type uses the callable-type subtype");
+expectSpan(4, "TIME", "s7TemporalType", "a Siemens temporal value type uses the temporal family");
+expectCapabilities(13, "A", [], "a scalar WORD remains a leaf when followed by slice access");
+expectSpan(13, "%X0", "number", "a percent-prefixed bit selector is a slice token, not an object property");
+expectHover(13, "%X0", "`Bool`", "a WORD bit slice resolves to Bool");
+
+// An FB/FC interface is still the source of a resolved scalar value after
+// walking through one or more UDT members. Preserve the parameter role at
+// scalar leaves, while UDT/ARRAY path segments retain their structural role.
+// A static VAR with the same UDT shape is the control: its leaves stay normal
+// properties rather than becoming interface-colored.
+const interfaceFixtureLines = [
+  'TYPE "Nested"',
+  "VERSION : 0.1",
+  "STRUCT",
+  "  Member : Int;",
+  "END_STRUCT;",
+  "END_TYPE",
+  'TYPE "Base"',
+  "VERSION : 0.1",
+  "STRUCT",
+  "  Test_Bool : Bool;",
+  '  TestNested : "Nested";',
+  "  Items : ARRAY[0..1] OF Int;",
+  "END_STRUCT;",
+  "END_TYPE",
+  'FUNCTION_BLOCK "InterfacePaths"',
+  "VAR_INPUT",
+  '  TestInput : "Base";',
+  "END_VAR",
+  "VAR_OUTPUT",
+  '  TestOutput : "Base";',
+  "END_VAR",
+  "VAR_IN_OUT",
+  '  TestInOut : "Base";',
+  "END_VAR",
+  "VAR",
+  '  TestVar : "Base";',
+  "END_VAR",
+  "BEGIN",
+  "  TestOutput.Test_Bool := TestInput.Test_Bool;",
+  "  TestInOut.TestNested.Member := 10;",
+  "  TestInOut.Items[0] := 1;",
+  "  TestVar.Test_Bool := TRUE;",
+  "  TestVar.TestNested.Member := 10;",
+  "END_FUNCTION_BLOCK",
+  "",
+];
+const interfaceFixture = interfaceFixtureLines.join("\n");
+const interfaceBlockIndex = new BlockIndex();
+interfaceBlockIndex.rebuild([{ path: "interfacePaths.scl", text: interfaceFixture }]);
+const interfaceTypeCache = buildTypeCache(ruleSet, [{ path: "interfacePaths.scl", decls: parseUdtText(interfaceFixture) }]);
+const interfaceIndex = buildDocumentIndex(interfaceFixture, ruleSet, interfaceBlockIndex, "interfacePaths.scl", "en-US", interfaceTypeCache);
+
+function interfaceSpan(lineFragment, text, occurrence = 1) {
+  const line = interfaceFixtureLines.findIndex((candidate) => candidate.includes(lineFragment)) + 1;
+  let seen = 0;
+  return interfaceIndex.spans.find((span) => {
+    if (span.line !== line || interfaceFixtureLines[line - 1].substr(span.startCol - 1, span.length) !== text) return false;
+    seen++;
+    return seen === occurrence;
+  });
+}
+
+function expectInterfaceSpan(lineFragment, text, tokenType, modifiers, occurrence, why) {
+  const span = interfaceSpan(lineFragment, text, occurrence);
+  const hasModifiers = modifiers.every((modifier) => span?.tokenModifiers.includes(modifier));
+  if (span?.tokenType === tokenType && hasModifiers) {
+    console.log(`-- PASS: interface '${text}' -> ${tokenType}${modifiers.length ? `.${modifiers.join(".")}` : ""} --`);
+    return;
+  }
+  totalFixtureFailures++;
+  console.error(
+    `-- FAIL: interface '${text}' -> ${span ? `${span.tokenType}.${span.tokenModifiers.join(".")}` : "NO SPAN"} ` +
+      `(expected ${tokenType}${modifiers.length ? `.${modifiers.join(".")}` : ""}) -- ${why}`
+  );
+}
+
+expectInterfaceSpan("TestOutput.Test_Bool", "Test_Bool", "s7InterfaceMember", [], 1, "VAR_OUTPUT scalar leaves inherit the parameter role");
+expectInterfaceSpan("TestOutput.Test_Bool", "Test_Bool", "s7InterfaceMember", [], 2, "VAR_INPUT scalar leaves inherit the parameter role");
+expectInterfaceSpan("TestInOut.TestNested.Member", "TestNested", "property", ["s7Container"], 1, "an interface-path UDT segment keeps its container color");
+expectInterfaceSpan("TestInOut.TestNested.Member", "Member", "s7InterfaceMember", [], 1, "a nested VAR_IN_OUT scalar leaf inherits the parameter role");
+expectInterfaceSpan("TestInOut.Items", "Items", "property", ["s7Indexable"], 1, "an interface-path ARRAY keeps its indexable color");
+expectInterfaceSpan("TestVar.Test_Bool", "Test_Bool", "property", [], 1, "a static VAR scalar member remains a normal property");
+expectInterfaceSpan("TestVar.TestNested.Member", "TestNested", "property", ["s7Container"], 1, "a static VAR UDT segment remains a container property");
+expectInterfaceSpan("TestVar.TestNested.Member", "Member", "property", [], 1, "a nested static VAR scalar member remains a normal property");
 
 const totalDetectedDiagnostics = totalDiags + totalLadWiringDiags + totalLiteralDiags + totalUndeclaredDiags + totalStructCountDiags + totalSclDiags;
 if (totalFixtureFailures > 0 || totalDetectedDiagnostics > 0) {

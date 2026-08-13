@@ -186,7 +186,8 @@ export interface ParsedBlockFile {
    *   - quoted -- a user FUNCTION_BLOCK single-instance DB (or a
    *     PLC-data-type-based DB), e.g. `DATA_BLOCK "Pump_DB" ... "FB_Pump"`,
    *     since user block/UDT names are always quoted in this grammar.
-   * Undefined for a global DB (one with its own VAR section instead) and for
+   * Undefined for a global DB (one with its own VAR section or outer STRUCT)
+   * and for
    * every non-DATA_BLOCK. */
   instanceOf?: { name: string; quoted: boolean };
   /** A DATA_BLOCK header pragma's `InstructionName` value, when present --
@@ -1291,6 +1292,29 @@ function parseBlockDeclaration(cur: TokenCursor): ParsedBlockFile | null {
       }
       cur.tryIdent("END_VAR");
       varSections.push({ kind: varKw, members });
+      headerDone = true;
+      continue;
+    }
+
+    // A text-exported global DB can use an anonymous outer STRUCT instead of
+    // a VAR...END_VAR section:
+    //
+    //   DATA_BLOCK "Store"
+    //   NON_RETAIN
+    //      STRUCT
+    //         Units : Array[1..4] of "SlotRecord";
+    //      END_STRUCT;
+    //   BEGIN
+    //   END_DATA_BLOCK
+    //
+    // This STRUCT is the DB's storage envelope, not an `instanceOf` type.
+    // Parse its direct children as the DB's ordinary VAR members so the
+    // BlockIndex can resolve `"Store".Units` just like a VAR-based global DB.
+    if (blockType === "DATA_BLOCK" && !headerDone && cur.isIdent("STRUCT")) {
+      const storage = parseTypeRefFromCursor(cur);
+      if (storage.kind === "inline-struct") {
+        varSections.push({ kind: "VAR", members: storage.members });
+      }
       headerDone = true;
       continue;
     }

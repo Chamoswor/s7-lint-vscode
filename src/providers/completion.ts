@@ -183,8 +183,8 @@ export class S7dclCompletionProvider implements vscode.CompletionItemProvider {
     const text = document.getText();
     const offset = document.offsetAt(position);
 
-    // Section-aware gating is SCL-specific (VAR_*/BEGIN is this grammar's
-    // own structure) -- a `.s7dcl`/`.s7udt` document keeps its existing,
+    // Section-aware gating is SCL-specific (VAR_*/TYPE STRUCT/BEGIN are this
+    // grammar's own structure) -- a `.s7dcl`/`.s7udt` document keeps its existing,
     // unrestricted behavior untouched (out of scope here; those files
     // aren't hand-typed member-by-member the same way, and don't have this
     // request's VAR-section/type-position editing workflow at all).

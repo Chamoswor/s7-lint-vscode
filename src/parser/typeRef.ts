@@ -218,7 +218,12 @@ export function parseMemberFromCursor(cur: TokenCursor): MemberRef {
   cur.tryPunct(":");
   const typeRef = parseTypeRefFromCursor(cur);
   cur.tryPunct(";");
-  return { name: nameTok.text, typeRef, line: nameTok.line };
+  // Quoting is only source spelling for a member name that starts with a
+  // digit or collides with a reserved word. Store the symbolic name without
+  // quotes so `Rec."3_Slave"` resolves against the declaration exactly like
+  // parseVarMember's quoted-name handling does.
+  const name = nameTok.kind === "string" ? nameTok.value ?? nameTok.text : nameTok.text;
+  return { name, typeRef, line: nameTok.line };
 }
 
 /**

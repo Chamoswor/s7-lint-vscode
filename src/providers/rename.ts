@@ -13,6 +13,7 @@ import * as fs from "fs";
 import * as vscode from "vscode";
 import { BlockIndex } from "../analysis/blockIndex";
 import { buildDocumentIndex, IdentifierSpan } from "../analysis/documentIndex";
+import { TypeCacheResult } from "../cache/typeCache";
 import { getMlcLocale } from "../config";
 import { loadSiblingS7Res } from "../parser/s7resParser";
 import { RuleSet } from "../rules/types";
@@ -52,8 +53,14 @@ function replacementFor(oldText: string, newName: string): string {
   return newName;
 }
 
-function findRenameSpan(document: vscode.TextDocument, position: vscode.Position, ruleSet: RuleSet, blockIndex: BlockIndex): IdentifierSpan | undefined {
-  const index = buildDocumentIndex(document.getText(), ruleSet, blockIndex, document.uri.fsPath, getMlcLocale(document.uri));
+function findRenameSpan(
+  document: vscode.TextDocument,
+  position: vscode.Position,
+  ruleSet: RuleSet,
+  blockIndex: BlockIndex,
+  typeCache: TypeCacheResult
+): IdentifierSpan | undefined {
+  const index = buildDocumentIndex(document.getText(), ruleSet, blockIndex, document.uri.fsPath, getMlcLocale(document.uri), typeCache);
   const line = position.line + 1;
   const col = position.character + 1;
   return index.spans.find((s) => s.renameKey && s.line === line && col >= s.startCol && col <= s.startCol + s.length);
@@ -104,23 +111,28 @@ async function candidateFiles(needle: string, currentDoc: vscode.TextDocument): 
 }
 
 export class S7dclRenameProvider implements vscode.RenameProvider {
-  constructor(private readonly ruleSet: RuleSet, private readonly blockIndex: BlockIndex) {}
+  constructor(
+    private readonly ruleSet: RuleSet,
+    private readonly blockIndex: BlockIndex,
+    private readonly getTypeCache: () => TypeCacheResult
+  ) {}
 
   prepareRename(document: vscode.TextDocument, position: vscode.Position): vscode.ProviderResult<vscode.Range> {
-    const span = findRenameSpan(document, position, this.ruleSet, this.blockIndex);
+    const span = findRenameSpan(document, position, this.ruleSet, this.blockIndex, this.getTypeCache());
     if (!span) throw new Error("This isn't a renameable symbol (variable, block name, or MultiLingualTexts ID).");
     return innerRange(document, span);
   }
 
   async provideRenameEdits(document: vscode.TextDocument, position: vscode.Position, newName: string): Promise<vscode.WorkspaceEdit | undefined> {
-    const span = findRenameSpan(document, position, this.ruleSet, this.blockIndex);
+    const typeCache = this.getTypeCache();
+    const span = findRenameSpan(document, position, this.ruleSet, this.blockIndex, typeCache);
     if (!span?.renameKey) return undefined;
     const key = span.renameKey;
     const edit = new vscode.WorkspaceEdit();
 
     if (key.startsWith("mlc:")) {
       const [id, resPath] = key.slice(4).split("\0");
-      const index = buildDocumentIndex(document.getText(), this.ruleSet, this.blockIndex, document.uri.fsPath, getMlcLocale(document.uri));
+      const index = buildDocumentIndex(document.getText(), this.ruleSet, this.blockIndex, document.uri.fsPath, getMlcLocale(document.uri), typeCache);
       for (const s of index.spans) {
         if (s.renameKey !== key) continue;
         edit.replace(document.uri, spanRange(s), replacementFor(document.getText(spanRange(s)), newName));
@@ -145,7 +157,7 @@ export class S7dclRenameProvider implements vscode.RenameProvider {
     }
 
     if (key.startsWith("local:")) {
-      const index = buildDocumentIndex(document.getText(), this.ruleSet, this.blockIndex, document.uri.fsPath, getMlcLocale(document.uri));
+      const index = buildDocumentIndex(document.getText(), this.ruleSet, this.blockIndex, document.uri.fsPath, getMlcLocale(document.uri), typeCache);
       for (const s of index.spans) {
         if (s.renameKey !== key) continue;
         edit.replace(document.uri, spanRange(s), replacementFor(document.getText(spanRange(s)), newName));
@@ -157,7 +169,7 @@ export class S7dclRenameProvider implements vscode.RenameProvider {
     const bareName = key.split(":").pop()!;
     const files = await candidateFiles(bareName, document);
     for (const f of files) {
-      const index = buildDocumentIndex(f.text, this.ruleSet, this.blockIndex, f.uri.fsPath, getMlcLocale(f.uri));
+      const index = buildDocumentIndex(f.text, this.ruleSet, this.blockIndex, f.uri.fsPath, getMlcLocale(f.uri), typeCache);
       for (const s of index.spans) {
         if (s.renameKey !== key) continue;
         edit.replace(f.uri, spanRange(s), replacementFor(spanText(f.text, s), newName));

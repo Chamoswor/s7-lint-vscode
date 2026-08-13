@@ -154,6 +154,15 @@ function resolveMember(
   typeCache: TypeCacheResult,
   ruleSet: RuleSet
 ): MemberStepResult {
+  // An anonymous inline STRUCT has no name for `stepLookupName` to resolve;
+  // its member list is the type definition. Handle it directly so chains
+  // such as `"Store".Rec."3_Slave"` can continue past the DB's top-level
+  // `Rec` property.
+  if (currentTypeRef.kind === "inline-struct") {
+    const member = currentTypeRef.members.find((m) => nameEq(m.name, memberName));
+    return member ? { kind: "ok", typeRef: member.typeRef } : { kind: "not-found" };
+  }
+
   const lookupName = stepLookupName(currentTypeRef);
   if (!lookupName) return { kind: "not-found" };
 

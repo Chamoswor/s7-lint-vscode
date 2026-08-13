@@ -5,14 +5,26 @@
 import * as vscode from "vscode";
 import { BlockIndex } from "../analysis/blockIndex";
 import { buildDocumentIndex } from "../analysis/documentIndex";
+import { TypeCacheResult } from "../cache/typeCache";
 import { getMlcLocale } from "../config";
 import { RuleSet } from "../rules/types";
 
 export class S7dclDefinitionProvider implements vscode.DefinitionProvider {
-  constructor(private readonly ruleSet: RuleSet, private readonly blockIndex: BlockIndex) {}
+  constructor(
+    private readonly ruleSet: RuleSet,
+    private readonly blockIndex: BlockIndex,
+    private readonly getTypeCache: () => TypeCacheResult
+  ) {}
 
   provideDefinition(document: vscode.TextDocument, position: vscode.Position): vscode.ProviderResult<vscode.Definition> {
-    const index = buildDocumentIndex(document.getText(), this.ruleSet, this.blockIndex, document.uri.fsPath, getMlcLocale(document.uri));
+    const index = buildDocumentIndex(
+      document.getText(),
+      this.ruleSet,
+      this.blockIndex,
+      document.uri.fsPath,
+      getMlcLocale(document.uri),
+      this.getTypeCache()
+    );
     const line = position.line + 1;
     const col = position.character + 1;
     for (const span of index.spans) {

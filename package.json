@@ -96,6 +96,17 @@
         "path": "./syntaxes/s7dcl.tmLanguage.json"
       }
     ],
+    "configurationDefaults": {
+      "[s7scl]": {
+        "editor.semanticHighlighting.enabled": true
+      },
+      "[s7dcl]": {
+        "editor.semanticHighlighting.enabled": true
+      },
+      "[s7udt]": {
+        "editor.semanticHighlighting.enabled": true
+      }
+    },
     "commands": [
       {
         "command": "tiaLint.rebuildCache",
@@ -112,6 +123,14 @@
       {
         "command": "tiaLint.openInstructionEditor",
         "title": "S7 Lint: Open Instruction Registry Editor"
+      },
+      {
+        "command": "tiaLint.installRecommendedSemanticColors",
+        "title": "S7 Lint: Install Recommended Semantic Colors"
+      },
+      {
+        "command": "tiaLint.disableRecommendedSemanticColors",
+        "title": "S7 Lint: Disable Recommended Semantic Colors"
       },
       {
         "command": "tiaLint.registryMarkPinOptional",
@@ -137,35 +156,83 @@
     "semanticTokenTypes": [
       {
         "id": "charLiteral",
+        "superType": "string",
         "description": "A single-quoted single-character (Char/WChar) literal, e.g. 'A'"
       },
       {
         "id": "timeLiteral",
+        "superType": "number",
         "description": "A time/duration literal, e.g. T#10S"
       },
       {
         "id": "dateLiteral",
+        "superType": "number",
         "description": "A date/time-of-day/date-time literal, e.g. D#2026-1-1"
       },
       {
         "id": "pointerLiteral",
+        "superType": "number",
         "description": "A legacy pointer literal, e.g. P#DB10.DBX20.0, NULL, ZERO"
       },
       {
         "id": "booleanLiteral",
+        "superType": "enumMember",
         "description": "A boolean literal (TRUE, FALSE) -- a language constant, not a control-flow keyword"
       },
       {
-        "id": "typeKeyword",
-        "description": "A keyword that builds a data type rather than controlling flow: STRUCT, END_STRUCT, ARRAY, OF, REF_TO"
+        "id": "s7TemporalType",
+        "superType": "type",
+        "description": "An SCL time, duration, date, or date-time datatype"
       },
       {
-        "id": "callable",
-        "description": "A project-defined callable: a FUNCTION_BLOCK instance, a timer/counter/edge instruction instance (TON, R_TRIG, CTU, ...), or a workspace FB/FC call target -- as opposed to a plain data variable or a Siemens catalog instruction"
+        "id": "s7IntegerType",
+        "superType": "type",
+        "description": "An SCL signed/unsigned integer or bit-string datatype"
       },
       {
-        "id": "dataBlock",
-        "description": "A workspace DATA_BLOCK, at its own declaration and at every reference to it (e.g. \"DB_IPC_Comms\") -- global storage, distinct from both variables and callables"
+        "id": "s7BooleanType",
+        "superType": "type",
+        "description": "The SCL Bool datatype"
+      },
+      {
+        "id": "s7FloatType",
+        "superType": "type",
+        "description": "An SCL Real or LReal floating-point datatype"
+      },
+      {
+        "id": "s7GenericType",
+        "superType": "type",
+        "description": "An SCL generic/reference datatype or ARRAY/OF constructor"
+      },
+      {
+        "id": "s7TextType",
+        "superType": "type",
+        "description": "An SCL String, WString, Char, or WChar datatype"
+      },
+      {
+        "id": "s7UdtType",
+        "superType": "struct",
+        "description": "A project-defined S7 PLC data type (UDT)"
+      },
+      {
+        "id": "s7CallableType",
+        "superType": "class",
+        "description": "An instantiable FUNCTION_BLOCK or Siemens instruction instance type"
+      },
+      {
+        "id": "s7CallableInstance",
+        "superType": "variable",
+        "description": "An instance value of a FUNCTION_BLOCK, timer, counter, edge instruction, or another callable instance type"
+      },
+      {
+        "id": "s7DataBlock",
+        "superType": "variable",
+        "description": "A global or PLC-data-type-backed S7 DATA_BLOCK storage object"
+      },
+      {
+        "id": "s7InterfaceMember",
+        "superType": "parameter",
+        "description": "A resolved scalar member reached through an FB/FC Input, Output, or InOut interface value"
       }
     ],
     "semanticTokenModifiers": [
@@ -176,62 +243,228 @@
       {
         "id": "float",
         "description": "A floating-point numeric literal, e.g. 4.0"
+      },
+      {
+        "id": "s7Container",
+        "description": "A value that exposes structured members through dotted access"
+      },
+      {
+        "id": "s7Indexable",
+        "description": "A value that supports SCL bracket indexing, such as Array, String, or WString"
       }
     ],
     "semanticTokenScopes": [
       {
         "language": "s7scl",
         "scopes": {
-          "callable": [
-            "entity.name.function",
-            "variable.other.object"
-          ],
-          "dataBlock": [
-            "variable.other.global",
-            "support.variable"
-          ],
           "booleanLiteral": [
             "constant.language.boolean",
             "constant.language"
           ],
-          "typeKeyword": [
-            "storage.type",
-            "keyword.other"
+          "charLiteral": [
+            "string.quoted.single"
+          ],
+          "timeLiteral": [
+            "constant.numeric"
+          ],
+          "dateLiteral": [
+            "constant.numeric"
+          ],
+          "pointerLiteral": [
+            "constant.numeric"
+          ],
+          "s7TemporalType": [
+            "storage.type.temporal",
+            "storage.type"
+          ],
+          "s7IntegerType": [
+            "storage.type.numeric.integer",
+            "storage.type.numeric",
+            "storage.type"
+          ],
+          "s7BooleanType": [
+            "storage.type.boolean",
+            "storage.type"
+          ],
+          "s7FloatType": [
+            "storage.type.numeric.float",
+            "storage.type.numeric",
+            "storage.type"
+          ],
+          "s7GenericType": [
+            "storage.type.generic",
+            "storage.type"
+          ],
+          "s7TextType": [
+            "storage.type.string",
+            "storage.type"
+          ],
+          "s7UdtType": [
+            "entity.name.type",
+            "storage.type"
+          ],
+          "s7CallableType": [
+            "entity.name.type.class",
+            "support.class"
+          ],
+          "s7CallableInstance": [
+            "variable.other.object",
+            "variable.other.readwrite"
+          ],
+          "s7DataBlock": [
+            "variable.other.global",
+            "variable.other.readwrite"
+          ],
+          "s7InterfaceMember": [
+            "variable.parameter",
+            "variable.other.readwrite"
           ]
         }
       },
       {
         "language": "s7dcl",
         "scopes": {
-          "callable": [
-            "entity.name.function",
-            "variable.other.object"
-          ],
-          "dataBlock": [
-            "variable.other.global",
-            "support.variable"
-          ],
           "booleanLiteral": [
             "constant.language.boolean",
             "constant.language"
           ],
-          "typeKeyword": [
-            "storage.type",
-            "keyword.other"
+          "charLiteral": [
+            "string.quoted.single"
+          ],
+          "timeLiteral": [
+            "constant.numeric"
+          ],
+          "dateLiteral": [
+            "constant.numeric"
+          ],
+          "pointerLiteral": [
+            "constant.numeric"
+          ],
+          "s7TemporalType": [
+            "storage.type.temporal",
+            "storage.type"
+          ],
+          "s7IntegerType": [
+            "storage.type.numeric.integer",
+            "storage.type.numeric",
+            "storage.type"
+          ],
+          "s7BooleanType": [
+            "storage.type.boolean",
+            "storage.type"
+          ],
+          "s7FloatType": [
+            "storage.type.numeric.float",
+            "storage.type.numeric",
+            "storage.type"
+          ],
+          "s7GenericType": [
+            "storage.type.generic",
+            "storage.type"
+          ],
+          "s7TextType": [
+            "storage.type.string",
+            "storage.type"
+          ],
+          "s7UdtType": [
+            "entity.name.type",
+            "storage.type"
+          ],
+          "s7CallableType": [
+            "entity.name.type.class",
+            "support.class"
+          ],
+          "s7CallableInstance": [
+            "variable.other.object",
+            "variable.other.readwrite"
+          ],
+          "s7DataBlock": [
+            "variable.other.global",
+            "variable.other.readwrite"
+          ],
+          "s7InterfaceMember": [
+            "variable.parameter",
+            "variable.other.readwrite"
           ]
         }
-      }
-    ],
-    "themes": [
+      },
       {
-        "label": "S7 Dark",
-        "uiTheme": "vs-dark",
-        "path": "./themes/tia-dark-color-theme.json"
+        "language": "s7udt",
+        "scopes": {
+          "booleanLiteral": [
+            "constant.language.boolean",
+            "constant.language"
+          ],
+          "charLiteral": [
+            "string.quoted.single"
+          ],
+          "timeLiteral": [
+            "constant.numeric"
+          ],
+          "dateLiteral": [
+            "constant.numeric"
+          ],
+          "pointerLiteral": [
+            "constant.numeric"
+          ],
+          "s7TemporalType": [
+            "storage.type.temporal",
+            "storage.type"
+          ],
+          "s7IntegerType": [
+            "storage.type.numeric.integer",
+            "storage.type.numeric",
+            "storage.type"
+          ],
+          "s7BooleanType": [
+            "storage.type.boolean",
+            "storage.type"
+          ],
+          "s7FloatType": [
+            "storage.type.numeric.float",
+            "storage.type.numeric",
+            "storage.type"
+          ],
+          "s7GenericType": [
+            "storage.type.generic",
+            "storage.type"
+          ],
+          "s7TextType": [
+            "storage.type.string",
+            "storage.type"
+          ],
+          "s7UdtType": [
+            "entity.name.type",
+            "storage.type"
+          ],
+          "s7CallableType": [
+            "entity.name.type.class",
+            "support.class"
+          ],
+          "s7CallableInstance": [
+            "variable.other.object",
+            "variable.other.readwrite"
+          ],
+          "s7DataBlock": [
+            "variable.other.global",
+            "variable.other.readwrite"
+          ],
+          "s7InterfaceMember": [
+            "variable.parameter",
+            "variable.other.readwrite"
+          ]
+        }
       }
     ],
     "configuration": {
       "title": "S7 Lint",
       "properties": {
+        "tiaLint.recommendedSemanticColors.enabled": {
+          "type": "boolean",
+          "default": true,
+          "scope": "window",
+          "markdownDescription": "Automatically install theme-scoped colors for S7 datatype families, UDTs, DATA_BLOCK objects, callable types/instances, structured members, and indexable values when a supported editor is active. Disable this to remove S7 Lint-managed preset rules while preserving unrelated or manually customized semantic color rules."
+        },
         "tiaLint.mlcLocale": {
           "type": "string",
           "default": "en-US",
@@ -248,10 +481,12 @@
     "bundle:ext": "esbuild src/extension.ts --bundle --platform=node --format=cjs --external:vscode --outfile=dist/extension.js --sourcemap",
     "bundle:webview": "esbuild src/instructionEditor/webview/main.ts --bundle --format=iife --platform=browser --outfile=dist/instructionEditor.webview.js --sourcemap",
     "watch": "tsc -watch -p ./",
-    "test": "npm run compile && npm run typecheck:webview && npm run test:completion && npm run test:quickfix && npm run test:manifest && npm run test:annotated && npm run test:instance-context && npm run test:editor && npm run test:editor-service && npm run test:smoke",
+    "test": "npm run compile && npm run typecheck:webview && npm run test:semantic-colors && npm run test:completion && npm run test:quickfix && npm run test:manifest && npm run test:annotated && npm run test:instance-context && npm run test:editor && npm run test:editor-service && npm run test:smoke",
     "test:instance-context": "node scripts/test-instance-type-context.js",
     "test:editor": "node scripts/test-instruction-editor.js",
     "test:editor-service": "node scripts/test-editor-service.js",
+    "test:semantic-colors": "node scripts/test-semantic-colors.js",
+    "test:highlight": "npm run compile && node scripts/test-semantic-highlighting.js temp/IPC_Lib.scl",
     "test:completion": "node scripts/test-completion-context.js",
     "test:quickfix": "node scripts/test-instance-quickfix.js",
     "test:manifest": "node scripts/run-manifest-smoke-tests.js",

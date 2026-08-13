@@ -67,32 +67,67 @@ expression cannot be resolved confidently, the extension avoids guessing.
   depth across all five, and using SCL's own parameter casing in `.scl`
   (`#edge.CLK`/`edge.Q`, not the graphical `clk`/`q`).
 - Hover, definition, rename, and semantic-token providers, including instance
-  DATA_BLOCK hovers that resolve to their instruction or FUNCTION_BLOCK type,
-  and two dedicated token types that colour a symbol by what it *is*:
-  `callable` for every project-defined callable — a FUNCTION_BLOCK instance, a
-  TON/R_TRIG/CTU-family instruction instance, and a workspace FB/FC call target
-  (`"Helper"(...)` / `Helper(...)`) — and `dataBlock` for a DATA_BLOCK
-  (`"DB_IPC_Comms"`), at its declaration and every reference alike. Both are
-  distinct from plain data variables and from the Siemens instruction catalog.
+  DATA_BLOCK hovers that resolve to their instruction or FUNCTION_BLOCK type.
+  Highlighting uses standard VS Code semantic families, so the user's active
+  dark or light theme controls every colour. S7-specific semantic subtypes
+  retain normal-theme fallbacks while allowing independent styling. The six
+  elementary families (`s7TemporalType`, `s7IntegerType`, `s7BooleanType`,
+  `s7FloatType`, `s7GenericType`, and `s7TextType`) inherit `type`;
+  `s7UdtType` inherits `struct`, `s7CallableType` inherits `class`, and
+  `s7CallableInstance` and `s7DataBlock` inherit `variable`, while
+  `s7InterfaceMember` inherits `parameter`. Direct call
+  expressions remain `function`; plain/UDT-backed DATA_BLOCK storage uses
+  `s7DataBlock`, while an FB/instruction instance DB uses
+  `s7CallableInstance`. Fields/interface values are `property`/`parameter`;
+  a resolved scalar field below an FB/FC Input, Output, or InOut path is an
+  `s7InterfaceMember`, preserving the theme's parameter color through nested
+  UDT access while containers and indexable segments keep their structural
+  colors.
+  No S7-specific colour theme is required.
+  Two composable capability modifiers refine value occurrences without
+  replacing those roles: `s7Container` means the value exposes structured
+  members through dotted access, and `s7Indexable` means it supports `[...]`
+  (`Array`, `String`, or `WString`). An `ARRAY OF` a UDT/STRUCT carries both;
+  a scalar leaf carries neither. The automatic palette gives container,
+  indexable, and combined members related but distinct colours, while root
+  objects such as DATA_BLOCKs and callable instances keep their identity
+  colour.
   Keyword-family tokens are split the way most language grammars split them,
   rather than sharing one colour: control flow (`IF`/`END_IF`/`RETURN`/…),
-  type keywords (`STRUCT`/`END_STRUCT`/`ARRAY`/`OF`/`REF_TO`), logical
+  type constructors (`STRUCT`/`END_STRUCT` and generic `ARRAY`/`OF`/`REF_TO`), logical
   operators (`NOT`/`AND`/`OR`/`XOR`/`MOD`), and language constants
   (`TRUE`/`FALSE`, `NULL`/`ZERO`). A pragma value is attribute data, not
   program data, so `'TRUE'` in `{ S7_Optimized_Access := 'TRUE' }` reads as
   the string it is rather than as the boolean constant.
-- Type names are coloured by what the type MEANS for the thing being declared,
-  identically at a declaration and at every reference: a Siemens
-  elementary/system type (`Int`, `IEC_TIMER`) as a library type, a
-  project-authored PLC data type (`"KDT_Header"`) as a user type, and an
-  FB/instruction instance type (`"FB_Pump"`, `TON`) as a callable — so a VAR
-  section shows at a glance which members are data and which are instances.
+- Type names are classified by what the type means for the thing being
+  declared, identically at a declaration and at every reference. Elementary
+  types are grouped as temporal (`Time`, `Date`, `DTL`, …), integer/bit
+  (`Int`, `UInt`, `Byte`, `Word`, …), boolean (`Bool`), floating point
+  (`Real`, `LReal`), generic/reference (`Void`, `Variant`, `Any`, `Pointer`,
+  `REF_TO`, `ARRAY`/`OF`), and text (`String`, `WString`, `Char`, `WChar`).
+  A Siemens record
+  (`IEC_TIMER`) remains `struct.defaultLibrary`, a project PLC data type
+  (`"KDT_Header"`) as `s7UdtType`, and an FB/instruction instance type
+  (`"FB_Pump"`, `TON`) as `s7CallableType`. The declared instance is
+  `s7CallableInstance`, becoming `function` only at a direct call site — so
+  `Pump : "FB_Pump";` and `Pump(...)` read like object construction and
+  invocation in other languages. A global DATA_BLOCK such as
+  `"DB_IPC_Comms"` is `s7DataBlock` at its declaration and every reference,
+  making global structured storage visually distinct from local variables.
   Composite declarations stay readable through the `ARRAY`/`OF`/`STRUCT`
   keywords themselves. A FUNCTION's return type is coloured on the same
   scheme (it previously had no colour at all).
   Bare, `#`-less local references and unquoted workspace-block calls resolve
   for hover, Ctrl+click, and rename exactly like their prefixed/quoted
   equivalents.
+- Distinct colors for the S7 datatype and object/callable subtypes activate automatically
+  when a supported SCL/declaration/UDT editor becomes active. The preset is
+  scoped to the current dark/light theme in User Settings, preserves unrelated
+  rules, and upgrades recognized older S7 Lint values without overwriting a
+  manually customized S7 selector. High-contrast themes are left unchanged.
+  Run **S7 Lint: Disable Recommended Semantic Colors** (or turn off
+  `tiaLint.recommendedSemanticColors.enabled`) to remove managed preset rules;
+  **Install Recommended Semantic Colors** re-enables/restores the preset.
 - Definition and rename support for `.s7res` multilingual resources.
 - Quick fixes for explicit expression conversions and instruction/FUNCTION_BLOCK
   instances, including auto-creating a single-instance DATA_BLOCK when

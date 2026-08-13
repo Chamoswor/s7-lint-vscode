@@ -41,7 +41,7 @@ const TOP_LEVEL_KEYWORDS = ["FUNCTION_BLOCK", "FUNCTION", "ORGANIZATION_BLOCK", 
  * body's own instruction/tag completions. */
 const TOP_LEVEL_CLOSERS = ["END_FUNCTION_BLOCK", "END_FUNCTION", "END_ORGANIZATION_BLOCK", "END_DATA_BLOCK", "END_TYPE"];
 export const VAR_SECTION_KEYWORDS = ["VAR_INPUT", "VAR_OUTPUT", "VAR_IN_OUT", "VAR_TEMP", "VAR_CONSTANT", "VAR"] as const;
-export type SclSection = (typeof VAR_SECTION_KEYWORDS)[number];
+export type SclSection = (typeof VAR_SECTION_KEYWORDS)[number] | "TYPE";
 
 /** `SclSection` -> resources/type-registry/section-legality.yaml's own
  * section key -- mirrors analysis/documentIndex.ts's own (private, not
@@ -49,7 +49,7 @@ export type SclSection = (typeof VAR_SECTION_KEYWORDS)[number];
  * here rather than imported, matching this project's own convention of
  * duplicating a small, stable constant across independent modules instead
  * of adding a cross-module coupling for six lines of data. */
-const VAR_SECTION_TO_LEGALITY_SECTION: Record<SclSection, string> = {
+const VAR_SECTION_TO_LEGALITY_SECTION: Record<Exclude<SclSection, "TYPE">, string> = {
   VAR_INPUT: "Input",
   VAR_OUTPUT: "Output",
   VAR_IN_OUT: "InOut",
@@ -78,6 +78,15 @@ export interface SectionTypeLegality {
 /** Resolves `section`'s own legal-type-name set from RuleSet.sectionLegality
  * -- see `SectionTypeLegality`'s own comment on each field. */
 export function legalTypeNamesForSection(ruleSet: RuleSet, section: SclSection): SectionTypeLegality {
+  // section-legality.yaml explicitly models only code-block VAR_* sections,
+  // not a PLC data type's own member list. Keep TYPE completion conservative:
+  // use only its universally legal set plus the three composition forms that
+  // composition-rules.yaml independently establishes for UDTs (Array,
+  // Struct, and another named UDT). Do not leak Static-only system/opaque
+  // handles into this separate declaration context.
+  if (section === "TYPE") {
+    return { names: [...ruleSet.sectionLegality.allSections.datatypes, "Array", "Struct"], allowsUdt: true };
+  }
   const legalitySection = VAR_SECTION_TO_LEGALITY_SECTION[section];
   const names = new Set<string>(ruleSet.sectionLegality.allSections.datatypes);
   const additional = ruleSet.sectionLegality.sections[legalitySection]?.additionalDatatypes ?? [];
@@ -110,7 +119,7 @@ export type DeclSubContext =
   | { kind: "quoted-type"; anchorEnd: number; afterArrayOf: boolean; quoteStart: number; identStart: number };
 
 export type SclCompletionContext =
-  | { kind: "none" } // not inside any recognized declaration section OR executable body, but ALSO not at the source-file root (a block header/attributes area, or inside a TYPE's own STRUCT body -- see this file's own header)
+  | { kind: "none" } // not inside any recognized declaration section OR executable body, but ALSO not at the source-file root (for example a block header/attributes area)
   | { kind: "root" } // the source-file root itself, outside every top-level block -- see providers/completion.ts's `topLevelCompletions`
   | { kind: "executable" } // inside BEGIN ... the enclosing block's own END_xxx
   | { kind: "declaration"; section: SclSection; decl: DeclSubContext }
@@ -346,6 +355,13 @@ export function resolveSclCompletionContext(text: string, offset: number): SclCo
   let functionHeaderStart = -1;
   // Same idea, for a `DATA_BLOCK` opener -- `classifyDataBlockInstanceRef`.
   let dataBlockHeaderStart = -1;
+  // A top-level TYPE owns a STRUCT member list without a VAR/END_VAR wrapper.
+  // Track the OUTERMOST STRUCT separately, including nested inline Struct
+  // types, so its members can reuse the same real member-list classifier as a
+  // VAR section without mistaking the header or post-END_STRUCT area for one.
+  let topLevelKind: string | null = null;
+  let typeMemberStart = -1;
+  let typeStructDepth = 0;
 
   for (let i = 0; i < tokens.length; i++) {
     const t = tokens[i];
@@ -358,6 +374,9 @@ export function resolveSclCompletionContext(text: string, offset: number): SclCo
       atRoot = false;
       functionHeaderStart = up === "FUNCTION" ? i + 1 : -1;
       dataBlockHeaderStart = up === "DATA_BLOCK" ? i + 1 : -1;
+      topLevelKind = up;
+      typeMemberStart = -1;
+      typeStructDepth = 0;
       continue;
     }
     if (up === "END_VAR") {
@@ -373,6 +392,15 @@ export function resolveSclCompletionContext(text: string, offset: number): SclCo
       // nothing for the outer section/body/root tracker to do with it
       // either way; a TYPE's own root-return only happens at `END_TYPE`
       // below.
+      if (topLevelKind === "TYPE" && typeStructDepth > 0) {
+        typeStructDepth--;
+        if (typeStructDepth === 0) typeMemberStart = -1;
+      }
+      continue;
+    }
+    if (up === "STRUCT" && topLevelKind === "TYPE") {
+      if (typeStructDepth === 0) typeMemberStart = i + 1;
+      typeStructDepth++;
       continue;
     }
     if (up === "BEGIN") {
@@ -380,6 +408,9 @@ export function resolveSclCompletionContext(text: string, offset: number): SclCo
       section = null;
       functionHeaderStart = -1;
       dataBlockHeaderStart = -1;
+      topLevelKind = null;
+      typeMemberStart = -1;
+      typeStructDepth = 0;
       continue;
     }
     if (TOP_LEVEL_CLOSERS.includes(up)) {
@@ -409,6 +440,7 @@ export function resolveSclCompletionContext(text: string, offset: number): SclCo
 
   if (inBody) return { kind: "executable" };
   if (section) return { kind: "declaration", section, decl: classifyDeclaration(tokens.slice(sectionStart)) };
+  if (typeMemberStart >= 0) return { kind: "declaration", section: "TYPE", decl: classifyDeclaration(tokens.slice(typeMemberStart)) };
   if (functionHeaderStart >= 0) {
     const returnType = classifyFunctionReturnType(tokens.slice(functionHeaderStart));
     if (returnType) return { kind: "function-return-type", ...returnType };

@@ -35,21 +35,128 @@ import { RegistryEditorPanel, RevealEntryTarget } from "./instructionEditor/pane
 import { RegistryEditResult, scaffoldInstruction, setPinsRequired } from "./instructionEditor/registryQuickFixEdits";
 import { EXTERNAL_REGISTRY_FILES } from "./instructionEditor/registryPaths";
 import { KNOWN_FAMILIES } from "./instructionEditor/schemaEnums";
+import {
+  DISABLE_RECOMMENDED_SEMANTIC_COLORS_COMMAND,
+  INSTALL_RECOMMENDED_SEMANTIC_COLORS_COMMAND,
+  RECOMMENDED_SEMANTIC_COLORS_SETTING,
+  RecommendedSemanticPaletteKind,
+  withRecommendedSemanticColors,
+  withoutRecommendedSemanticColors,
+} from "./semanticColors";
 
 const S7DCL_SELECTOR: vscode.DocumentSelector = [{ language: "s7dcl" }, { language: "s7udt" }, { language: "s7scl" }];
 const S7RES_SELECTOR: vscode.DocumentSelector = [{ pattern: "**/*.s7res" }];
+const S7_LANGUAGE_IDS = new Set(["s7dcl", "s7udt", "s7scl"]);
 
 let ruleSet: RuleSet;
 let cacheManager: CacheManager;
 let diagnosticCollection: vscode.DiagnosticCollection;
 let output: vscode.OutputChannel;
 let mlcHints: MlcHintsController;
+let semanticColorWrite: Promise<void> = Promise.resolve();
 
 const SEVERITY_MAP: Record<LintSeverity, vscode.DiagnosticSeverity> = {
   error: vscode.DiagnosticSeverity.Error,
   warning: vscode.DiagnosticSeverity.Warning,
   information: vscode.DiagnosticSeverity.Information,
 };
+
+function recommendedSemanticColorsEnabled(): boolean {
+  return vscode.workspace.getConfiguration().get<boolean>(RECOMMENDED_SEMANTIC_COLORS_SETTING, true);
+}
+
+function activePaletteKind(): RecommendedSemanticPaletteKind | undefined {
+  if (vscode.window.activeColorTheme.kind === vscode.ColorThemeKind.Dark) return "dark";
+  if (vscode.window.activeColorTheme.kind === vscode.ColorThemeKind.Light) return "light";
+  return undefined;
+}
+
+function enqueueSemanticColorWrite(run: () => Promise<void>): Promise<void> {
+  const result = semanticColorWrite.then(run, run);
+  semanticColorWrite = result.catch(() => undefined);
+  return result;
+}
+
+/** Installs/refreshes the current theme's S7 semantic rules. Automatic calls
+ * preserve user-customized selector values; the explicit command passes
+ * `overwriteCustom` so it can restore the shipped preset on demand. */
+function ensureRecommendedSemanticColors(showResult: boolean, overwriteCustom = false): Promise<void> {
+  return enqueueSemanticColorWrite(async () => {
+    if (!recommendedSemanticColorsEnabled() && !overwriteCustom) return;
+    const paletteKind = activePaletteKind();
+    if (!paletteKind) {
+      if (showResult) {
+        void vscode.window.showWarningMessage(
+          "S7 Lint: recommended semantic colors were not installed for this high-contrast theme. Its accessibility colors remain unchanged."
+        );
+      }
+      return;
+    }
+    const themeName = vscode.workspace.getConfiguration("workbench").get<string>("colorTheme")?.trim();
+    if (!themeName) {
+      if (showResult) void vscode.window.showErrorMessage("S7 Lint: could not determine the active color theme.");
+      return;
+    }
+
+    const editorConfig = vscode.workspace.getConfiguration("editor");
+    const current = editorConfig.inspect<unknown>("semanticTokenColorCustomizations")?.globalValue;
+    const next = withRecommendedSemanticColors(current, themeName, paletteKind, overwriteCustom);
+    const changed = JSON.stringify(current) !== JSON.stringify(next);
+    if (changed) {
+      try {
+        await editorConfig.update("semanticTokenColorCustomizations", next, vscode.ConfigurationTarget.Global);
+      } catch (err) {
+        output.appendLine(`[S7 Lint] Failed to install recommended semantic colors: ${String(err)}`);
+        if (showResult) {
+          void vscode.window.showErrorMessage(
+            'S7 Lint: could not update User Settings -- see the "S7 Lint" output channel.'
+          );
+        }
+        return;
+      }
+    }
+
+    if (showResult) {
+      const openSettings = "Open User Settings (JSON)";
+      const choice = await vscode.window.showInformationMessage(
+        changed
+          ? `S7 Lint: installed recommended ${paletteKind} semantic colors for '${themeName}'. Existing unrelated rules were preserved.`
+          : `S7 Lint: recommended semantic colors are already active for '${themeName}'.`,
+        openSettings
+      );
+      if (choice === openSettings) await vscode.commands.executeCommand("workbench.action.openSettingsJson");
+    }
+  });
+}
+
+function removeRecommendedSemanticColors(showResult: boolean): Promise<void> {
+  return enqueueSemanticColorWrite(async () => {
+    const editorConfig = vscode.workspace.getConfiguration("editor");
+    const current = editorConfig.inspect<unknown>("semanticTokenColorCustomizations")?.globalValue;
+    const next = withoutRecommendedSemanticColors(current);
+    const changed = JSON.stringify(current) !== JSON.stringify(next);
+    if (changed) {
+      try {
+        await editorConfig.update("semanticTokenColorCustomizations", next, vscode.ConfigurationTarget.Global);
+      } catch (err) {
+        output.appendLine(`[S7 Lint] Failed to remove recommended semantic colors: ${String(err)}`);
+        if (showResult) {
+          void vscode.window.showErrorMessage(
+            'S7 Lint: could not update User Settings -- see the "S7 Lint" output channel.'
+          );
+        }
+        return;
+      }
+    }
+    if (showResult) {
+      void vscode.window.showInformationMessage(
+        changed
+          ? "S7 Lint: automatic recommended semantic colors disabled and managed preset rules removed."
+          : "S7 Lint: automatic recommended semantic colors disabled. No managed preset rules were present."
+      );
+    }
+  });
+}
 
 export async function activate(context: vscode.ExtensionContext): Promise<void> {
   output = vscode.window.createOutputChannel("S7 Lint");
@@ -79,13 +186,22 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
   context.subscriptions.push(
     vscode.languages.registerDocumentSemanticTokensProvider(
       S7DCL_SELECTOR,
-      new S7dclSemanticTokensProvider(ruleSet, cacheManager.getBlockIndex()),
+      new S7dclSemanticTokensProvider(ruleSet, cacheManager.getBlockIndex(), () => cacheManager.getTypeCacheResult()),
       semanticTokensLegend
     ),
-    vscode.languages.registerHoverProvider(S7DCL_SELECTOR, new S7dclHoverProvider(ruleSet, cacheManager.getBlockIndex())),
-    vscode.languages.registerDefinitionProvider(S7DCL_SELECTOR, new S7dclDefinitionProvider(ruleSet, cacheManager.getBlockIndex())),
+    vscode.languages.registerHoverProvider(
+      S7DCL_SELECTOR,
+      new S7dclHoverProvider(ruleSet, cacheManager.getBlockIndex(), () => cacheManager.getTypeCacheResult())
+    ),
+    vscode.languages.registerDefinitionProvider(
+      S7DCL_SELECTOR,
+      new S7dclDefinitionProvider(ruleSet, cacheManager.getBlockIndex(), () => cacheManager.getTypeCacheResult())
+    ),
     vscode.languages.registerDefinitionProvider(S7RES_SELECTOR, new S7ResDefinitionProvider()),
-    vscode.languages.registerRenameProvider(S7DCL_SELECTOR, new S7dclRenameProvider(ruleSet, cacheManager.getBlockIndex())),
+    vscode.languages.registerRenameProvider(
+      S7DCL_SELECTOR,
+      new S7dclRenameProvider(ruleSet, cacheManager.getBlockIndex(), () => cacheManager.getTypeCacheResult())
+    ),
     vscode.languages.registerRenameProvider(S7RES_SELECTOR, new S7ResRenameProvider()),
     vscode.languages.registerCompletionItemProvider(S7DCL_SELECTOR, new S7dclCompletionProvider(ruleSet, cacheManager.getBlockIndex(), () => cacheManager.getTypeCacheResult()), ".", "#", '"', ":"),
     vscode.languages.registerCodeActionsProvider(
@@ -154,15 +270,33 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     })
   );
 
-  context.subscriptions.push(vscode.window.onDidChangeActiveTextEditor((e) => mlcHints.refresh(e)));
+  context.subscriptions.push(
+    vscode.window.onDidChangeActiveTextEditor((e) => {
+      mlcHints.refresh(e);
+      if (e && S7_LANGUAGE_IDS.has(e.document.languageId)) void ensureRecommendedSemanticColors(false);
+    })
+  );
   context.subscriptions.push(vscode.window.onDidChangeVisibleTextEditors(() => mlcHints.refreshAllVisible()));
   context.subscriptions.push(
     vscode.workspace.onDidChangeConfiguration((e) => {
       if (e.affectsConfiguration("tiaLint.mlcLocale")) mlcHints.refreshAllVisible();
+      if (e.affectsConfiguration(RECOMMENDED_SEMANTIC_COLORS_SETTING)) {
+        if (recommendedSemanticColorsEnabled()) void ensureRecommendedSemanticColors(false);
+        else void removeRecommendedSemanticColors(false);
+      }
+    })
+  );
+  context.subscriptions.push(
+    vscode.window.onDidChangeActiveColorTheme(() => {
+      const editor = vscode.window.activeTextEditor;
+      if (editor && S7_LANGUAGE_IDS.has(editor.document.languageId)) void ensureRecommendedSemanticColors(false);
     })
   );
 
   relintAllOpen();
+  if (vscode.window.activeTextEditor && S7_LANGUAGE_IDS.has(vscode.window.activeTextEditor.document.languageId)) {
+    void ensureRecommendedSemanticColors(false);
+  }
 
   context.subscriptions.push(
     vscode.commands.registerCommand("tiaLint.rebuildCache", async () => {
@@ -188,6 +322,22 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
   context.subscriptions.push(
     vscode.commands.registerCommand("tiaLint.openInstructionEditor", () => {
       RegistryEditorPanel.createOrShow(context, resourcesDir, output);
+    })
+  );
+  context.subscriptions.push(
+    vscode.commands.registerCommand(INSTALL_RECOMMENDED_SEMANTIC_COLORS_COMMAND, async () => {
+      await vscode.workspace
+        .getConfiguration("tiaLint")
+        .update("recommendedSemanticColors.enabled", true, vscode.ConfigurationTarget.Global);
+      await ensureRecommendedSemanticColors(true, true);
+    })
+  );
+  context.subscriptions.push(
+    vscode.commands.registerCommand(DISABLE_RECOMMENDED_SEMANTIC_COLORS_COMMAND, async () => {
+      await vscode.workspace
+        .getConfiguration("tiaLint")
+        .update("recommendedSemanticColors.enabled", false, vscode.ConfigurationTarget.Global);
+      await removeRecommendedSemanticColors(true);
     })
   );
 
