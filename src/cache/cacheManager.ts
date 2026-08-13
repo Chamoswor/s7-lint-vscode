@@ -74,7 +74,7 @@ export class CacheManager {
    * any lint pass), rather than `undefined`, so callers don't need their
    * own null-check. */
   getTypeCacheResult(): TypeCacheResult {
-    return this.result ?? { types: new Map(), diagnostics: [] };
+    return this.result ?? { types: new Map(), diagnostics: [], canonicalNames: new Map() };
   }
 
   /** True if `fsPath` is a UDT/type-declaration source the cache understands

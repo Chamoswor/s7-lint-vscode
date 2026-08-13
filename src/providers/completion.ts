@@ -1,20 +1,30 @@
 // Completion on "#", ".", '"', and a bare identifier. "#" (bare, or with
 // some identifier characters already typed) lists every locally-declared
 // tag (VAR_INPUT/OUTPUT/IN_OUT/TEMP/VAR/VAR_CONSTANT) -- the same set
-// `#`-prefixed operand references in this grammar draw from. "." after a
-// resolved tag lists its members: `#fbMvA.` lists FB_MotorProtection's
-// VAR_INPUT/VAR_OUTPUT members, `#tonX.` lists TON_TIME's pt/et/IN/Q, etc.
+// `#`-prefixed operand references in this grammar draw from.
+//
+// "." after a resolved tag lists its members. The base may be spelled either
+// `#tag.` or -- inside an `.scl` body -- bare `tag.`, since TIA's own
+// external-source importer resolves both against the block's declarations
+// (see parser/s7dclParser.ts's `LocalTagNames`); both produce the identical
+// list. Members come from whichever of four stores actually describes the
+// resolved type, and one chain hops between them freely -- see `MemberSource`:
+// a workspace FUNCTION_BLOCK/DATA_BLOCK's own VAR members, a UDT's fields
+// (type cache), a system-struct's fields (system-types.yaml -- IEC_TIMER,
+// ErrorStruct, ...), an inline `STRUCT ... END_STRUCT`'s fields, or a
+// timer/counter/edge instruction instance's registry pins.
+//
 // '"' (bare, or with some identifier characters already typed) lists every
 // WORKSPACE BLOCK name instead -- the "global plane" a double-quoted
 // external reference draws from (see analysis/symbolTable.ts's
 // `resolveOperandRef` `isExternal` handling / `linter/sclInstructionChecks.
 // ts`'s `resolveCallEntry` `externalName` handling, both added alongside
-// this). A bare identifier (no leading `#`/`.`/`"`) lists every catalog
-// INSTRUCTION name instead -- a call's own name is never `#`- or
-// `"`-prefixed (`ABS(...)`, `RUNTIME(...)`), unlike an operand/instance/
-// external reference, so this is the one case genuinely disjoint from the
-// other three. All four reuse the exact same resolution the hover/
-// definition providers already do (see analysis/documentIndex.ts's
+// this). A bare identifier (no leading `#`/`.`/`"`) lists the three planes
+// that position accepts -- local tags, callable workspace blocks, and the
+// catalog INSTRUCTION names -- each row labelled with which one it came
+// from, since they look identical once typed (see
+// `bareIdentifierCompletions`). All of these reuse the exact same resolution
+// the hover/definition providers already do (see analysis/documentIndex.ts's
 // `localDecls`/`listInstanceMembers`/`renderInstructionHover`, and
 // analysis/blockIndex.ts's own `values()`) via a text-based backward scan
 // for the operand chain immediately before the cursor, rather than
@@ -22,12 +32,20 @@
 // the mid-edit, possibly-incomplete text after the cursor).
 import * as vscode from "vscode";
 import { BlockIndex, BlockInfo } from "../analysis/blockIndex";
-import { buildDocumentIndex, listInstanceMembers, renderInstructionHover } from "../analysis/documentIndex";
+import {
+  blockScopeAt,
+  buildDocumentIndex,
+  isDotAccessLegal,
+  listInstanceMembers,
+  LocalDecl,
+  renderInstructionHover,
+  resolveInstanceTypeToInstructionNames,
+} from "../analysis/documentIndex";
 import { DeclSubContext, legalTypeNamesForSection, resolveSclCompletionContext, SclSection } from "../analysis/sclCompletionContext";
-import { TypeCacheResult } from "../cache/typeCache";
+import { lookupType, TypeCacheResult } from "../cache/typeCache";
 import { Lexer } from "../parser/lexer";
-import { typeRefLeafName, typeRefToText, typeRefTopLevelName } from "../parser/typeRef";
-import { InstructionEntry, RuleSet } from "../rules/types";
+import { MemberRef, TypeRef, typeRefLeafName, typeRefToText, typeRefTopLevelName } from "../parser/typeRef";
+import { InstructionEntry, RuleSet, SystemTypeEntry, SystemTypeMember, SystemTypeMemberTypeRef } from "../rules/types";
 import {
   buildInstanceDeclarationEdit,
   buildSingleInstanceDbEdit,
@@ -37,6 +55,16 @@ import {
 } from "./instanceQuickFix";
 
 const CHAIN_BEFORE_DOT_RE = /(#[A-Za-z_][A-Za-z0-9_]*(?:\.[A-Za-z_][A-Za-z0-9_]*)*)\.$/;
+/** The same member-chain trigger for the BARE, `#`-less spelling of a local
+ * reference -- `SeqEdge.` must offer exactly what `#SeqEdge.` offers, since
+ * TIA's own importer resolves both against the block's declarations (see
+ * parser/s7dclParser.ts's `LocalTagNames`). The lookbehind keeps it off the
+ * two chain shapes that have their own trigger: a `#tag` chain
+ * (`CHAIN_BEFORE_DOT_RE`, tried first anyway) and a quoted external base
+ * (`QUOTED_CHAIN_BEFORE_DOT_RE`, whose own branch returns before this one is
+ * reached). The base still has to resolve to a real local declaration, so a
+ * bare word that isn't one simply yields no completions. */
+const BARE_CHAIN_BEFORE_DOT_RE = /(?<![#"A-Za-z0-9_])([A-Za-z_][A-Za-z0-9_]*(?:\.[A-Za-z_][A-Za-z0-9_]*)*)\.$/;
 /** The same member-chain trigger, but rooted at a QUOTED external block
  * reference (`"R_TRIG_DB".` / `"Pump_DB".member.`) instead of a `#tag`.
  * Siemens' own convention for referencing a workspace block -- including a
@@ -57,6 +85,96 @@ const QUOTED_REF_RE = /"[A-Za-z0-9_]*$/;
 // mid-typing after CHAIN_BEFORE_DOT_RE's own trigger dot -- an instruction
 // name is never a struct/instance member name).
 const BARE_IDENT_RE = /(?<![A-Za-z0-9_#."])[A-Za-z_][A-Za-z0-9_]*$/;
+
+/**
+ * Where the members offered after a `.` come from. Four backing stores hold
+ * "a thing with named fields" in four different shapes, and one dot chain can
+ * hop between them freely (`#fbPump.settings.limits.` -- workspace block,
+ * then UDT, then inline STRUCT), so each is adapted to this single union
+ * rather than re-handled at every step:
+ *   - `block`    -- a workspace FB/FC/OB/DB's own VAR members (BlockIndex).
+ *                   Kept distinct because its members carry a VAR_* section
+ *                   and can hop THROUGH an instance DB to what it instances.
+ *   - `fields`   -- anything whose members are a plain declared list: a UDT
+ *                   from the type cache, a system-struct from
+ *                   system-types.yaml (IEC_TIMER, ErrorStruct, TCON_Param,
+ *                   ...), or an inline `STRUCT ... END_STRUCT` declared in
+ *                   this very document.
+ *   - `instance` -- a timer/counter/edge instruction instance, whose
+ *                   "members" are its registry pins (`listInstanceMembers`).
+ */
+type MemberSource =
+  | { kind: "block"; block: BlockInfo }
+  | { kind: "fields"; label: string; entries: MemberEntry[] }
+  | { kind: "instance"; typeName: string };
+
+/** One named field, normalized out of whichever store it came from. */
+interface MemberEntry {
+  name: string;
+  typeText: string;
+  /** Ultimate named leaf of the field's type (drilled through Array/REF_TO). */
+  leafName: string | null;
+  /** The field's OWN top-level type name (`Array` for an array, etc.). */
+  topLevelName: string | null;
+  /** Set when the field's own type is an inline STRUCT -- which has no name
+   * to look anything up by, so its fields travel with it. */
+  nested?: MemberEntry[];
+}
+
+function entryFromMemberRef(m: MemberRef): MemberEntry {
+  return {
+    name: m.name,
+    typeText: typeRefToText(m.typeRef),
+    leafName: typeRefLeafName(m.typeRef),
+    topLevelName: typeRefTopLevelName(m.typeRef),
+    nested: inlineStructEntriesOf(m.typeRef),
+  };
+}
+
+function entryFromLocalDecl(d: LocalDecl): MemberEntry {
+  return {
+    name: d.name,
+    typeText: d.typeText,
+    leafName: d.elementLeafName ?? d.leafName,
+    topLevelName: d.topLevelName,
+    nested: d.structMembers?.map(entryFromLocalDecl),
+  };
+}
+
+/** system-types.yaml stores member types in its own YAML-native shape
+ * (`SystemTypeMemberTypeRef`), not the parser's `TypeRef` -- drilled the
+ * same way here so a system-struct field chains onward like any other. */
+function entryFromSystemTypeMember(m: SystemTypeMember): MemberEntry {
+  const drill = (ref: SystemTypeMemberTypeRef): SystemTypeMemberTypeRef => (ref.kind === "array" && ref.of ? drill(ref.of) : ref);
+  const leaf = drill(m.type);
+  return {
+    name: m.name,
+    typeText: m.type.kind === "array" ? `Array of ${leaf.name ?? leaf.kind}` : leaf.name ?? leaf.kind,
+    leafName: leaf.name ?? null,
+    topLevelName: m.type.kind === "named" ? m.type.name ?? null : m.type.kind === "array" ? "Array" : "Struct",
+    nested: leaf.kind === "inline-struct" ? (leaf.members ?? []).map((sub) => entryFromSystemTypeMember({ name: sub.name, type: sub.typeRef })) : undefined,
+  };
+}
+
+/** An inline `STRUCT` type's own fields, drilled through Array/REF_TO --
+ * `undefined` for every other TypeRef. */
+function inlineStructEntriesOf(ref: TypeRef): MemberEntry[] | undefined {
+  if (ref.kind === "array" || ref.kind === "reference") return inlineStructEntriesOf(ref.of);
+  return ref.kind === "inline-struct" ? ref.members.map(entryFromMemberRef) : undefined;
+}
+
+/** system-types.yaml lookup by name, ignoring case (SCL type names are
+ * case-insensitive) -- returns the CANONICAL key alongside the entry so the
+ * completion detail shows the registry's own spelling. */
+function findSystemType(ruleSet: RuleSet, name: string): { name: string; entry: SystemTypeEntry } | undefined {
+  const exact = ruleSet.systemTypes[name];
+  if (exact) return { name, entry: exact };
+  const lower = name.toLowerCase();
+  for (const [key, entry] of Object.entries(ruleSet.systemTypes)) {
+    if (key.toLowerCase() === lower) return { name: key, entry };
+  }
+  return undefined;
+}
 
 export class S7dclCompletionProvider implements vscode.CompletionItemProvider {
   constructor(private readonly ruleSet: RuleSet, private readonly blockIndex: BlockIndex, private readonly getTypeCache: () => TypeCacheResult) {}
@@ -113,30 +231,141 @@ export class S7dclCompletionProvider implements vscode.CompletionItemProvider {
       return items;
     }
 
-    const match = CHAIN_BEFORE_DOT_RE.exec(before);
+    // The `#`-prefixed chain, then the bare one -- the SAME completion for
+    // the SAME reference, since TIA's importer accepts both spellings (see
+    // parser/s7dclParser.ts's `LocalTagNames`). The bare form is restricted
+    // to `.scl`, matching where the linter and document index accept it: a
+    // `.s7dcl` RUNG is full of bare identifiers that are not tag references.
+    const match = CHAIN_BEFORE_DOT_RE.exec(before) ?? (document.languageId === "s7scl" ? BARE_CHAIN_BEFORE_DOT_RE.exec(before) : null);
     if (!match) {
       if (HASH_TAG_RE.test(before)) {
-        const { localDecls } = buildDocumentIndex(text, this.ruleSet, this.blockIndex);
-        return [...localDecls.values()].map((decl) => {
-          const item = new vscode.CompletionItem(decl.name, vscode.CompletionItemKind.Variable);
-          item.detail = decl.typeText;
-          return item;
-        });
+        return this.declsInScope(text, position).map((decl) => this.localTagItem(decl));
       }
       if (QUOTED_REF_RE.test(before)) return this.externalBlockCompletions();
-      if (BARE_IDENT_RE.test(before)) return this.instructionCompletions(document, position);
+      if (BARE_IDENT_RE.test(before)) return this.bareIdentifierCompletions(document, position, text);
       return undefined;
     }
 
     const segments = match[1].split(".");
-    const baseTag = segments[0].slice(1); // strip leading '#'
+    const baseTag = segments[0].startsWith("#") ? segments[0].slice(1) : segments[0];
     const chainRest = segments.slice(1);
 
-    const { localDecls } = buildDocumentIndex(text, this.ruleSet, this.blockIndex);
-    const decl = localDecls.get(baseTag);
+    const decl = this.declsInScope(text, position).find((d) => d.name.toLowerCase() === baseTag.toLowerCase());
     if (!decl) return undefined;
 
-    return this.memberCompletions(this.blockIndex.get(decl.leafName ?? ""), decl.topLevelName, chainRest);
+    // An `.scl` body spells instruction pins the way its own registry half
+    // does (`Q`/`CLK`, not the graphical `q`/`clk`) -- see listInstanceMembers.
+    const preferScl = document.languageId === "s7scl";
+    return this.memberCompletions(
+      this.blockIndex.get(decl.leafName ?? ""),
+      decl.topLevelName,
+      chainRest,
+      preferScl,
+      decl.elementLeafName ?? decl.leafName,
+      decl.structMembers?.map(entryFromLocalDecl)
+    );
+  }
+
+  /** The tags actually addressable at `position` -- the VAR sections of the
+   * ONE block declaration containing it, in declaration order.
+   *
+   * An authored `.scl` routinely bundles several declarations in one file,
+   * and SCL scopes tags hard between them: `#CmdProc`/`CmdProc` is a real
+   * reference inside the FB that declares it and an undeclared identifier
+   * three declarations later. Offering the whole file's tags therefore
+   * completed code TIA rejects, and (since two blocks can declare the same
+   * name) could resolve a member list against the wrong declaration
+   * entirely.
+   *
+   * Falls back to every declaration seen when the document has NO block
+   * declarations at all -- a `.udt`/TYPE-only file, where there's no block
+   * structure to scope by and the previous flat behavior is all there is. */
+  private declsInScope(text: string, position: vscode.Position): LocalDecl[] {
+    const index = buildDocumentIndex(text, this.ruleSet, this.blockIndex);
+    if (index.blockScopes.length === 0) return [...index.localDecls.values()];
+    const scope = blockScopeAt(index, position.line + 1);
+    return scope ? [...scope.decls.values()] : [];
+  }
+
+  /** True when `decl` names a CALLABLE, state-owning instance -- a
+   * FUNCTION_BLOCK instance or a timer/counter/edge instruction instance
+   * (TON, R_TRIG, CTU, ...) -- rather than a plain data variable. Mirrors
+   * analysis/documentIndex.ts's `localTagTokenType` (which decides the same
+   * thing for semantic-token coloring); the two answer the same question
+   * for the two different surfaces the user sees it on. */
+  private isInstanceDecl(decl: LocalDecl): boolean {
+    const leaf = decl.elementLeafName ?? decl.leafName;
+    if (leaf && this.blockIndex.get(leaf)?.blockType === "FUNCTION_BLOCK") return true;
+    const top = decl.elementTopLevelName ?? decl.topLevelName;
+    return !!top && resolveInstanceTypeToInstructionNames(this.ruleSet, top).length > 0;
+  }
+
+  /** One completion row for a locally-declared tag. `sortGroup`/`prefix`
+   * are set by the BARE-identifier list (where local tags share the list
+   * with the instruction catalog and workspace blocks); the `#`-triggered
+   * list leaves both at their defaults, since everything in it is a local
+   * tag already. */
+  private localTagItem(decl: LocalDecl, sortGroup?: string): vscode.CompletionItem {
+    const isInstance = this.isInstanceDecl(decl);
+    const item = new vscode.CompletionItem(
+      { label: decl.name, description: isInstance ? "local instance" : "local tag" },
+      isInstance ? vscode.CompletionItemKind.Class : vscode.CompletionItemKind.Variable
+    );
+    item.detail = decl.typeText;
+    if (sortGroup) item.sortText = `${sortGroup}${decl.name}`;
+    return item;
+  }
+
+  /**
+   * The list offered for a BARE (unprefixed, unquoted) identifier inside an
+   * executable body. That position accepts three genuinely different kinds
+   * of name, so all three are offered -- and, because they LOOK identical
+   * once typed, each row says which kind it is:
+   *
+   *   - this block's own declared tags, which TIA's importer resolves
+   *     without the `#` (see parser/s7dclParser.ts's `LocalTagNames`) --
+   *     `Variable`/`Class` icon, "local tag"/"local instance";
+   *   - workspace blocks callable by bare name (`Helper(...)`) --
+   *     `Function`/`Class`/`Module` icon, the block type as the note;
+   *   - the Siemens instruction catalog -- `Function` icon, "TIA
+   *     instruction".
+   *
+   * `sortText` groups them in that order (most-local first) rather than
+   * interleaving ~500 catalog instructions with the handful of names
+   * actually in scope. Every row keeps `filterText` at the bare name so
+   * typing still filters on what the user sees.
+   */
+  private bareIdentifierCompletions(document: vscode.TextDocument, position: vscode.Position, text: string): vscode.CompletionItem[] {
+    const items: vscode.CompletionItem[] = [];
+    if (document.languageId === "s7scl") {
+      for (const decl of this.declsInScope(text, position)) items.push(this.localTagItem(decl, "0_"));
+      for (const block of this.blockIndex.values()) {
+        // A DATA_BLOCK is only ever referenced in QUOTED form, never called
+        // bare -- `externalBlockCompletions` (the `"` trigger) covers it.
+        if (block.blockType === "DATA_BLOCK") continue;
+        const typeLabel = block.blockType.replace(/_/g, " ").toLowerCase();
+        const item = new vscode.CompletionItem(
+          { label: block.name, description: `workspace ${typeLabel}` },
+          block.blockType === "FUNCTION_BLOCK" ? vscode.CompletionItemKind.Class : vscode.CompletionItemKind.Function
+        );
+        item.detail = typeLabel;
+        item.documentation = new vscode.MarkdownString(`**${block.name}** _(${typeLabel})_\n\ndeclared in \`${block.file}\``);
+        item.sortText = `1_${block.name}`;
+        items.push(item);
+      }
+    }
+    for (const item of this.instructionCompletions(document, position)) {
+      // `instructionCompletions` may already have rewritten `label` to an
+      // auto-instance variant ("TON (local multi-instance)") with its own
+      // `filterText`; keep whichever text it settled on and just annotate
+      // WHICH list this row came from.
+      const label = typeof item.label === "string" ? item.label : item.label.label;
+      item.label = { label, description: "TIA instruction" };
+      item.filterText = item.filterText ?? label;
+      item.sortText = `2_${item.filterText}`;
+      items.push(item);
+    }
+    return items;
   }
 
   /**
@@ -204,59 +433,128 @@ export class S7dclCompletionProvider implements vscode.CompletionItemProvider {
     return { ownerBlock: block, topLevelName: null };
   }
 
+  /** Resolves the member source a chain step lands on. `leafName` is the
+   * type's ultimate named leaf (drilled through Array/REF_TO), `topLevelName`
+   * its own top-level name, `structEntries` the already-captured fields of an
+   * inline STRUCT (which has no name to look anything up by). Tried in
+   * specificity order: an inline STRUCT is self-describing, a workspace block
+   * shadows a same-named UDT, and the instruction registry is last since its
+   * "members" are the loosest match. */
+  private memberSourceFor(leafName: string | null, topLevelName: string | null, structEntries?: MemberEntry[]): MemberSource | undefined {
+    if (structEntries && structEntries.length > 0) {
+      return { kind: "fields", label: "STRUCT", entries: structEntries };
+    }
+    if (leafName) {
+      const block = this.blockIndex.get(leafName);
+      if (block) {
+        // A member typed as an instance DB hops through to what it instances.
+        const root = this.instanceMemberRoot(block);
+        if (root?.ownerBlock) return { kind: "block", block: root.ownerBlock };
+        if (root?.topLevelName) return { kind: "instance", typeName: root.topLevelName };
+        return { kind: "block", block };
+      }
+      const udt = lookupType(this.getTypeCache(), leafName);
+      if (udt && udt.kind === "udt" && udt.members && udt.members.length > 0) {
+        return { kind: "fields", label: udt.name, entries: udt.members.map(entryFromMemberRef) };
+      }
+    }
+    // Before system-types.yaml, deliberately: a CALLABLE instance type is
+    // listed in BOTH registries -- `R_TRIG` is an instance-dot instruction
+    // AND a system-struct whose members are its raw memory layout
+    // (`clk`/`q`). Code addresses it as an instance, so the instruction
+    // registry's own parameter names win (and, in SCL, its SCL-cased
+    // `CLK`/`Q` rather than the graphical `clk`/`q`). A system-struct that
+    // ISN'T a callable instance type -- IEC_TIMER, ErrorStruct, TCON_Param,
+    // ... -- falls through to the branch below unaffected.
+    const instanceType = topLevelName ?? leafName;
+    if (instanceType && listInstanceMembers(this.ruleSet, instanceType).length > 0) {
+      return { kind: "instance", typeName: instanceType };
+    }
+    if (leafName) {
+      const systemType = findSystemType(this.ruleSet, leafName);
+      if (systemType?.entry.category === "system-struct" && systemType.entry.members && systemType.entry.members.length > 0) {
+        return { kind: "fields", label: systemType.name, entries: systemType.entry.members.map(entryFromSystemTypeMember) };
+      }
+    }
+    return undefined;
+  }
+
+  /** One `.member` hop off `source`, or undefined when `segment` isn't a
+   * member of it. Case-insensitive throughout -- SCL identifiers are. */
+  private stepMemberSource(source: MemberSource, segment: string, preferScl: boolean): MemberSource | undefined {
+    if (source.kind === "block") {
+      const memberVar =
+        source.block.vars.get(segment) ?? [...source.block.vars.values()].find((v) => v.name.toLowerCase() === segment.toLowerCase());
+      if (!memberVar) return undefined;
+      const ref = memberVar.member.typeRef;
+      return this.memberSourceFor(typeRefLeafName(ref), typeRefTopLevelName(ref), inlineStructEntriesOf(ref));
+    }
+    if (source.kind === "fields") {
+      const entry = source.entries.find((e) => e.name.toLowerCase() === segment.toLowerCase());
+      if (!entry) return undefined;
+      return this.memberSourceFor(entry.leafName, entry.topLevelName, entry.nested);
+    }
+    const found = listInstanceMembers(this.ruleSet, source.typeName, preferScl).find((m) => m.name.toLowerCase() === segment.toLowerCase());
+    // Only a single unambiguous pin type can carry a further `.member` step
+    // -- don't guess when the registry lists several.
+    if (!found || found.dataTypes.length !== 1) return undefined;
+    return this.memberSourceFor(found.dataTypes[0], found.dataTypes[0]);
+  }
+
   /** Walks any already-typed `.member` segments before the trigger dot (e.g.
    * the SECOND dot in `#fbX.someInstance.`), then emits the member list for
-   * whatever it lands on -- a block's VAR members, or an instance type's
-   * pins. Shared by the `#tag.` and `"Quoted".` entry points. */
+   * whatever it lands on. Shared by the `#tag.`, bare `tag.`, and
+   * `"Quoted".` entry points. */
   private memberCompletions(
     startBlock: BlockInfo | undefined,
     startTopLevelName: string | null,
     chainRest: string[],
-    preferScl = false
+    preferScl = false,
+    startLeafName?: string | null,
+    startStructEntries?: MemberEntry[]
   ): vscode.CompletionItem[] | undefined {
-    let ownerBlock = startBlock;
-    let topLevelName = startTopLevelName;
+    let source: MemberSource | undefined = startBlock
+      ? { kind: "block", block: startBlock }
+      : this.memberSourceFor(startLeafName ?? startTopLevelName, startTopLevelName, startStructEntries);
 
     for (const segment of chainRest) {
-      if (ownerBlock) {
-        const memberVar = ownerBlock.vars.get(segment);
-        if (!memberVar) return undefined;
-        topLevelName = typeRefTopLevelName(memberVar.member.typeRef);
-        const next = this.blockIndex.get(typeRefLeafName(memberVar.member.typeRef) ?? "");
-        // A member typed as an instance DB hops through to what it instances.
-        const root = next ? this.instanceMemberRoot(next) : undefined;
-        ownerBlock = root ? root.ownerBlock : next;
-        if (root?.topLevelName) topLevelName = root.topLevelName;
-      } else if (topLevelName) {
-        const found = listInstanceMembers(this.ruleSet, topLevelName, preferScl).find((m) => m.name.toLowerCase() === segment.toLowerCase());
-        if (!found) return undefined;
-        topLevelName = found.dataTypes.length === 1 ? found.dataTypes[0] : null;
-        ownerBlock = undefined;
-      } else {
-        return undefined;
-      }
+      if (!source) return undefined;
+      source = this.stepMemberSource(source, segment, preferScl);
     }
+    if (!source) return undefined;
 
-    if (ownerBlock) {
-      const block = ownerBlock;
-      return [...block.vars.values()].map((v) => {
-        const item = new vscode.CompletionItem(v.name, vscode.CompletionItemKind.Field);
-        item.detail = typeRefToText(v.member.typeRef);
-        item.documentation = new vscode.MarkdownString(`_(${v.section} of \`${block.name}\`)_`);
+    if (source.kind === "block") {
+      const block = source.block;
+      return [...block.vars.values()]
+        // Same rule linter/symbolChecks.ts's `checkIllegalDotAccess`
+        // enforces: a VAR_TEMP/VAR_CONSTANT member is never externally
+        // exposed, and a FUNCTION has no instance data at all -- offering
+        // either would complete code the linter immediately flags.
+        .filter((v) => isDotAccessLegal(block.blockType, v.section))
+        .map((v) => {
+          const item = new vscode.CompletionItem(v.name, vscode.CompletionItemKind.Field);
+          item.detail = typeRefToText(v.member.typeRef);
+          item.documentation = new vscode.MarkdownString(`_(${v.section} of \`${block.name}\`)_`);
+          return item;
+        });
+    }
+    if (source.kind === "fields") {
+      const label = source.label;
+      return source.entries.map((e) => {
+        const item = new vscode.CompletionItem(e.name, vscode.CompletionItemKind.Field);
+        item.detail = e.typeText;
+        item.documentation = new vscode.MarkdownString(`_(member of \`${label}\`)_`);
         return item;
       });
     }
-    if (topLevelName) {
-      const members = listInstanceMembers(this.ruleSet, topLevelName, preferScl);
-      if (members.length === 0) return undefined;
-      return members.map((m) => {
-        const item = new vscode.CompletionItem(m.name, vscode.CompletionItemKind.Property);
-        item.detail = m.dataTypes.join(" / ");
-        item.documentation = new vscode.MarkdownString(`via \`${m.source}\``);
-        return item;
-      });
-    }
-    return undefined;
+    const members = listInstanceMembers(this.ruleSet, source.typeName, preferScl);
+    if (members.length === 0) return undefined;
+    return members.map((m) => {
+      const item = new vscode.CompletionItem(m.name, vscode.CompletionItemKind.Property);
+      item.detail = m.dataTypes.join(" / ");
+      item.documentation = new vscode.MarkdownString(`via \`${m.source}\``);
+      return item;
+    });
   }
 
   /** The identifier run immediately before `offset`, at the source-file

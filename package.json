@@ -150,6 +150,22 @@
       {
         "id": "pointerLiteral",
         "description": "A legacy pointer literal, e.g. P#DB10.DBX20.0, NULL, ZERO"
+      },
+      {
+        "id": "booleanLiteral",
+        "description": "A boolean literal (TRUE, FALSE) -- a language constant, not a control-flow keyword"
+      },
+      {
+        "id": "typeKeyword",
+        "description": "A keyword that builds a data type rather than controlling flow: STRUCT, END_STRUCT, ARRAY, OF, REF_TO"
+      },
+      {
+        "id": "callable",
+        "description": "A project-defined callable: a FUNCTION_BLOCK instance, a timer/counter/edge instruction instance (TON, R_TRIG, CTU, ...), or a workspace FB/FC call target -- as opposed to a plain data variable or a Siemens catalog instruction"
+      },
+      {
+        "id": "dataBlock",
+        "description": "A workspace DATA_BLOCK, at its own declaration and at every reference to it (e.g. \"DB_IPC_Comms\") -- global storage, distinct from both variables and callables"
       }
     ],
     "semanticTokenModifiers": [
@@ -160,6 +176,50 @@
       {
         "id": "float",
         "description": "A floating-point numeric literal, e.g. 4.0"
+      }
+    ],
+    "semanticTokenScopes": [
+      {
+        "language": "s7scl",
+        "scopes": {
+          "callable": [
+            "entity.name.function",
+            "variable.other.object"
+          ],
+          "dataBlock": [
+            "variable.other.global",
+            "support.variable"
+          ],
+          "booleanLiteral": [
+            "constant.language.boolean",
+            "constant.language"
+          ],
+          "typeKeyword": [
+            "storage.type",
+            "keyword.other"
+          ]
+        }
+      },
+      {
+        "language": "s7dcl",
+        "scopes": {
+          "callable": [
+            "entity.name.function",
+            "variable.other.object"
+          ],
+          "dataBlock": [
+            "variable.other.global",
+            "support.variable"
+          ],
+          "booleanLiteral": [
+            "constant.language.boolean",
+            "constant.language"
+          ],
+          "typeKeyword": [
+            "storage.type",
+            "keyword.other"
+          ]
+        }
       }
     ],
     "themes": [

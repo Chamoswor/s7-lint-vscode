@@ -88,7 +88,7 @@
     {
       "name": "Parameter",
       "scope": ["variable.parameter"],
-      "settings": { "foreground": "#e0a458" }
+      "settings": { "foreground": "#7fd1e8" }
     },
     {
       "name": "Property / attribute",
@@ -113,7 +113,10 @@
     { "name": "S7: SCL loop keywords (FOR/WHILE/REPEAT/...)", "scope": "keyword.control.loop.s7dcl", "settings": { "foreground": "#c586c0", "fontStyle": "bold" } },
     { "name": "S7: SCL other control keywords (GOTO/RETURN/REGION)", "scope": "keyword.control.s7dcl", "settings": { "foreground": "#c586c0", "fontStyle": "bold" } },
     { "name": "S7: SCL elementary/base types", "scope": "storage.type.primitive.s7dcl", "settings": { "foreground": "#4fd1c5" } },
-    { "name": "S7: ARRAY/OF", "scope": "storage.type.array.s7dcl", "settings": { "foreground": "#4fd1c5" } },
+    { "name": "S7: ARRAY/OF", "scope": "storage.type.array.s7dcl", "settings": { "foreground": "#4fd190" } },
+    { "name": "S7: STRUCT/END_STRUCT/REF_TO", "scope": "storage.type.struct.s7dcl", "settings": { "foreground": "#4fd1c5" } },
+    { "name": "S7: SCL logical operators (NOT/AND/OR/XOR/MOD)", "scope": "keyword.operator.logical.s7dcl", "settings": { "foreground": "#56b6c2" } },
+    { "name": "S7: SCL boolean literals (TRUE/FALSE)", "scope": "constant.language.boolean.s7dcl", "settings": { "foreground": "#b5cea8" } },
     { "name": "S7: pragma braces", "scope": ["punctuation.definition.pragma.begin.s7dcl", "punctuation.definition.pragma.end.s7dcl"], "settings": { "foreground": "#7a8296" } },
     { "name": "S7: pragma key (fallback)", "scope": "support.type.property-name.s7dcl", "settings": { "foreground": "#b7cd8b" } },
     { "name": "S7: := (input assignment)", "scope": "keyword.operator.assignment.input.s7dcl", "settings": { "foreground": "#56b6c2", "fontStyle": "bold" } },
@@ -133,7 +136,18 @@
     "variable.readonly": "#d19a66",
     "variable.declaration.readonly": { "foreground": "#d19a66", "bold": true },
 
-    "parameter": "#e0a458",
+    "callable": { "foreground": "#e0a458", "italic": true },
+    "callable.declaration": { "foreground": "#e0a458", "bold": true, "italic": true },
+    "callable.defaultLibrary": { "foreground": "#bf8544", "italic": true },
+
+    "dataBlock": "#9d8cff",
+    "dataBlock.declaration": { "foreground": "#9d8cff", "bold": true },
+
+    "typeKeyword": "#4fd1c5",
+    "booleanLiteral": "#b5cea8",
+    "operator": "#56b6c2",
+
+    "parameter": "#7fd1e8",
     "property": "#b7cd8b",
     "property.declaration": { "foreground": "#b7cd8b", "bold": true },
 

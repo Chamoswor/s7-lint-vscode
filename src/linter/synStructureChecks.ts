@@ -99,10 +99,27 @@ export function checkSclSyntaxStructure(text: string, ruleSet: RuleSet): LintDia
     return sharedLiteralRunLength(cur, offset, { keywordLiterals: true });
   }
 
+  /** Tags declared by the VAR sections of the block currently being walked,
+   * lower-cased. TIA's external-source importer resolves an unprefixed,
+   * unquoted word in a statement body against these and writes the `#` back
+   * itself (see parser/s7dclParser.ts's `LocalTagNames`), so `IF Active
+   * THEN` / `NewCommand := FALSE;` are legal statements this grammar has to
+   * recognize -- otherwise the enclosing IF looked unterminated and the
+   * whole block cascaded. Reset per block by `parseBlockBody`; a word NOT in
+   * here is still not an operand, so an undeclared bare word keeps failing
+   * exactly as before. */
+  let declaredTags = new Set<string>();
+
+  function isBareLocalTag(t: Token): boolean {
+    return t.kind === "ident" && !t.text.startsWith("#") && !SCL_RESERVED_KEYWORDS.has(t.text.toUpperCase()) && declaredTags.has(t.text.toLowerCase());
+  }
+
   function isOperandRefStart(): boolean {
     const t0 = cur.peek();
     if (t0.kind === "ident" && t0.text.startsWith("#")) return true;
     if (t0.kind === "string" && t0.text.startsWith('"') && cur.peek(1).kind === "punct" && cur.peek(1).text === ".") return true;
+    // Not when followed by `(` -- that's a call, `isCallStart`'s business.
+    if (isBareLocalTag(t0) && !(cur.peek(1).kind === "punct" && cur.peek(1).text === "(")) return true;
     return false;
   }
 
@@ -416,6 +433,9 @@ export function checkSclSyntaxStructure(text: string, ruleSet: RuleSet): LintDia
       if (["IF", "CASE", "FOR", "WHILE", "REPEAT", "EXIT", "CONTINUE", "RETURN", "GOTO"].includes(up)) return true;
       if (t.text.startsWith("#")) return true;
       if (!SCL_RESERVED_KEYWORDS.has(up) && cur.peek(1).kind === "punct" && cur.peek(1).text === "(") return true;
+      // `NewCommand := FALSE;` -- the `#`-less spelling of an assignment
+      // statement, see `declaredTags`.
+      if (isBareLocalTag(t)) return true;
       return false;
     }
     if (t.kind === "string" && t.text.startsWith('"')) {
@@ -744,7 +764,12 @@ export function checkSclSyntaxStructure(text: string, ruleSet: RuleSet): LintDia
 
   function parseVarMember(): void {
     if (cur.isPunct("{")) cur.skipBraceBlock();
-    cur.next(); // member name
+    const nameTok = cur.next(); // member name
+    // Only top-level members land here (an inline STRUCT's own fields are
+    // consumed wholesale by parseTypeRefFromCursor below), which is exactly
+    // the set addressable as a bare base tag -- see `declaredTags`.
+    if (nameTok.kind === "ident") declaredTags.add(nameTok.text.toLowerCase());
+    else if (nameTok.kind === "string" && nameTok.value) declaredTags.add(nameTok.value.toLowerCase());
     if (cur.isPunct("{")) cur.skipBraceBlock();
     if (cur.isPunct(":")) {
       cur.next();
@@ -776,6 +801,7 @@ export function checkSclSyntaxStructure(text: string, ruleSet: RuleSet): LintDia
 
   function parseBlockBody(endKeyword: string): void {
     let sawBeginOrNetwork = false;
+    declaredTags = new Set(); // a bare tag only resolves inside its OWN block
     while (!cur.isIdent(endKeyword) && !cur.atEnd()) {
       const isVarConstant = cur.isIdent("VAR") && cur.peek(1).kind === "ident" && cur.peek(1).text.toUpperCase() === "CONSTANT";
       const varKw = isVarConstant ? "VAR_CONSTANT" : VAR_KEYWORDS.find((kw) => cur.isIdent(kw));

@@ -1,0 +1,18 @@
+// The '#'-less spelling of a LOCAL reference is legal (see
+// positive/SYN-POS-002-bare-local-references.scl), but only for a name the
+// block actually declares. A bare word that is neither '#'-prefixed, quoted,
+// nor declared here has no scope left to resolve against.
+FUNCTION_BLOCK "Semantic_UndeclaredBareReference"
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+
+VAR
+    Active : Bool;
+END_VAR
+
+BEGIN
+    IF NotDeclaredAnywhere THEN
+        // EXPECT: error[condition-not-a-tag] SEM-REF-010
+        Active := FALSE;
+    END_IF;
+END_FUNCTION_BLOCK

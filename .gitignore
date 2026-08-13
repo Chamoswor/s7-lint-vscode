@@ -1,5 +1,6 @@
 # Local configuration and credentials
 /.claude/settings.local.json
+/.claude/settings.json
 /.tia/
 .env
 .env.*
@@ -8,6 +9,7 @@
 # Test and tooling output
 /out/
 /dist/
+temp/
 coverage/
 .nyc_output/
 *.tsbuildinfo

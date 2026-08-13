@@ -4,8 +4,26 @@
 // mapping for "type", "function", "variable", etc. Four custom literal
 // types (charLiteral/timeLiteral/dateLiteral/pointerLiteral) and two custom
 // number modifiers (radix/float) are added because no standard LSP token
-// kind distinguishes e.g. a `T#10S` duration from a plain `4` -- see
-// package.json's `semanticTokenTypes`/`semanticTokenModifiers`
+// kind distinguishes e.g. a `T#10S` duration from a plain `4`; a fifth
+// custom type, `callable`, marks every PROJECT-DEFINED thing that can be
+// called or that owns instance state -- an FB instance tag, a
+// TON/R_TRIG/CTU-family instruction instance, and a workspace FB/FC call
+// target (`"_IPC_SetRunning"(...)` / `Helper(...)`) alike -- separating all
+// of them from ordinary data `variable`s on one side and from the Siemens
+// instruction catalog (`function.defaultLibrary`) on the other. A sixth,
+// `dataBlock`, does the same for a DATA_BLOCK (`"DB_IPC_Comms"`), which is
+// neither: it's global storage, as distinct a kind of thing in TIA as a
+// variable or a function block.
+//
+// `booleanLiteral` and `typeKeyword` exist because a semantic token OVERRIDES
+// whatever TextMate scope the grammar gave the same span -- so emitting the
+// blanket `keyword` type for `TRUE`/`FALSE`, `STRUCT`/`END_STRUCT`,
+// `ARRAY`/`OF` and `REF_TO` flattened them all onto IF/END_IF/RETURN's colour,
+// discarding the distinction syntaxes/s7dcl.tmLanguage.json already draws
+// (`constant.language.boolean` / `storage.type`). These two types carry that
+// same split up into the semantic layer; `NOT` uses the existing `operator`
+// type, matching the grammar's `keyword.operator.logical`. See package.json's
+// `semanticTokenTypes`/`semanticTokenModifiers`/`semanticTokenScopes`
 // contributions and themes/tia-dark-color-theme.json's `semanticTokenColors`.
 import * as vscode from "vscode";
 import { BlockIndex } from "../analysis/blockIndex";
@@ -23,10 +41,15 @@ export const SEMANTIC_TOKEN_TYPES = [
   "keyword",
   "number",
   "operator",
+  "string",
   "charLiteral",
   "timeLiteral",
   "dateLiteral",
   "pointerLiteral",
+  "booleanLiteral",
+  "callable",
+  "dataBlock",
+  "typeKeyword",
 ] as const;
 export const SEMANTIC_TOKEN_MODIFIERS = ["declaration", "readonly", "defaultLibrary", "radix", "float"] as const;
 

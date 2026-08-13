@@ -6,7 +6,7 @@ undeclared-identifier:
 
 condition-not-a-tag:
   severity: error
-  message: "{keyword} condition '{shown}' isn't a valid operand -- a local tag needs a '#' prefix (e.g. '#{name}'), a global tag must be quoted (e.g. \"{name}\")."
+  message: "{keyword} condition '{shown}' isn't a valid operand -- '{name}' isn't declared in this block, so it can't be a bare local reference; a local tag can also be written '#{name}', a global tag must be quoted (e.g. \"{name}\")."
 
 condition-not-bool:
   severity: error

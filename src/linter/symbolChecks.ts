@@ -33,15 +33,17 @@ import { ResolvedSymbol, resolveOperandRef } from "../analysis/symbolTable";
 import { TypeCacheResult } from "../cache/typeCache";
 import { OperandRef, ParsedBlockFile } from "../parser/s7dclParser";
 import { typeRefTopLevelName } from "../parser/typeRef";
+import { resolveTypeAlias } from "../rules/literalTypes";
 import { RuleSet } from "../rules/types";
 import { formatDiagnostic, LintDiagnostic } from "./diagnostics";
 
-/** `#tag.member` for a local reference, `"Name".member` for an external
+/** `#tag.member` for a local reference, `tag.member` for the bare `#`-less
+ * spelling of one (see `OperandRef.bare`), `"Name".member` for an external
  * one (see `OperandRef.external`) -- matches how each shape actually
  * appears in real source, for readable diagnostic messages. */
 function operandRefText(ref: OperandRef): string {
   const [first, ...rest] = ref.segments;
-  const base = ref.external ? `"${first}"` : `#${first}`;
+  const base = ref.external ? `"${first}"` : ref.bare ? first : `#${first}`;
   return [base, ...rest].join(".");
 }
 
@@ -126,11 +128,13 @@ export function checkSclConditionTypes(
   const diags: LintDiagnostic[] = [];
   for (const check of block.sclConditionChecks) {
     if (check.kind === "bare-identifier") {
-      // Real TIA SCL syntax requires `#` for a local reference or quotes
-      // for a global one (e.g. `"PMP_RUN_FB"`) -- a bare, unquoted word
-      // is invalid operand syntax regardless of whether anything by that
-      // name is declared anywhere, so this is always an error, no
-      // symbol-table lookup needed.
+      // A bare, unquoted word that DOES name one of this block's own tags
+      // never reaches here -- the parser already reported it as `kind:
+      // "tag"` (TIA's importer resolves the `#`-less spelling itself, see
+      // parser/s7dclParser.ts's `LocalTagNames`). What's left is a word
+      // that's neither `#`-prefixed, quoted, NOR declared locally, which
+      // no scope can resolve -- always an error, no symbol-table lookup
+      // needed.
       const shown = (check.negated ? "NOT " : "") + check.name;
       diags.push(
         formatDiagnostic(ruleSet, "condition-not-a-tag", check.line, check.col, { keyword: check.keyword, shown, name: check.name })
@@ -139,8 +143,11 @@ export function checkSclConditionTypes(
     }
     const resolved: ResolvedSymbol = resolveOperandRef(check.ref.segments, block, blockIndex, typeCache, ruleSet, check.ref.external);
     if (resolved.kind !== "resolved") continue; // "undeclared"/"illegal-dot-access" already reported elsewhere; "unresolved-path" -- can't verify, don't guess
+    // `resolveTypeAlias` normalizes both the alias spellings and the CASING
+    // (`BOOL`/`Bool`/`bool` are one type in SCL) before this comparison --
+    // without it every `Active : BOOL;` condition read as "not Bool".
     const topLevelName = typeRefTopLevelName(resolved.typeRef);
-    if (topLevelName === "Bool") continue;
+    if (topLevelName && resolveTypeAlias(topLevelName, ruleSet) === "Bool") continue;
     const shown = (check.negated ? "NOT " : "") + operandRefText(check.ref);
     diags.push(
       formatDiagnostic(ruleSet, "condition-not-bool", check.line, check.col, {

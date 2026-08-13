@@ -35,6 +35,22 @@ export interface UdtSourceFile {
 export interface TypeCacheResult {
   types: Map<string, TypeInfo>;
   diagnostics: CacheDiagnostic[];
+  /** Lower-cased type name -> the key it occupies in `types`. Siemens type
+   * names (elementary, system, AND user PLC data types alike) are
+   * case-INSENSITIVE: `BYTE`/`Byte`/`byte` all name the same type, and TIA
+   * Portal imports source declared any of those ways. `types` stores one
+   * canonical spelling per type, so a raw `types.get(asWritten)` reported
+   * perfectly valid declarations as unknown -- go through `lookupType`
+   * instead of indexing `types` directly. */
+  canonicalNames: Map<string, string>;
+}
+
+/** Case-insensitive `types` lookup -- see `TypeCacheResult.canonicalNames`. */
+export function lookupType(result: TypeCacheResult, name: string): TypeInfo | undefined {
+  const exact = result.types.get(name);
+  if (exact) return exact;
+  const canonical = result.canonicalNames.get(name.toLowerCase());
+  return canonical === undefined ? undefined : result.types.get(canonical);
 }
 
 function seed(ruleSet: RuleSet): Map<string, TypeInfo> {
@@ -76,10 +92,17 @@ function visitNamedRefs(ref: TypeRef, line: number, cb: (name: string, quoted: b
   }
 }
 
-function isCompositeRef(ref: TypeRef, types: Map<string, TypeInfo>): boolean {
+/** Resolves a type name to its cache entry. Always the case-insensitive
+ * `findType` closure from `buildTypeCache` -- passed in rather than the raw
+ * `types` map so a member that spelled its UDT/elementary type in different
+ * casing than the declaration still resolves (see
+ * `TypeCacheResult.canonicalNames`). */
+type FindType = (name: string) => TypeInfo | undefined;
+
+function isCompositeRef(ref: TypeRef, findType: FindType): boolean {
   if (ref.kind === "inline-struct") return true;
   if (ref.kind === "named") {
-    const info = types.get(ref.name);
+    const info = findType(ref.name);
     return !!(info && info.kind === "udt" && info.members);
   }
   return false;
@@ -92,19 +115,19 @@ function isCompositeRef(ref: TypeRef, types: Map<string, TypeInfo>): boolean {
  * `arrayCost` is composition-rules.yaml's `struct.nestingDepthRules.
  * arrayOfStructOrUdtCost` -- threaded through rather than hardcoded so
  * the YAML stays the single source of truth for the number. */
-function depthOfCompositeMembers(ref: TypeRef, types: Map<string, TypeInfo>, visiting: Set<string>, arrayCost: number): number {
+function depthOfCompositeMembers(ref: TypeRef, findType: FindType, visiting: Set<string>, arrayCost: number): number {
   if (ref.kind === "inline-struct") {
     let max = 0;
-    for (const m of ref.members) max = Math.max(max, depthOfTypeRef(m.typeRef, types, visiting, arrayCost));
+    for (const m of ref.members) max = Math.max(max, depthOfTypeRef(m.typeRef, findType, visiting, arrayCost));
     return max;
   }
   if (ref.kind === "named") {
-    const info = types.get(ref.name);
-    if (!info || info.kind !== "udt" || !info.members || visiting.has(ref.name)) return 0;
-    visiting.add(ref.name);
+    const info = findType(ref.name);
+    if (!info || info.kind !== "udt" || !info.members || visiting.has(info.name)) return 0;
+    visiting.add(info.name);
     let max = 0;
-    for (const m of info.members) max = Math.max(max, depthOfTypeRef(m.typeRef, types, visiting, arrayCost));
-    visiting.delete(ref.name);
+    for (const m of info.members) max = Math.max(max, depthOfTypeRef(m.typeRef, findType, visiting, arrayCost));
+    visiting.delete(info.name);
     return max;
   }
   return 0;
@@ -115,29 +138,43 @@ function depthOfCompositeMembers(ref: TypeRef, types: Map<string, TypeInfo>, vis
  * hop costs `arrayCost` levels instead of the normal 1 a plain struct/UDT
  * member hop costs -- best-effort implementation of that rule; see this
  * file's header. */
-function depthOfTypeRef(ref: TypeRef, types: Map<string, TypeInfo>, visiting: Set<string>, arrayCost: number): number {
+function depthOfTypeRef(ref: TypeRef, findType: FindType, visiting: Set<string>, arrayCost: number): number {
   if (ref.kind === "named") {
-    const info = types.get(ref.name);
-    if (!info || info.kind !== "udt" || !info.members || visiting.has(ref.name)) return 1;
-    visiting.add(ref.name);
+    const info = findType(ref.name);
+    if (!info || info.kind !== "udt" || !info.members || visiting.has(info.name)) return 1;
+    visiting.add(info.name);
     let max = 0;
-    for (const m of info.members) max = Math.max(max, depthOfTypeRef(m.typeRef, types, visiting, arrayCost));
-    visiting.delete(ref.name);
+    for (const m of info.members) max = Math.max(max, depthOfTypeRef(m.typeRef, findType, visiting, arrayCost));
+    visiting.delete(info.name);
     return 1 + max;
   }
   if (ref.kind === "inline-struct") {
     let max = 0;
-    for (const m of ref.members) max = Math.max(max, depthOfTypeRef(m.typeRef, types, visiting, arrayCost));
+    for (const m of ref.members) max = Math.max(max, depthOfTypeRef(m.typeRef, findType, visiting, arrayCost));
     return 1 + max;
   }
   // array
-  if (!isCompositeRef(ref.of, types)) return 1;
-  return arrayCost + depthOfCompositeMembers(ref.of, types, visiting, arrayCost);
+  if (!isCompositeRef(ref.of, findType)) return 1;
+  return arrayCost + depthOfCompositeMembers(ref.of, findType, visiting, arrayCost);
 }
 
 export function buildTypeCache(ruleSet: RuleSet, files: UdtSourceFile[]): TypeCacheResult {
   const types = seed(ruleSet);
   const diagnostics: CacheDiagnostic[] = [];
+  // Kept in lockstep with `types` from here on -- see
+  // `TypeCacheResult.canonicalNames`. Seeded names win over a later UDT of
+  // the same (case-insensitively equal) name, which is exactly what the
+  // `reserved-name` check below already enforces.
+  const canonicalNames = new Map<string, string>();
+  for (const name of types.keys()) {
+    if (!canonicalNames.has(name.toLowerCase())) canonicalNames.set(name.toLowerCase(), name);
+  }
+  const findType = (name: string): TypeInfo | undefined => {
+    const exact = types.get(name);
+    if (exact) return exact;
+    const canonical = canonicalNames.get(name.toLowerCase());
+    return canonical === undefined ? undefined : types.get(canonical);
+  };
   const limits = ruleSet.composition.array.index.valueLimits;
   const nestingRules = ruleSet.composition.struct.nestingDepthRules;
   const nestingWarnDepth = nestingRules?.baseLimit ?? ruleSet.composition.struct.maxNestingDepth;
@@ -147,7 +184,7 @@ export function buildTypeCache(ruleSet: RuleSet, files: UdtSourceFile[]): TypeCa
   // Insert (step 4): every UDT declaration, flagging duplicates.
   for (const file of files) {
     for (const decl of file.decls) {
-      const existing = types.get(decl.name);
+      const existing = findType(decl.name);
       if (existing && existing.kind === "udt") {
         diagnostics.push({
           file: file.path,
@@ -186,6 +223,7 @@ export function buildTypeCache(ruleSet: RuleSet, files: UdtSourceFile[]): TypeCa
         dependencies: new Set(),
         resolved: false,
       });
+      canonicalNames.set(decl.name.toLowerCase(), decl.name);
     }
   }
 
@@ -196,8 +234,12 @@ export function buildTypeCache(ruleSet: RuleSet, files: UdtSourceFile[]): TypeCa
     for (const m of info.members) {
       const memberLine = m.line ?? info.declLine ?? 1;
       visitNamedRefs(m.typeRef, memberLine, (depName, quoted, depLine) => {
-        info.dependencies.add(depName);
-        if (!types.has(depName)) {
+        const dep = findType(depName);
+        // Record the CANONICAL name so cycle detection (which indexes
+        // `types` by dependency name) still finds the node when the member
+        // spelled its type in different casing.
+        info.dependencies.add(dep?.name ?? depName);
+        if (!dep) {
           allResolved = false;
           diagnostics.push({
             file: info.sourceFile!,
@@ -291,7 +333,7 @@ export function buildTypeCache(ruleSet: RuleSet, files: UdtSourceFile[]): TypeCa
     // diagnostic could never actually fire. Safe to start empty: any UDT
     // reachable from here already passed the separate cycle-detection pass
     // above (the `cycleMembers.has` check just above skips cyclic ones).
-    const depth = 1 + depthOfCompositeMembers({ kind: "named", name: info.name, quoted: false, namespace: null }, types, new Set<string>(), arrayOfStructCost);
+    const depth = 1 + depthOfCompositeMembers({ kind: "named", name: info.name, quoted: false, namespace: null }, findType, new Set<string>(), arrayOfStructCost);
     const firmwareGate = Object.entries(nestingRules?.extendedLimitFirmwareGate ?? {})
       .map(([platform, floor]) => `${platform} FW${floor}`)
       .join(" / ");
@@ -314,5 +356,5 @@ export function buildTypeCache(ruleSet: RuleSet, files: UdtSourceFile[]): TypeCa
     }
   }
 
-  return { types, diagnostics };
+  return { types, diagnostics, canonicalNames };
 }

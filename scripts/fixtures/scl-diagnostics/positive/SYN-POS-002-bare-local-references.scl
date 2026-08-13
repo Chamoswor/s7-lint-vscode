@@ -1,0 +1,68 @@
+// TIA Portal's external-source importer resolves an UNPREFIXED, unquoted
+// word in a statement body against the block's own VAR sections and writes
+// the '#' back itself -- so every reference below is the '#'-less spelling
+// of the same code SYN-POS-001 writes with '#', and imports identically.
+// Type names are equally case-INSENSITIVE (BOOL/Bool/bool are one type).
+FUNCTION_BLOCK "BareLocalReferences"
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+
+VAR_INPUT
+    Enable    : BOOL := TRUE;
+    Threshold : INT := 10;
+END_VAR
+VAR_OUTPUT
+    Running   : BOOL;
+    Elapsed   : TIME;
+END_VAR
+VAR
+    Active     : BOOL;
+    Counter    : WORD;
+    Runtime    : DWORD;
+    Level      : REAL;
+    Tick       : TON;
+    StartEdge  : R_TRIG;
+    Slots      : ARRAY[0..3] OF INT;
+END_VAR
+VAR_TEMP
+    i     : INT;
+    found : BOOL;
+END_VAR
+
+BEGIN
+    // Bare condition on a declared Bool -- with and without NOT
+    IF NOT Enable THEN
+        Running := FALSE;
+        RETURN;
+    END_IF;
+
+    IF Active THEN
+        Counter := Counter + 1;
+    END_IF;
+
+    // Bare instance calls: an instruction instance and an edge detector
+    Tick(IN := Active, PT := T#1S);
+    StartEdge(CLK := Enable);
+
+    // Bare '.member' reads off those same instances
+    IF Tick.Q THEN
+        Runtime := Runtime + 1;
+        Elapsed := Tick.ET;
+    END_IF;
+
+    IF StartEdge.Q THEN
+        Active := TRUE;
+    END_IF;
+
+    // Bare references inside expressions, indices and call arguments
+    found := FALSE;
+    FOR i := 0 TO 3 DO
+        IF Slots[i] > Threshold THEN
+            found := TRUE;
+        END_IF;
+    END_FOR;
+
+    Level := LIMIT(MN := 0.0, IN := Level, MX := 100.0);
+    Running := Enable AND NOT found;
+
+END_FUNCTION_BLOCK

@@ -155,6 +155,53 @@ for (const file of sclFiles) {
 }
 console.log(`\nTotals across .scl files: ${totalSclDecls} declaration(s), ${totalSclCalls} SCL instruction call(s), ${totalSclDiags} diagnostic(s).`);
 
+// --- semantic spans (analysis/documentIndex.ts) ---------------------------
+// The span list drives hover, Ctrl+click, rename AND semantic highlighting,
+// so a span silently going missing degrades all four at once with no
+// diagnostic to notice it by. These assert the classifications that are
+// easiest to lose to a walker-recovery bug.
+console.log("\n=== semantic spans (hover / definition / highlighting) ===");
+const spanFixture = [
+  'FUNCTION_BLOCK "SpanProbe"',
+  "VERSION : 0.1",
+  "VAR_INPUT",
+  "    Limit : TIME;",
+  "END_VAR",
+  "VAR",
+  "    T1 : TON;",
+  "    A  : WORD;",
+  "    B  : WORD;",
+  "END_VAR",
+  "BEGIN",
+  "    T1(IN := (A = B), PT := Limit);",
+  "END_FUNCTION_BLOCK",
+  "",
+].join("\n");
+const spanIndex = buildDocumentIndex(spanFixture, ruleSet, new BlockIndex(), "spanProbe.scl");
+const spanAt = (line, text) =>
+  spanIndex.spans.find((s) => s.line === line && spanFixture.split("\n")[line - 1].substr(s.startCol - 1, s.length) === text);
+
+function expectSpan(line, text, tokenType, why) {
+  const span = spanAt(line, text);
+  if (span && span.tokenType === tokenType) {
+    console.log(`-- PASS: L${line} '${text}' -> ${tokenType} --`);
+    return;
+  }
+  totalFixtureFailures++;
+  console.error(`-- FAIL: L${line} '${text}' -> ${span ? span.tokenType : "NO SPAN"} (expected ${tokenType}) -- ${why}`);
+}
+
+// The pin AFTER a parenthesised argument value. `walkCallArgs` used to end
+// its whole argument-list walk at the sub-expression's own `)`, so `PT` got
+// no span at all: no hover, no Ctrl+click, no pin/type validation.
+expectSpan(12, "PT", "parameter", "a pin following a parenthesised value must still resolve");
+expectSpan(12, "IN", "parameter", "the pin before it, as a control");
+expectSpan(12, "Limit", "variable", "that pin's own value");
+expectSpan(12, "A", "variable", "operands INSIDE the parenthesised value still resolve");
+expectSpan(12, "T1", "callable", "an instruction instance reads as callable, not as a plain variable");
+expectSpan(7, "TON", "callable", "...and so does its declared type");
+expectSpan(4, "TIME", "type", "a Siemens elementary type");
+
 const totalDetectedDiagnostics = totalDiags + totalLadWiringDiags + totalLiteralDiags + totalUndeclaredDiags + totalStructCountDiags + totalSclDiags;
 if (totalFixtureFailures > 0 || totalDetectedDiagnostics > 0) {
   console.error(`\nSmoke test failed: ${totalFixtureFailures} fixture failure(s), ${totalDetectedDiagnostics} diagnostic(s).`);

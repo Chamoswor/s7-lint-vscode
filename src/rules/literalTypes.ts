@@ -333,12 +333,22 @@ export function expandPinDataTypes(dataTypes: string[], ruleSet: RuleSet): { ski
  * either spelling -- resolve to the canonical base-types.yaml key before
  * comparing an operand's declared type against a pin's `dataTypes` (which
  * always use the canonical spelling per instruction-registry/README.md's
- * "Pin data types" normalization rule). Returns `name` unchanged if it
- * isn't a known alias of anything. */
+ * "Pin data types" normalization rule).
+ *
+ * CASING is normalized the same way, and for the same reason: SCL type
+ * names are case-INSENSITIVE (`BYTE`, `Byte`, and `byte` all declare the
+ * same type, and TIA Portal imports all three), while this registry stores
+ * exactly one canonical spelling per type. Comparing the raw declared
+ * spelling against a canonical key therefore reported perfectly valid,
+ * TIA-importable declarations as unknown types -- see
+ * `cache/typeCache.ts`'s `unknown-type`, which routes through this same
+ * function. Returns `name` unchanged if it isn't a known type name or an
+ * alias of one. */
 export function resolveTypeAlias(name: string, ruleSet: RuleSet): string {
   if (ruleSet.baseTypes[name]) return name;
   const upper = name.toUpperCase();
   for (const [canonical, entry] of Object.entries(ruleSet.baseTypes)) {
+    if (canonical.toUpperCase() === upper) return canonical;
     const aliases = (entry as { aliases?: string[] }).aliases;
     if (aliases?.some((a) => a.toUpperCase() === upper)) return canonical;
   }

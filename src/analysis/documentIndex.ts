@@ -67,8 +67,38 @@ export interface DocumentIndex {
   diagnostics: LintDiagnostic[];
   /** Every VAR-section declaration seen in this document, keyed by name
    * (no leading `#`) -- exposed so providers/completion.ts can resolve a
-   * `#tag` chain's type without re-implementing the VAR-section walk. */
+   * `#tag` chain's type without re-implementing the VAR-section walk.
+   *
+   * ACCUMULATED across every declaration in the file, so two blocks
+   * declaring the same name collide here (last one walked wins). Anything
+   * deciding what is IN SCOPE at a position must use `blockScopes` instead
+   * -- a tag is only addressable inside the block that declares it. */
   localDecls: Map<string, LocalDecl>;
+  /** One entry per program-block declaration in the file, in file order --
+   * what `localDecls` flattens away. See `BlockScope`. */
+  blockScopes: BlockScope[];
+}
+
+/** A single program block's own declaration scope. SCL has no lexical
+ * scoping WITHIN a block, but it has hard scoping BETWEEN blocks: a tag is
+ * addressable only inside the block that declares it, so an authored `.scl`
+ * bundling several declarations in one file (the norm -- see the top-level
+ * walk) needs the boundaries kept, not flattened. */
+export interface BlockScope {
+  /** The block's declared name, or null if the declaration is mid-typing. */
+  name: string | null;
+  /** FUNCTION_BLOCK | FUNCTION | ORGANIZATION_BLOCK | DATA_BLOCK. */
+  blockType: string;
+  /** 1-based line of the block keyword. */
+  startLine: number;
+  /** 1-based line of the matching `END_xxx`, or the file's last line for a
+   * declaration that isn't closed yet (mid-edit). */
+  endLine: number;
+  /** This block's own VAR_*-section declarations, keyed LOWER-CASE (SCL
+   * identifiers are case-insensitive). A STRUCT/UDT field is deliberately
+   * excluded -- it's reachable as `#owner.field`, never as a base tag of
+   * its own. */
+  decls: Map<string, LocalDecl>;
 }
 
 export interface LocalDecl {
@@ -106,6 +136,12 @@ export interface LocalDecl {
    * FB/FC's VAR_INPUT/VAR_OUTPUT/VAR_IN_OUT (or any DATA_BLOCK member) is
    * externally reachable from other files, everything else is doc-local. */
   section: string;
+  /** For an INLINE `STRUCT ... END_STRUCT` declaration, its own fields (in
+   * declaration order, recursively) -- there's no named type to look this
+   * up from afterwards (`leafName` is null), so the members are captured
+   * here as the walk passes them. `undefined` for every other type.
+   * Consumed by providers/completion.ts's `#tag.`/`tag.` member list. */
+  structMembers?: LocalDecl[];
 }
 
 const VAR_SECTION_KEYWORDS = ["VAR_INPUT", "VAR_OUTPUT", "VAR_IN_OUT", "VAR_TEMP", "VAR_CONSTANT", "VAR"];
@@ -404,6 +440,15 @@ const COUNTER_SUFFIX_TYPES: Record<string, string> = {
   ULINT: "ULInt",
 };
 
+/** The `ruleSet.instructions` key matching `name`, ignoring case -- SCL
+ * instruction names are case-insensitive (`ton`/`TON`), same as every other
+ * identifier in the language. */
+function findInstructionCaseInsensitive(ruleSet: RuleSet, name: string): string | undefined {
+  if (ruleSet.instructions[name]) return name;
+  const lower = name.toLowerCase();
+  return Object.keys(ruleSet.instructions).find((k) => k.toLowerCase() === lower);
+}
+
 function refineCounterValueTypes(instanceTypeName: string, dataTypes: string[]): string[] {
   const m = /^(?:CTU|CTD|CTUD)_(.+)$/i.exec(instanceTypeName);
   if (!m) return dataTypes;
@@ -424,6 +469,13 @@ function refineCounterValueTypes(instanceTypeName: string, dataTypes: string[]):
  * placeholder (see 03-counters.yaml's own header). */
 export function resolveInstanceTypeToInstructionNames(ruleSet: RuleSet, instanceTypeName: string): string[] {
   const instanceTypeToInstructions = new Map<string, string[]>();
+  // Hand-authored SCL declares a timer/edge instance by the INSTRUCTION
+  // name (`HB_Timer : TON;`) -- it's a TIA export that rewrites the same
+  // declaration to the `instanceType` (`TON_TIME`). Both spellings name the
+  // same instance, so the instruction's own name is a valid key too;
+  // without it, `#HB_Timer.Q`/`HB_Timer.Q` resolved to nothing at all.
+  const identity = findInstructionCaseInsensitive(ruleSet, instanceTypeName);
+  if (identity && ruleSet.instructions[identity].callShape === "instance-dot") return [identity];
   for (const [name, entry] of Object.entries(ruleSet.instructions)) {
     // Only "instance-dot" instructions' pins become the INSTANCE's own
     // dot-accessible fields (`#tonX.ET`) -- a "coil-ref" instruction like
@@ -438,6 +490,15 @@ export function resolveInstanceTypeToInstructionNames(ruleSet: RuleSet, instance
     }
   }
   let instrNames = instanceTypeToInstructions.get(instanceTypeName) ?? [];
+  if (instrNames.length === 0) {
+    const lower = instanceTypeName.toLowerCase();
+    for (const [key, names] of instanceTypeToInstructions) {
+      if (key.toLowerCase() === lower) {
+        instrNames = names;
+        break;
+      }
+    }
+  }
   if (instrNames.length === 0) {
     const m = /^(CTU|CTD|CTUD)_/i.exec(instanceTypeName);
     if (m && ruleSet.instructions[m[1].toUpperCase()]) instrNames = [m[1].toUpperCase()];
@@ -545,6 +606,73 @@ export function buildDocumentIndex(text: string, ruleSet: RuleSet, blockIndex: B
   let currentBlockType: string | null = null;
   let currentSectionKind: string | null = null;
   let currentBlockName: string | null = null;
+
+  // Every type name Siemens itself defines -- elementary (base-types.yaml,
+  // aliases included), system (system-types.yaml), and the section-legality
+  // opaque names -- lower-cased, since SCL type names are case-insensitive.
+  // Built once per pass rather than re-scanned per type occurrence.
+  const builtinTypeNames = new Set<string>();
+  for (const [name, entry] of Object.entries(ruleSet.baseTypes)) {
+    builtinTypeNames.add(name.toLowerCase());
+    for (const alias of (entry as { aliases?: string[] }).aliases ?? []) builtinTypeNames.add(alias.toLowerCase());
+  }
+  for (const name of Object.keys(ruleSet.systemTypes)) builtinTypeNames.add(name.toLowerCase());
+  for (const name of ruleSet.opaqueSectionNames) builtinTypeNames.add(name.toLowerCase());
+
+  // True only while `walkSclBody` is walking a `BEGIN ... END_xxx` SCL
+  // statement body. Gates the BARE (unprefixed, unquoted) local-tag
+  // spelling TIA's external-source importer accepts -- see
+  // parser/s7dclParser.ts's `LocalTagNames`. A LAD/FBD RUNG body is full of
+  // bare identifiers that are NOT operands (instruction names, pin names),
+  // so `walkRung` must keep treating them the old way.
+  let inSclBody = false;
+
+  // The block currently being walked and its own VAR-section declarations,
+  // keyed lower-case -- reset per block, unlike `localDecls` (which
+  // deliberately accumulates across a multi-declaration `.scl` file, see the
+  // top-level walk). Only a tag THIS block declares is addressable at all,
+  // which is what keeps a later block's `IF Enable THEN` from silently
+  // resolving against an earlier block's `Enable`. Published as
+  // `DocumentIndex.blockScopes` for providers/completion.ts.
+  const blockScopes: BlockScope[] = [];
+  let currentBlockTags = new Map<string, LocalDecl>();
+
+  /** A declared local tag by name, case-insensitively -- SCL identifiers
+   * are case-insensitive, only their declared spelling is preserved. */
+  function findLocalDecl(name: string): LocalDecl | undefined {
+    const exact = localDecls.get(name);
+    if (exact) return exact;
+    const lower = name.toLowerCase();
+    for (const decl of localDecls.values()) {
+      if (decl.name.toLowerCase() === lower) return decl;
+    }
+    return undefined;
+  }
+
+  /** True when `name` is one of THIS block's declared tags addressable as a
+   * bare base reference (the `#`-less spelling, SCL bodies only). */
+  function isBareLocalTag(tok: Token): boolean {
+    return inSclBody && tok.kind === "ident" && !tok.text.startsWith("#") && !SCL_RESERVED_KEYWORDS.has(tok.text.toUpperCase()) && currentBlockTags.has(tok.text.toLowerCase());
+  }
+
+  /** Semantic-token type for a reference to a declared local tag: an
+   * INSTANCE of a FUNCTION_BLOCK or of a stateful instruction (TON, R_TRIG,
+   * CTU, ...) gets the `callable` type so a theme can color it apart from an
+   * ordinary data variable -- they behave completely differently (an
+   * instance is callable and owns persistent state), and once bare
+   * `Instance(...)` calls are legal there's no `#` left to tell them apart
+   * at a glance. The same type covers a workspace FB/FC CALL TARGET (see
+   * `tryWalkCall`), so every project-defined callable reads alike, distinct
+   * from the Siemens catalog's own `function.defaultLibrary`. Everything
+   * else stays a plain `variable`. */
+  function localTagTokenType(decl: LocalDecl | undefined): string {
+    if (!decl) return "variable";
+    const leaf = decl.elementLeafName ?? decl.leafName;
+    if (leaf && blockIndex.get(leaf)?.blockType === "FUNCTION_BLOCK") return "callable";
+    const top = decl.elementTopLevelName ?? decl.topLevelName;
+    if (top && resolveInstanceTypeToInstructionNames(ruleSet, top).length > 0) return "callable";
+    return "variable";
+  }
 
   /** Whether a `section`-kind member of a `blockType` block is reachable
    * from OTHER files (via `#instance.name`/named-pin syntax) -- an FB/FC's
@@ -929,7 +1057,7 @@ export function buildDocumentIndex(text: string, ruleSet: RuleSet, blockIndex: B
   function literalSemantics(rawText: string): { tokenType: string; tokenModifiers: string[] } {
     switch (detectLiteralShape(rawText)) {
       case "bool":
-        return { tokenType: "keyword", tokenModifiers: [] };
+        return { tokenType: "booleanLiteral", tokenModifiers: [] };
       case "char":
         return { tokenType: "charLiteral", tokenModifiers: [] };
       case "string":
@@ -1019,6 +1147,22 @@ export function buildDocumentIndex(text: string, ruleSet: RuleSet, blockIndex: B
    *   - a quoted instance-of line is a user FUNCTION_BLOCK single-instance DB
    *     (or a PLC-data-type-based DB), resolved against the workspace index.
    * See parser/s7dclParser.ts's `ParsedBlockFile.instanceOf` for both shapes. */
+  /** Semantic-token type for a reference to a WORKSPACE BLOCK by name --
+   * quoted (`"DB_IPC_Comms".Slots` / `"_IPC_SetRunning"(...)`) or, for a
+   * call, bare (`Helper(...)`). Decided by WHAT THE SYMBOL IS, not by how
+   * this particular reference uses it, so one block reads the same colour
+   * everywhere it appears:
+   *   - a DATA_BLOCK is storage -- its own `dataBlock` type, since a DB is
+   *     as distinct a kind of thing in TIA as a variable or a function;
+   *   - an FB/FC/OB is something you call -- `callable`, the same type a
+   *     local instance tag gets (see `localTagTokenType`);
+   *   - an unresolved name says nothing about itself, so it stays a plain
+   *     `variable` rather than claiming a kind this pass can't verify. */
+  function externalRefTokenType(ownerBlock: BlockInfo | undefined): string {
+    if (!ownerBlock) return "variable";
+    return ownerBlock.blockType === "DATA_BLOCK" ? "dataBlock" : "callable";
+  }
+
   function renderExternalBlockHover(extName: string, ownerBlock: BlockInfo | undefined): string {
     if (!ownerBlock) return `**"${extName}"** — not found in workspace`;
     const kindOf = (t: string) => t.replace(/_/g, " ").toLowerCase();
@@ -1083,10 +1227,10 @@ export function buildDocumentIndex(text: string, ruleSet: RuleSet, blockIndex: B
    * positions needed for hover/semantic spans. */
   function walkTypeRef(
     memberContext: "VAR" | "STRUCT"
-  ): { text: string; leafName: string | null; topLevelName: string | null; derefTopLevelName: string | null; arrayBounds: [number, number][] | null; elementTopLevelName: string | null; elementLeafName: string | null } {
+  ): { text: string; leafName: string | null; topLevelName: string | null; derefTopLevelName: string | null; arrayBounds: [number, number][] | null; elementTopLevelName: string | null; elementLeafName: string | null; structMembers?: LocalDecl[] } {
     if (cur.isIdent("REF_TO")) {
       const refTok = cur.next();
-      push(refTok, "keyword", []);
+      push(refTok, "typeKeyword", []);
       checkReferenceLegality(refTok, memberContext);
       const inner = walkTypeRef(memberContext);
       checkReferenceTargetType(refTok, inner);
@@ -1094,13 +1238,13 @@ export function buildDocumentIndex(text: string, ruleSet: RuleSet, blockIndex: B
     }
     if (cur.isIdent("ARRAY")) {
       const arrTok = cur.next();
-      push(arrTok, "keyword", []);
+      push(arrTok, "typeKeyword", []);
       cur.tryPunct("[");
       const boundsTokens: Token[] = [];
       while (!cur.isPunct("]") && !cur.atEnd()) boundsTokens.push(cur.next());
       cur.tryPunct("]");
       checkArrayDeclaration(boundsTokens, arrTok, memberContext);
-      if (cur.isIdent("of")) push(cur.next(), "keyword", []);
+      if (cur.isIdent("of")) push(cur.next(), "typeKeyword", []);
       const inner = walkTypeRef(memberContext);
       checkArrayElementType(arrTok, inner);
       return {
@@ -1114,12 +1258,17 @@ export function buildDocumentIndex(text: string, ruleSet: RuleSet, blockIndex: B
       };
     }
     if (cur.isIdent("STRUCT")) {
-      push(cur.next(), "keyword", []);
+      push(cur.next(), "typeKeyword", []);
+      // An inline STRUCT has no named type to look its fields up from
+      // later, so they're collected here as the walk passes them -- see
+      // `LocalDecl.structMembers`.
+      const structMembers: LocalDecl[] = [];
       while (!cur.isIdent("END_STRUCT") && !cur.atEnd()) {
-        walkVarMember("STRUCT");
+        const member = walkVarMember("STRUCT");
+        if (member) structMembers.push(member);
       }
-      if (cur.isIdent("END_STRUCT")) push(cur.next(), "keyword", []);
-      return { text: "STRUCT", leafName: null, topLevelName: "Struct", derefTopLevelName: null, arrayBounds: null, elementTopLevelName: null, elementLeafName: null };
+      if (cur.isIdent("END_STRUCT")) push(cur.next(), "typeKeyword", []);
+      return { text: "STRUCT", leafName: null, topLevelName: "Struct", derefTopLevelName: null, arrayBounds: null, elementTopLevelName: null, elementLeafName: null, structMembers };
     }
     if (cur.peek().kind === "string") {
       const t = cur.next();
@@ -1151,19 +1300,57 @@ export function buildDocumentIndex(text: string, ruleSet: RuleSet, blockIndex: B
     };
   }
 
-  function pushTypeNameSpan(tok: Token, name: string, length: number): void {
-    const isKnownBuiltin = !!ruleSet.baseTypes[name] || !!ruleSet.systemTypes[name];
+  /** Semantic (type, modifiers) for one TYPE-NAME occurrence -- a VAR
+   * member's declared type, an `ARRAY ... OF <here>` element type, a
+   * FUNCTION's return type, a block/UDT's own declared name. One function
+   * so the SAME type reads identically everywhere it appears; a declaration
+   * that looked different from a reference to it was the whole problem.
+   *
+   * Deliberately NOT one colour per base-types.yaml `category` -- eleven
+   * hues for Int-vs-Real-vs-Time is a rainbow no language's highlighting
+   * actually does. The split is the one other languages DO draw, along
+   * what the type MEANS for the thing being declared:
+   *
+   *   callable                 -- a workspace FB/FC/OB used as a type: the
+   *                               tag declaring it is an instance you call,
+   *                               so it reads like every other callable.
+   *   callable.defaultLibrary  -- the same, for a Siemens instance type
+   *                               (TON, R_TRIG, CTU_INT, ...).
+   *   dataBlock                -- a workspace DATA_BLOCK used as a type.
+   *   type.defaultLibrary      -- a Siemens elementary/system type (Bool,
+   *                               Int, IEC_TIMER, ErrorStruct, ...).
+   *   type                     -- a project-authored PLC data type (UDT),
+   *                               or a name this pass can't resolve.
+   *
+   * `Array`/`Struct`/`REF_TO` never reach here -- they're syntax, coloured
+   * as `typeKeyword` by `walkTypeRef` itself, which is what makes a
+   * composite declaration readable at a glance. */
+  function typeNameSemantics(name: string): { tokenType: string; tokenModifiers: string[] } {
+    const blk = blockIndex.get(name);
+    if (blk) return { tokenType: blk.blockType === "DATA_BLOCK" ? "dataBlock" : "callable", tokenModifiers: [] };
+    if (resolveInstanceTypeToInstructionNames(ruleSet, name).length > 0) {
+      return { tokenType: "callable", tokenModifiers: ["defaultLibrary"] };
+    }
+    // Case-INSENSITIVE: SCL type names are (`BYTE`/`Byte`/`byte` are one
+    // type, and real source uses all three). Matching case-sensitively made
+    // every upper-cased built-in render as a user-defined type instead.
+    if (builtinTypeNames.has(name.toLowerCase())) return { tokenType: "type", tokenModifiers: ["defaultLibrary"] };
+    return { tokenType: "type", tokenModifiers: [] };
+  }
+
+  function pushTypeNameSpan(tok: Token, name: string, length: number, extraModifiers: string[] = []): void {
     // Only a WORKSPACE block (FB/FC/OB/DB -- blockIndex) is renameable here;
     // a base/system type name is a fixed Siemens keyword, and a UDT/STRUCT
     // leaf lives in the separate type-cache index this pass doesn't share,
     // so it's left doc-local (no renameKey) rather than guessed at.
     const blk = blockIndex.get(name);
+    const { tokenType, tokenModifiers } = typeNameSemantics(name);
     spans.push({
       line: tok.line,
       startCol: tok.col,
       length,
-      tokenType: "type",
-      tokenModifiers: isKnownBuiltin ? ["defaultLibrary"] : [],
+      tokenType,
+      tokenModifiers: [...tokenModifiers, ...extraModifiers],
       hoverMarkdown: typeHover(name),
       definition: typeDefinition(name),
       renameKey: blk ? `type:${blk.name}` : undefined,
@@ -1205,7 +1392,17 @@ export function buildDocumentIndex(text: string, ruleSet: RuleSet, blockIndex: B
         if (isMlcKey && cur.peek().kind === "string") {
           classifyMlcPragmaValue(cur.next());
         } else if (!cur.atEnd() && !cur.isPunct(";") && !cur.isPunct("}")) {
-          cur.next(); // value (string/ident) -- TextMate already colors strings
+          const valueTok = cur.next();
+          // A pragma value is ATTRIBUTE data, never program data: the
+          // `'TRUE'` in `{ S7_Optimized_Access := 'TRUE' }` is the quoted
+          // string "TRUE" configuring the block, not the boolean constant
+          // `TRUE`, and must not read as one (nor as a keyword). Quoted ->
+          // `string`; a bare value keeps its own literal semantics.
+          if (valueTok.kind === "string") push(valueTok, "string", []);
+          else if (valueTok.kind === "number" || valueTok.kind === "ident") {
+            const { tokenType, tokenModifiers } = literalSemantics(valueTok.text);
+            push(valueTok, tokenType, tokenModifiers);
+          }
         }
         cur.tryPunct(";");
         continue;
@@ -1219,7 +1416,7 @@ export function buildDocumentIndex(text: string, ruleSet: RuleSet, blockIndex: B
    * value or a pin's value expression, without trying to fully parse it. */
   function classifyLiteralOrSkip(): boolean {
     if (cur.isIdent("NOT")) {
-      push(cur.next(), "keyword", []);
+      push(cur.next(), "operator", []);
       return true;
     }
     const value = consumeLiteralValue(cur, ruleSet);
@@ -1255,7 +1452,10 @@ export function buildDocumentIndex(text: string, ruleSet: RuleSet, blockIndex: B
     }
   }
 
-  function walkVarMember(context: "VAR" | "STRUCT"): void {
+  /** Returns the `LocalDecl` it recorded, so `walkTypeRef`'s inline-STRUCT
+   * branch can keep the fields it just walked (see `LocalDecl.structMembers`).
+   * `undefined` when the cursor wasn't at a member at all. */
+  function walkVarMember(context: "VAR" | "STRUCT"): LocalDecl | undefined {
     // A .s7dcl EXPORT's VAR sections put the pragma BEFORE the name; an
     // authored .scl source file's VAR sections instead follow the SAME
     // convention STRUCT bodies already use -- pragma AFTER the name (see
@@ -1267,15 +1467,16 @@ export function buildDocumentIndex(text: string, ruleSet: RuleSet, blockIndex: B
     // pragma block is left sitting where `:` is expected, and walkTypeRef
     // silently returns an empty type for it.
     classifyPragma();
-    if (cur.isIdent("END_VAR") || cur.isIdent("END_STRUCT") || cur.atEnd()) return;
+    if (cur.isIdent("END_VAR") || cur.isIdent("END_STRUCT") || cur.atEnd()) return undefined;
     const nameTok = cur.next();
     classifyPragma();
     const section = context === "STRUCT" ? "STRUCT" : currentSectionKind ?? "VAR";
+    const declSpanIndex = spans.length;
     push(nameTok, "variable", ["declaration"], undefined, undefined, memberRenameKey(nameTok.text, section));
     cur.tryPunct(":");
-    const { text, leafName, topLevelName, derefTopLevelName, arrayBounds, elementTopLevelName, elementLeafName } = walkTypeRef(context);
+    const { text, leafName, topLevelName, derefTopLevelName, arrayBounds, elementTopLevelName, elementLeafName, structMembers } = walkTypeRef(context);
     checkSectionLegality(nameTok, topLevelName, section);
-    localDecls.set(nameTok.text, {
+    const decl: LocalDecl = {
       name: nameTok.text,
       leafName,
       topLevelName,
@@ -1287,7 +1488,17 @@ export function buildDocumentIndex(text: string, ruleSet: RuleSet, blockIndex: B
       line: nameTok.line,
       col: nameTok.col,
       section,
-    });
+      structMembers,
+    };
+    localDecls.set(nameTok.text, decl);
+    // A STRUCT/UDT field is reachable as `#owner.field`, never as a base tag
+    // of its own -- so only VAR-section members join the block's scope.
+    if (context === "VAR") currentBlockTags.set(nameTok.text.toLowerCase(), decl);
+    // The declared type is only known AFTER walkTypeRef, so the name's own
+    // span is retyped here rather than guessed at push time -- an FB/timer/
+    // counter instance declaration gets the same distinct `callable` type
+    // its references do (see `localTagTokenType`).
+    if (spans[declSpanIndex]) spans[declSpanIndex].tokenType = localTagTokenType(decl);
     if (cur.isOp(":=")) {
       const assignTok = cur.next();
       if (topLevelName === "Reference") {
@@ -1303,6 +1514,7 @@ export function buildDocumentIndex(text: string, ruleSet: RuleSet, blockIndex: B
       }
     }
     skipToSemicolon();
+    return decl;
   }
 
   /** Consumes a `[index[, index...]]` suffix on an array-typed tag
@@ -1382,9 +1594,14 @@ export function buildDocumentIndex(text: string, ruleSet: RuleSet, blockIndex: B
    * workspace block, and hid the `#"Inst".Instruction(...)` call shape
    * entirely.
    */
-  function peekLocalTagHead(offset = 0): { name: string; span: number } | undefined {
+  function peekLocalTagHead(offset = 0): { name: string; span: number; bare?: boolean } | undefined {
     const t0 = cur.peek(offset);
-    if (t0.kind !== "ident" || !t0.text.startsWith("#")) return undefined;
+    if (t0.kind !== "ident") return undefined;
+    if (!t0.text.startsWith("#")) {
+      // The `#`-less spelling of the exact same reference, accepted inside
+      // an SCL body for any tag THIS block declares -- see `isBareLocalTag`.
+      return isBareLocalTag(t0) ? { name: t0.text, span: 1, bare: true } : undefined;
+    }
     if (t0.text.length > 1) return { name: t0.text.slice(1), span: 1 };
     const t1 = cur.peek(offset + 1);
     if (t1.kind === "string" && t1.text.startsWith('"') && tokensAdjacent(t0, t1)) return { name: t1.value ?? "", span: 2 };
@@ -1414,7 +1631,7 @@ export function buildDocumentIndex(text: string, ruleSet: RuleSet, blockIndex: B
       const extName = nameTok.value ?? "";
       const ownerBlock = blockIndex.get(extName);
       const hover = renderExternalBlockHover(extName, ownerBlock);
-      push(nameTok, "variable", [], hover, ownerBlock ? { file: ownerBlock.file, line: ownerBlock.declLine } : undefined);
+      push(nameTok, externalRefTokenType(ownerBlock), [], hover, ownerBlock ? { file: ownerBlock.file, line: ownerBlock.declLine } : undefined);
       return { topLevelName: ownerBlock?.name ?? null, derefTopLevelName: null, ownerBlock, display: nameTok.text, tok: nameTok };
     }
     if (t0.kind === "ident" && t0.text.toLowerCase() === "wire" && tokensAdjacent(t0, cur.peek(1)) && cur.peek(1).kind === "ident" && cur.peek(1).text.startsWith("#")) {
@@ -1433,21 +1650,22 @@ export function buildDocumentIndex(text: string, ruleSet: RuleSet, blockIndex: B
       // reference rather than stopping after the `#`.
       if (localHead.span === 2) headLength += cur.next().text.length;
       const varName = localHead.name;
-      const decl = localDecls.get(varName);
+      const decl = findLocalDecl(varName);
+      const shown = localHead.bare ? varName : `#${varName}`;
       pushRun(
         nameTok,
         headLength,
-        "variable",
+        localTagTokenType(decl),
         [],
-        decl ? `**#${varName}** : \`${decl.typeText}\`` : undefined,
+        decl ? `**${shown}** : \`${decl.typeText}\`` : undefined,
         decl ? { line: decl.line, col: decl.col } : undefined,
-        decl ? memberRenameKey(varName, decl.section) : undefined
+        decl ? memberRenameKey(decl.name, decl.section) : undefined
       );
 
       let ownerBlock: BlockInfo | undefined = decl ? blockIndex.get(decl.leafName ?? "") : undefined;
       let topLevelName: string | null = decl?.topLevelName ?? null;
       let derefTopLevelName: string | null = decl?.derefTopLevelName ?? null;
-      let display = `#${varName}`;
+      let display = shown;
 
       // Dereference operator directly on the base tag: `#myRef^` -- the
       // effective type for pin-checking purposes becomes whatever the
@@ -1686,7 +1904,27 @@ export function buildDocumentIndex(text: string, ruleSet: RuleSet, blockIndex: B
     let referenceListBounds: [number, number][] | undefined;
     let nameListTok: Token | undefined;
 
-    while (!cur.isPunct(")") && !cur.atEnd()) {
+    // Parenthesis depth WITHIN this argument list. An argument's value can
+    // itself be parenthesised (`IN := (#a = #b)`) or contain a nested call
+    // (`IN := ABS(#x)`), and this loop used to end at the FIRST `)` it saw
+    // -- so that inner one closed the whole list and every pin after it was
+    // dropped on the floor: no span, no hover, no Ctrl+click, no pin/type
+    // validation. Tracked rather than modelled, matching this walker's
+    // deliberately tolerant design: only the depth-0 `)` ends the list.
+    let depth = 0;
+
+    while (!cur.atEnd()) {
+      if (depth === 0 && cur.isPunct(")")) break;
+      if (cur.isPunct("(")) {
+        depth++;
+        cur.next();
+        continue;
+      }
+      if (cur.isPunct(")")) {
+        depth--;
+        cur.next();
+        continue;
+      }
       // A pin name is quoted whenever it isn't a legal bare identifier (one
       // starting with a digit, or colliding with a reserved word) -- the same
       // rule that applies to a member name, see `walkOperandRef`. Recognising
@@ -1696,7 +1934,10 @@ export function buildDocumentIndex(text: string, ruleSet: RuleSet, blockIndex: B
       const nameCandidate = cur.peek();
       const isQuotedName = nameCandidate.kind === "string" && nameCandidate.text.startsWith('"');
       const isNamed =
-        (nameCandidate.kind === "ident" || isQuotedName) && cur.peek(1).kind === "op" && (cur.peek(1).text === ":=" || cur.peek(1).text === "=>");
+        depth === 0 &&
+        (nameCandidate.kind === "ident" || isQuotedName) &&
+        cur.peek(1).kind === "op" &&
+        (cur.peek(1).text === ":=" || cur.peek(1).text === "=>");
       let pin: InstructionPin | undefined;
       if (isNamed) {
         const nameTok = cur.next();
@@ -1718,7 +1959,7 @@ export function buildDocumentIndex(text: string, ruleSet: RuleSet, blockIndex: B
         push(nameTok, "parameter", [], hover, definition, pinRenameKey);
         if (!instructionEntry && ownerBlock) checkFbInstancePin(nameTok, pinName, opTok, ownerBlock, callName);
       }
-      if (cur.isIdent("NOT")) push(cur.next(), "keyword", []); // e.g. `in3 := NOT #tag`
+      if (cur.isIdent("NOT")) push(cur.next(), "operator", []); // e.g. `in3 := NOT #tag`
       // value expression -- single operand/literal in every real export seen.
       const operand = walkOperandRef();
       if (operand) {
@@ -1751,16 +1992,28 @@ export function buildDocumentIndex(text: string, ruleSet: RuleSet, blockIndex: B
               reportLiteralMismatch(value, types, severity, `pin '${pin.name}' on '${callName}'`);
             }
           }
-        } else if (!cur.isPunct(",") && !cur.isPunct(")")) {
+          // `(` is deliberately NOT consumed here -- it's an argument value
+          // that OPENS a sub-expression, and the loop top is what counts it
+          // into `depth`. Swallowing it here left the depth counter at 0, so
+          // the sub-expression's own `)` still ended the whole list.
+        } else if (!cur.isPunct(",") && !cur.isPunct(")") && !cur.isPunct("(")) {
+          // Consumed unconditionally -- this is the branch that guarantees
+          // the loop always makes progress, so it must never be skipped.
+          const badTok = cur.next();
           // A real argument value is always a `#tag` (walkOperandRef), a
           // literal (consumeLiteralValue), or `NOT`-prefixed -- never a
           // bare identifier -- confirmed against every real .s7dcl export
           // in the workspace before adding this check, so this is never a
           // legitimate construct the walker just doesn't model yet.
-          const badTok = cur.next();
-          diagnostics.push(
-            formatDiagnostic(ruleSet, "unexpected-token", badTok.line, badTok.col, { tokenText: badTok.text, callName }, { variant: "call-args" })
-          );
+          //
+          // Reported only at depth 0: INSIDE a parenthesised sub-expression
+          // this walker deliberately models no grammar at all (see `depth`),
+          // so an operator or comparison there isn't a defect to report.
+          if (depth === 0) {
+            diagnostics.push(
+              formatDiagnostic(ruleSet, "unexpected-token", badTok.line, badTok.col, { tokenText: badTok.text, callName }, { variant: "call-args" })
+            );
+          }
         }
       }
       if (cur.isPunct(",")) {
@@ -1811,7 +2064,7 @@ export function buildDocumentIndex(text: string, ruleSet: RuleSet, blockIndex: B
       const extName = nameTok.value ?? "";
       const ownerBlock = blockIndex.get(extName);
       const hover = renderExternalBlockHover(extName, ownerBlock);
-      push(nameTok, "variable", [], hover, ownerBlock ? { file: ownerBlock.file, line: ownerBlock.declLine } : undefined);
+      push(nameTok, externalRefTokenType(ownerBlock), [], hover, ownerBlock ? { file: ownerBlock.file, line: ownerBlock.declLine } : undefined);
       walkCallArgs(undefined, extName, ownerBlock);
       return true;
     }
@@ -1829,15 +2082,15 @@ export function buildDocumentIndex(text: string, ruleSet: RuleSet, blockIndex: B
         cur.next(); // .
         const nameTok = cur.next(); // Name
         const instName = callHead.name;
-        const decl = localDecls.get(instName);
+        const decl = findLocalDecl(instName);
         pushRun(
           instTok,
           instLength,
-          "variable",
+          localTagTokenType(decl),
           [],
-          decl ? `**#${instName}** : \`${decl.typeText}\`` : undefined,
+          decl ? `**${callHead.bare ? instName : `#${instName}`}** : \`${decl.typeText}\`` : undefined,
           decl ? { line: decl.line, col: decl.col } : undefined,
-          decl ? memberRenameKey(instName, decl.section) : undefined
+          decl ? memberRenameKey(decl.name, decl.section) : undefined
         );
         const entry = ruleSet.instructions[nameTok.text];
         push(nameTok, "function", entry ? ["defaultLibrary"] : [], entry ? renderInstructionHover(nameTok.text, entry) : `**${nameTok.text}** — unknown instruction (not in instruction-registry)`);
@@ -1860,7 +2113,7 @@ export function buildDocumentIndex(text: string, ruleSet: RuleSet, blockIndex: B
         let instLength = instTok.text.length;
         if (callHead.span === 2) instLength += cur.next().text.length; // the quoted name
         const instName = callHead.name;
-        const decl = localDecls.get(instName);
+        const decl = findLocalDecl(instName);
         let instructionEntry: InstructionEntry | undefined;
         let registryKey: string | undefined;
         if (decl?.topLevelName) {
@@ -1876,11 +2129,13 @@ export function buildDocumentIndex(text: string, ruleSet: RuleSet, blockIndex: B
         const hover = instructionEntry
           ? renderInstructionHover(registryKey!, instructionEntry, true)
           : decl
-          ? `**#${instName}** : \`${decl.typeText}\`${ownerBlock ? ` — calling this ${ownerBlock.blockType.replace(/_/g, " ").toLowerCase()} instance` : ""}`
+          ? `**${callHead.bare ? instName : `#${instName}`}** : \`${decl.typeText}\`${ownerBlock ? ` — calling this ${ownerBlock.blockType.replace(/_/g, " ").toLowerCase()} instance` : ""}`
           : undefined;
-        // Still the instance TAG, not a function name -- tokenType stays
-        // "variable" regardless of whether registry resolution succeeded.
-        pushRun(instTok, instLength, "variable", [], hover, decl ? { line: decl.line, col: decl.col } : undefined, decl ? memberRenameKey(instName, decl.section) : undefined);
+        // Still the instance TAG, not a function name -- so it never gets
+        // the `function` type regardless of whether registry resolution
+        // succeeded; `localTagTokenType` picks `callable` over plain
+        // `variable` for exactly this "callable, owns state" case.
+        pushRun(instTok, instLength, localTagTokenType(decl), [], hover, decl ? { line: decl.line, col: decl.col } : undefined, decl ? memberRenameKey(decl.name, decl.section) : undefined);
         walkCallArgs(instructionEntry, registryKey ?? instName, ownerBlock);
         return true;
       }
@@ -1923,6 +2178,21 @@ export function buildDocumentIndex(text: string, ruleSet: RuleSet, blockIndex: B
     ) {
       const nameTok = cur.next();
       const entry = isSclBody ? findSclInstruction(nameTok.text) : ruleSet.instructions[nameTok.text];
+      // An UNQUOTED workspace block call (`ComputeOffset(...)` rather than
+      // Siemens' `"ComputeOffset"(...)` spelling) -- TIA accepts it whenever
+      // the name is a legal bare identifier, and it's what makes Ctrl+click
+      // land on the callee's own declaration instead of nothing at all.
+      // Only consulted when the name isn't a catalog instruction, so a
+      // real instruction always keeps its registry hover.
+      const target = !entry && isSclBody ? blockIndex.get(nameTok.text) : undefined;
+      if (target) {
+        // Typed exactly like the QUOTED spelling of this same call --
+        // `Helper(...)` and `"Helper"(...)` are one call, so they must read
+        // alike.
+        push(nameTok, externalRefTokenType(target), [], renderExternalBlockHover(nameTok.text, target), { file: target.file, line: target.declLine });
+        walkCallArgs(undefined, nameTok.text, target);
+        return true;
+      }
       push(nameTok, "function", entry ? ["defaultLibrary"] : [], entry ? renderInstructionHover(nameTok.text, entry, isSclBody) : `**${nameTok.text}** — unknown instruction (not in instruction-registry)`);
       walkCallArgs(entry, nameTok.text, undefined);
       return true;
@@ -2151,6 +2421,7 @@ export function buildDocumentIndex(text: string, ruleSet: RuleSet, blockIndex: B
    * grammar, not an error). */
   function walkSclBody(endKeyword: string): void {
     cur.tryIdent("BEGIN");
+    inSclBody = true; // enables the bare, `#`-less local-tag spelling -- see `isBareLocalTag`
     while (!cur.isIdent(endKeyword) && !cur.atEnd()) {
       if (cur.isPunct("{")) {
         classifyPragma();
@@ -2168,6 +2439,7 @@ export function buildDocumentIndex(text: string, ruleSet: RuleSet, blockIndex: B
       if (classifyLiteralOrSkip()) continue; // handles a leading NOT
       cur.next(); // IF/THEN/CASE/FOR/WHILE/REPEAT/operators/etc. -- not modeled, not an error
     }
+    inSclBody = false;
   }
 
   // --- top-level walk -----------------------------------------------
@@ -2179,15 +2451,19 @@ export function buildDocumentIndex(text: string, ruleSet: RuleSet, blockIndex: B
   // deliberately NOT reset between blocks -- declarations are walked
   // strictly in file order and every span already bakes in its resolved
   // value at walk time, so accumulating across blocks is safe (no
-  // forward-reference is possible) and lets providers/completion.ts see
-  // more of the file than just the first block.
+  // forward-reference is possible) and gives hover/definition one flat map
+  // to resolve against. It is NOT a scope, though: `blockScopes` (recorded
+  // below, one entry per declaration) is what says which tags are actually
+  // addressable at a given position.
   classifyPragma(); // file-level attributes
 
   while (!cur.atEnd()) {
     let blockKeyword: string | null = null;
+    let blockKeywordTok: Token | null = null;
     for (const kw of BLOCK_KEYWORDS) {
       if (cur.isIdent(kw)) {
         blockKeyword = kw;
+        blockKeywordTok = cur.peek();
         cur.next();
         break;
       }
@@ -2196,10 +2472,43 @@ export function buildDocumentIndex(text: string, ruleSet: RuleSet, blockIndex: B
     if (blockKeyword) {
       currentBlockType = blockKeyword;
       currentBlockName = null;
+      currentBlockTags = new Map();
+      const scope: BlockScope = {
+        name: null,
+        blockType: blockKeyword,
+        startLine: blockKeywordTok?.line ?? 1,
+        // Provisional: overwritten with the real END_xxx line below. A
+        // declaration still being typed never reaches that, so it keeps the
+        // open-ended value and stays in scope to the end of the file -- which
+        // is what the user is editing inside.
+        endLine: Number.MAX_SAFE_INTEGER,
+        decls: currentBlockTags,
+      };
+      blockScopes.push(scope);
       if (cur.peek().kind === "string" || cur.peek().kind === "ident") {
         const nameTok = cur.next(); // TextMate already colors the string; span pushed below is for rename/hover only
         currentBlockName = nameTok.kind === "string" ? nameTok.value ?? nameTok.text : nameTok.text;
-        push(nameTok, "type", ["declaration"], typeHover(currentBlockName), undefined, `type:${currentBlockName}`);
+        scope.name = currentBlockName;
+        // A declaration reads as whatever a REFERENCE to it reads as: a
+        // DATA_BLOCK is storage, an FB/FC/OB is callable. Sharing one `type`
+        // across all four made a block's own name look unrelated to every
+        // use of it.
+        push(
+          nameTok,
+          blockKeyword === "DATA_BLOCK" ? "dataBlock" : "callable",
+          ["declaration"],
+          typeHover(currentBlockName),
+          undefined,
+          `type:${currentBlockName}`
+        );
+      }
+      // `FUNCTION "Name" : <returnType>` -- the only block header with a
+      // type in it. Walked (rather than skipped as it used to be) so the
+      // return type is coloured like the type it is, by the same
+      // `typeNameSemantics` every other type occurrence goes through.
+      if (blockKeyword === "FUNCTION" && cur.isPunct(":")) {
+        cur.next();
+        walkTypeRef("VAR");
       }
       classifyPragma(); // block-level attributes
 
@@ -2268,13 +2577,24 @@ export function buildDocumentIndex(text: string, ruleSet: RuleSet, blockIndex: B
         }
         cur.next();
       }
+      // The loop exits ON the `END_xxx` token (never consumed here -- the
+      // outer loop's own defensive skip steps past it), or at EOF for a
+      // declaration that isn't closed yet.
+      if (cur.isIdent(endKeyword)) scope.endLine = cur.peek().line;
       continue;
     }
 
     if (cur.isIdent("TYPE")) {
       // .udt / TYPE-block file: `TYPE "Name" VERSION : x.y STRUCT ... END_STRUCT; END_TYPE`.
       cur.next();
-      if (cur.peek().kind === "string" || cur.peek().kind === "ident") cur.next();
+      if (cur.peek().kind === "string" || cur.peek().kind === "ident") {
+        // A UDT's own name, coloured as the `type` every reference to it
+        // already is -- it had no span at all before, so a PLC data type
+        // declaration read as plain text while its uses read as a type.
+        const udtNameTok = cur.next();
+        const udtName = udtNameTok.kind === "string" ? udtNameTok.value ?? udtNameTok.text : udtNameTok.text;
+        push(udtNameTok, "type", ["declaration"], typeHover(udtName));
+      }
       if (cur.isIdent("VERSION")) {
         cur.next();
         while (!cur.isIdent("STRUCT") && !cur.atEnd()) cur.next();
@@ -2294,5 +2614,18 @@ export function buildDocumentIndex(text: string, ruleSet: RuleSet, blockIndex: B
     cur.next();
   }
 
-  return { spans, diagnostics, localDecls };
+  return { spans, diagnostics, localDecls, blockScopes };
+}
+
+/** The block declaration containing 1-based `line`, or undefined when the
+ * position sits between declarations (where no local tag is addressable).
+ * Searched last-first so an unclosed declaration being typed -- whose
+ * `endLine` is open-ended -- doesn't swallow positions inside the closed
+ * blocks before it. */
+export function blockScopeAt(index: DocumentIndex, line: number): BlockScope | undefined {
+  for (let i = index.blockScopes.length - 1; i >= 0; i--) {
+    const scope = index.blockScopes[i];
+    if (line >= scope.startLine && line <= scope.endLine) return scope;
+  }
+  return undefined;
 }

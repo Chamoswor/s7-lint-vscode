@@ -41,6 +41,12 @@ the target CPU and TIA Portal compiler.
   condition types, expression types, conversions, loop constraints, and
   instruction-result usage.
 - Checks literals and resolvable operands against declared or expected types.
+- Accepts the two spellings TIA Portal's own external-source importer accepts:
+  a local reference written without its `#` (`IF Active THEN`,
+  `SecondTick(IN := ..., PT := ...)`) when the block declares that name, and
+  any casing of a type name (`BYTE` and `Byte` are one type). Both are checked
+  exactly like their `#`-prefixed / canonically-cased equivalents — a bare word
+  the block does NOT declare is still an error.
 - Builds a workspace type cache for UDT dependencies, duplicate declarations,
   circular references, array bounds, and nesting limits.
 - Applies declaration-section, reference, pointer, array, and selected
@@ -54,8 +60,39 @@ expression cannot be resolved confidently, the extension avoids guessing.
 - Context-aware completion for declarations, types, instructions, symbols, and
   top-level block templates, including dotted member completion on instance
   DATA_BLOCKs and quoted external block references.
+- Dotted member completion off a local tag, written `#tag.` or bare `tag.`,
+  resolving through workspace FUNCTION_BLOCK/DATA_BLOCK interfaces, UDT fields,
+  system-struct fields (`IEC_TIMER`, `ErrorStruct`, …), inline
+  `STRUCT … END_STRUCT` fields, and instruction-instance pins — chained to any
+  depth across all five, and using SCL's own parameter casing in `.scl`
+  (`#edge.CLK`/`edge.Q`, not the graphical `clk`/`q`).
 - Hover, definition, rename, and semantic-token providers, including instance
-  DATA_BLOCK hovers that resolve to their instruction or FUNCTION_BLOCK type.
+  DATA_BLOCK hovers that resolve to their instruction or FUNCTION_BLOCK type,
+  and two dedicated token types that colour a symbol by what it *is*:
+  `callable` for every project-defined callable — a FUNCTION_BLOCK instance, a
+  TON/R_TRIG/CTU-family instruction instance, and a workspace FB/FC call target
+  (`"Helper"(...)` / `Helper(...)`) — and `dataBlock` for a DATA_BLOCK
+  (`"DB_IPC_Comms"`), at its declaration and every reference alike. Both are
+  distinct from plain data variables and from the Siemens instruction catalog.
+  Keyword-family tokens are split the way most language grammars split them,
+  rather than sharing one colour: control flow (`IF`/`END_IF`/`RETURN`/…),
+  type keywords (`STRUCT`/`END_STRUCT`/`ARRAY`/`OF`/`REF_TO`), logical
+  operators (`NOT`/`AND`/`OR`/`XOR`/`MOD`), and language constants
+  (`TRUE`/`FALSE`, `NULL`/`ZERO`). A pragma value is attribute data, not
+  program data, so `'TRUE'` in `{ S7_Optimized_Access := 'TRUE' }` reads as
+  the string it is rather than as the boolean constant.
+- Type names are coloured by what the type MEANS for the thing being declared,
+  identically at a declaration and at every reference: a Siemens
+  elementary/system type (`Int`, `IEC_TIMER`) as a library type, a
+  project-authored PLC data type (`"KDT_Header"`) as a user type, and an
+  FB/instruction instance type (`"FB_Pump"`, `TON`) as a callable — so a VAR
+  section shows at a glance which members are data and which are instances.
+  Composite declarations stay readable through the `ARRAY`/`OF`/`STRUCT`
+  keywords themselves. A FUNCTION's return type is coloured on the same
+  scheme (it previously had no colour at all).
+  Bare, `#`-less local references and unquoted workspace-block calls resolve
+  for hover, Ctrl+click, and rename exactly like their prefixed/quoted
+  equivalents.
 - Definition and rename support for `.s7res` multilingual resources.
 - Quick fixes for explicit expression conversions and instruction/FUNCTION_BLOCK
   instances, including auto-creating a single-instance DATA_BLOCK when

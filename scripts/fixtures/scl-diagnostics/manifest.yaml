@@ -17,6 +17,14 @@ positive:
 - id: SYN-POS-001
   file: positive/SYN-POS-001-general-valid.scl
   expectedDiagnostics: 0
+- id: SYN-POS-002
+  file: positive/SYN-POS-002-bare-local-references.scl
+  expectedDiagnostics: 0
+  notes: The '#'-less spelling of a local reference (condition, assignment target,
+    instance call, '.member' read, array index, call argument) plus upper-case
+    elementary type names. TIA Portal's importer resolves both against the block's
+    own declarations, so neither is an error - a word that is NOT declared locally
+    still is (see negative/semantic/SEM-REF-010).
 - id: SEM-ARRAY-005
   file: positive/SEM-ARRAY-005-variable-index-expression.scl
   expectedDiagnostics: 0
@@ -354,6 +362,14 @@ negative:
   layer: semantic
   rule: IEC_TIMER is not legal in an Output section.
   registrySource: section-legality.yaml
+  targetPlatform: S7-1200/S7-1500
+- id: SEM-REF-010
+  file: negative/semantic/SEM-REF-010-undeclared-bare-reference.scl
+  severity: error
+  layer: semantic
+  rule: A bare, unprefixed word is only a local reference when the block declares
+    it; otherwise it needs a '#' prefix (local) or quotes (global).
+  registrySource: TIA Portal external-source import behavior
   targetPlatform: S7-1200/S7-1500
 - id: SEM-FOR-001
   file: negative/semantic/SEM-FOR-001-modify-loop-variable.scl

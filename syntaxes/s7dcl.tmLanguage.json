@@ -69,7 +69,7 @@
     },
     "block-keywords": {
       "name": "keyword.control.block.s7dcl",
-      "match": "\\b(FUNCTION_BLOCK|FUNCTION|ORGANIZATION_BLOCK|DATA_BLOCK|END_FUNCTION_BLOCK|END_FUNCTION|END_ORGANIZATION_BLOCK|END_DATA_BLOCK|TYPE|END_TYPE|STRUCT|END_STRUCT|BEGIN)\\b"
+      "match": "\\b(FUNCTION_BLOCK|FUNCTION|ORGANIZATION_BLOCK|DATA_BLOCK|END_FUNCTION_BLOCK|END_FUNCTION|END_ORGANIZATION_BLOCK|END_DATA_BLOCK|TYPE|END_TYPE|BEGIN)\\b"
     },
     "var-keywords": {
       "name": "keyword.control.var.s7dcl",
@@ -82,7 +82,8 @@
     "other-keywords": {
       "patterns": [
         { "name": "keyword.other.version.s7dcl", "match": "\\bVERSION\\b" },
-        { "name": "storage.type.array.s7dcl", "match": "\\b(ARRAY|[Oo][Ff])\\b" }
+        { "name": "storage.type.array.s7dcl", "match": "\\b(ARRAY|[Oo][Ff])\\b" },
+        { "name": "storage.type.struct.s7dcl", "match": "\\b(STRUCT|END_STRUCT|REF_TO)\\b" }
       ]
     },
     "scl-conditional-keywords": {

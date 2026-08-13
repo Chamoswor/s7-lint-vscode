@@ -22,7 +22,7 @@
 // linter/symbolChecks.ts for the checks built on top of this.
 import { BlockIndex, BlockInfo } from "./blockIndex";
 import { isDotAccessLegal, resolveInstanceTypeToInstructionNames, listInstanceMembers } from "./documentIndex";
-import { TypeCacheResult } from "../cache/typeCache";
+import { lookupType, TypeCacheResult } from "../cache/typeCache";
 import { ParsedBlockFile } from "../parser/s7dclParser";
 import {
   TypeRef,
@@ -80,14 +80,31 @@ function systemTypeRefToTypeRef(ref: SystemTypeMemberTypeRef): TypeRef {
   return { kind: "named", name: ref.name ?? "", quoted: false, namespace: null };
 }
 
+/** Case-insensitive name comparison -- SCL identifiers (tags, members,
+ * types) are all case-insensitive; only their DECLARED spelling is
+ * preserved. */
+function nameEq(a: string, b: string): boolean {
+  return a.toLowerCase() === b.toLowerCase();
+}
+
+/** Case-insensitive key lookup into a plain registry record. */
+function findCaseInsensitive<T>(record: Record<string, T>, key: string): T | undefined {
+  const lower = key.toLowerCase();
+  for (const [k, v] of Object.entries(record)) {
+    if (k.toLowerCase() === lower) return v;
+  }
+  return undefined;
+}
+
 /** Every symbol declared anywhere in `block`'s own VAR sections is
  * visible to the whole body -- SCL/FBD don't have nested lexical scoping
- * within one block, so a single flat map covers it. */
+ * within one block, so a single flat map covers it. Keyed lower-case (see
+ * `nameEq`); look up through `lookupLocalDecl`. */
 function buildLocalDeclMap(block: ParsedBlockFile): Map<string, TypeRef> {
   const map = new Map<string, TypeRef>();
   for (const section of block.varSections) {
     for (const member of section.members) {
-      map.set(member.name, member.typeRef);
+      map.set(member.name.toLowerCase(), member.typeRef);
     }
   }
   return map;
@@ -115,7 +132,7 @@ type MemberStepResult =
  * and `"External".member` enforce the exact same rule rather than two
  * copies that could drift apart. */
 function resolveBlockMember(target: BlockInfo, memberName: string): MemberStepResult {
-  const blockVar = target.vars.get(memberName);
+  const blockVar = target.vars.get(memberName) ?? [...target.vars.values()].find((v) => nameEq(v.name, memberName));
   if (!blockVar) return { kind: "not-found" };
   if (!isDotAccessLegal(target.blockType, blockVar.section)) {
     return { kind: "illegal", blockName: target.name, blockType: target.blockType, section: blockVar.section, memberName };
@@ -140,15 +157,19 @@ function resolveMember(
   const lookupName = stepLookupName(currentTypeRef);
   if (!lookupName) return { kind: "not-found" };
 
-  const udt = typeCache.types.get(lookupName);
+  // Type AND member names are both case-insensitive in SCL (`byte`/`BYTE`,
+  // `#hdr.flags`/`#hdr.Flags` -- TIA Portal resolves and imports all of
+  // them), so neither side of this walk may compare with `===` on raw
+  // source spelling. See `TypeCacheResult.canonicalNames`.
+  const udt = lookupType(typeCache, lookupName);
   if (udt && udt.kind === "udt" && udt.members) {
-    const member = udt.members.find((m) => m.name === memberName);
+    const member = udt.members.find((m) => nameEq(m.name, memberName));
     if (member) return { kind: "ok", typeRef: member.typeRef };
   }
 
-  const systemType = ruleSet.systemTypes[lookupName];
+  const systemType = ruleSet.systemTypes[lookupName] ?? findCaseInsensitive(ruleSet.systemTypes, lookupName);
   if (systemType && systemType.category === "system-struct" && systemType.members) {
-    const member = systemType.members.find((m) => m.name === memberName);
+    const member = systemType.members.find((m) => nameEq(m.name, memberName));
     if (member) return { kind: "ok", typeRef: systemTypeRefToTypeRef(member.type) };
   }
 
@@ -233,7 +254,7 @@ export function resolveOperandRef(
     startIndex = 2;
   } else {
     const localDecls = buildLocalDeclMap(block);
-    const localTypeRef = localDecls.get(segments[0]);
+    const localTypeRef = localDecls.get(segments[0].toLowerCase());
     if (!localTypeRef) {
       // A FUNCTION's return value is addressed through the function's OWN
       // name (`#TheFunction := ...`), which is IEC 61131-3's result-variable
@@ -241,7 +262,7 @@ export function resolveOperandRef(
       // as an undeclared tag flagged the one legal way to return a value.
       // Scoped to a FUNCTION: a FUNCTION_BLOCK has no result variable, so a
       // `#SameNameAsTheFB` there really is undeclared.
-      if (block.blockType === "FUNCTION" && segments[0] === block.name) {
+      if (block.blockType === "FUNCTION" && nameEq(segments[0], block.name)) {
         return { kind: "unresolved-path" };
       }
       return { kind: "undeclared" };

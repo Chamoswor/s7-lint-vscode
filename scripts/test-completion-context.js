@@ -101,8 +101,21 @@ function test(name, fn) {
   }
 }
 
+// A CompletionItem's `label` is either a plain string or a
+// CompletionItemLabel ({ label, detail, description }) -- the executable-body
+// lists use the latter so each row can say WHICH plane it came from (local
+// tag / workspace block / TIA instruction) without that note becoming part
+// of the inserted text. Everything here matches on the label TEXT either way.
+function labelText(item) {
+  return typeof item.label === "string" ? item.label : item.label.label;
+}
+
+function labelDescription(item) {
+  return typeof item.label === "string" ? undefined : item.label.description;
+}
+
 function labels(items) {
-  return (items || []).map((i) => i.label);
+  return (items || []).map(labelText);
 }
 
 // --- analysis/sclCompletionContext.ts direct tests -----------------------
@@ -260,6 +273,170 @@ for (const [closer, body] of [
       assert.ok(!dbItems[0].additionalTextEdits, "already an instance -- nothing to create");
     });
   }
+}
+
+// `.member` completion off a LOCAL declaration, for both the `#tag.` and the
+// bare `tag.` spelling TIA's importer accepts, across all four stores a
+// member list can come from: a workspace FUNCTION_BLOCK, a UDT (type cache),
+// a system-struct (system-types.yaml), an inline STRUCT, and an instruction
+// instance (registry pins).
+{
+  const memberBlockIndex = new BlockIndex();
+  memberBlockIndex.rebuild([
+    { path: "inner.scl", text: 'FUNCTION_BLOCK "Inner"\nVAR_INPUT\n  InEnable : Bool;\nEND_VAR\nVAR_OUTPUT\n  OutDone : Bool;\nEND_VAR\nBEGIN\nEND_FUNCTION_BLOCK\n' },
+  ]);
+  const memberTypeCache = buildTypeCache(ruleSet, [
+    {
+      path: "hdr.udt",
+      decls: [
+        {
+          name: "KDT_Header",
+          line: 1,
+          members: [
+            { name: "Version", typeRef: { kind: "named", name: "BYTE", quoted: false, namespace: null }, line: 2 },
+            { name: "Counter", typeRef: { kind: "named", name: "WORD", quoted: false, namespace: null }, line: 3 },
+          ],
+        },
+      ],
+    },
+  ]);
+  const memberProvider = new S7dclCompletionProvider(ruleSet, memberBlockIndex, () => memberTypeCache);
+
+  const VARS = [
+    "FUNCTION_BLOCK \"DotProbe\"",
+    "VAR",
+    "   SeqEdge : R_TRIG;",
+    "   Tick    : TON;",
+    '   Sub     : "Inner";',
+    '   Hdr     : "KDT_Header";',
+    "   Timer   : IEC_TIMER;",
+    "   Local   : STRUCT",
+    "                Alpha : Real;",
+    "                Beta  : Int;",
+    "             END_STRUCT;",
+    "END_VAR",
+    "BEGIN",
+  ].join("\n");
+
+  const labelsAfter = (base, languageId = "s7scl") => {
+    const { document, position } = withCursor(`${VARS}\n   ${base}|\nEND_FUNCTION_BLOCK\n`, languageId);
+    return (memberProvider.provideCompletionItems(document, position) ?? []).map(labelText);
+  };
+
+  test("completion: bare `tag.` offers the same members as `#tag.` for an instruction instance", () => {
+    // The user-facing case: `SeqEdge.Q` must complete exactly like `#SeqEdge.Q`.
+    // SCL parameter casing (CLK/Q), not the graphical registry's clk/q.
+    assert.deepEqual(labelsAfter("SeqEdge."), ["CLK", "Q"]);
+    assert.deepEqual(labelsAfter("#SeqEdge."), ["CLK", "Q"]);
+  });
+
+  test("completion: an instruction instance's own registry pins win over its same-named system-struct layout", () => {
+    // R_TRIG is BOTH an instance-dot instruction and a system-struct whose
+    // members are the raw layout (clk/q). Code addresses it as an instance.
+    assert.deepEqual(labelsAfter("Tick.").sort(), ["ET", "IN", "PT", "Q"]);
+  });
+
+  test("completion: bare `tag.` on a local FUNCTION_BLOCK instance offers its interface", () => {
+    assert.deepEqual(labelsAfter("Sub."), ["InEnable", "OutDone"]);
+    assert.deepEqual(labelsAfter("#Sub."), ["InEnable", "OutDone"]);
+  });
+
+  test("completion: bare `tag.` on a UDT-typed tag offers the UDT's fields", () => {
+    assert.deepEqual(labelsAfter("Hdr."), ["Version", "Counter"]);
+    assert.deepEqual(labelsAfter("#Hdr."), ["Version", "Counter"]);
+  });
+
+  test("completion: bare `tag.` on a system-struct-typed tag offers its members", () => {
+    assert.deepEqual(labelsAfter("Timer.").sort(), ["ET", "IN", "PT", "Q"]);
+  });
+
+  test("completion: bare `tag.` on an inline STRUCT offers the fields declared right there", () => {
+    assert.deepEqual(labelsAfter("Local."), ["Alpha", "Beta"]);
+    assert.deepEqual(labelsAfter("#Local."), ["Alpha", "Beta"]);
+  });
+
+  test("completion: a bare base that isn't declared offers nothing", () => {
+    assert.deepEqual(labelsAfter("NotDeclaredAnywhere."), []);
+  });
+
+  test("completion: the bare `tag.` trigger is SCL-only", () => {
+    // A `.s7dcl` RUNG is full of bare identifiers that are not tag references,
+    // so the `#`-less spelling must not fire there.
+    assert.deepEqual(labelsAfter("Sub.", "s7dcl"), []);
+  });
+}
+
+// SCL scopes tags HARD between block declarations, and an authored `.scl`
+// routinely bundles several in one file. A tag is only addressable inside the
+// block that declares it, so completion must never offer (or dot into) a
+// sibling declaration's tags -- that would complete code TIA rejects, and with
+// two blocks declaring the same name could resolve the member list against the
+// wrong declaration entirely.
+{
+  const scopeSrc = [
+    'FUNCTION_BLOCK "First"',
+    "VAR",
+    "   OnlyInFirst : R_TRIG;",
+    "   Shared      : Int;",
+    "END_VAR",
+    "BEGIN",
+    "   /*FIRST*/",
+    "END_FUNCTION_BLOCK",
+    "",
+    'FUNCTION_BLOCK "Second"',
+    "VAR",
+    "   OnlyInSecond : TON;",
+    "   Shared       : Bool;",
+    "END_VAR",
+    "BEGIN",
+    "   /*SECOND*/",
+    "END_FUNCTION_BLOCK",
+    "",
+  ].join("\n");
+
+  const at = (marker, typed) => {
+    const { document, position } = withCursor(scopeSrc.replace(marker, `${typed}|`), "s7scl");
+    return (provider.provideCompletionItems(document, position) ?? []).map(labelText);
+  };
+
+  test("scope: `#` lists only the enclosing block's own declarations", () => {
+    assert.deepEqual(at("/*FIRST*/", "#"), ["OnlyInFirst", "Shared"]);
+    assert.deepEqual(at("/*SECOND*/", "#"), ["OnlyInSecond", "Shared"]);
+  });
+
+  test("scope: dot access into a SIBLING block's tag offers nothing", () => {
+    // `OnlyInSecond` is declared three lines further down, in another block --
+    // referencing it here is an undeclared identifier, so there is nothing
+    // legal to complete.
+    assert.deepEqual(at("/*FIRST*/", "OnlyInSecond."), []);
+    assert.deepEqual(at("/*FIRST*/", "#OnlyInSecond."), []);
+    assert.deepEqual(at("/*SECOND*/", "OnlyInFirst."), []);
+    assert.deepEqual(at("/*SECOND*/", "#OnlyInFirst."), []);
+  });
+
+  test("scope: dot access into the enclosing block's own tag still works", () => {
+    assert.deepEqual(at("/*FIRST*/", "OnlyInFirst."), ["CLK", "Q"]);
+    assert.deepEqual(at("/*SECOND*/", "OnlyInSecond.").sort(), ["ET", "IN", "PT", "Q"]);
+  });
+
+  test("scope: a name declared in BOTH blocks resolves against the enclosing one", () => {
+    // `Shared` is Int in First and Bool in Second. The flat, whole-file map
+    // can only hold one of them, so the type shown here is the check that
+    // completion really is reading the enclosing block's own declaration.
+    const { document: d1, position: p1 } = withCursor(scopeSrc.replace("/*FIRST*/", "#|"), "s7scl");
+    const { document: d2, position: p2 } = withCursor(scopeSrc.replace("/*SECOND*/", "#|"), "s7scl");
+    const detailOf = (doc, pos) =>
+      (provider.provideCompletionItems(doc, pos) ?? []).find((i) => labelText(i) === "Shared").detail;
+    assert.equal(detailOf(d1, p1), "Int");
+    assert.equal(detailOf(d2, p2), "Bool");
+  });
+
+  test("scope: the bare-identifier list is scoped too, while instructions stay global", () => {
+    const inFirst = at("/*FIRST*/", "Only");
+    assert.ok(inFirst.includes("OnlyInFirst"), "the enclosing block's own tag is offered");
+    assert.ok(!inFirst.includes("OnlyInSecond"), "a sibling block's tag is not");
+    assert.ok(at("/*FIRST*/", "AB").includes("ABS"), "the instruction catalog is file-independent");
+  });
 }
 
 test("context: a real END_FUNCTION_BLOCK still returns to root", () => {
@@ -432,11 +609,64 @@ test("BEGIN / my -> instructions and local symbols ARE suggested", () => {
   assert.ok(items && items.length > 0, "expected instruction suggestions inside BEGIN body");
 });
 
+test("BEGIN, bare identifier -> local tags and FB/timer instances are offered alongside instructions, each labelled with its own plane", () => {
+  const fixture = [
+    'FUNCTION_BLOCK "X"',
+    "VAR",
+    "   myTag : Int;",
+    "   myTimer : TON;",
+    "END_VAR",
+    "BEGIN",
+    "   my|",
+    "END_FUNCTION_BLOCK",
+    "",
+  ].join("\n");
+  const { document, position } = withCursor(fixture, "s7scl");
+  const items = provider.provideCompletionItems(document, position);
+
+  const tag = items.find((i) => labelText(i) === "myTag");
+  const instance = items.find((i) => labelText(i) === "myTimer");
+  const instruction = items.find((i) => labelText(i) === "ABS");
+  assert.ok(tag, "a bare identifier must offer this block's own declared tags -- TIA resolves them without the '#'");
+  assert.ok(instance, "...including instance tags");
+  assert.ok(instruction, "...without dropping the instruction catalog");
+
+  assert.equal(labelDescription(tag), "local tag");
+  assert.equal(labelDescription(instance), "local instance");
+  assert.equal(labelDescription(instruction), "TIA instruction");
+  assert.equal(tag.kind, vscode.CompletionItemKind.Variable);
+  assert.equal(instance.kind, vscode.CompletionItemKind.Class);
+  assert.notEqual(instance.kind, tag.kind, "an instance and a plain variable must be visually distinct from each other");
+  assert.notEqual(instance.kind, instruction.kind, "an instance and a TIA instruction must be visually distinct from each other");
+  assert.ok(tag.sortText < instruction.sortText, "names actually in scope sort above the ~500-entry instruction catalog");
+});
+
+test("'#' trigger -> local instances are still visually distinct from plain tags", () => {
+  const fixture = [
+    'FUNCTION_BLOCK "X"',
+    "VAR",
+    "   myTag : Int;",
+    "   myTimer : TON;",
+    "END_VAR",
+    "BEGIN",
+    "   #|",
+    "END_FUNCTION_BLOCK",
+    "",
+  ].join("\n");
+  const { document, position } = withCursor(fixture, "s7scl");
+  const items = provider.provideCompletionItems(document, position);
+  const tag = items.find((i) => labelText(i) === "myTag");
+  const instance = items.find((i) => labelText(i) === "myTimer");
+  assert.ok(tag && instance);
+  assert.equal(tag.kind, vscode.CompletionItemKind.Variable);
+  assert.equal(instance.kind, vscode.CompletionItemKind.Class);
+});
+
 test("BEGIN, FUNCTION_BLOCK, instance-dot instruction -> BOTH multi-instance and single-instance-DB completions offered, visually distinct", () => {
   const { document, position } = withCursor('FUNCTION_BLOCK "X"\nVAR\nEND_VAR\nBEGIN\n   TONR|\nEND_FUNCTION_BLOCK\n', "s7scl");
   const items = provider.provideCompletionItems(document, position);
-  const multi = items.find((i) => i.label === "TONR (local multi-instance)");
-  const single = items.find((i) => i.label === "TONR (single-instance DB)");
+  const multi = items.find((i) => labelText(i) === "TONR (local multi-instance)");
+  const single = items.find((i) => labelText(i) === "TONR (single-instance DB)");
   assert.ok(multi, "expected a local multi-instance suggestion for TONR inside a FUNCTION_BLOCK");
   assert.ok(single, "expected a single-instance DB suggestion for TONR alongside it");
   assert.equal(multi.kind, vscode.CompletionItemKind.Constructor);
@@ -449,8 +679,8 @@ test("BEGIN, FUNCTION_BLOCK, instance-dot instruction -> BOTH multi-instance and
 test("BEGIN, FUNCTION (no Static section) -> only the single-instance-DB completion is offered", () => {
   const { document, position } = withCursor('FUNCTION "X" : Void\nBEGIN\n   TONR|\nEND_FUNCTION\n', "s7scl");
   const items = provider.provideCompletionItems(document, position);
-  const multi = items.find((i) => i.label === "TONR (local multi-instance)");
-  const single = items.find((i) => i.label === "TONR (single-instance DB)");
+  const multi = items.find((i) => labelText(i) === "TONR (local multi-instance)");
+  const single = items.find((i) => labelText(i) === "TONR (single-instance DB)");
   assert.ok(!multi, "a FUNCTION has no Static section -- must never offer a local multi-instance");
   assert.ok(single, "single-instance DB generation must still be offered inside a FUNCTION");
   assert.equal(single.kind, vscode.CompletionItemKind.Module);

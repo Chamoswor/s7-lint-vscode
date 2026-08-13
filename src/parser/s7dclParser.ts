@@ -40,6 +40,12 @@ export interface OperandRef {
    * parameter), not a local VAR declaration. Omitted (falsy) for the
    * ordinary local `#tag(.member)*` shape. */
   external?: boolean;
+  /** True when this LOCAL reference was written without its `#` -- the
+   * spelling TIA's importer resolves against the block's own declarations
+   * (see `LocalTagNames`). Resolution is identical either way; this exists
+   * only so a diagnostic quotes the reference back the way it was actually
+   * written. */
+  bare?: boolean;
 }
 
 /** An SCL `IF`/`WHILE`/`UNTIL` condition that is ENTIRELY a single,
@@ -50,18 +56,19 @@ export interface OperandRef {
  * general expression-type-inference here, see linter/symbolChecks.ts's
  * `checkSclConditionTypes`.
  *
- * Two shapes: `kind: "tag"` is a real `#tag(.member)*` reference, checked
- * against the symbol table for its resolved type. `kind:
- * "bare-identifier"` is a plain word with neither a `#` prefix (a local
- * reference) nor quotes (a global tag reference, e.g. `"PMP_RUN_FB"` --
- * confirmed real TIA SCL syntax) -- this project has no global PLC tag
- * table to resolve a quoted reference against, so a QUOTED condition is
- * simply never recorded at all (nothing to check), but a bare,
- * unquoted, non-`#` word is invalid operand syntax regardless of
- * whether it's declared anywhere -- always an error, no type resolution
- * needed. Boolean literals (`TRUE`/`FALSE`) and reserved keywords are
- * excluded from this, and a bare word immediately followed by `(` (a
- * function call) is left unrecorded entirely (too complex to verify). */
+ * Two shapes: `kind: "tag"` is a real tag reference -- `#tag(.member)*`, or
+ * the equivalent `#`-less spelling of a tag this block itself declares
+ * (`LocalTagNames`) -- checked against the symbol table for its resolved
+ * type. `kind: "bare-identifier"` is a plain word with neither a `#` prefix
+ * (a local reference), nor quotes (a global tag reference, e.g.
+ * `"PMP_RUN_FB"` -- confirmed real TIA SCL syntax), nor a matching local
+ * declaration -- this project has no global PLC tag table to resolve a
+ * quoted reference against, so a QUOTED condition is simply never recorded
+ * at all (nothing to check), but a word no scope can resolve is invalid
+ * operand syntax -- always an error, no type resolution needed. Boolean
+ * literals (`TRUE`/`FALSE`) and reserved keywords are excluded from this,
+ * and a bare word immediately followed by `(` (a function call) is left
+ * unrecorded entirely (too complex to verify). */
 export type SclConditionCheck =
   | { keyword: "IF" | "WHILE" | "UNTIL"; kind: "tag"; negated: boolean; ref: OperandRef; line: number; col: number }
   | { keyword: "IF" | "WHILE" | "UNTIL"; kind: "bare-identifier"; negated: boolean; name: string; line: number; col: number };
@@ -338,15 +345,23 @@ function parseVarMember(cur: TokenCursor): MemberRef {
  * are real operand references, just two different token shapes for the
  * same syntax. Used instead of a plain `text.startsWith("#")` check so
  * the quoted form isn't silently treated as an empty-name reference. */
-function looksLikeOperandRefStartAt(cur: TokenCursor, offset: number): boolean {
+function looksLikeOperandRefStartAt(cur: TokenCursor, offset: number, localTags?: LocalTagNames): boolean {
   const t0 = cur.peek(offset);
-  if (t0.kind !== "ident" || !t0.text.startsWith("#")) return false;
+  if (t0.kind !== "ident") return false;
+  if (!t0.text.startsWith("#")) {
+    // The `#`-less spelling of a local reference (`LocalTagNames`). NOT
+    // when followed by `(` -- that's a call, `tryParseCall`'s business, and
+    // treating it as an operand here would swallow the callee name.
+    if (!localTagName(t0.text, localTags)) return false;
+    const next = cur.peek(offset + 1);
+    return !(next.kind === "punct" && next.text === "(");
+  }
   if (t0.text.length > 1) return true;
   return cur.peek(offset + 1).kind === "string";
 }
 
-function looksLikeOperandRefStart(cur: TokenCursor): boolean {
-  return looksLikeOperandRefStartAt(cur, 0);
+function looksLikeOperandRefStart(cur: TokenCursor, localTags?: LocalTagNames): boolean {
+  return looksLikeOperandRefStartAt(cur, 0, localTags);
 }
 
 /** True at a bare double-quoted `"Name"` token used as a dot-chain BASE --
@@ -407,11 +422,18 @@ function memberSegmentName(tok: Token): string | null {
   return null;
 }
 
-function peekOperandRefChainAt(cur: TokenCursor, startOffset: number): { ref: OperandRef; length: number } {
+function peekOperandRefChainAt(cur: TokenCursor, startOffset: number, localTags?: LocalTagNames): { ref: OperandRef; length: number } {
   const hashTok = cur.peek(startOffset);
   let offset: number;
   let firstSegment: string;
-  if (hashTok.text === "#") {
+  // The bare, `#`-less spelling of a local reference -- reported with the
+  // tag's DECLARED spelling so resolution and rename grouping don't depend
+  // on how the reference happened to be cased (see `LocalTagNames`).
+  const bareTag = localTagName(hashTok.text, localTags);
+  if (bareTag) {
+    firstSegment = bareTag;
+    offset = startOffset + 1;
+  } else if (hashTok.text === "#") {
     // `#"Quoted Tag"` -- the quoted form, see `looksLikeOperandRefStart`.
     firstSegment = cur.peek(startOffset + 1).value ?? "";
     offset = startOffset + 2;
@@ -429,11 +451,11 @@ function peekOperandRefChainAt(cur: TokenCursor, startOffset: number): { ref: Op
     segments.push(memberName);
     offset += 2;
   }
-  return { ref: { segments, line: hashTok.line, col: hashTok.col }, length: offset - startOffset };
+  return { ref: { segments, line: hashTok.line, col: hashTok.col, ...(bareTag ? { bare: true } : {}) }, length: offset - startOffset };
 }
 
-function peekOperandRefChain(cur: TokenCursor): OperandRef {
-  return peekOperandRefChainAt(cur, 0).ref;
+function peekOperandRefChain(cur: TokenCursor, localTags?: LocalTagNames): OperandRef {
+  return peekOperandRefChainAt(cur, 0, localTags).ref;
 }
 
 /** Builds a `"ExternalName"(.member)*` chain's `OperandRef` by PEEKING
@@ -472,7 +494,13 @@ interface ArgValueResult {
   isSoleCall: boolean;
 }
 
-function collectArgValue(cur: TokenCursor, operandRefsOut: OperandRef[], nestedCallsOut: CallNode[], allowBareInstanceCall: boolean): ArgValueResult {
+function collectArgValue(
+  cur: TokenCursor,
+  operandRefsOut: OperandRef[],
+  nestedCallsOut: CallNode[],
+  allowBareInstanceCall: boolean,
+  localTags?: LocalTagNames
+): ArgValueResult {
   let depth = 0;
   const parts: string[] = [];
   let prevToken: Token | null = null;
@@ -497,7 +525,7 @@ function collectArgValue(cur: TokenCursor, operandRefsOut: OperandRef[], nestedC
     // -- bare `#Instance(`), so this can't misfire on a plain operand or
     // literal; it fully consumes its own matching parens internally, so
     // the `depth` counter here is untouched by it either way.
-    const nested = tryParseCall(cur, allowBareInstanceCall);
+    const nested = tryParseCall(cur, allowBareInstanceCall, localTags);
     if (nested) {
       nestedCallsOut.push(nested);
       parts.push(`<${nested.name || "#" + nested.instancePrefix}(...)>`);
@@ -512,8 +540,8 @@ function collectArgValue(cur: TokenCursor, operandRefsOut: OperandRef[], nestedC
       extraTokens++;
       continue;
     }
-    if (looksLikeOperandRefStart(cur) && !isLiteralOrWireTail(prevToken, t)) {
-      operandRefsOut.push(peekOperandRefChain(cur));
+    if (looksLikeOperandRefStart(cur, localTags) && !isLiteralOrWireTail(prevToken, t)) {
+      operandRefsOut.push(peekOperandRefChain(cur, localTags));
     } else if (looksLikeExternalRefStart(cur) && !isQuotedLocalTagName(prevToken, t) && !isQuotedChainMember(prevToken, t)) {
       operandRefsOut.push(peekExternalRefChain(cur));
     }
@@ -524,7 +552,7 @@ function collectArgValue(cur: TokenCursor, operandRefsOut: OperandRef[], nestedC
   return { text: parts.join(" ").trim(), isSoleCall: nestedCallsOut.length === 1 && extraTokens === 0 };
 }
 
-function parseCallArgs(cur: TokenCursor, allowBareInstanceCall: boolean): PinArg[] {
+function parseCallArgs(cur: TokenCursor, allowBareInstanceCall: boolean, localTags?: LocalTagNames): PinArg[] {
   cur.tryPunct("(");
   const pins: PinArg[] = [];
   while (!cur.isPunct(")") && !cur.atEnd()) {
@@ -543,7 +571,7 @@ function parseCallArgs(cur: TokenCursor, allowBareInstanceCall: boolean): PinArg
     if (isNamed) {
       const nameTok = cur.next();
       const opTok = cur.next();
-      const { text: valueText, isSoleCall } = collectArgValue(cur, operandRefs, nestedCalls, allowBareInstanceCall);
+      const { text: valueText, isSoleCall } = collectArgValue(cur, operandRefs, nestedCalls, allowBareInstanceCall, localTags);
       pins.push({
         name: isQuotedName ? nameTok.value ?? "" : nameTok.text,
         dir: opTok.text === ":=" ? "in" : "out",
@@ -555,7 +583,7 @@ function parseCallArgs(cur: TokenCursor, allowBareInstanceCall: boolean): PinArg
         col: nameTok.col,
       });
     } else {
-      const { text: valueText, isSoleCall } = collectArgValue(cur, operandRefs, nestedCalls, allowBareInstanceCall);
+      const { text: valueText, isSoleCall } = collectArgValue(cur, operandRefs, nestedCalls, allowBareInstanceCall, localTags);
       pins.push({ name: null, dir: null, valueText, operandRefs, nestedCalls, isSoleNestedCall: isSoleCall, line: startTok.line, col: startTok.col });
     }
     if (cur.isPunct(",")) {
@@ -567,7 +595,40 @@ function parseCallArgs(cur: TokenCursor, allowBareInstanceCall: boolean): PinArg
   return pins;
 }
 
-function tryParseCall(cur: TokenCursor, allowBareInstanceCall = false): CallNode | null {
+/**
+ * The block's own declared tag names, lower-cased -> their DECLARED
+ * spelling. Threaded into `parseSclBody` so the SCL-body grammar can accept
+ * TIA Portal's "bare local reference" spelling.
+ *
+ * TIA's external-source importer resolves an unprefixed, unquoted word in a
+ * statement body against the block's own VAR sections and writes the `#`
+ * back itself -- `IF Active THEN` / `SecondTick(IN := ..., PT := ...)` are
+ * both accepted and compile to exactly what `#Active`/`#SecondTick(...)`
+ * compile to (confirmed against a real, importing project source). Only a
+ * word that ISN'T declared here is genuinely invalid operand syntax, which
+ * is why this map -- rather than a blanket "accept any bare word" -- is what
+ * gates the relaxation.
+ */
+export type LocalTagNames = Map<string, string>;
+
+export function collectLocalTagNames(varSections: VarSection[]): LocalTagNames {
+  const names: LocalTagNames = new Map();
+  for (const section of varSections) {
+    for (const member of section.members) names.set(member.name.toLowerCase(), member.name);
+  }
+  return names;
+}
+
+/** The declared spelling of `text` if it names one of this block's own
+ * tags, else undefined. Reserved words never resolve (a tag can't be named
+ * `IF`), so a keyword is never mistaken for a bare tag reference. */
+function localTagName(text: string, localTags: LocalTagNames | undefined): string | undefined {
+  if (!localTags || text.startsWith("#")) return undefined;
+  if (SCL_RESERVED_KEYWORDS.has(text.toUpperCase())) return undefined;
+  return localTags.get(text.toLowerCase());
+}
+
+function tryParseCall(cur: TokenCursor, allowBareInstanceCall = false, localTags?: LocalTagNames): CallNode | null {
   const t0 = cur.peek();
   if (t0.kind === "string" && t0.text.startsWith('"') && cur.peek(1).kind === "punct" && cur.peek(1).text === "(") {
     // Siemens' own external-symbol convention: a bare double-quoted call
@@ -579,7 +640,7 @@ function tryParseCall(cur: TokenCursor, allowBareInstanceCall = false): CallNode
     // BlockIndex by this name, not the instruction registry -- see
     // linter/sclInstructionChecks.ts's `resolveCallEntry`.
     const nameTok = cur.next(); // "Name"
-    const pins = parseCallArgs(cur, allowBareInstanceCall);
+    const pins = parseCallArgs(cur, allowBareInstanceCall, localTags);
     return { name: "", instancePrefix: null, externalName: nameTok.value ?? "", pins, line: nameTok.line, col: nameTok.col };
   }
   if (t0.kind === "ident" && t0.text.startsWith("#")) {
@@ -593,7 +654,7 @@ function tryParseCall(cur: TokenCursor, allowBareInstanceCall = false): CallNode
       const instTok = cur.next(); // #Instance
       cur.next(); // .
       const nameTok = cur.next(); // Name
-      const pins = parseCallArgs(cur, allowBareInstanceCall);
+      const pins = parseCallArgs(cur, allowBareInstanceCall, localTags);
       return { name: nameTok.text, instancePrefix: instTok.text.slice(1), pins, line: instTok.line, col: instTok.col };
     }
     // SCL's `#Instance(...)` call shape -- unlike FBD/LAD, SCL calls a
@@ -606,7 +667,7 @@ function tryParseCall(cur: TokenCursor, allowBareInstanceCall = false): CallNode
     // parsing is unaffected.
     if (allowBareInstanceCall && t1.kind === "punct" && t1.text === "(") {
       const instTok = cur.next(); // #Instance
-      const pins = parseCallArgs(cur, allowBareInstanceCall);
+      const pins = parseCallArgs(cur, allowBareInstanceCall, localTags);
       return { name: "", instancePrefix: instTok.text.slice(1), pins, line: instTok.line, col: instTok.col };
     }
     return null;
@@ -617,8 +678,16 @@ function tryParseCall(cur: TokenCursor, allowBareInstanceCall = false): CallNode
     cur.peek(1).text === "(" &&
     !(allowBareInstanceCall && SCL_RESERVED_KEYWORDS.has(t0.text.toUpperCase()))
   ) {
+    // A bare `Name(...)` whose name is one of THIS block's own declared
+    // tags is the `#`-less spelling of SCL's `#Instance(...)` call shape
+    // (see `LocalTagNames`) -- reported identically, so the instance's own
+    // declared type still supplies which instruction/FB is being called.
+    // Local declarations shadow the instruction catalog here, matching TIA's
+    // own scope resolution.
+    const declaredTag = allowBareInstanceCall ? localTagName(t0.text, localTags) : undefined;
     const nameTok = cur.next();
-    const pins = parseCallArgs(cur, allowBareInstanceCall);
+    const pins = parseCallArgs(cur, allowBareInstanceCall, localTags);
+    if (declaredTag) return { name: "", instancePrefix: declaredTag, pins, line: nameTok.line, col: nameTok.col };
     return { name: nameTok.text, instancePrefix: null, pins, line: nameTok.line, col: nameTok.col };
   }
   return null;
@@ -703,10 +772,19 @@ type SimpleConditionMatch =
  * word is neither). A QUOTED global-tag condition (`IF "SomeTag" THEN`)
  * is deliberately left unrecorded -- this project has no global PLC tag
  * table to resolve it against, so there's nothing to check either way.
- * Returns `null` for anything more complex, a boolean literal
- * (`TRUE`/`FALSE`), a reserved keyword, or a bare word immediately
- * followed by `(` (a function call -- too complex to verify here). */
-function peekSimpleCondition(cur: TokenCursor, startOffset: number, isTerminator: (t: Token) => boolean): SimpleConditionMatch | null {
+ * A bare word that DOES name one of this block's own declared tags
+ * (`localTags`) is the `#`-less spelling TIA's importer accepts -- see
+ * `LocalTagNames` -- so it reports as `kind: "tag"`, `.member` chain and
+ * all, exactly as if the `#` had been typed. Returns `null` for anything
+ * more complex, a boolean literal (`TRUE`/`FALSE`), a reserved keyword, or
+ * a bare word immediately followed by `(` (a function call -- too complex
+ * to verify here). */
+function peekSimpleCondition(
+  cur: TokenCursor,
+  startOffset: number,
+  isTerminator: (t: Token) => boolean,
+  localTags?: LocalTagNames
+): SimpleConditionMatch | null {
   let offset = startOffset;
   let negated = false;
   if (cur.peek(offset).kind === "ident" && cur.peek(offset).text.toUpperCase() === "NOT") {
@@ -714,6 +792,22 @@ function peekSimpleCondition(cur: TokenCursor, startOffset: number, isTerminator
     offset += 1;
   }
   const base = cur.peek(offset);
+
+  /** Consumes `.member` segments from `offset` onward, appending to
+   * `segments` -- identical for the `#tag` and bare-tag spellings. */
+  const takeMemberChain = (segments: string[]): string[] => {
+    for (;;) {
+      const dot = cur.peek(offset);
+      const member = cur.peek(offset + 1);
+      if (dot.kind === "punct" && dot.text === "." && member.kind === "ident") {
+        segments.push(member.text);
+        offset += 2;
+        continue;
+      }
+      break;
+    }
+    return segments;
+  };
 
   if (base.kind === "ident" && base.text.startsWith("#")) {
     let segments: string[];
@@ -725,16 +819,7 @@ function peekSimpleCondition(cur: TokenCursor, startOffset: number, isTerminator
       segments = [base.text.slice(1)];
       offset += 1;
     }
-    for (;;) {
-      const dot = cur.peek(offset);
-      const member = cur.peek(offset + 1);
-      if (dot.kind === "punct" && dot.text === "." && member.kind === "ident") {
-        segments.push(member.text);
-        offset += 2;
-        continue;
-      }
-      break;
-    }
+    takeMemberChain(segments);
     if (!isTerminator(cur.peek(offset))) return null;
     return { kind: "tag", negated, ref: { segments, line: base.line, col: base.col } };
   }
@@ -744,6 +829,13 @@ function peekSimpleCondition(cur: TokenCursor, startOffset: number, isTerminator
     if (BOOLEAN_LITERALS.has(upper) || SCL_RESERVED_KEYWORDS.has(upper)) return null;
     const next = cur.peek(offset + 1);
     if (next.kind === "punct" && next.text === "(") return null; // a function call -- too complex to verify
+    const declaredTag = localTagName(base.text, localTags);
+    if (declaredTag) {
+      offset += 1; // past the base tag itself, so takeMemberChain starts at the first `.`
+      const segments = takeMemberChain([declaredTag]);
+      if (!isTerminator(cur.peek(offset))) return null;
+      return { kind: "tag", negated, ref: { segments, line: base.line, col: base.col, bare: true } };
+    }
     if (!isTerminator(next)) return null;
     return { kind: "bare-identifier", negated, name: base.text, line: base.line, col: base.col };
   }
@@ -872,11 +964,11 @@ function endPosAt(cur: TokenCursor, lastOffset: number): { endLine: number; endC
   return { endLine: t.line, endCol: t.col + t.text.length };
 }
 
-function peekPrimaryAt(cur: TokenCursor, offset: number): PeekExprResult | null {
+function peekPrimaryAt(cur: TokenCursor, offset: number, localTags?: LocalTagNames): PeekExprResult | null {
   const t0 = cur.peek(offset);
 
   if (t0.kind === "punct" && t0.text === "(") {
-    const inner = peekExprAt(cur, offset + 1, 0);
+    const inner = peekExprAt(cur, offset + 1, 0, localTags);
     if (!inner) return null;
     const close = cur.peek(inner.nextOffset);
     if (!(close.kind === "punct" && close.text === ")")) return null;
@@ -904,7 +996,7 @@ function peekPrimaryAt(cur: TokenCursor, offset: number): PeekExprResult | null 
     const args: SclExprNode[] = [];
     if (!(cur.peek(o).kind === "punct" && cur.peek(o).text === ")")) {
       for (;;) {
-        const arg = peekExprAt(cur, o, 0);
+        const arg = peekExprAt(cur, o, 0, localTags);
         if (!arg) return null;
         args.push(arg.node);
         o = arg.nextOffset;
@@ -920,8 +1012,8 @@ function peekPrimaryAt(cur: TokenCursor, offset: number): PeekExprResult | null 
     return { node: { kind: "call", name: t0.text, args, line: t0.line, col: t0.col, ...endPosAt(cur, o - 1) }, nextOffset: o };
   }
 
-  if (looksLikeOperandRefStartAt(cur, offset)) {
-    const { ref, length } = peekOperandRefChainAt(cur, offset);
+  if (looksLikeOperandRefStartAt(cur, offset, localTags)) {
+    const { ref, length } = peekOperandRefChainAt(cur, offset, localTags);
     return {
       node: { kind: "operand", ref, line: t0.line, col: t0.col, ...endPosAt(cur, offset + length - 1) },
       nextOffset: offset + length,
@@ -941,10 +1033,10 @@ function peekPrimaryAt(cur: TokenCursor, offset: number): PeekExprResult | null 
 /** Unary `NOT`/`-`, right-recursive (`NOT NOT #a`, `- - #a` both legal,
  * however unlikely in practice) -- falls through to `peekPrimaryAt` when
  * neither prefix is present. */
-function peekUnaryAt(cur: TokenCursor, offset: number): PeekExprResult | null {
+function peekUnaryAt(cur: TokenCursor, offset: number, localTags?: LocalTagNames): PeekExprResult | null {
   const t0 = cur.peek(offset);
   if (t0.kind === "ident" && t0.text.toUpperCase() === "NOT") {
-    const inner = peekUnaryAt(cur, offset + 1);
+    const inner = peekUnaryAt(cur, offset + 1, localTags);
     if (!inner) return null;
     return {
       node: { kind: "unary", op: "NOT", operand: inner.node, line: t0.line, col: t0.col, endLine: inner.node.endLine, endCol: inner.node.endCol },
@@ -952,14 +1044,14 @@ function peekUnaryAt(cur: TokenCursor, offset: number): PeekExprResult | null {
     };
   }
   if (t0.kind === "punct" && t0.text === "-") {
-    const inner = peekUnaryAt(cur, offset + 1);
+    const inner = peekUnaryAt(cur, offset + 1, localTags);
     if (!inner) return null;
     return {
       node: { kind: "unary", op: "-", operand: inner.node, line: t0.line, col: t0.col, endLine: inner.node.endLine, endCol: inner.node.endCol },
       nextOffset: inner.nextOffset,
     };
   }
-  return peekPrimaryAt(cur, offset);
+  return peekPrimaryAt(cur, offset, localTags);
 }
 
 /** Precedence-climbing binary expression parser, starting `offset` tokens
@@ -970,8 +1062,8 @@ function peekUnaryAt(cur: TokenCursor, offset: number): PeekExprResult | null {
  * operators). `null` propagates from `peekUnaryAt`/a missing right operand
  * -- an unparseable expression aborts the WHOLE parse rather than return a
  * partial tree. */
-function peekExprAt(cur: TokenCursor, offset: number, minPrec: number): PeekExprResult | null {
-  let left = peekUnaryAt(cur, offset);
+function peekExprAt(cur: TokenCursor, offset: number, minPrec: number, localTags?: LocalTagNames): PeekExprResult | null {
+  let left = peekUnaryAt(cur, offset, localTags);
   if (!left) return null;
   for (;;) {
     const opText = peekBinaryOperatorAt(cur, left.nextOffset);
@@ -979,7 +1071,7 @@ function peekExprAt(cur: TokenCursor, offset: number, minPrec: number): PeekExpr
     const prec = BINARY_PRECEDENCE[opText];
     if (prec < minPrec) break;
     const opTok = cur.peek(left.nextOffset);
-    const right = peekExprAt(cur, left.nextOffset + 1, prec + 1);
+    const right = peekExprAt(cur, left.nextOffset + 1, prec + 1, localTags);
     if (!right) return null;
     left = {
       node: {
@@ -1004,7 +1096,8 @@ const isSemicolon = (t: Token) => t.kind === "punct" && t.text === ";";
 
 function parseSclBody(
   cur: TokenCursor,
-  endKeyword: string
+  endKeyword: string,
+  localTags?: LocalTagNames
 ): {
   calls: CallNode[];
   operandRefs: OperandRef[];
@@ -1039,7 +1132,7 @@ function parseSclBody(
     // `:=`/`=>` is consumed inside parseCallArgs, never reaching this outer
     // loop, so a `:=` seen here can only be a plain SCL assignment operator).
     const precededByAssign = prevToken !== null && prevToken.kind === "op" && prevToken.text === ":=";
-    const call = tryParseCall(cur, true);
+    const call = tryParseCall(cur, true, localTags);
     if (call) {
       if (precededByAssign) {
         call.isAssignmentRhs = true;
@@ -1063,7 +1156,7 @@ function parseSclBody(
     // above already applies, for the same reason: `#arr[#i] := ...`'s own
     // `#arr` type isn't what the indexed element actually receives).
     if (precededByAssign && lastTopLevelRef && !lastTopLevelRefIndexed) {
-      const parsed = peekExprAt(cur, 0, 0);
+      const parsed = peekExprAt(cur, 0, 0, localTags);
       if (parsed) {
         const after = cur.peek(parsed.nextOffset);
         if (after.kind === "punct" && after.text === ";") {
@@ -1089,13 +1182,13 @@ function parseSclBody(
     // condition itself exactly as it always has (including adding the
     // condition's own tag to `operandRefs` once the loop reaches it).
     if (cur.isIdent("IF")) {
-      const match = peekSimpleCondition(cur, 1, isThenKeyword);
+      const match = peekSimpleCondition(cur, 1, isThenKeyword, localTags);
       if (match) conditionChecks.push({ keyword: "IF", ...match, line: cur.peek().line, col: cur.peek().col });
     } else if (cur.isIdent("WHILE")) {
-      const match = peekSimpleCondition(cur, 1, isDoKeyword);
+      const match = peekSimpleCondition(cur, 1, isDoKeyword, localTags);
       if (match) conditionChecks.push({ keyword: "WHILE", ...match, line: cur.peek().line, col: cur.peek().col });
     } else if (cur.isIdent("UNTIL")) {
-      const match = peekSimpleCondition(cur, 1, isSemicolon);
+      const match = peekSimpleCondition(cur, 1, isSemicolon, localTags);
       if (match) conditionChecks.push({ keyword: "UNTIL", ...match, line: cur.peek().line, col: cur.peek().col });
     }
 
@@ -1105,8 +1198,8 @@ function parseSclBody(
     // `operandRefs`, see `parseCallArgs` -- this only sees what's left
     // once a call attempt above has failed.)
     const t0 = cur.peek();
-    if (looksLikeOperandRefStart(cur) && !isLiteralOrWireTail(prevToken, t0)) {
-      const ref = peekOperandRefChain(cur);
+    if (looksLikeOperandRefStart(cur, localTags) && !isLiteralOrWireTail(prevToken, t0)) {
+      const ref = peekOperandRefChain(cur, localTags);
       operandRefs.push(ref);
       if (bracketDepth === 0) {
         lastTopLevelRef = ref;
@@ -1217,7 +1310,10 @@ function parseBlockDeclaration(cur: TokenCursor): ParsedBlockFile | null {
 
     if (cur.isIdent("BEGIN")) {
       headerDone = true;
-      const body = parseSclBody(cur, endKeyword);
+      // Every VAR section precedes BEGIN in this grammar, so `varSections`
+      // is already complete here -- which is what lets the body grammar
+      // resolve TIA's bare, `#`-less local references (see `LocalTagNames`).
+      const body = parseSclBody(cur, endKeyword, collectLocalTagNames(varSections));
       sclCalls.push(...body.calls);
       sclOperandRefs.push(...body.operandRefs);
       sclConditionChecks.push(...body.conditionChecks);
