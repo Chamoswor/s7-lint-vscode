@@ -27,12 +27,18 @@ export type RegistryFix =
    * Offered as "mark it optional" because a mis-transcribed `required`
    * flag is the far more common cause than a genuinely wrong call. */
   | { kind: "pin-required"; instructionName: string; pinName: string; scl: boolean }
-  /** A call whose name isn't in the registry at all. `pinNames` are the
-   * NAMED arguments the call site actually passes, usable to seed a
-   * scaffold entry. Only set for a plain `Name(...)` call shape -- an
-   * instance call would also need an `instanceType` and a matching system
-   * type, which can't be derived from a call site. */
-  | { kind: "unknown-instruction"; instructionName: string; scl: boolean; pinNames: string[] };
+  /** A call whose name isn't in the registry at all. Named arguments seed
+   * the scaffold's pins. LAD/FBD instance calls also carry the instance type
+   * resolved from the enclosing block's VAR declaration; without that
+   * declaration the fix is deliberately not offered. */
+  | {
+      kind: "unknown-instruction";
+      instructionName: string;
+      scl: boolean;
+      callShape: "box" | "instance-dot";
+      instanceType?: string;
+      pins: { name: string; dir: "in" | "out" | "inout" }[];
+    };
 
 export interface LintDiagnostic {
   line: number;

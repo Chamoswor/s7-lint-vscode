@@ -13,7 +13,7 @@
 // user happens to have pending in an open editor panel (the caller refuses to
 // run at all while the panel has unsaved changes -- see the provider).
 import { EditorService } from "./editorService";
-import { InstructionPin } from "../rules/types";
+import { CallShape, InstructionPin, PinDir } from "../rules/types";
 
 export interface RegistryEditResult {
   ok: boolean;
@@ -63,8 +63,11 @@ export interface ScaffoldSpec {
   instructionName: string;
   family: string;
   scl: boolean;
+  callShape: Extract<CallShape, "box" | "instance-dot">;
+  /** Required for an instance-dot scaffold; resolved from its VAR declaration. */
+  instanceType?: string;
   /** Named arguments observed at the call site, used to seed the pin list. */
-  pinNames: string[];
+  pins: { name: string; dir: PinDir }[];
 }
 
 /**
@@ -98,13 +101,19 @@ export function scaffoldInstruction(resourcesDir: string, spec: ScaffoldSpec): R
     };
   }
 
-  const created = service.createEntry(targetRelPath, spec.instructionName, { family: spec.family, callShape: "box" });
+  if (spec.callShape === "instance-dot" && !spec.instanceType) {
+    return { ok: false, reason: `Cannot scaffold instance instruction '${spec.instructionName}' without its declared instance type.` };
+  }
+
+  const created = service.createEntry(targetRelPath, spec.instructionName, { family: spec.family, callShape: spec.callShape });
   if (!created.ok || !created.data) return { ok: false, reason: created.reason ?? "Could not create the entry." };
 
-  if (spec.pinNames.length > 0) {
-    const pins: Pick<InstructionPin, "name" | "dir" | "required" | "note">[] = spec.pinNames.map((name) => ({
-      name,
-      dir: "in",
+  if (spec.instanceType) service.updateField(created.data.uid, ["instanceType"], spec.instanceType);
+
+  if (spec.pins.length > 0) {
+    const pins: Pick<InstructionPin, "name" | "dir" | "required" | "note">[] = spec.pins.map((pin) => ({
+      name: pin.name,
+      dir: pin.dir,
       required: false,
       note: "",
     }));
@@ -113,8 +122,8 @@ export function scaffoldInstruction(resourcesDir: string, spec: ScaffoldSpec): R
   service.updateField(
     created.data.uid,
     ["notes"],
-    "Scaffolded from a call site by a Quick Fix. Pin names come from that call; " +
-      "direction, data types and which pins are actually required are NOT verified -- " +
+    "Scaffolded from a call site by a Quick Fix. Pin names and syntactically explicit directions come from that call; " +
+      "data types and which pins are actually required are NOT verified -- " +
       "complete this against Siemens' own documentation and raise `confidence` when you have."
   );
 

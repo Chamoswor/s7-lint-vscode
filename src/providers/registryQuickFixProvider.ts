@@ -50,8 +50,10 @@ export interface MarkPinOptionalArgs {
 
 export interface ScaffoldInstructionArgs {
   instructionName: string;
-  pinNames: string[];
   scl: boolean;
+  callShape: "box" | "instance-dot";
+  instanceType?: string;
+  pins: { name: string; dir: "in" | "out" | "inout" }[];
 }
 
 export class RegistryQuickFixProvider implements vscode.CodeActionProvider {
@@ -81,7 +83,13 @@ export class RegistryQuickFixProvider implements vscode.CodeActionProvider {
       if (fix.kind === "unknown-instruction") {
         const action = new vscode.CodeAction(`Add '${fix.instructionName}' to the instruction registry...`, vscode.CodeActionKind.QuickFix);
         action.diagnostics = [diagnostic];
-        const args: ScaffoldInstructionArgs = { instructionName: fix.instructionName, pinNames: fix.pinNames, scl: fix.scl };
+        const args: ScaffoldInstructionArgs = {
+          instructionName: fix.instructionName,
+          scl: fix.scl,
+          callShape: fix.callShape,
+          instanceType: fix.instanceType,
+          pins: fix.pins,
+        };
         action.command = { command: SCAFFOLD_INSTRUCTION_COMMAND, title: action.title, arguments: [args] };
         actions.push(action);
         continue;

@@ -1446,3 +1446,19 @@ MC_TORQUELIMITING:
   source: "anonymized reference fixture (signature only)"
   result:
     kind: none
+
+ESTOP1:
+  family: technology
+  callShape: instance-dot
+  pins:
+  - {name: e_stop, dir: in, required: false, note: ''}
+  - {name: ack_nec, dir: in, required: false, note: ''}
+  - {name: ack, dir: in, required: false, note: ''}
+  - {name: time_del, dir: in, required: false, note: ''}
+  - {name: q, dir: out, required: false, note: ''}
+  - {name: ack_req, dir: out, required: false, note: ''}
+  - {name: diag, dir: out, required: false, note: ''}
+  template: {shape: none, keys: [], extra: {}}
+  confidence: shape-only
+  instanceType: ESTOP1
+  notes: Scaffolded from a call site by a Quick Fix. Pin names and syntactically explicit directions come from that call; data types and which pins are actually required are NOT verified -- complete this against Siemens' own documentation and raise `confidence` when you have.

@@ -14,25 +14,36 @@
 // already covers (a MISSING required pragma), not a duplicate of it.
 import { BlockIndex } from "../analysis/blockIndex";
 import { CallNode, ParsedBlockFile } from "../parser/s7dclParser";
+import { typeRefTopLevelName } from "../parser/typeRef";
 import { InstructionEntry, RuleSet } from "../rules/types";
 import { formatDiagnostic, LintDiagnostic, LintSeverity, RegistryFix } from "./diagnostics";
 
 export type { LintDiagnostic, LintSeverity } from "./diagnostics";
 
 /** The `unknown-instruction` Quick Fix payload for `call`, or undefined when
- * this call shape can't be scaffolded from its call site alone. Only a plain
- * `Name(...)` box call qualifies: an instance call (`#inst.Name(...)`, a
- * quoted `"Name"(...)` external) additionally needs an `instanceType` and a
- * matching system-types.yaml entry, neither of which a call site reveals --
- * offering a half-filled scaffold there would just trade one diagnostic for
- * another. See `RegistryFix`. */
-export function unknownInstructionFix(call: CallNode, isScl: boolean): RegistryFix | undefined {
-  if (!call.name || call.instancePrefix || call.externalName !== undefined) return undefined;
-  const pinNames: string[] = [];
+ * this call shape can't be scaffolded from the source alone. A plain
+ * `Name(...)` call is always self-contained. A LAD/FBD `#inst.Name(...)`
+ * call additionally qualifies when its VAR declaration supplied the
+ * `instanceType`; the caller passes that resolved type in explicitly. */
+export function unknownInstructionFix(call: CallNode, isScl: boolean, instanceType?: string): RegistryFix | undefined {
+  if (!call.name || call.externalName !== undefined || (call.instancePrefix && !instanceType)) return undefined;
+  const pins: { name: string; dir: "in" | "out" | "inout" }[] = [];
   for (const p of call.pins) {
-    if (p.name && !pinNames.includes(p.name)) pinNames.push(p.name);
+    if (p.name && !pins.some((existing) => existing.name === p.name)) {
+      // SCL's `:=` cannot distinguish input from inout, so retain the old
+      // conservative input placeholder there. LAD/FBD's `=>` does prove an
+      // output and is valuable information when scaffolding an instance.
+      pins.push({ name: p.name, dir: isScl ? "in" : p.dir === "out" ? "out" : "in" });
+    }
   }
-  return { kind: "unknown-instruction", instructionName: call.name, scl: isScl, pinNames };
+  return {
+    kind: "unknown-instruction",
+    instructionName: call.name,
+    scl: isScl,
+    callShape: call.instancePrefix ? "instance-dot" : "box",
+    ...(instanceType ? { instanceType } : {}),
+    pins,
+  };
 }
 
 interface ParsedTemplateValue {
@@ -197,7 +208,7 @@ function checkEnEno(call: CallNode, entry: InstructionEntry, ruleSet: RuleSet): 
  * effective registry name (a free-function name, or the declared type of a
  * bare `#Instance(...)` call) -- see that module for why SCL needs its own
  * name-resolution step in front of this. */
-export function checkCall(call: CallNode, ruleSet: RuleSet, networkLanguage: string | undefined): LintDiagnostic[] {
+export function checkCall(call: CallNode, ruleSet: RuleSet, networkLanguage: string | undefined, instanceType?: string): LintDiagnostic[] {
   const diags: LintDiagnostic[] = [];
   // linter/sclInstructionChecks.ts passes its own SCL_LANGUAGE = "SCL"
   // sentinel as `networkLanguage` for every SCL call (this same param is
@@ -211,7 +222,7 @@ export function checkCall(call: CallNode, ruleSet: RuleSet, networkLanguage: str
   if (!entry) {
     diags.push({
       ...formatDiagnostic(ruleSet, "unknown-instruction", call.line, call.col, { callName: call.name }, { variant: "catalog" }),
-      registryFix: unknownInstructionFix(call, isScl),
+      registryFix: unknownInstructionFix(call, isScl, instanceType),
     });
     return diags;
   }
@@ -314,6 +325,13 @@ export function checkCall(call: CallNode, ruleSet: RuleSet, networkLanguage: str
  */
 export function checkInstructions(block: ParsedBlockFile, ruleSet: RuleSet, blockIndex?: BlockIndex): LintDiagnostic[] {
   const diags: LintDiagnostic[] = [];
+  const instanceTypes = new Map<string, string>();
+  for (const section of block.varSections) {
+    for (const member of section.members) {
+      const typeName = typeRefTopLevelName(member.typeRef);
+      if (typeName) instanceTypes.set(member.name.toLowerCase(), typeName);
+    }
+  }
   for (const network of block.networks) {
     const networkLanguage = network.pragma?.S7_Language;
     for (const rung of network.rungs) {
@@ -322,7 +340,8 @@ export function checkInstructions(block: ParsedBlockFile, ruleSet: RuleSet, bloc
           diags.push(...checkExternalCall(call, ruleSet, blockIndex));
           continue;
         }
-        diags.push(...checkCall(call, ruleSet, networkLanguage));
+        const instanceType = call.instancePrefix ? instanceTypes.get(call.instancePrefix.toLowerCase()) : undefined;
+        diags.push(...checkCall(call, ruleSet, networkLanguage, instanceType));
       }
     }
   }

@@ -449,7 +449,15 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
       });
       if (!family) return;
       applyRegistryEdit(
-        () => scaffoldInstruction(resourcesDir, { instructionName: args.instructionName, family, scl: args.scl, pinNames: args.pinNames }),
+        () =>
+          scaffoldInstruction(resourcesDir, {
+            instructionName: args.instructionName,
+            family,
+            scl: args.scl,
+            callShape: args.callShape,
+            instanceType: args.instanceType,
+            pins: args.pins,
+          }),
         (relPath) =>
           `S7 Lint: scaffolded '${args.instructionName}' in ${relPath} (confidence: shape-only). ` +
           "Complete its pin directions and data types against Siemens' documentation.",
