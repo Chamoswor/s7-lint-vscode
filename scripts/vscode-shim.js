@@ -28,18 +28,52 @@ class Range {
   }
 }
 
+class Uri {
+  constructor(fsPath) {
+    this.fsPath = fsPath;
+  }
+  static file(fsPath) {
+    return new Uri(fsPath);
+  }
+  toString() {
+    return `file:///${this.fsPath.replace(/\\/g, "/")}`;
+  }
+}
+
+class WorkspaceEdit {
+  constructor() {
+    this.edits = [];
+  }
+  replace(uri, range, newText) {
+    this.edits.push({ uri, range, newText });
+  }
+}
+
 const TextEdit = {
   insert: (position, newText) => ({ kind: "insert", position, newText }),
   replace: (range, newText) => ({ kind: "replace", range, newText }),
 };
 
 const EndOfLine = { LF: 1, CRLF: 2 };
+const CompletionTriggerKind = { Invoke: 0, TriggerCharacter: 1, TriggerForIncompleteCompletions: 2 };
+const workspace = {
+  textDocuments: [],
+  findFiles: async () => [],
+  fs: { readFile: async () => Buffer.from("") },
+  getConfiguration: () => ({ get: (_key, fallback) => fallback }),
+};
 
 // -- providers/completion.ts's own additional surface --------------------
 class CompletionItem {
   constructor(label, kind) {
     this.label = label;
     this.kind = kind;
+  }
+}
+class CompletionList {
+  constructor(items = [], isIncomplete = false) {
+    this.items = items;
+    this.isIncomplete = isIncomplete;
   }
 }
 // Real enum values don't matter for a test (nothing compares against a
@@ -69,4 +103,18 @@ class MarkdownString {
   }
 }
 
-module.exports = { Position, Range, TextEdit, EndOfLine, CompletionItem, CompletionItemKind, SnippetString, MarkdownString };
+module.exports = {
+  Position,
+  Range,
+  Uri,
+  WorkspaceEdit,
+  TextEdit,
+  EndOfLine,
+  workspace,
+  CompletionTriggerKind,
+  CompletionItem,
+  CompletionList,
+  CompletionItemKind,
+  SnippetString,
+  MarkdownString,
+};

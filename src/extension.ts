@@ -12,7 +12,7 @@ import { checkSclInstructions } from "./linter/sclInstructionChecks";
 import { checkSclSyntaxStructure } from "./linter/synStructureChecks";
 import { checkIllegalDotAccess, checkSclConditionTypes, checkUndeclaredIdentifiers } from "./linter/symbolChecks";
 import { detectS7dclKind, parseS7dclBlock, parseS7dclFile } from "./parser/s7dclParser";
-import { S7dclCompletionProvider } from "./providers/completion";
+import { S7_COMPLETION_TRIGGER_CHARACTERS, S7dclCompletionProvider } from "./providers/completion";
 import { S7dclDefinitionProvider } from "./providers/definition";
 import { S7dclHoverProvider } from "./providers/hover";
 import { ExprConversionQuickFixProvider } from "./providers/exprConversionQuickFixProvider";
@@ -203,7 +203,11 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
       new S7dclRenameProvider(ruleSet, cacheManager.getBlockIndex(), () => cacheManager.getTypeCacheResult())
     ),
     vscode.languages.registerRenameProvider(S7RES_SELECTOR, new S7ResRenameProvider()),
-    vscode.languages.registerCompletionItemProvider(S7DCL_SELECTOR, new S7dclCompletionProvider(ruleSet, cacheManager.getBlockIndex(), () => cacheManager.getTypeCacheResult()), ".", "#", '"', ":"),
+    vscode.languages.registerCompletionItemProvider(
+      S7DCL_SELECTOR,
+      new S7dclCompletionProvider(ruleSet, cacheManager.getBlockIndex(), () => cacheManager.getTypeCacheResult()),
+      ...S7_COMPLETION_TRIGGER_CHARACTERS
+    ),
     vscode.languages.registerCodeActionsProvider(
       S7DCL_SELECTOR,
       new InstanceQuickFixProvider(ruleSet, cacheManager.getBlockIndex(), () => cacheManager.getTypeCacheResult()),

@@ -2,6 +2,48 @@
 
 All notable changes to S7 Lint for VS Code will be documented in this file.
 
+## 0.1.5
+
+Editor intelligence and SCL semantic-highlighting improvements.
+
+- Reworked semantic highlighting around SCL meaning while retaining ordinary
+  VS Code theme compatibility. UDTs, DATA_BLOCK objects, callable types and
+  instances, interface leaves, structured containers, and indexable values now
+  have distinct, composable semantic roles. Built-in datatypes are grouped into
+  temporal, integer/bit, boolean, floating-point, generic/reference, and text
+  families to reduce visual noise.
+- Added an automatically managed dark/light semantic palette. It activates for
+  supported files, preserves unrelated and manually customized rules, migrates
+  recognized older S7 Lint values, and can be disabled or restored with the
+  **Disable/Install Recommended Semantic Colors** commands. High-contrast
+  themes are left unchanged.
+- Made dotted-access highlighting type-aware. Root DATA_BLOCKs retain their
+  object identity; intermediate UDT/STRUCT members show container capability;
+  arrays and strings show indexable capability; scalar leaves remain leaves.
+  Bit selection such as `Flags.%X0` no longer incorrectly turns the scalar
+  `Flags` value into a container.
+- Added case-insensitive builtin/system-type hover lookup and richer UDT and
+  DATA_BLOCK hovers. Siemens standard/non-optimized layout calculations now
+  report total size, included padding, and every unknown-size dependency that
+  prevents a safe calculation.
+- Added storage details when hovering declaration names in UDT `STRUCT`,
+  DATA_BLOCK `VAR`/outer `STRUCT`, and nested inline `STRUCT` sections. Hovers
+  show declared type, member size, and container-relative offset, including
+  packed `byte.bit` offsets for `BOOL` members and Siemens alignment for arrays,
+  strings, nested structures, and referenced UDTs.
+- Added rename support for workspace UDT declarations and case-insensitive
+  quoted UDT references, including collision and builtin-name safeguards.
+- Fixed datatype completion inside legal `STRUCT ... END_STRUCT` declaration
+  bodies, including partially typed names such as `NewVar : B`, whitespace
+  around `:`, and nested inline structures.
+- Fixed completion requests becoming permanently incomplete/loading when an
+  unfinished declaration produced the same suggestions repeatedly.
+- Fixed global DATA_BLOCK `STRUCT` parsing and member resolution for mixed
+  declaration forms.
+- Preserved explicit `String[n]`/`WString[n]` capacities for layout calculation
+  without weakening the existing rule that rejects sized strings as `REF_TO`
+  targets.
+
 ## 0.1.4
 
 Bug fixes.

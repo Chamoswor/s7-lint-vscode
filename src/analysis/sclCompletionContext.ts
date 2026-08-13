@@ -41,7 +41,7 @@ const TOP_LEVEL_KEYWORDS = ["FUNCTION_BLOCK", "FUNCTION", "ORGANIZATION_BLOCK", 
  * body's own instruction/tag completions. */
 const TOP_LEVEL_CLOSERS = ["END_FUNCTION_BLOCK", "END_FUNCTION", "END_ORGANIZATION_BLOCK", "END_DATA_BLOCK", "END_TYPE"];
 export const VAR_SECTION_KEYWORDS = ["VAR_INPUT", "VAR_OUTPUT", "VAR_IN_OUT", "VAR_TEMP", "VAR_CONSTANT", "VAR"] as const;
-export type SclSection = (typeof VAR_SECTION_KEYWORDS)[number] | "TYPE";
+export type SclSection = (typeof VAR_SECTION_KEYWORDS)[number] | "TYPE" | "DATA_BLOCK";
 
 /** `SclSection` -> resources/type-registry/section-legality.yaml's own
  * section key -- mirrors analysis/documentIndex.ts's own (private, not
@@ -56,6 +56,9 @@ const VAR_SECTION_TO_LEGALITY_SECTION: Record<Exclude<SclSection, "TYPE">, strin
   VAR: "Static",
   VAR_TEMP: "Temp",
   VAR_CONSTANT: "Constant",
+  // A global DB's direct `STRUCT ... END_STRUCT;` body declares the same
+  // persistent/static data shapes as its VAR-form declaration body.
+  DATA_BLOCK: "Static",
 };
 
 export interface SectionTypeLegality {
@@ -355,13 +358,15 @@ export function resolveSclCompletionContext(text: string, offset: number): SclCo
   let functionHeaderStart = -1;
   // Same idea, for a `DATA_BLOCK` opener -- `classifyDataBlockInstanceRef`.
   let dataBlockHeaderStart = -1;
-  // A top-level TYPE owns a STRUCT member list without a VAR/END_VAR wrapper.
-  // Track the OUTERMOST STRUCT separately, including nested inline Struct
-  // types, so its members can reuse the same real member-list classifier as a
-  // VAR section without mistaking the header or post-END_STRUCT area for one.
+  // A top-level TYPE or global DATA_BLOCK can own a direct STRUCT member list
+  // without a VAR/END_VAR wrapper. Track that OUTERMOST STRUCT separately,
+  // including nested inline Struct types, so its members can reuse the same
+  // real member-list classifier as a VAR section without mistaking the header
+  // or post-END_STRUCT area for one.
   let topLevelKind: string | null = null;
-  let typeMemberStart = -1;
-  let typeStructDepth = 0;
+  let topLevelStructSection: "TYPE" | "DATA_BLOCK" | null = null;
+  let topLevelStructMemberStart = -1;
+  let topLevelStructDepth = 0;
 
   for (let i = 0; i < tokens.length; i++) {
     const t = tokens[i];
@@ -375,8 +380,9 @@ export function resolveSclCompletionContext(text: string, offset: number): SclCo
       functionHeaderStart = up === "FUNCTION" ? i + 1 : -1;
       dataBlockHeaderStart = up === "DATA_BLOCK" ? i + 1 : -1;
       topLevelKind = up;
-      typeMemberStart = -1;
-      typeStructDepth = 0;
+      topLevelStructSection = null;
+      topLevelStructMemberStart = -1;
+      topLevelStructDepth = 0;
       continue;
     }
     if (up === "END_VAR") {
@@ -388,19 +394,25 @@ export function resolveSclCompletionContext(text: string, offset: number): SclCo
       // (section-tracking) level -- entirely `classifyDeclaration`/
       // `walkMemberList`'s own concern (they re-walk this same section's
       // tokens from scratch and correctly recurse through it), OR (inside
-      // a top-level TYPE declaration) just the UDT's own struct body --
-      // nothing for the outer section/body/root tracker to do with it
-      // either way; a TYPE's own root-return only happens at `END_TYPE`
-      // below.
-      if (topLevelKind === "TYPE" && typeStructDepth > 0) {
-        typeStructDepth--;
-        if (typeStructDepth === 0) typeMemberStart = -1;
+      // a top-level TYPE or global DATA_BLOCK declaration) just that
+      // construct's direct struct body -- nothing for the outer section/
+      // body/root tracker to do with it either way; root-return only happens
+      // at the enclosing top-level END_* keyword below.
+      if (topLevelStructDepth > 0) {
+        topLevelStructDepth--;
+        if (topLevelStructDepth === 0) {
+          topLevelStructSection = null;
+          topLevelStructMemberStart = -1;
+        }
       }
       continue;
     }
-    if (up === "STRUCT" && topLevelKind === "TYPE") {
-      if (typeStructDepth === 0) typeMemberStart = i + 1;
-      typeStructDepth++;
+    if (up === "STRUCT" && (topLevelKind === "TYPE" || topLevelKind === "DATA_BLOCK")) {
+      if (topLevelStructDepth === 0) {
+        topLevelStructSection = topLevelKind;
+        topLevelStructMemberStart = i + 1;
+      }
+      topLevelStructDepth++;
       continue;
     }
     if (up === "BEGIN") {
@@ -409,8 +421,9 @@ export function resolveSclCompletionContext(text: string, offset: number): SclCo
       functionHeaderStart = -1;
       dataBlockHeaderStart = -1;
       topLevelKind = null;
-      typeMemberStart = -1;
-      typeStructDepth = 0;
+      topLevelStructSection = null;
+      topLevelStructMemberStart = -1;
+      topLevelStructDepth = 0;
       continue;
     }
     if (TOP_LEVEL_CLOSERS.includes(up)) {
@@ -423,6 +436,10 @@ export function resolveSclCompletionContext(text: string, offset: number): SclCo
       atRoot = true;
       functionHeaderStart = -1;
       dataBlockHeaderStart = -1;
+      topLevelKind = null;
+      topLevelStructSection = null;
+      topLevelStructMemberStart = -1;
+      topLevelStructDepth = 0;
       continue;
     }
     if (up === "VAR" && tokens[i + 1]?.kind === "ident" && tokens[i + 1].text.toUpperCase() === "CONSTANT") {
@@ -440,7 +457,9 @@ export function resolveSclCompletionContext(text: string, offset: number): SclCo
 
   if (inBody) return { kind: "executable" };
   if (section) return { kind: "declaration", section, decl: classifyDeclaration(tokens.slice(sectionStart)) };
-  if (typeMemberStart >= 0) return { kind: "declaration", section: "TYPE", decl: classifyDeclaration(tokens.slice(typeMemberStart)) };
+  if (topLevelStructSection && topLevelStructMemberStart >= 0) {
+    return { kind: "declaration", section: topLevelStructSection, decl: classifyDeclaration(tokens.slice(topLevelStructMemberStart)) };
+  }
   if (functionHeaderStart >= 0) {
     const returnType = classifyFunctionReturnType(tokens.slice(functionHeaderStart));
     if (returnType) return { kind: "function-return-type", ...returnType };

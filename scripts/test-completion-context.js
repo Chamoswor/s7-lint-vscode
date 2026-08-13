@@ -23,7 +23,7 @@ const { loadRuleSet } = require("../out/rules/loadRules");
 const { BlockIndex } = require("../out/analysis/blockIndex");
 const { buildTypeCache } = require("../out/cache/typeCache");
 const { resolveSclCompletionContext } = require("../out/analysis/sclCompletionContext");
-const { S7dclCompletionProvider } = require("../out/providers/completion");
+const { S7_COMPLETION_TRIGGER_CHARACTERS, S7dclCompletionProvider } = require("../out/providers/completion");
 
 const ruleSet = loadRuleSet(path.join(__dirname, "..", "resources"));
 const blockIndex = new BlockIndex();
@@ -115,7 +115,7 @@ function labelDescription(item) {
 }
 
 function labels(items) {
-  return (items || []).map(labelText);
+  return (items?.items ?? items ?? []).map(labelText);
 }
 
 // --- analysis/sclCompletionContext.ts direct tests -----------------------
@@ -145,6 +145,15 @@ test("context: empty type slot inside a top-level TYPE Struct is a TYPE declarat
   const ctx = resolveSclCompletionContext(text, text.length);
   assert.equal(ctx.kind, "declaration");
   assert.equal(ctx.section, "TYPE");
+  assert.equal(ctx.decl.kind, "bare-type");
+  assert.equal(ctx.decl.identStart, null);
+});
+
+test("context: empty type slot inside a DATA_BLOCK Struct is a DATA_BLOCK declaration", () => {
+  const text = 'DATA_BLOCK "Store"\nVERSION : 0.1\nNON_RETAIN\nSTRUCT\n   Member:';
+  const ctx = resolveSclCompletionContext(text, text.length);
+  assert.equal(ctx.kind, "declaration");
+  assert.equal(ctx.section, "DATA_BLOCK");
   assert.equal(ctx.decl.kind, "bare-type");
   assert.equal(ctx.decl.identStart, null);
 });
@@ -191,10 +200,122 @@ test("completion: empty type slot inside a top-level TYPE Struct suggests conser
   assert.ok(!result.includes("Variant"), "TYPE members must not borrow unverified VAR-section-only additions");
 });
 
+test("completion: an empty TYPE member slot requests refresh as its partial datatype is typed", () => {
+  const fixture = ['TYPE "Base"', "VERSION : 0.1", "", "   STRUCT", "      NewVar:|", "   END_STRUCT;", "", "END_TYPE", ""].join("\n");
+  const { document, position } = withCursor(fixture, "s7scl");
+  const result = provider.provideCompletionItems(document, position);
+  assert.ok(result instanceof vscode.CompletionList);
+  assert.equal(result.isIncomplete, true);
+  assert.ok(labels(result).includes("Bool"));
+});
+
+test("completion: an unchanged incomplete-list retrigger becomes final instead of loading forever", () => {
+  const fixture = [
+    'FUNCTION_BLOCK "ExampleFB"',
+    "VAR",
+    '   TestVar : "Base";',
+    "   Test:|",
+    "END_VAR",
+    "VAR_TEMP",
+    "END_VAR",
+    "BEGIN",
+    "END_FUNCTION_BLOCK",
+    "",
+  ].join("\n");
+  const { document, position } = withCursor(fixture, "s7scl");
+  const result = provider.provideCompletionItems(document, position, undefined, {
+    triggerKind: vscode.CompletionTriggerKind.TriggerForIncompleteCompletions,
+  });
+  assert.ok(Array.isArray(result), "the unchanged retrigger must return a final array, not another incomplete CompletionList");
+  assert.ok(labels(result).includes("Bool"));
+});
+
+test("completion: partial 'B' inside a complete TYPE Struct suggests and replaces matching datatypes", () => {
+  const fixture = [
+    'TYPE "Base"',
+    "VERSION : 0.1",
+    "",
+    "   STRUCT",
+    "      Test_Bool : Bool;",
+    "      Test_Word : Word;",
+    '      TestNested : "Nested";',
+    "      NewVar:B|",
+    "   END_STRUCT;",
+    "",
+    "END_TYPE",
+    "",
+  ].join("\n");
+  const { document, position } = withCursor(fixture, "s7scl");
+  const items = provider.provideCompletionItems(document, position);
+  assert.ok(Array.isArray(items), "a refreshed partial-type result should be a normal complete list");
+  const result = labels(items);
+  for (const expected of ["Bool", "Byte", "Word"]) assert.ok(result.includes(expected), `expected ${expected}`);
+  const bool = items.find((item) => labelText(item) === "Bool");
+  assert.equal(document.getText(bool.range), "B");
+  const accepted = simulateAccept(document, bool);
+  assert.ok(accepted.includes("NewVar: Bool;"), accepted);
+});
+
+test("completion: spaced `NewVar : B` inside TYPE suggests and replaces matching datatypes", () => {
+  const fixture = ['TYPE "Base"', "VERSION : 0.1", "", "   STRUCT", "      NewVar : B|", "   END_STRUCT;", "", "END_TYPE", ""].join("\n");
+  const { document, position } = withCursor(fixture, "s7scl");
+  const items = provider.provideCompletionItems(document, position);
+  assert.ok(Array.isArray(items));
+  const bool = items.find((item) => labelText(item) === "Bool");
+  assert.ok(bool, "expected Bool for the spaced declaration form");
+  assert.equal(document.getText(bool.range), "B");
+  assert.ok(simulateAccept(document, bool).includes("NewVar : Bool;"));
+});
+
+test("completion: the space after a declaration colon actively reopens datatype suggestions", () => {
+  assert.ok(S7_COMPLETION_TRIGGER_CHARACTERS.includes(" "));
+  const fixture = ['TYPE "Base"', "VERSION : 0.1", "", "   STRUCT", "      NewVar : |", "   END_STRUCT;", "", "END_TYPE", ""].join("\n");
+  const { document, position } = withCursor(fixture, "s7scl");
+  const result = provider.provideCompletionItems(document, position, undefined, {
+    triggerKind: vscode.CompletionTriggerKind.TriggerCharacter,
+    triggerCharacter: " ",
+  });
+  assert.ok(result instanceof vscode.CompletionList);
+  assert.equal(result.isIncomplete, true);
+  assert.ok(labels(result).includes("Bool"));
+});
+
+test("completion: an ordinary source-root space does not open top-level suggestions", () => {
+  const { document, position } = withCursor(" |", "s7scl");
+  const result = provider.provideCompletionItems(document, position, undefined, {
+    triggerKind: vscode.CompletionTriggerKind.TriggerCharacter,
+    triggerCharacter: " ",
+  });
+  assert.equal(result, undefined);
+});
+
 test("completion: quoted type slot inside a top-level TYPE Struct suggests workspace UDTs", () => {
   const fixture = ['TYPE "MyUDT"', "VERSION : 0.1", "", "   STRUCT", '      Member: "|', "   END_STRUCT;", "", "END_TYPE", ""].join("\n");
   const { document, position } = withCursor(fixture, "s7scl");
   assert.deepEqual(labels(provider.provideCompletionItems(document, position)), ["UserDefined"]);
+});
+
+test("completion: empty type slot inside a complete DATA_BLOCK Struct suggests legal datatypes", () => {
+  const fixture = [
+    'DATA_BLOCK "Store"',
+    "VERSION : 0.1",
+    "NON_RETAIN",
+    "   STRUCT",
+    "      Member:| // completion is requested before this comment",
+    "   END_STRUCT;",
+    "BEGIN",
+    "END_DATA_BLOCK",
+    "",
+  ].join("\n");
+  const { document, position } = withCursor(fixture, "s7scl");
+  const result = labels(provider.provideCompletionItems(document, position));
+  for (const expected of ["Bool", "Int", "Array", "Struct"]) assert.ok(result.includes(expected), `expected ${expected}`);
+});
+
+test("context: a naked Struct in a FUNCTION_BLOCK header is not a legal declaration list", () => {
+  const text = 'FUNCTION_BLOCK "X"\nVERSION : 0.1\nSTRUCT\n   Member:';
+  const ctx = resolveSclCompletionContext(text, text.length);
+  assert.equal(ctx.kind, "none");
 });
 
 test("context: after 'of', bare partial -> bare-type, afterArrayOf true", () => {

@@ -16,6 +16,12 @@ import { TypeRef, typeRefDereferencedTopLevelName, typeRefToText, typeRefTopLeve
 import { anyDataTypeCodeNames, classifyLiteral, detectLiteralShape, expandPinDataTypes, resolveTypeAlias } from "../rules/literalTypes";
 import { BaseTypeEntry, InstructionEntry, InstructionPin, RuleSet, SystemTypeEntry, SystemTypeMemberTypeRef } from "../rules/types";
 import { BlockIndex, BlockInfo } from "./blockIndex";
+import {
+  calculateStandardMemberLayout,
+  calculateStandardUdtLayout,
+  isStandardTypeLayout,
+  TypeLayoutResult,
+} from "./typeLayout";
 
 /** Semantic families for elementary datatype occurrences. Keys include the
  * canonical base-types.yaml names and the aliases users can write in SCL.
@@ -103,6 +109,10 @@ export interface IdentifierSpan {
    *   `type:<blockName>`          -- a FUNCTION_BLOCK/FUNCTION/
    *                                 ORGANIZATION_BLOCK/DATA_BLOCK's own
    *                                 declared name -- workspace-wide.
+   *   `udt:<typeName>`            -- a PLC data type's own TYPE declaration
+   *                                 and every resolved reference to it --
+   *                                 workspace-wide and case-insensitive via
+   *                                 TypeCacheResult's canonical spelling.
    *   `mlc:<id>\0<s7resPath>`     -- an S7_MLC-family pragma's ID --
    *                                 renaming touches this doc's pragma
    *                                 value(s) AND the sibling `.s7res`. A
@@ -196,6 +206,8 @@ export interface LocalDecl {
    * here as the walk passes them. `undefined` for every other type.
    * Consumed by providers/completion.ts's `#tag.`/`tag.` member list. */
   structMembers?: LocalDecl[];
+  /** Span created for the declaration name before its type is walked. */
+  declarationSpanIndex?: number;
 }
 
 const VAR_SECTION_KEYWORDS = ["VAR_INPUT", "VAR_OUTPUT", "VAR_IN_OUT", "VAR_TEMP", "VAR_CONSTANT", "VAR"];
@@ -309,6 +321,14 @@ function renderSystemTypeHover(name: string, entry: SystemTypeEntry): string {
     for (const m of entry.members) lines.push(`| ${m.name} | ${renderMemberTypeRef(m.type)} |`);
   }
   return lines.join("\n");
+}
+
+function formatStorageBits(bits: number): string {
+  if (bits % 8 === 0) {
+    const bytes = bits / 8;
+    return `${bytes} byte${bytes === 1 ? "" : "s"}`;
+  }
+  return `${bits} bit${bits === 1 ? "" : "s"}`;
 }
 
 /** Finds the `]` matching a `[` at lookahead offset `openIdx` (i.e.
@@ -674,16 +694,23 @@ export function buildDocumentIndex(
   // Both sets are lower-cased because SCL type names are case-insensitive.
   const primitiveTypeNames = new Set<string>();
   const baseTypesByLowerName = new Map<string, (typeof ruleSet.baseTypes)[string]>();
+  const baseTypeCanonicalNames = new Map<string, string>();
   for (const [name, entry] of Object.entries(ruleSet.baseTypes)) {
     primitiveTypeNames.add(name.toLowerCase());
     baseTypesByLowerName.set(name.toLowerCase(), entry);
+    baseTypeCanonicalNames.set(name.toLowerCase(), name);
     for (const alias of (entry as { aliases?: string[] }).aliases ?? []) {
       primitiveTypeNames.add(alias.toLowerCase());
       baseTypesByLowerName.set(alias.toLowerCase(), entry);
+      baseTypeCanonicalNames.set(alias.toLowerCase(), name);
     }
   }
   const systemTypeNames = new Set<string>();
-  for (const name of Object.keys(ruleSet.systemTypes)) systemTypeNames.add(name.toLowerCase());
+  const systemTypeCanonicalNames = new Map<string, string>();
+  for (const name of Object.keys(ruleSet.systemTypes)) {
+    systemTypeNames.add(name.toLowerCase());
+    systemTypeCanonicalNames.set(name.toLowerCase(), name);
+  }
   for (const name of ruleSet.opaqueSectionNames) systemTypeNames.add(name.toLowerCase());
 
   // True only while `walkSclBody` is walking a `BEGIN ... END_xxx` SCL
@@ -946,21 +973,21 @@ export function buildDocumentIndex(
    * own "no length declaration on the reference itself" note) -- a
    * reference is always declared `REF_TO String`, unsized. Called from the
    * `REF_TO` branch of `walkTypeRef` AFTER recursing into the inner type,
-   * so `inner` already reflects what's actually being referenced. The
-   * sized-string case additionally consumes the leftover `[n]` length
-   * tokens `walkTypeRef`'s own leaf-ident branch never consumes (see that
-   * branch's own comment) -- otherwise they'd dangle in the token stream
-   * for `skipToSemicolon` to silently absorb. */
-  function checkReferenceTargetType(refTok: Token, inner: { topLevelName: string | null }): void {
+   * so `inner` already reflects what's actually being referenced. Sized
+   * String/WString declarations retain their capacity in the TypeRef for
+   * layout calculation, so inspect that parsed value instead of looking
+   * for still-unconsumed `[n]` tokens. */
+  function checkReferenceTargetType(refTok: Token, inner: { topLevelName: string | null; typeRef: TypeRef | null }): void {
     if (inner.topLevelName && ruleSet.references.referenceableTargets.bitStrings.disallowed.includes(inner.topLevelName)) {
       diagnostics.push(formatDiagnostic(ruleSet, "reference-illegal-target-type", refTok.line, refTok.col, { targetType: inner.topLevelName }, { variant: "not-referenceable" }));
       return;
     }
-    if ((inner.topLevelName === "String" || inner.topLevelName === "WString") && cur.isPunct("[")) {
+    if (
+      (inner.topLevelName === "String" || inner.topLevelName === "WString") &&
+      inner.typeRef?.kind === "named" &&
+      inner.typeRef.length !== undefined
+    ) {
       diagnostics.push(formatDiagnostic(ruleSet, "reference-illegal-target-type", refTok.line, refTok.col, { targetType: inner.topLevelName }, { variant: "sized-string" }));
-      cur.next(); // '['
-      while (!cur.isPunct("]") && !cur.atEnd()) cur.next();
-      cur.tryPunct("]");
     }
   }
 
@@ -1266,11 +1293,171 @@ export function buildDocumentIndex(
     spans.push({ line: startTok.line, startCol: startTok.col, length, tokenType, tokenModifiers, hoverMarkdown, definition, renameKey });
   }
 
+  function hoverTitle(symbol: string, kind: string): string[] {
+    return [`### \`${symbol}\``, `_${kind}_`];
+  }
+
+  function hoverSource(file: string): string[] {
+    return ["---", `**Source**  `, `\`${file}\``];
+  }
+
+  function standardLayoutLines(layout: TypeLayoutResult, layoutName: string): string[] {
+    if (!isStandardTypeLayout(layout)) {
+      const lines = ["**Storage**", "", `> Size unavailable for the **${layoutName}** layout.`];
+      if (layout.unknownSizes.length === 0) return [...lines, "", `_${layout.unavailable}_`];
+      const count = layout.unknownSizes.length;
+      lines.push(
+        "",
+        `${count} unknown-size dependenc${count === 1 ? "y" : "ies"} prevent${count === 1 ? "s" : ""} a complete calculation:`,
+        ""
+      );
+      for (const issue of layout.unknownSizes) {
+        const path = issue.path.reduce((rendered, segment) => {
+          if (segment === "[]") return `${rendered}[]`;
+          return rendered.length > 0 ? `${rendered}.${segment}` : segment;
+        }, "");
+        lines.push(`- \`${path || "type itself"}\` — \`${issue.typeName}\`  `, `  ${issue.reason}`);
+      }
+      return lines;
+    }
+    const padding = layout.paddingBits === undefined ? "included; not itemized" : formatStorageBits(layout.paddingBits);
+    return [
+      "**Storage**",
+      "",
+      `- **Layout:** ${layoutName}`,
+      `- **Size:** \`${formatStorageBits(layout.sizeBits)}\``,
+      `- **Padding included:** \`${padding}\``,
+    ];
+  }
+
+  function formatMemberOffset(offsetBits: number, sizeBits: number): string {
+    const byte = Math.floor(offsetBits / 8);
+    const bit = offsetBits % 8;
+    return sizeBits === 1 || bit !== 0 ? `\`${byte}.${bit}\` (byte.bit)` : `byte \`${byte}\``;
+  }
+
+  function memberUnavailableReason(layout: TypeLayoutResult): string | undefined {
+    if (isStandardTypeLayout(layout)) return undefined;
+    return layout.unknownSizes
+      .map((issue) => {
+        const nestedPath = issue.path.reduce(
+          (rendered, segment) => (segment === "[]" ? `${rendered}[]` : rendered ? `${rendered}.${segment}` : segment),
+          ""
+        );
+        return `${nestedPath ? `\`${nestedPath}\` → ` : ""}\`${issue.typeName}\`: ${issue.reason}`;
+      })
+      .join("; ");
+  }
+
+  function memberStorageHover(
+    decl: LocalDecl,
+    placement: NonNullable<TypeLayoutResult["memberLayouts"]>[number],
+    ownerKind: string,
+    layoutName: string,
+    caveat?: string
+  ): string {
+    const lines = [...hoverTitle(decl.name, ownerKind), "", `**Type:** \`${typeRefToText(decl.typeRef)}\``, "", "**Storage**", ""];
+    if (isStandardTypeLayout(placement.layout)) {
+      lines.push(`- **Size:** \`${formatStorageBits(placement.layout.sizeBits)}\``);
+      if (placement.offsetBits === undefined) {
+        lines.push("- **Offset:** _unavailable_");
+        lines.push("", "> The offset depends on an earlier member whose size is unknown.");
+      } else {
+        lines.push(`- **Offset:** ${formatMemberOffset(placement.offsetBits, placement.layout.sizeBits)}`);
+      }
+    } else {
+      lines.push("- **Size:** _unavailable_", "- **Offset:** _unavailable_");
+      const reason = memberUnavailableReason(placement.layout);
+      if (reason) lines.push("", `> ${reason}`);
+    }
+    lines.push(`- **Layout:** ${layoutName}`);
+    if (caveat) lines.push("", `> ${caveat}`);
+    return lines.join("\n");
+  }
+
+  function applyMemberStorageHovers(
+    declarations: LocalDecl[],
+    ownerKind: string,
+    layoutName: string,
+    caveat?: string
+  ): void {
+    if (declarations.length === 0) return;
+    const result = calculateStandardMemberLayout(
+      declarations.map((decl) => ({ name: decl.name, typeRef: decl.typeRef, line: decl.line })),
+      ruleSet,
+      typeCache
+    );
+    const placements = result.memberLayouts;
+    if (!placements) return;
+    for (let i = 0; i < declarations.length && i < placements.length; i++) {
+      const spanIndex = declarations[i].declarationSpanIndex;
+      if (spanIndex === undefined || !spans[spanIndex]) continue;
+      spans[spanIndex].hoverMarkdown = memberStorageHover(declarations[i], placements[i], ownerKind, layoutName, caveat);
+    }
+  }
+
+  function dataBlockLayout(block: BlockInfo): TypeLayoutResult {
+    // A global DB owns its declarations directly. An empty quoted instanceOf
+    // can instead be a DB based on a PLC data type; FB/instruction instance
+    // DB sizes include compiler/runtime storage that this source index cannot
+    // derive safely.
+    if (block.vars.size > 0 || !block.instanceOf) {
+      return calculateStandardMemberLayout(
+        [...block.vars.values()].map((variable) => variable.member),
+        ruleSet,
+        typeCache
+      );
+    }
+    if (block.instanceOf.quoted) {
+      const typeInfo = typeCache ? lookupType(typeCache, block.instanceOf.name) : undefined;
+      if (typeInfo?.kind === "udt") return calculateStandardUdtLayout(typeInfo.name, ruleSet, typeCache);
+    }
+    return { unavailable: "instance DB size depends on compiler-generated instance storage", unknownSizes: [] };
+  }
+
+  function dataBlockSizeLines(block: BlockInfo): string[] {
+    if (block.blockType !== "DATA_BLOCK") return [];
+    const layout = dataBlockLayout(block);
+    if (block.optimizedAccess === false) {
+      return standardLayoutLines(layout, "Siemens standard / non-optimized");
+    }
+    const lines = standardLayoutLines(layout, "Siemens standard transfer");
+    if (block.optimizedAccess === true) {
+      lines.push("", "> The physical optimized size is target-system dependent and has no fixed source-level layout.");
+    } else {
+      lines.push("", "> Access mode is not declared in this source, so the deterministic Siemens standard layout is shown.");
+    }
+    return lines;
+  }
+
+  function renderWorkspaceBlockHover(block: BlockInfo): string {
+    const lines = hoverTitle(block.name, block.blockType.replace(/_/g, " ").toLowerCase());
+    const sizeLines = dataBlockSizeLines(block);
+    if (sizeLines.length > 0) lines.push("", ...sizeLines);
+    lines.push("", ...hoverSource(block.file));
+    return lines.join("\n");
+  }
+
   function typeHover(name: string): string | undefined {
-    if (ruleSet.baseTypes[name]) return renderBaseTypeHover(name, ruleSet.baseTypes[name]);
-    if (ruleSet.systemTypes[name]) return renderSystemTypeHover(name, ruleSet.systemTypes[name]);
+    // SCL type names are case-insensitive. Resolve the source spelling to
+    // the registry's canonical key before rendering so `WORD`/`word` gets
+    // the same hover as `Word` (and likewise for system structs/aliases).
+    const baseCanonicalName = baseTypeCanonicalNames.get(name.toLowerCase());
+    if (baseCanonicalName) return renderBaseTypeHover(baseCanonicalName, ruleSet.baseTypes[baseCanonicalName]);
+    const systemCanonicalName = systemTypeCanonicalNames.get(name.toLowerCase());
+    if (systemCanonicalName) return renderSystemTypeHover(systemCanonicalName, ruleSet.systemTypes[systemCanonicalName]);
+    const udt = typeCache ? lookupType(typeCache, name) : undefined;
+    if (udt?.kind === "udt") {
+      const lines = [
+        ...hoverTitle(udt.name, "PLC data type"),
+        "",
+        ...standardLayoutLines(calculateStandardUdtLayout(udt.name, ruleSet, typeCache), "Siemens standard / non-optimized"),
+      ];
+      if (udt.sourceFile) lines.push("", ...hoverSource(udt.sourceFile));
+      return lines.join("\n");
+    }
     const blk = blockIndex.get(name);
-    if (blk) return `**${name}** _(${blk.blockType.replace(/_/g, " ").toLowerCase()})_\n\ndeclared in \`${blk.file}\``;
+    if (blk) return renderWorkspaceBlockHover(blk);
     const viaInstruction = instanceTypeToInstructions.get(name);
     if (viaInstruction && viaInstruction.length > 0) {
       return `**${name}** _(instance type)_\n\nused by instruction${viaInstruction.length > 1 ? "s" : ""}: ${viaInstruction.map((n) => `\`${n}\``).join(", ")}`;
@@ -1355,7 +1542,10 @@ export function buildDocumentIndex(
   function renderExternalBlockHover(extName: string, ownerBlock: BlockInfo | undefined): string {
     if (!ownerBlock) return `**"${extName}"** — not found in workspace`;
     const kindOf = (t: string) => t.replace(/_/g, " ").toLowerCase();
-    const lines = [`**"${extName}"** _(${kindOf(ownerBlock.blockType)})_`, "", `declared in \`${ownerBlock.file}\``];
+    const lines = hoverTitle(`"${extName}"`, kindOf(ownerBlock.blockType));
+    const sizeLines = dataBlockSizeLines(ownerBlock);
+    if (sizeLines.length > 0) lines.push("", ...sizeLines);
+    lines.push("", ...hoverSource(ownerBlock.file));
     const inst = ownerBlock.instanceOf;
     if (ownerBlock.blockType === "DATA_BLOCK" && inst) {
       // The InstructionName pragma is authoritative when present; otherwise an
@@ -1404,6 +1594,8 @@ export function buildDocumentIndex(
   }
 
   function typeDefinition(name: string): Location | undefined {
+    const udt = typeCache ? lookupType(typeCache, name) : undefined;
+    if (udt?.kind === "udt" && udt.sourceFile) return { file: udt.sourceFile, line: udt.declLine ?? 1 };
     const blk = blockIndex.get(name);
     if (blk) return { file: blk.file, line: blk.declLine };
     return undefined;
@@ -1467,6 +1659,11 @@ export function buildDocumentIndex(
         if (member) structMembers.push(member);
       }
       if (cur.isIdent("END_STRUCT")) push(cur.next(), "struct", ["defaultLibrary"]);
+      applyMemberStorageHovers(
+        structMembers,
+        "STRUCT member",
+        "Siemens standard / non-optimized (relative to this STRUCT)"
+      );
       return {
         text: "STRUCT",
         typeRef: { kind: "inline-struct", members: structMembers.map((member) => ({ name: member.name, typeRef: member.typeRef, line: member.line })) },
@@ -1507,13 +1704,25 @@ export function buildDocumentIndex(
     const leaf = parts[parts.length - 1];
     const leafName = leaf.kind === "string" ? leaf.value ?? leaf.text : leaf.text;
     pushTypeNameSpan(leaf, leafName, leaf.text.length);
+    let declaredLength: number | undefined;
+    if (/^(String|WString)$/i.test(leafName) && cur.isPunct("[")) {
+      cur.next();
+      const lengthTok = cur.peek();
+      if (lengthTok.kind === "number" && /^\d+$/.test(lengthTok.text)) {
+        declaredLength = parseInt(lengthTok.text, 10);
+        push(cur.next(), "number", []);
+      }
+      while (!cur.isPunct("]") && !cur.atEnd()) cur.next();
+      cur.tryPunct("]");
+    }
     return {
-      text: parts.map((p) => (p.kind === "string" ? p.value ?? p.text : p.text)).join("."),
+      text: `${parts.map((p) => (p.kind === "string" ? p.value ?? p.text : p.text)).join(".")}${declaredLength === undefined ? "" : `[${declaredLength}]`}`,
       typeRef: {
         kind: "named",
         name: leafName,
         quoted: leaf.kind === "string",
         namespace: parts.length > 1 ? parts.slice(0, -1).map((p) => (p.kind === "string" ? p.value ?? p.text : p.text)).join(".") : null,
+        length: declaredLength,
       },
       leafName,
       topLevelName: leafName,
@@ -1555,6 +1764,8 @@ export function buildDocumentIndex(
    * classified by `walkTypeRef`, which lets a composite declaration read
    * like `List<Element>`, `object`, or `reference` at a glance. */
   function typeNameSemantics(name: string): { tokenType: string; tokenModifiers: string[] } {
+    const udt = typeCache ? lookupType(typeCache, name) : undefined;
+    if (udt?.kind === "udt") return { tokenType: "s7UdtType", tokenModifiers: [] };
     const blk = blockIndex.get(name);
     if (blk) return { tokenType: externalRefTokenType(blk), tokenModifiers: [] };
     if (resolveInstanceTypeToInstructionNames(ruleSet, name).length > 0) {
@@ -1570,11 +1781,13 @@ export function buildDocumentIndex(
   }
 
   function pushTypeNameSpan(tok: Token, name: string, length: number, extraModifiers: string[] = []): void {
-    // Only a WORKSPACE block (FB/FC/OB/DB -- blockIndex) is renameable here;
-    // a base/system type name is a fixed Siemens keyword, and a UDT/STRUCT
-    // leaf lives in the separate type-cache index this pass doesn't share,
-    // so it's left doc-local (no renameKey) rather than guessed at.
-    const blk = blockIndex.get(name);
+    // A workspace UDT is resolved through the canonical, case-insensitive
+    // type cache. Base/system types remain fixed Siemens names and therefore
+    // never receive a rename key. A block type uses the pre-existing `type:`
+    // identity when no UDT owns this type-reference name.
+    const udt = typeCache ? lookupType(typeCache, name) : undefined;
+    const resolvedUdt = udt?.kind === "udt" ? udt : undefined;
+    const blk = resolvedUdt ? undefined : blockIndex.get(name);
     const { tokenType, tokenModifiers } = typeNameSemantics(name);
     spans.push({
       line: tok.line,
@@ -1584,7 +1797,7 @@ export function buildDocumentIndex(
       tokenModifiers: [...tokenModifiers, ...extraModifiers],
       hoverMarkdown: typeHover(name),
       definition: typeDefinition(name),
-      renameKey: blk ? `type:${blk.name}` : undefined,
+      renameKey: resolvedUdt ? `udt:${resolvedUdt.name}` : blk ? `type:${blk.name}` : undefined,
     });
   }
 
@@ -1721,6 +1934,7 @@ export function buildDocumentIndex(
       col: nameTok.col,
       section,
       structMembers,
+      declarationSpanIndex: declSpanIndex,
     };
     localDecls.set(nameTok.text, decl);
     // A STRUCT/UDT field is reachable as `#owner.field`, never as a base tag
@@ -2812,6 +3026,7 @@ export function buildDocumentIndex(
       blockScopes.push(scope);
       let declaredBlockInfo: BlockInfo | undefined;
       let dataBlockInstanceTypeSeen = false;
+      const dataBlockStorageDecls: LocalDecl[] = [];
       if (cur.peek().kind === "string" || cur.peek().kind === "ident") {
         const nameTok = cur.next(); // TextMate already colors the string; span pushed below is for rename/hover only
         currentBlockName = nameTok.kind === "string" ? nameTok.value ?? nameTok.text : nameTok.text;
@@ -2875,7 +3090,10 @@ export function buildDocumentIndex(
           push(structTok, "struct", ["defaultLibrary"]);
           const previousSection: string | null = currentSectionKind;
           currentSectionKind = "VAR";
-          while (!cur.isIdent("END_STRUCT") && !cur.isIdent(endKeyword) && !cur.atEnd()) walkVarMember("VAR");
+          while (!cur.isIdent("END_STRUCT") && !cur.isIdent(endKeyword) && !cur.atEnd()) {
+            const member = walkVarMember("VAR");
+            if (member) dataBlockStorageDecls.push(member);
+          }
           if (cur.isIdent("END_STRUCT")) push(cur.next(), "struct", ["defaultLibrary"]);
           cur.tryPunct(";");
           currentSectionKind = previousSection;
@@ -2887,7 +3105,10 @@ export function buildDocumentIndex(
           cur.next();
           if (varKw === "VAR CONSTANT") cur.next(); // consume "CONSTANT" too
           currentSectionKind = varKw === "VAR CONSTANT" ? "VAR_CONSTANT" : varKw;
-          while (!cur.isIdent("END_VAR") && !cur.atEnd()) walkVarMember("VAR");
+          while (!cur.isIdent("END_VAR") && !cur.atEnd()) {
+            const member = walkVarMember("VAR");
+            if (member && blockKeyword === "DATA_BLOCK") dataBlockStorageDecls.push(member);
+          }
           if (cur.isIdent("END_VAR")) cur.next();
           currentSectionKind = null;
           continue;
@@ -2948,6 +3169,19 @@ export function buildDocumentIndex(
       // The loop exits ON the `END_xxx` token (never consumed here -- the
       // outer loop's own defensive skip steps past it), or at EOF for a
       // declaration that isn't closed yet.
+      if (blockKeyword === "DATA_BLOCK") {
+        const optimized = declaredBlockInfo?.optimizedAccess;
+        applyMemberStorageHovers(
+          dataBlockStorageDecls,
+          "data-block member",
+          optimized === true ? "Siemens standard transfer" : "Siemens standard / non-optimized",
+          optimized === true
+            ? "This is the standard-transfer offset. The physical optimized offset is target-system dependent and may differ."
+            : optimized === undefined
+              ? "Access mode is not declared; this is the deterministic standard/non-optimized offset."
+              : undefined
+        );
+      }
       if (cur.isIdent(endKeyword)) scope.endLine = cur.peek().line;
       continue;
     }
@@ -2955,6 +3189,7 @@ export function buildDocumentIndex(
     if (cur.isIdent("TYPE")) {
       // .udt / TYPE-block file: `TYPE "Name" VERSION : x.y STRUCT ... END_STRUCT; END_TYPE`.
       cur.next();
+      const udtMembers: LocalDecl[] = [];
       if (cur.peek().kind === "string" || cur.peek().kind === "ident") {
         // A UDT's own name uses the same custom struct subtype as every
         // reference to it, allowing themes/users to distinguish PLC data
@@ -2963,7 +3198,9 @@ export function buildDocumentIndex(
         // declaration read as plain text while its uses read as a type.
         const udtNameTok = cur.next();
         const udtName = udtNameTok.kind === "string" ? udtNameTok.value ?? udtNameTok.text : udtNameTok.text;
-        push(udtNameTok, "s7UdtType", ["declaration"], typeHover(udtName));
+        const cachedUdt = typeCache ? lookupType(typeCache, udtName) : undefined;
+        const canonicalName = cachedUdt?.kind === "udt" ? cachedUdt.name : udtName;
+        push(udtNameTok, "s7UdtType", ["declaration"], typeHover(udtName), undefined, `udt:${canonicalName}`);
       }
       if (cur.isIdent("VERSION")) {
         cur.next();
@@ -2971,9 +3208,13 @@ export function buildDocumentIndex(
       }
       if (cur.isIdent("STRUCT")) {
         push(cur.next(), "struct", ["defaultLibrary"]);
-        while (!cur.isIdent("END_STRUCT") && !cur.atEnd()) walkVarMember("STRUCT");
+        while (!cur.isIdent("END_STRUCT") && !cur.atEnd()) {
+          const member = walkVarMember("STRUCT");
+          if (member) udtMembers.push(member);
+        }
         if (cur.isIdent("END_STRUCT")) push(cur.next(), "struct", ["defaultLibrary"]);
       }
+      applyMemberStorageHovers(udtMembers, "UDT member", "Siemens standard / non-optimized");
       cur.tryIdent("END_TYPE");
       continue;
     }

@@ -1,10 +1,12 @@
-// F2 / right-click "Rename Symbol" for `.s7dcl`/`.udt` documents. Built on
+// F2 / right-click "Rename Symbol" for `.s7dcl`/`.udt`/`.scl` documents. Built on
 // the SAME `renameKey`-tagged spans hover/definition/semantic-tokens
 // already share (analysis/documentIndex.ts) -- rename just groups spans by
 // key instead of re-deriving what a `#tag`, a pin, or a block name refers
 // to. Three scopes (see IdentifierSpan's own doc comment):
 //   local:<docPath>:<name>   -- this document only
 //   type:<blockName>         -- this FB/FC/OB/DB's own name, workspace-wide
+//   udt:<typeName>           -- a PLC data type declaration + references,
+//                               workspace-wide
 //   member:<blockName>:<name> -- an FB/FC's VAR_INPUT/OUTPUT/IN_OUT pin, or
 //                                a DATA_BLOCK member, workspace-wide
 //   mlc:<id>\0<s7resPath>     -- an MLC pragma ID -- this doc's pragma
@@ -13,12 +15,12 @@ import * as fs from "fs";
 import * as vscode from "vscode";
 import { BlockIndex } from "../analysis/blockIndex";
 import { buildDocumentIndex, IdentifierSpan } from "../analysis/documentIndex";
-import { TypeCacheResult } from "../cache/typeCache";
+import { lookupType, TypeCacheResult } from "../cache/typeCache";
 import { getMlcLocale } from "../config";
 import { loadSiblingS7Res } from "../parser/s7resParser";
 import { RuleSet } from "../rules/types";
 
-const WORKSPACE_GLOB = "**/*.s7dcl";
+const WORKSPACE_GLOB = "**/*.{s7dcl,udt,scl,db}";
 const EXCLUDE_GLOB = "**/node_modules/**";
 
 function normalizePath(p: string): string {
@@ -82,7 +84,7 @@ function innerRange(document: vscode.TextDocument, span: IdentifierSpan): vscode
   return new vscode.Range(full.start.line, full.start.character + startDelta, full.end.line, full.end.character - endDelta);
 }
 
-/** Reads a workspace `.s7dcl` file's current text -- an OPEN document's
+/** Reads a supported workspace S7 source's current text -- an OPEN document's
  * live (possibly unsaved) buffer if there is one, otherwise disk content --
  * so a rename in progress elsewhere in the workspace isn't silently
  * ignored or overwritten. */
@@ -92,7 +94,7 @@ async function readWorkspaceFile(uri: vscode.Uri): Promise<string> {
   return Buffer.from(await vscode.workspace.fs.readFile(uri)).toString("utf8");
 }
 
-/** Collects every workspace `.s7dcl` file whose text COULD contain a match
+/** Collects every supported textual S7 source whose text COULD contain a match
  * for `renameKey` -- a cheap substring pre-filter (the key's own bare
  * name) before actually tokenizing/parsing each candidate, since most
  * files in a real workspace won't reference a given block/member at all. */
@@ -105,7 +107,9 @@ async function candidateFiles(needle: string, currentDoc: vscode.TextDocument): 
     if (seen.has(norm)) continue;
     seen.add(norm);
     const text = await readWorkspaceFile(uri);
-    if (text.includes(needle)) results.push({ uri, text });
+    // SCL symbol/type names are case-insensitive; a `"nested"` reference
+    // must still be found when the canonical declaration is `"Nested"`.
+    if (text.toLowerCase().includes(needle.toLowerCase())) results.push({ uri, text });
   }
   return results;
 }
@@ -119,7 +123,7 @@ export class S7dclRenameProvider implements vscode.RenameProvider {
 
   prepareRename(document: vscode.TextDocument, position: vscode.Position): vscode.ProviderResult<vscode.Range> {
     const span = findRenameSpan(document, position, this.ruleSet, this.blockIndex, this.getTypeCache());
-    if (!span) throw new Error("This isn't a renameable symbol (variable, block name, or MultiLingualTexts ID).");
+    if (!span) throw new Error("This isn't a renameable symbol (variable, block/type name, or MultiLingualTexts ID).");
     return innerRange(document, span);
   }
 
@@ -129,6 +133,15 @@ export class S7dclRenameProvider implements vscode.RenameProvider {
     if (!span?.renameKey) return undefined;
     const key = span.renameKey;
     const edit = new vscode.WorkspaceEdit();
+
+    if (key.startsWith("udt:")) {
+      const oldCanonicalName = key.slice(4);
+      const collision = lookupType(typeCache, newName);
+      if (collision && collision.name.toLowerCase() !== oldCanonicalName.toLowerCase()) {
+        const kind = collision.kind === "udt" ? "PLC data type" : `${collision.kind} type`;
+        throw new Error(`Cannot rename PLC data type '${oldCanonicalName}' to '${newName}': that ${kind} name already exists.`);
+      }
+    }
 
     if (key.startsWith("mlc:")) {
       const [id, resPath] = key.slice(4).split("\0");
@@ -165,8 +178,10 @@ export class S7dclRenameProvider implements vscode.RenameProvider {
       return edit;
     }
 
-    // `type:` / `member:` -- workspace-wide.
-    const bareName = key.split(":").pop()!;
+    // `type:` / `udt:` / `member:` -- workspace-wide.
+    // A quoted block/UDT name may itself contain `:`; strip the known key
+    // prefix instead of splitting the whole identity and losing part of it.
+    const bareName = key.startsWith("udt:") ? key.slice(4) : key.startsWith("type:") ? key.slice(5) : key.split(":").pop()!;
     const files = await candidateFiles(bareName, document);
     for (const f of files) {
       const index = buildDocumentIndex(f.text, this.ruleSet, this.blockIndex, f.uri.fsPath, getMlcLocale(f.uri), typeCache);

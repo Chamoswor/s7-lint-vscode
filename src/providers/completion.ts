@@ -54,6 +54,14 @@ import {
   resolveBlockInstanceContext,
 } from "./instanceQuickFix";
 
+/** Characters that should actively invoke this provider. A space is useful
+ * specifically after a declaration `:`/`of`: VS Code closes the `:`-opened
+ * suggestion session when that whitespace is typed, so without this trigger
+ * `member : B` depends on the user's global quick-suggestion setting. The
+ * provider has a cheap line-prefix guard below, so ordinary spaces do not
+ * produce lists or force a full SCL context scan. */
+export const S7_COMPLETION_TRIGGER_CHARACTERS = [".", "#", '"', ":", " "] as const;
+
 const CHAIN_BEFORE_DOT_RE = /(#[A-Za-z_][A-Za-z0-9_]*(?:\.[A-Za-z_][A-Za-z0-9_]*)*)\.$/;
 /** The same member-chain trigger for the BARE, `#`-less spelling of a local
  * reference -- `SeqEdge.` must offer exactly what `#SeqEdge.` offers, since
@@ -179,20 +187,69 @@ function findSystemType(ruleSet: RuleSet, name: string): { name: string; entry: 
 export class S7dclCompletionProvider implements vscode.CompletionItemProvider {
   constructor(private readonly ruleSet: RuleSet, private readonly blockIndex: BlockIndex, private readonly getTypeCache: () => TypeCacheResult) {}
 
-  provideCompletionItems(document: vscode.TextDocument, position: vscode.Position): vscode.ProviderResult<vscode.CompletionItem[]> {
+  provideCompletionItems(
+    document: vscode.TextDocument,
+    position: vscode.Position,
+    _token?: vscode.CancellationToken,
+    triggerContext?: vscode.CompletionContext
+  ): vscode.ProviderResult<vscode.CompletionItem[] | vscode.CompletionList<vscode.CompletionItem>> {
     const text = document.getText();
     const offset = document.offsetAt(position);
+    const triggeredBySpace =
+      triggerContext?.triggerKind === vscode.CompletionTriggerKind.TriggerCharacter && triggerContext.triggerCharacter === " ";
 
-    // Section-aware gating is SCL-specific (VAR_*/TYPE STRUCT/BEGIN are this
-    // grammar's own structure) -- a `.s7dcl`/`.s7udt` document keeps its existing,
+    // Registering a whitespace trigger is intentionally narrow: only a line
+    // whose text up to the cursor ends in declaration punctuation plus
+    // whitespace can proceed. This avoids tokenizing the whole prefix on
+    // ordinary formatting/comment/code spaces and keeps top-level templates
+    // from appearing after a space at the source root.
+    if (triggeredBySpace) {
+      const linePrefix = document.lineAt(position.line).text.slice(0, position.character);
+      if (!/(?::|\bOF)\s+$/i.test(linePrefix)) return undefined;
+    }
+
+    // Section-aware gating is SCL-specific (VAR_*/TYPE STRUCT/DATA_BLOCK
+    // STRUCT/BEGIN are this grammar's own structure) -- a `.s7dcl`/`.s7udt` document keeps its existing,
     // unrestricted behavior untouched (out of scope here; those files
     // aren't hand-typed member-by-member the same way, and don't have this
     // request's VAR-section/type-position editing workflow at all).
     if (document.languageId === "s7scl") {
       const ctx = resolveSclCompletionContext(text, offset);
+      if (
+        triggeredBySpace &&
+        !(
+          (ctx.kind === "declaration" && ctx.decl.kind === "bare-type" && ctx.decl.identStart === null) ||
+          (ctx.kind === "function-return-type" && ctx.identStart === null)
+        )
+      ) {
+        return undefined;
+      }
       if (ctx.kind === "none") return [];
       if (ctx.kind === "root") return this.topLevelCompletions(document, offset);
-      if (ctx.kind === "declaration") return this.declarationCompletions(document, offset, ctx.section, ctx.decl);
+      if (ctx.kind === "declaration") {
+        const items = this.declarationCompletions(document, offset, ctx.section, ctx.decl);
+        // `:` is a trigger character, so VS Code first asks for this list
+        // while the type slot is still empty. At that instant every item's
+        // replacement range is zero-width. If the result is marked complete,
+        // VS Code may keep filtering that stale list after the user types `B`
+        // instead of asking us again for the now-correct `B` replacement
+        // range -- making valid Bool/Byte suggestions disappear. An incomplete
+        // list explicitly requests that refresh on further typing. Once an
+        // identifier exists, normal complete-list filtering takes over.
+        //
+        // VS Code can also re-request an incomplete list before the document
+        // changes (`TriggerForIncompleteCompletions`). Returning another
+        // incomplete list for that identical empty slot creates a permanent
+        // loading spinner. Finalize that unchanged re-request; if the user
+        // actually typed `B`, the newly parsed identifier takes the normal
+        // complete-list path anyway with the correct replacement range.
+        if (ctx.decl.kind === "bare-type" && ctx.decl.identStart === null) {
+          const isUnchangedIncompleteRetrigger =
+            triggerContext?.triggerKind === vscode.CompletionTriggerKind.TriggerForIncompleteCompletions;
+          return isUnchangedIncompleteRetrigger ? items : new vscode.CompletionList(items, true);
+        }
+        return items;
+      }
       if (ctx.kind === "function-return-type") return this.functionReturnTypeCompletions(document, text, offset, ctx.anchorEnd, ctx.identStart);
       if (ctx.kind === "data-block-instance-ref") return this.dataBlockInstanceRefCompletions(document, offset, ctx.identStart, ctx.textSoFar);
       // ctx.kind === "executable" -- falls through to the same tag/

@@ -153,6 +153,8 @@ export interface SystemTypeEntry {
   category: "system-struct" | "system-alias";
   basicDataType?: string; // system-alias only
   members?: SystemTypeMember[] | null; // system-struct only
+  /** Authoritative compiled storage size when known from a TIA export. */
+  sizeBytes?: number | null;
   [key: string]: unknown;
 }
 export type SystemTypeRegistry = Record<string, SystemTypeEntry>;

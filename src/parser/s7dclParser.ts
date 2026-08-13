@@ -194,6 +194,9 @@ export interface ParsedBlockFile {
    * the authoritative instruction identity for an instruction instance DB
    * (TIA writes it alongside the unquoted `instanceOf` line). */
   instructionName?: string;
+  /** Explicit S7_Optimized_Access block/file pragma. Undefined when the
+   * source does not state an access mode. */
+  optimizedAccess?: boolean;
   varSections: VarSection[];
   networks: NetworkNode[];
   /** Instruction/instance calls found in a `BEGIN ... END_xxx` SCL statement
@@ -1244,7 +1247,17 @@ function parseNetwork(cur: TokenCursor, pragma: Pragma | undefined): NetworkNode
  * cursor isn't positioned at one. Shared by `parseS7dclBlock` (single-
  * declaration .s7dcl exports) and `parseS7dclFile` (multi-declaration .scl
  * source files). */
-function parseBlockDeclaration(cur: TokenCursor): ParsedBlockFile | null {
+function pragmaBoolean(pragma: Pragma | null | undefined, key: string): boolean | undefined {
+  if (!pragma) return undefined;
+  const match = Object.entries(pragma).find(([candidate]) => candidate.toLowerCase() === key.toLowerCase());
+  if (!match) return undefined;
+  const normalized = match[1].trim().toUpperCase();
+  if (normalized === "TRUE") return true;
+  if (normalized === "FALSE") return false;
+  return undefined;
+}
+
+function parseBlockDeclaration(cur: TokenCursor, filePragma?: Pragma | null): ParsedBlockFile | null {
   let blockType: (typeof BLOCK_KEYWORDS)[number] | null = null;
   for (const kw of BLOCK_KEYWORDS) {
     if (cur.isIdent(kw)) {
@@ -1260,8 +1273,10 @@ function parseBlockDeclaration(cur: TokenCursor): ParsedBlockFile | null {
 
   // Block-level attributes, e.g. S7_Language / S7_Optimized_Access, and (on an
   // instruction instance DB) InstructionName -- see ParsedBlockFile.
-  const headerPragma = cur.isPunct("{") ? parsePragmaBlock(cur) : null;
+  const inlineHeaderPragma = cur.isPunct("{") ? parsePragmaBlock(cur) : null;
+  const headerPragma: Pragma = { ...(filePragma ?? {}), ...(inlineHeaderPragma ?? {}) };
   const instructionName = headerPragma?.InstructionName;
+  const optimizedAccess = pragmaBoolean(headerPragma, "S7_Optimized_Access");
   let instanceOf: { name: string; quoted: boolean } | undefined;
   // Only the HEADER region can carry the instance-of line; once a VAR section
   // or the body starts, anything left is data/statements.
@@ -1366,7 +1381,20 @@ function parseBlockDeclaration(cur: TokenCursor): ParsedBlockFile | null {
   }
   cur.tryIdent(endKeyword);
 
-  return { blockType, name, varSections, networks, sclCalls, sclOperandRefs, sclConditionChecks, sclAssignments, sclMissingSemicolons, instanceOf, instructionName };
+  return {
+    blockType,
+    name,
+    varSections,
+    networks,
+    sclCalls,
+    sclOperandRefs,
+    sclConditionChecks,
+    sclAssignments,
+    sclMissingSemicolons,
+    instanceOf,
+    instructionName,
+    optimizedAccess,
+  };
 }
 
 /** Skips one `TYPE "Name" ... END_TYPE` declaration wholesale -- parsing its
@@ -1394,8 +1422,8 @@ function skipTypeDeclaration(cur: TokenCursor): void {
 export function parseS7dclBlock(text: string): ParsedBlockFile | null {
   const tokens: Token[] = new Lexer(text).tokenize();
   const cur = new TokenCursor(tokens);
-  if (cur.isPunct("{")) parsePragmaBlock(cur); // file-level attributes (S7_Optimized, S7_PreferredLanguage, S7_Version)
-  return parseBlockDeclaration(cur);
+  const filePragma = cur.isPunct("{") ? parsePragmaBlock(cur) : null; // file-level attributes
+  return parseBlockDeclaration(cur, filePragma);
 }
 
 /** Parses every FUNCTION_BLOCK/FUNCTION/ORGANIZATION_BLOCK/DATA_BLOCK
@@ -1410,19 +1438,21 @@ export function parseS7dclFile(text: string): ParsedBlockFile[] {
   const tokens: Token[] = new Lexer(text).tokenize();
   const cur = new TokenCursor(tokens);
   const results: ParsedBlockFile[] = [];
+  let pendingFilePragma: Pragma | null = null;
 
   while (!cur.atEnd()) {
     if (cur.isPunct("{")) {
-      parsePragmaBlock(cur);
+      pendingFilePragma = parsePragmaBlock(cur);
       continue;
     }
     if (cur.isIdent("TYPE")) {
       skipTypeDeclaration(cur);
       continue;
     }
-    const block = parseBlockDeclaration(cur);
+    const block = parseBlockDeclaration(cur, pendingFilePragma);
     if (block) {
       results.push(block);
+      pendingFilePragma = null;
       continue;
     }
     if (cur.atEnd()) break;

@@ -195,7 +195,7 @@ for (const [label, text] of [["DB first", SCL_WITH_DB], ["DB last", SCL_DB_LAST]
   const hoverFor = (name) => hovers.find((h) => h.includes(`"${name}"`)) ?? "";
 
   const instrHover = hoverFor("R_TRIG_DB");
-  ok(instrHover.includes("(data block)"), "instance DB hover still identifies the block kind");
+  ok(instrHover.includes('### `"R_TRIG_DB"`\n_data block_'), "instance DB hover still identifies the block kind");
   ok(instrHover.includes("instance of instruction"), "instruction instance DB hover names what it instances");
   ok(instrHover.includes("bit-logic") && instrHover.includes("| CLK |"), "instruction instance DB hover renders the registry entry (family + pins)");
 

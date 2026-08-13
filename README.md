@@ -10,7 +10,7 @@ product and is not affiliated with, endorsed by, sponsored by, or maintained by
 Siemens AG. Siemens, SIMATIC, TIA Portal, and other product names are trademarks
 of their respective owners.
 
-The extension is currently version `0.1.4` and under active development. It is
+The extension is currently version `0.1.5` and under active development. It is
 intended to catch common structural, type, symbol, and instruction-call errors
 before code is imported or compiled in TIA Portal. It is not a replacement for
 the target CPU and TIA Portal compiler.
@@ -59,7 +59,9 @@ expression cannot be resolved confidently, the extension avoids guessing.
 
 - Context-aware completion for declarations, types, instructions, symbols, and
   top-level block templates, including dotted member completion on instance
-  DATA_BLOCKs and quoted external block references.
+  DATA_BLOCKs and quoted external block references. Datatype completion also
+  works after `:` inside inline, UDT, and DATA_BLOCK `STRUCT ... END_STRUCT`
+  declarations, with or without whitespace around the colon.
 - Dotted member completion off a local tag, written `#tag.` or bare `tag.`,
   resolving through workspace FUNCTION_BLOCK/DATA_BLOCK interfaces, UDT fields,
   system-struct fields (`IEC_TIMER`, `ErrorStruct`, …), inline
@@ -68,6 +70,8 @@ expression cannot be resolved confidently, the extension avoids guessing.
   (`#edge.CLK`/`edge.Q`, not the graphical `clk`/`q`).
 - Hover, definition, rename, and semantic-token providers, including instance
   DATA_BLOCK hovers that resolve to their instruction or FUNCTION_BLOCK type.
+  Workspace UDT declarations and their case-insensitive references can be
+  renamed directly from the type name.
   Highlighting uses standard VS Code semantic families, so the user's active
   dark or light theme controls every colour. S7-specific semantic subtypes
   retain normal-theme fallbacks while allowing independent styling. The six
@@ -120,6 +124,14 @@ expression cannot be resolved confidently, the extension avoids guessing.
   Bare, `#`-less local references and unquoted workspace-block calls resolve
   for hover, Ctrl+click, and rename exactly like their prefixed/quoted
   equivalents.
+- Hovering a PLC data type or global DATA_BLOCK shows its calculated Siemens
+  standard/non-optimized storage size and included padding. Hovering an
+  individual declaration name in a UDT `STRUCT`, DATA_BLOCK `VAR`, or inline
+  `STRUCT` additionally shows that member's size and container-relative byte
+  offset; packed `BOOL` members use `byte.bit` notation. Arrays, sized
+  `String`/`WString`, nested structures, and referenced UDTs participate in the
+  calculation. If a dependency has no known storage size, the hover lists each
+  unresolved member path instead of presenting a guessed total or offset.
 - Distinct colors for the S7 datatype and object/callable subtypes activate automatically
   when a supported SCL/declaration/UDT editor becomes active. The preset is
   scoped to the current dark/light theme in User Settings, preserves unrelated
@@ -187,7 +199,9 @@ npm test
 
 | Command | Scope |
 |---|---|
+| `npm run test:semantic-colors` | automatic palette installation and migration |
 | `npm run test:completion` | completion and context classification |
+| `npm run test:rename` | UDT and symbol rename behavior |
 | `npm run test:quickfix` | instance-generation quick fixes |
 | `npm run test:manifest` | manifest-driven parser and semantic diagnostics |
 | `npm run test:annotated` | exact line-annotated expression diagnostics |
@@ -218,6 +232,8 @@ The extension contributes these commands:
 - **S7 Lint: Re-lint All Open Files**
 - **S7 Lint: Show Loaded Rule Stats**
 - **S7 Lint: Open Instruction Registry Editor**
+- **S7 Lint: Install Recommended Semantic Colors**
+- **S7 Lint: Disable Recommended Semantic Colors**
 
 Two further commands back the registry quick fixes
 (`tiaLint.registryMarkPinOptional`, `tiaLint.registryScaffoldInstruction`).
@@ -226,6 +242,10 @@ command palette and are invoked from the lightbulb only.
 
 `tiaLint.mlcLocale` selects the preferred locale for multilingual resource
 resolution. Resolution falls back to `en-US` and then to an available locale.
+
+`tiaLint.recommendedSemanticColors.enabled` controls automatic installation of
+the theme-scoped S7 semantic palette. Disabling it removes only values managed
+by S7 Lint and preserves unrelated or manually customized semantic colors.
 
 ## Known limitations
 

@@ -26,6 +26,8 @@ export interface BlockInfo {
   instanceOf?: ParsedBlockFile["instanceOf"];
   /** A DATA_BLOCK header pragma's `InstructionName`, when present. */
   instructionName?: string;
+  /** Explicit S7_Optimized_Access value; undefined when omitted. */
+  optimizedAccess?: boolean;
 }
 
 function flattenVars(sections: VarSection[]): Map<string, BlockVar> {
@@ -61,6 +63,7 @@ export function scanBlockFile(fsPath: string, text: string): BlockInfo[] {
     vars: flattenVars(parsed.varSections),
     instanceOf: parsed.instanceOf,
     instructionName: parsed.instructionName,
+    optimizedAccess: parsed.optimizedAccess,
   }));
 }
 

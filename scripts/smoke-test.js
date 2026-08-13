@@ -19,6 +19,7 @@ const { BlockIndex } = require("../out/analysis/blockIndex");
 const { buildDocumentIndex } = require("../out/analysis/documentIndex");
 const { buildTypeCache } = require("../out/cache/typeCache");
 const { parseUdtText } = require("../out/parser/udtTextParser");
+const { calculateStandardUdtLayout, isStandardTypeLayout } = require("../out/analysis/typeLayout");
 
 const ROOT = path.resolve(__dirname, "..", "..");
 const ruleSet = loadRuleSet(path.join(__dirname, "..", "resources"));
@@ -249,6 +250,248 @@ expectSpan(4, "TIME", "s7TemporalType", "a Siemens temporal value type uses the 
 expectCapabilities(13, "A", [], "a scalar WORD remains a leaf when followed by slice access");
 expectSpan(13, "%X0", "number", "a percent-prefixed bit selector is a slice token, not an object property");
 expectHover(13, "%X0", "`Bool`", "a WORD bit slice resolves to Bool");
+
+// Type classification was already case-insensitive, but hover used to index
+// the registry by exact source spelling. Canonical, upper, and lower-case
+// spellings must all resolve to the same built-in/system type documentation.
+const typeCaseFixture = [
+  'FUNCTION_BLOCK "TypeCaseProbe"',
+  "VAR",
+  "    Canonical : Word;",
+  "    Upper     : WORD;",
+  "    Lower     : word;",
+  "    Runtime   : iec_timer;",
+  "END_VAR",
+  "BEGIN",
+  "END_FUNCTION_BLOCK",
+  "",
+].join("\n");
+const typeCaseIndex = buildDocumentIndex(typeCaseFixture, ruleSet, new BlockIndex(), "typeCaseProbe.scl");
+const typeCaseLines = typeCaseFixture.split("\n");
+function expectTypeCaseHover(line, sourceSpelling, canonicalName) {
+  const span = typeCaseIndex.spans.find(
+    (candidate) =>
+      candidate.line === line &&
+      typeCaseLines[line - 1].slice(candidate.startCol - 1, candidate.startCol - 1 + candidate.length) === sourceSpelling
+  );
+  if (span?.hoverMarkdown?.includes(`**${canonicalName}**`)) {
+    console.log(`-- PASS: L${line} '${sourceSpelling}' hover resolves canonical '${canonicalName}' --`);
+    return;
+  }
+  totalFixtureFailures++;
+  console.error(`-- FAIL: L${line} '${sourceSpelling}' hover -> ${span?.hoverMarkdown ?? "NO HOVER"}; expected **${canonicalName}** --`);
+}
+expectTypeCaseHover(3, "Word", "Word");
+expectTypeCaseHover(4, "WORD", "Word");
+expectTypeCaseHover(5, "word", "Word");
+expectTypeCaseHover(6, "iec_timer", "IEC_TIMER");
+
+// Siemens standard/non-optimized layout regression. This includes the
+// official padding shape where an odd-length ARRAY follows three BYTEs:
+// the ARRAY starts on the next WORD and is padded at its end. String[7]
+// additionally proves that the parser retains the declared capacity.
+const layoutFixtureLines = [
+  'TYPE "WirePayload"',
+  "VERSION : 0.1",
+  "STRUCT",
+  "  A     : Byte;",
+  "  B     : Byte;",
+  "  C     : Byte;",
+  "  Bytes : ARRAY[0..6] OF Byte;",
+  "  Tail  : Byte;",
+  "  Label : String[7];",
+  "END_STRUCT;",
+  "END_TYPE",
+  'DATA_BLOCK "LayoutStore"',
+  "{ S7_Optimized_Access := 'FALSE' }",
+  "VAR",
+  '  Payload : "WirePayload";',
+  "END_VAR",
+  "BEGIN",
+  "END_DATA_BLOCK",
+  'FUNCTION "ReadLayout" : Void',
+  "BEGIN",
+  '  "LayoutStore".Payload.Tail := 1;',
+  "END_FUNCTION",
+  "",
+];
+const layoutFixture = layoutFixtureLines.join("\n");
+const layoutTypeCache = buildTypeCache(ruleSet, [{ path: "layoutProbe.scl", decls: parseUdtText(layoutFixture) }]);
+const layoutBlockIndex = new BlockIndex();
+layoutBlockIndex.rebuild([{ path: "layoutProbe.scl", text: layoutFixture }]);
+const wireLayout = calculateStandardUdtLayout("WirePayload", ruleSet, layoutTypeCache);
+expectIndexedBlockShape(
+  isStandardTypeLayout(wireLayout) && wireLayout.sizeBits === 24 * 8 && wireLayout.paddingBits === 4 * 8,
+  "UDT standard layout applies ARRAY/STRING word-boundary padding (24 bytes, including 4 bytes padding)"
+);
+expectIndexedBlockShape(layoutBlockIndex.get("LayoutStore")?.optimizedAccess === false, "DATA_BLOCK retains S7_Optimized_Access=FALSE metadata");
+const layoutDocumentIndex = buildDocumentIndex(layoutFixture, ruleSet, layoutBlockIndex, "layoutProbe.scl", "en-US", layoutTypeCache);
+const layoutSpan = (line, text) =>
+  layoutDocumentIndex.spans.find(
+    (span) => span.line === line && layoutFixtureLines[line - 1].substr(span.startCol - 1, span.length) === text
+  );
+const wirePayloadHover = layoutSpan(1, '"WirePayload"')?.hoverMarkdown ?? "";
+expectIndexedBlockShape(
+  wirePayloadHover.includes("24 bytes") &&
+    wirePayloadHover.includes(
+      "### `WirePayload`\n_PLC data type_\n\n**Storage**\n\n- **Layout:** Siemens standard / non-optimized\n- **Size:** `24 bytes`\n- **Padding included:** `4 bytes`"
+    ) &&
+    wirePayloadHover.includes("\n---\n**Source**  \n`layoutProbe.scl`"),
+  "PLC data type declaration hover shows its calculated standard-layout size"
+);
+const layoutStoreHover = layoutSpan(21, '"LayoutStore"')?.hoverMarkdown ?? "";
+expectIndexedBlockShape(
+  layoutStoreHover.includes("24 bytes") && layoutStoreHover.includes('### `"LayoutStore"`\n_data block_\n\n**Storage**'),
+  "external DATA_BLOCK hover shows its calculated standard/non-optimized size"
+);
+const bytesMemberHover = layoutSpan(7, "Bytes")?.hoverMarkdown ?? "";
+expectIndexedBlockShape(
+  ["_UDT member_", "`Array[0..6] of Byte`", "**Size:** `8 bytes`", "**Offset:** byte `4`"].every((part) =>
+    bytesMemberHover.includes(part)
+  ),
+  "UDT ARRAY member declaration hover shows its padded size and standard byte offset"
+);
+const labelMemberHover = layoutSpan(9, "Label")?.hoverMarkdown ?? "";
+expectIndexedBlockShape(
+  ["`String[7]`", "**Size:** `10 bytes`", "**Offset:** byte `14`"].every((part) => labelMemberHover.includes(part)),
+  "UDT sized-STRING member declaration hover preserves its capacity, size, and aligned offset"
+);
+const payloadMemberHover = layoutSpan(15, "Payload")?.hoverMarkdown ?? "";
+expectIndexedBlockShape(
+  ["_data-block member_", '`"WirePayload"`', "**Size:** `24 bytes`", "**Offset:** byte `0`"].every((part) =>
+    payloadMemberHover.includes(part)
+  ),
+  "DATA_BLOCK VAR member declaration hover shows its contained UDT size and block-relative offset"
+);
+
+const bitLayoutLines = [
+  'TYPE "BitLayout"',
+  "VERSION : 0.1",
+  "STRUCT",
+  "  A      : Bool;",
+  "  B      : Bool;",
+  "  Code   : Byte;",
+  "  Nested : Struct",
+  "    Flag      : Bool;",
+  "    WordValue : Word;",
+  "  END_STRUCT;",
+  "END_STRUCT;",
+  "END_TYPE",
+  "",
+];
+const bitLayoutFixture = bitLayoutLines.join("\n");
+const bitLayoutCache = buildTypeCache(ruleSet, [{ path: "bitLayoutProbe.scl", decls: parseUdtText(bitLayoutFixture) }]);
+const bitLayoutIndex = buildDocumentIndex(bitLayoutFixture, ruleSet, new BlockIndex(), "bitLayoutProbe.scl", "en-US", bitLayoutCache);
+const bitLayoutSpan = (line, text) =>
+  bitLayoutIndex.spans.find(
+    (span) => span.line === line && bitLayoutLines[line - 1].substr(span.startCol - 1, span.length) === text
+  );
+expectIndexedBlockShape(
+  bitLayoutSpan(4, "A")?.hoverMarkdown?.includes("**Offset:** `0.0` (byte.bit)") === true &&
+    bitLayoutSpan(5, "B")?.hoverMarkdown?.includes("**Offset:** `0.1` (byte.bit)") === true &&
+    bitLayoutSpan(6, "Code")?.hoverMarkdown?.includes("**Offset:** byte `1`") === true,
+  "consecutive BOOL declarations use packed byte.bit offsets and the following BYTE starts at the next byte"
+);
+expectIndexedBlockShape(
+  bitLayoutSpan(8, "Flag")?.hoverMarkdown?.includes("**Offset:** `0.0` (byte.bit)") === true &&
+    bitLayoutSpan(9, "WordValue")?.hoverMarkdown?.includes("**Offset:** byte `2`") === true &&
+    bitLayoutSpan(8, "Flag")?.hoverMarkdown?.includes("relative to this STRUCT") === true,
+  "nested inline STRUCT member offsets are relative to their containing STRUCT and apply word alignment"
+);
+
+// Unknown system-struct sizes must fail closed even when a partial-looking
+// member list exists, and the result must retain every nested declaration
+// path so UDT and DATA_BLOCK hover can explain all blockers in one pass.
+const unknownSystemRuleSet = {
+  ...ruleSet,
+  systemTypes: {
+    ...ruleSet.systemTypes,
+    NullSizedSystem: {
+      category: "system-struct",
+      sizeBytes: null,
+      members: [{ name: "VisibleButPossiblyPartial", type: { kind: "named", name: "Byte" } }],
+    },
+    MissingSizedSystem: {
+      category: "system-struct",
+      members: [{ name: "VisibleButPossiblyPartial", type: { kind: "named", name: "Byte" } }],
+    },
+  },
+};
+const unknownLayoutLines = [
+  'TYPE "NestedUnknown"',
+  "VERSION : 0.1",
+  "STRUCT",
+  "  Y : MissingSizedSystem;",
+  "  Z : PID_CompactConfig;",
+  "END_STRUCT;",
+  "END_TYPE",
+  'TYPE "BrokenLayout"',
+  "VERSION : 0.1",
+  "STRUCT",
+  "  X      : NullSizedSystem;",
+  '  Nested : "NestedUnknown";',
+  "  Items  : ARRAY[0..1] OF MissingSizedSystem;",
+  "END_STRUCT;",
+  "END_TYPE",
+  'DATA_BLOCK "BrokenStore"',
+  "{ S7_Optimized_Access := 'FALSE' }",
+  "VAR",
+  '  Data : "BrokenLayout";',
+  "END_VAR",
+  "BEGIN",
+  "END_DATA_BLOCK",
+  'FUNCTION "ReadBroken" : Void',
+  "BEGIN",
+  '  "BrokenStore".Data.X := 0;',
+  "END_FUNCTION",
+  "",
+];
+const unknownLayoutFixture = unknownLayoutLines.join("\n");
+const unknownLayoutCache = buildTypeCache(unknownSystemRuleSet, [
+  { path: "unknownLayoutProbe.scl", decls: parseUdtText(unknownLayoutFixture) },
+]);
+const brokenLayout = calculateStandardUdtLayout("BrokenLayout", unknownSystemRuleSet, unknownLayoutCache);
+const renderUnknownPath = (pathSegments) =>
+  pathSegments.reduce((rendered, segment) => (segment === "[]" ? `${rendered}[]` : rendered ? `${rendered}.${segment}` : segment), "");
+const brokenPaths = isStandardTypeLayout(brokenLayout) ? [] : brokenLayout.unknownSizes.map((issue) => renderUnknownPath(issue.path));
+expectIndexedBlockShape(
+  JSON.stringify(brokenPaths) === JSON.stringify(["X", "Nested.Y", "Nested.Z", "Items[]"]),
+  "UDT sizing reports every null/missing system-type size with its full nested/ARRAY path"
+);
+const unknownBlockIndex = new BlockIndex();
+unknownBlockIndex.rebuild([{ path: "unknownLayoutProbe.scl", text: unknownLayoutFixture }]);
+const unknownDocumentIndex = buildDocumentIndex(
+  unknownLayoutFixture,
+  unknownSystemRuleSet,
+  unknownBlockIndex,
+  "unknownLayoutProbe.scl",
+  "en-US",
+  unknownLayoutCache
+);
+const unknownSpan = (line, text) =>
+  unknownDocumentIndex.spans.find(
+    (span) => span.line === line && unknownLayoutLines[line - 1].substr(span.startCol - 1, span.length) === text
+  );
+const brokenUdtHover = unknownSpan(8, '"BrokenLayout"')?.hoverMarkdown ?? "";
+expectIndexedBlockShape(
+  [
+    "**Storage**\n\n> Size unavailable",
+    "`X`",
+    "`Nested.Y`",
+    "`Nested.Z`",
+    "`Items[]`",
+    "sizeBytes: null",
+    "does not define sizeBytes",
+  ].every((part) =>
+    brokenUdtHover.includes(part)
+  ),
+  "UDT hover lists every unknown-size dependency and distinguishes null from missing sizeBytes"
+);
+const brokenDbHover = unknownSpan(25, '"BrokenStore"')?.hoverMarkdown ?? "";
+expectIndexedBlockShape(
+  ["`Data.X`", "`Data.Nested.Y`", "`Data.Nested.Z`", "`Data.Items[]`"].every((part) => brokenDbHover.includes(part)),
+  "DATA_BLOCK hover prefixes and lists every unknown-size dependency from its contained UDT"
+);
 
 // An FB/FC interface is still the source of a resolved scalar value after
 // walking through one or more UDT members. Preserve the parameter role at

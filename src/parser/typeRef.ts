@@ -5,7 +5,7 @@
 import { Token, TokenCursor } from "./lexer";
 
 export type TypeRef =
-  | { kind: "named"; name: string; quoted: boolean; namespace: string | null }
+  | { kind: "named"; name: string; quoted: boolean; namespace: string | null; /** Declared String/WString capacity. */ length?: number }
   | { kind: "array"; bounds: [number, number][]; of: TypeRef }
   | { kind: "inline-struct"; members: MemberRef[] }
   | { kind: "reference"; of: TypeRef };
@@ -57,6 +57,17 @@ export function parseTypeRefText(raw: string): TypeRef {
     return { kind: "array", bounds, of: parseTypeRefText(ofText) };
   }
 
+  const sizedStringMatch = /^(String|WString)\s*\[\s*(\d+)\s*\]$/i.exec(text);
+  if (sizedStringMatch) {
+    return {
+      kind: "named",
+      name: sizedStringMatch[1],
+      quoted: false,
+      namespace: null,
+      length: parseInt(sizedStringMatch[2], 10),
+    };
+  }
+
   const namespaceMatch = /^([A-Za-z_][A-Za-z0-9_]*)\.(.+)$/.exec(text);
   if (namespaceMatch && !text.startsWith('"')) {
     // `_.UdtName` or `MyNamespace.UdtName` (.s7dcl VAR-section convention).
@@ -80,7 +91,8 @@ export function parseTypeRefText(raw: string): TypeRef {
  * `Array[0..1] of Bool`, `_.FB_MotorProtection`, `STRUCT ... END_STRUCT`. */
 export function typeRefToText(ref: TypeRef): string {
   if (ref.kind === "named") {
-    const base = ref.namespace ? `${ref.namespace}.${ref.name}` : ref.name;
+    const sizedName = ref.length === undefined ? ref.name : `${ref.name}[${ref.length}]`;
+    const base = ref.namespace ? `${ref.namespace}.${sizedName}` : sizedName;
     return ref.quoted ? `"${base}"` : base;
   }
   if (ref.kind === "array") {
@@ -194,18 +206,26 @@ export function parseTypeRefFromCursor(cur: TokenCursor): TypeRef {
   // identity -- `String[64]` and `String` are the same base type to every
   // lookup here -- but it MUST be consumed, or the `[` is left mid-declaration
   // and the caller reports a malformed `name : type;`.
+  let length: number | undefined;
   if (cur.isPunct("[")) {
+    const capacityTokens: Token[] = [];
     let depth = 0;
     do {
       const t = cur.next();
       if (t.kind === "punct" && t.text === "[") depth++;
       else if (t.kind === "punct" && t.text === "]") depth--;
+      else if (depth === 1) capacityTokens.push(t);
     } while (depth > 0 && !cur.atEnd());
+    const capacityText = capacityTokens.map((t) => t.text).join("").trim();
+    const leafName = parts[parts.length - 1];
+    if (/^(String|WString)$/i.test(leafName) && /^\d+$/.test(capacityText)) {
+      length = parseInt(capacityText, 10);
+    }
   }
   if (parts.length > 1) {
-    return { kind: "named", name: parts[parts.length - 1], quoted: false, namespace: parts.slice(0, -1).join(".") };
+    return { kind: "named", name: parts[parts.length - 1], quoted: false, namespace: parts.slice(0, -1).join("."), length };
   }
-  return { kind: "named", name: parts[0], quoted: false, namespace: null };
+  return { kind: "named", name: parts[0], quoted: false, namespace: null, length };
 }
 
 /** `Name { pragma }? : TypeRef ;` -- shared member grammar for STRUCT
