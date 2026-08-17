@@ -1528,10 +1528,11 @@ export function buildDocumentIndex(
     if (!ownerBlock) return "variable";
     if (ownerBlock.blockType === "DATA_BLOCK") {
       const inst = ownerBlock.instanceOf;
+      const workspaceInstanceTarget = inst ? blockIndex.get(inst.name) : undefined;
       const callableInstance = Boolean(
         ownerBlock.instructionName ||
         (inst && !inst.quoted && resolveInstanceTypeToInstructionNames(ruleSet, inst.name).length > 0) ||
-        (inst?.quoted && blockIndex.get(inst.name)?.blockType === "FUNCTION_BLOCK")
+        workspaceInstanceTarget?.blockType === "FUNCTION_BLOCK"
       );
       return callableInstance ? "s7CallableInstance" : "s7DataBlock";
     }
@@ -1548,14 +1549,16 @@ export function buildDocumentIndex(
     lines.push("", ...hoverSource(ownerBlock.file));
     const inst = ownerBlock.instanceOf;
     if (ownerBlock.blockType === "DATA_BLOCK" && inst) {
+      const target = blockIndex.get(inst.name);
       // The InstructionName pragma is authoritative when present; otherwise an
-      // unquoted instance-of line names the instruction/system type directly.
-      const instrName = ownerBlock.instructionName ?? (inst.quoted ? undefined : inst.name);
+      // unquoted instance-of line is tried as an instruction/system type. A
+      // workspace FUNCTION_BLOCK with that name wins: TIA also exports user
+      // FB instance DBs as `DATA_BLOCK DbName : FbName` without quotes.
+      const instrName = ownerBlock.instructionName ?? (!target && !inst.quoted ? inst.name : undefined);
       const entry = instrName ? findSclInstruction(instrName) : undefined;
       if (instrName && entry) {
         lines.push("", "---", "", `instance of instruction:`, "", renderInstructionHover(instrName, entry, true));
-      } else if (inst.quoted) {
-        const target = blockIndex.get(inst.name);
+      } else if (target || inst.quoted) {
         lines.push(
           "",
           "---",
@@ -1585,9 +1588,9 @@ export function buildDocumentIndex(
    * FUNCTION_BLOCK whose interface supplies the DB's members -- the DB itself
    * has no VAR section to resolve `"Pump_DB".q_y` against. */
   function instanceTargetBlock(blk: BlockInfo): BlockInfo | undefined {
-    if (blk.blockType !== "DATA_BLOCK" || !blk.instanceOf?.quoted) return undefined;
+    if (blk.blockType !== "DATA_BLOCK" || !blk.instanceOf) return undefined;
     const target = blockIndex.get(blk.instanceOf.name);
-    return target && target.name !== blk.name ? target : undefined;
+    return target?.blockType === "FUNCTION_BLOCK" && target.name !== blk.name ? target : undefined;
   }
 
   /** For an instruction instance DB (`DATA_BLOCK "R_TRIG_DB" ... R_TRIG`), the
@@ -1597,6 +1600,7 @@ export function buildDocumentIndex(
    * `q` while SCL writes `Q`. */
   function instanceDbInstructionMember(blk: BlockInfo, member: string): { name: string; dataTypes: string[]; source: string } | undefined {
     if (blk.blockType !== "DATA_BLOCK") return undefined;
+    if (instanceTargetBlock(blk)) return undefined;
     const instanceType = blk.instructionName ?? (blk.instanceOf && !blk.instanceOf.quoted ? blk.instanceOf.name : undefined);
     if (!instanceType) return undefined;
     const wanted = member.toLowerCase();

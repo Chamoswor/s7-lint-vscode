@@ -215,10 +215,7 @@ const externalFbText = [
   "END_FUNCTION_BLOCK",
 ].join("\n");
 const externalDbText = [
-  'DATA_BLOCK "FB_ExternalProbe_DB"',
-  "NON_RETAIN",
-  '"FB_ExternalProbe"',
-  "BEGIN",
+  "DATA_BLOCK FB_ExternalProbe_DB : FB_ExternalProbe",
   "END_DATA_BLOCK",
 ].join("\n");
 const externalCallText = [
@@ -244,7 +241,7 @@ const externalCallDocumentIndex = buildDocumentIndex(externalCallText, ruleSet, 
 const externalCallUnknownPins = externalCallDocumentIndex.diagnostics.filter((diagnostic) => diagnostic.code === "unknown-pin");
 expectIndexedBlockShape(
   externalCallUnknownPins.length === 1 && externalCallUnknownPins[0].message.includes("BadPin"),
-  "external FB instance DB calls validate pins against the instanced FUNCTION_BLOCK interface"
+  "unquoted colon-form FB instance DB calls validate pins against the instanced FUNCTION_BLOCK interface"
 );
 const externalOutputLine = externalCallText.split("\n").findIndex((line) => line.includes("q_Value")) + 1;
 const externalOutputSpan = externalCallDocumentIndex.spans.find(
@@ -252,7 +249,7 @@ const externalOutputSpan = externalCallDocumentIndex.spans.find(
 );
 expectIndexedBlockShape(
   externalOutputSpan?.definition?.file === "FB_ExternalProbe.scl",
-  "external FB instance DB pin definitions resolve to the FUNCTION_BLOCK declaration"
+  "unquoted colon-form FB instance DB pin definitions resolve to the FUNCTION_BLOCK declaration"
 );
 
 // Real UDT type cache (analysis/symbolTable.ts's cross-type member
