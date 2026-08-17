@@ -203,6 +203,16 @@ function checkEnEno(call: CallNode, entry: InstructionEntry, ruleSet: RuleSet): 
   return [formatDiagnostic(ruleSet, "eno-generation-not-supported", call.line, call.col, { callName: call.name, requested })];
 }
 
+/** Siemens LAD/FBD safety calls carry two card attributes in their call-site
+ * pragma. TIA may parse a source without them far enough to blame the first
+ * actual operand, even though the operand's type and memory area are valid. */
+function checkSafetyCallMetadata(call: CallNode, entry: InstructionEntry, ruleSet: RuleSet, isScl: boolean): LintDiagnostic[] {
+  if (isScl || entry.family.toLowerCase() !== "safety") return [];
+  const keys = new Set(Object.keys(call.pragma ?? {}).map((key) => key.toLowerCase()));
+  if (keys.has("f_user_card") && keys.has("f_image_card")) return [];
+  return [formatDiagnostic(ruleSet, "safety-call-metadata-missing", call.line, call.col, { callName: call.name })];
+}
+
 /** Exported so linter/sclInstructionChecks.ts can reuse the same pin/
  * template validation for an SCL call once it has resolved the call's
  * effective registry name (a free-function name, or the declared type of a
@@ -308,6 +318,7 @@ export function checkCall(call: CallNode, ruleSet: RuleSet, networkLanguage: str
 
   diags.push(...checkTemplate(call, entry, ruleSet));
   diags.push(...checkEnEno(call, entry, ruleSet));
+  diags.push(...checkSafetyCallMetadata(call, entry, ruleSet, isScl));
   return diags;
 }
 
@@ -335,6 +346,13 @@ export function checkInstructions(block: ParsedBlockFile, ruleSet: RuleSet, bloc
   for (const network of block.networks) {
     const networkLanguage = network.pragma?.S7_Language;
     for (const rung of network.rungs) {
+      if (block.safety === true && rung.enableInput && rung.hasCallBox) {
+        diags.push(
+          formatDiagnostic(ruleSet, "safety-call-enable-input", rung.enableInput.line, rung.enableInput.col, {
+            enable: rung.enableInput.text,
+          })
+        );
+      }
       for (const call of rung.calls) {
         if (call.externalName !== undefined) {
           diags.push(...checkExternalCall(call, ruleSet, blockIndex));

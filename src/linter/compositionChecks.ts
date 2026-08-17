@@ -60,3 +60,18 @@ export function checkStructCountPerDataBlock(block: ParsedBlockFile, ruleSet: Ru
   }
   return [];
 }
+
+/** A safety block numbered 1 is the main safety block. Its callable
+ * interface must not expose formal input or output parameters. */
+export function checkMainSafetyBlockInterface(block: ParsedBlockFile, ruleSet: RuleSet): LintDiagnostic[] {
+  if (block.safety !== true || block.blockNumber !== 1) return [];
+
+  const forbiddenSections = new Set(["VAR_INPUT", "VAR_OUTPUT", "VAR_IN_OUT"]);
+  const forbiddenParameters = block.varSections
+    .filter((section) => forbiddenSections.has(section.kind))
+    .flatMap((section) => section.members);
+
+  return forbiddenParameters.map((parameter) =>
+    formatDiagnostic(ruleSet, "main-safety-block-interface-parameters", parameter.line ?? 1, 1)
+  );
+}

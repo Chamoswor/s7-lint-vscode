@@ -156,6 +156,12 @@ export interface WireLabel {
 
 export interface RungNode {
   calls: CallNode[];
+  /** True when the rung contains TIA's LAD/FBD `#instance(...)` CallBox
+   * form, which is distinct from an instruction's `.Instruction(...)` call. */
+  hasCallBox: boolean;
+  /** Operand after `RUNG` that supplies an implicit EN/power-flow input.
+   * Undefined for a bare RUNG. */
+  enableInput?: { text: string; line: number; col: number };
   /** This RUNG's own `RUNG wire#X` header, if it has one (vs. `RUNG TRUE`,
    * `RUNG #tag`, or a bare `RUNG` -- none of those are wire-rooted, so
    * they're left undefined here rather than guessed at). */
@@ -203,6 +209,10 @@ export interface ParsedBlockFile {
   /** Explicit S7_Optimized_Access block/file pragma. Undefined when the
    * source does not state an access mode. */
   optimizedAccess?: boolean;
+  /** True when the merged file/block pragma declares `S7_Safety := TRUE`. */
+  safety?: boolean;
+  /** Siemens block number from `S7_BlockNumber`, normalized as an integer. */
+  blockNumber?: number;
   varSections: VarSection[];
   networks: NetworkNode[];
   /** Instruction/instance calls found in a `BEGIN ... END_xxx` SCL statement
@@ -741,13 +751,27 @@ function tryConsumeWireLabel(cur: TokenCursor): WireLabel | null {
 function parseRung(cur: TokenCursor): RungNode {
   cur.tryIdent("RUNG");
   const wireHeader = tryConsumeWireLabel(cur) ?? undefined;
+  const headerToken = cur.peek();
+  const startsCall =
+    (headerToken.kind === "ident" && headerToken.text.startsWith("#") &&
+      ((cur.peek(1).kind === "punct" && cur.peek(1).text === "(") || (cur.peek(1).kind === "punct" && cur.peek(1).text === "."))) ||
+    ((headerToken.kind === "ident" || headerToken.kind === "string") && cur.peek(1).kind === "punct" && cur.peek(1).text === "(");
+  const enableInput = wireHeader
+    ? { text: `wire#${wireHeader.name}`, line: wireHeader.line, col: wireHeader.col }
+    : !cur.isIdent("END_RUNG") && !cur.isPunct("{") && !startsCall
+      ? { text: headerToken.text, line: headerToken.line, col: headerToken.col }
+      : undefined;
   const calls: CallNode[] = [];
+  let hasCallBox = false;
   const bodyWireLabels: WireLabel[] = [];
   let pendingPragma: Pragma | undefined;
   while (!cur.isIdent("END_RUNG") && !cur.atEnd()) {
     if (cur.isPunct("{")) {
       pendingPragma = parsePragmaBlock(cur) ?? undefined;
       continue;
+    }
+    if (cur.peek().kind === "ident" && cur.peek().text.startsWith("#") && cur.peek(1).kind === "punct" && cur.peek(1).text === "(") {
+      hasCallBox = true;
     }
     const call = tryParseCall(cur);
     if (call) {
@@ -765,7 +789,7 @@ function parseRung(cur: TokenCursor): RungNode {
   }
   cur.tryIdent("END_RUNG");
   const endWireLabel = tryConsumeWireLabel(cur) ?? undefined;
-  return { calls, wireHeader, bodyWireLabels, endWireLabel };
+  return { calls, hasCallBox, enableInput, wireHeader, bodyWireLabels, endWireLabel };
 }
 
 /** Parses an SCL `BEGIN ... <endKeyword>` statement body, flatly collecting
@@ -1303,6 +1327,11 @@ function pragmaBoolean(pragma: Pragma | null | undefined, key: string): boolean 
   return undefined;
 }
 
+function pragmaValue(pragma: Pragma | null | undefined, key: string): string | undefined {
+  if (!pragma) return undefined;
+  return Object.entries(pragma).find(([candidate]) => candidate.toLowerCase() === key.toLowerCase())?.[1];
+}
+
 function parseBlockDeclaration(cur: TokenCursor, filePragma?: Pragma | null): ParsedBlockFile | null {
   let blockType: (typeof BLOCK_KEYWORDS)[number] | null = null;
   for (const kw of BLOCK_KEYWORDS) {
@@ -1323,6 +1352,10 @@ function parseBlockDeclaration(cur: TokenCursor, filePragma?: Pragma | null): Pa
   const headerPragma: Pragma = { ...(filePragma ?? {}), ...(inlineHeaderPragma ?? {}) };
   const instructionName = headerPragma?.InstructionName;
   const optimizedAccess = pragmaBoolean(headerPragma, "S7_Optimized_Access");
+  const safety = pragmaBoolean(headerPragma, "S7_Safety");
+  const blockNumberText = pragmaValue(headerPragma, "S7_BlockNumber");
+  const parsedBlockNumber = blockNumberText === undefined ? Number.NaN : Number(blockNumberText.trim());
+  const blockNumber = Number.isInteger(parsedBlockNumber) ? parsedBlockNumber : undefined;
   let instanceOf: { name: string; quoted: boolean } | undefined;
   // Only the HEADER region can carry the instance-of line; once a VAR section
   // or the body starts, anything left is data/statements.
@@ -1440,6 +1473,8 @@ function parseBlockDeclaration(cur: TokenCursor, filePragma?: Pragma | null): Pa
     instanceOf,
     instructionName,
     optimizedAccess,
+    safety,
+    blockNumber,
   };
 }
 

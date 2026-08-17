@@ -9,7 +9,7 @@ const path = require("path");
 const { loadRuleSet } = require("../out/rules/loadRules");
 const { parseS7dclBlock, parseS7dclFile, detectS7dclKind } = require("../out/parser/s7dclParser");
 const { checkInstructions } = require("../out/linter/instructionChecks");
-const { checkStructCountPerDataBlock } = require("../out/linter/compositionChecks");
+const { checkMainSafetyBlockInterface, checkStructCountPerDataBlock } = require("../out/linter/compositionChecks");
 const { checkLadWiring } = require("../out/linter/ladWiringChecks");
 const { checkSclInstructions } = require("../out/linter/sclInstructionChecks");
 const { checkUndeclaredIdentifiers, checkSclConditionTypes } = require("../out/linter/symbolChecks");
@@ -29,6 +29,67 @@ console.log(
 
 function readText(p) {
   return fs.readFileSync(p, "utf-8");
+}
+
+const safetyCallWithoutMetadata = parseS7dclBlock(`
+{ S7_Safety := "TRUE" }
+FUNCTION_BLOCK "SafetyHelper"
+VAR
+  stopInstance : ESTOP1;
+END_VAR
+{ S7_Language := "FBD" }
+NETWORK
+  RUNG
+    #stopInstance.ESTOP1(E_STOP := TRUE, ACK_NEC := TRUE, ACK := FALSE, TIME_DEL := T#0ms, Q =>, Q_DELAY =>, ACK_REQ =>, DIAG =>)
+  END_RUNG
+END_NETWORK
+END_FUNCTION_BLOCK`);
+if (!safetyCallWithoutMetadata) throw new Error("Safety metadata fixture failed to parse");
+const safetyMetadataDiags = checkInstructions(safetyCallWithoutMetadata, ruleSet).filter((d) => d.code === "safety-call-metadata-missing");
+if (safetyMetadataDiags.length !== 1) throw new Error("Expected missing Safety call metadata diagnostic");
+
+const safetyCallWithEnable = parseS7dclBlock(`
+{ S7_Safety := "TRUE" }
+FUNCTION_BLOCK "SafetyMain"
+VAR
+  helper : "SafetyHelper";
+END_VAR
+{ S7_Language := "FBD" }
+NETWORK
+  RUNG TRUE
+    #helper()
+  END_RUNG
+END_NETWORK
+END_FUNCTION_BLOCK`);
+if (!safetyCallWithEnable) throw new Error("Safety CallBox EN fixture failed to parse");
+const safetyEnableDiags = checkInstructions(safetyCallWithEnable, ruleSet).filter((d) => d.code === "safety-call-enable-input");
+if (safetyEnableDiags.length !== 1 || safetyEnableDiags[0].message.indexOf("RUNG operand: TRUE") < 0) {
+  throw new Error("Expected Safety CallBox EN diagnostic on the RUNG operand");
+}
+
+const mainSafetyWithParameter = parseS7dclBlock(`
+{ S7_BlockNumber := "1"; S7_Safety := "TRUE" }
+FUNCTION_BLOCK "SafetyProgram"
+VAR_OUTPUT
+  Ready : Bool;
+  Healthy : Bool;
+END_VAR
+END_FUNCTION_BLOCK`);
+if (!mainSafetyWithParameter) throw new Error("Main-safety interface fixture failed to parse");
+const mainSafetyInterfaceDiags = checkMainSafetyBlockInterface(mainSafetyWithParameter, ruleSet);
+if (mainSafetyInterfaceDiags.length !== 2 || mainSafetyInterfaceDiags.some((d) => d.code !== "main-safety-block-interface-parameters")) {
+  throw new Error("Expected one main-safety interface diagnostic per parameter");
+}
+
+const ordinarySafetyBlock = parseS7dclBlock(`
+{ S7_BlockNumber := "2"; S7_Safety := "TRUE" }
+FUNCTION_BLOCK "SafetyHelper"
+VAR_OUTPUT
+  Ready : Bool;
+END_VAR
+END_FUNCTION_BLOCK`);
+if (!ordinarySafetyBlock || checkMainSafetyBlockInterface(ordinarySafetyBlock, ruleSet).length !== 0) {
+  throw new Error("A non-main safety block must allow interface parameters");
 }
 
 // This corpus intentionally contains only the twelve anonymized .s7dcl

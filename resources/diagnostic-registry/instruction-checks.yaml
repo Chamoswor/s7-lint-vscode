@@ -50,3 +50,10 @@ missing-required-pin:
     scl: "Missing required parameter '{pinName}' on instruction '{callName}'."
     positional: "'{callName}' expects at least {expected} positional argument(s), found {found}."
   notes: "'named' -- a required NAMED pin absent from a LAD/FBD call. 'scl' -- the same NAMED case for an SCL call (networkLanguage === \"SCL\") -- previously unreachable for SCL (required was blanket-relaxed for every SCL call), now reachable for a dedicated *-SCL.yaml entry whose own data genuinely requires a parameter (e.g. 11-conversion-SCL.yaml's LREAL_TO_REAL). 'positional' -- fewer positional arguments than the registry's required positional-pin count; already says 'argument', not 'pin', so it's shared as-is by both languages."
+safety-call-metadata-missing:
+  severity: error
+  message: "Safety instruction '{callName}' is missing the Siemens call attributes f_user_card and f_image_card; TIA Portal may reject a valid operand while importing the block."
+
+safety-call-enable-input:
+  severity: error
+  message: "Enable input EN cannot be used in the safety program for CallBox (RUNG operand: {enable}). Use a bare RUNG for the block call."

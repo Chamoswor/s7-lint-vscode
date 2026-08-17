@@ -4,7 +4,7 @@ import * as vscode from "vscode";
 import { buildDocumentIndex } from "./analysis/documentIndex";
 import { CacheManager } from "./cache/cacheManager";
 import { getMlcLocale } from "./config";
-import { checkStructCountPerDataBlock } from "./linter/compositionChecks";
+import { checkMainSafetyBlockInterface, checkStructCountPerDataBlock } from "./linter/compositionChecks";
 import { LintDiagnostic, LintSeverity } from "./linter/diagnostics";
 import { checkSclExpressionTypes } from "./linter/exprTypeChecks";
 import { checkLadWiring } from "./linter/ladWiringChecks";
@@ -32,6 +32,7 @@ import { S7dclRenameProvider } from "./providers/rename";
 import { S7dclSemanticTokensProvider, semanticTokensLegend } from "./providers/semanticTokens";
 import { S7ResDefinitionProvider } from "./providers/s7resDefinition";
 import { S7ResQuickFixProvider } from "./providers/s7resQuickFixProvider";
+import { SafetyCallQuickFixProvider } from "./providers/safetyCallQuickFixProvider";
 import { S7ResRenameProvider } from "./providers/s7resRename";
 import { loadRuleSet } from "./rules/loadRules";
 import { RuleSet } from "./rules/types";
@@ -227,6 +228,11 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
       S7DCL_SELECTOR,
       new RegistryQuickFixProvider(ruleSet, cacheManager.getBlockIndex(), () => cacheManager.getTypeCacheResult()),
       RegistryQuickFixProvider.metadata
+    ),
+    vscode.languages.registerCodeActionsProvider(
+      S7DCL_SELECTOR,
+      new SafetyCallQuickFixProvider(),
+      SafetyCallQuickFixProvider.metadata
     ),
     vscode.languages.registerCodeActionsProvider(
       S7DCL_SELECTOR,
@@ -594,6 +600,9 @@ function lintDocument(doc: vscode.TextDocument): void {
           diagnostics.push(toVscodeDiagnostic(doc, d));
         }
         for (const d of checkStructCountPerDataBlock(block, ruleSet)) {
+          diagnostics.push(toVscodeDiagnostic(doc, d));
+        }
+        for (const d of checkMainSafetyBlockInterface(block, ruleSet)) {
           diagnostics.push(toVscodeDiagnostic(doc, d));
         }
       }
