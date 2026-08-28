@@ -50,6 +50,7 @@ allSections:
     - DB_WWW
     - DInt
     - DTL
+    - Date_And_Time
     - DWord
     - Date
     - EVENT_ANY
