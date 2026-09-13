@@ -132,6 +132,7 @@ commands below link to their test runners in the GitHub repository:
 | `npm run test:s7res` | multilingual-resource diagnostics | [`test-s7res-checks.js`](https://github.com/Chamoswor/s7-lint-vscode/blob/main/scripts/test-s7res-checks.js) |
 | `npm run test:s7res-quickfix` | multilingual-resource quick fixes | [`test-s7res-quickfix.js`](https://github.com/Chamoswor/s7-lint-vscode/blob/main/scripts/test-s7res-quickfix.js) |
 | `npm run test:plc-tags` | PLC-tag resolution from XML exports | [`test-plc-tags.js`](https://github.com/Chamoswor/s7-lint-vscode/blob/main/scripts/test-plc-tags.js) |
+| `npm run test:positions` | source lines of XML and multi-block declarations | [`test-source-positions.js`](https://github.com/Chamoswor/s7-lint-vscode/blob/main/scripts/test-source-positions.js) |
 | `npm run test:semantic-colors` | automatic palette installation and migration | [`test-semantic-colors.js`](https://github.com/Chamoswor/s7-lint-vscode/blob/main/scripts/test-semantic-colors.js) |
 | `npm run test:completion` | completion and context classification | [`test-completion-context.js`](https://github.com/Chamoswor/s7-lint-vscode/blob/main/scripts/test-completion-context.js) |
 | `npm run test:rename` | UDT and symbol rename behavior | [`test-rename.js`](https://github.com/Chamoswor/s7-lint-vscode/blob/main/scripts/test-rename.js) |
@@ -196,8 +197,6 @@ by S7 Lint and preserves unrelated or manually customized semantic colors.
 - **Incomplete type information:** Checks that require an unresolved symbol or
   an expression without one safely inferred type are skipped instead of
   guessed.
-- **XML source locations:** XML UDT members do not retain source positions, so
-  related cache diagnostics point to line 1 instead of the exact member.
 - **Workspace updates:** Relevant file changes rebuild the complete type and
   block caches rather than updating only the affected entries.
 - **Registry confidence:** Checks based on `shape-only` instruction entries are

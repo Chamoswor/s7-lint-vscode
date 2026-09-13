@@ -6,6 +6,7 @@
 // its declared Bool/Int/... type instead of treating it as a string literal.
 import { XMLParser } from "fast-xml-parser";
 import { TypeRef, parseTypeRefText } from "./typeRef";
+import { XmlLineIndex, withoutByteOrderMark } from "./xmlSourcePosition";
 
 export interface ParsedPlcTag {
   name: string;
@@ -19,20 +20,24 @@ export interface ParsedPlcTag {
 const parser = new XMLParser({
   ignoreAttributes: false,
   attributeNamePrefix: "@_",
+  captureMetaData: true,
   isArray: (name) => name === "SW.Tags.PlcTagTable" || name === "SW.Tags.PlcTag" || name === "MultilingualTextItem",
 });
 
 /** Returns every tag declared by a TIA PLC tag-table XML export. */
 export function parsePlcTagXml(text: string): ParsedPlcTag[] {
+  if (!text.includes("<SW.Tags.PlcTagTable")) return [];
+  const source = withoutByteOrderMark(text);
   let doc: any;
   try {
-    doc = parser.parse(text);
+    doc = parser.parse(source);
   } catch {
     return [];
   }
 
   const root = doc?.Document;
   if (!root) return [];
+  const lines = new XmlLineIndex(source);
   const tables: any[] = root["SW.Tags.PlcTagTable"] ?? [];
   const results: ParsedPlcTag[] = [];
 
@@ -61,7 +66,7 @@ export function parsePlcTagXml(text: string): ParsedPlcTag[] {
         typeRef: parseTypeRefText(dataTypeName),
         logicalAddress,
         comments,
-        line: 1,
+        line: lines.textChildLine(tag, "SW.Tags.PlcTag", "Name") ?? 1,
       });
     }
   }

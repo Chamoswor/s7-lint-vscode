@@ -13,16 +13,21 @@
 // shape (and the same cache graph algorithm) as the .udt text format.
 import { XMLParser } from "fast-xml-parser";
 import { MemberRef, TypeRef, parseTypeRefText } from "./typeRef";
+import { XmlLineIndex, withoutByteOrderMark } from "./xmlSourcePosition";
 
 export interface ParsedUdtDecl {
   name: string;
   members: MemberRef[];
-  line: number; // XML has no useful line info per-declaration; always 1
+  /** Line of the declaration's own `<Name>` element. */
+  line: number;
 }
 
 const parser = new XMLParser({
   ignoreAttributes: false,
   attributeNamePrefix: "@_",
+  // Each element records where it starts, so declarations and members keep
+  // their own source line -- see xmlSourcePosition.ts.
+  captureMetaData: true,
   isArray: (name) =>
     name === "Member" ||
     name === "Section" ||
@@ -37,9 +42,13 @@ function memberDatatypeToTypeRef(datatype: string): TypeRef {
 
 /** Parses one `PLC data types/*.xml` file's text into its top-level UDT declaration(s). */
 export function parseUdtXml(text: string): ParsedUdtDecl[] {
+  // Every XML export is offered to every XML parser, so skip the parse
+  // outright when this one's root element can't be in the file.
+  if (!text.includes("<SW.Types.PlcStruct")) return [];
+  const source = withoutByteOrderMark(text);
   let doc: any;
   try {
-    doc = parser.parse(text);
+    doc = parser.parse(source);
   } catch {
     return [];
   }
@@ -47,6 +56,7 @@ export function parseUdtXml(text: string): ParsedUdtDecl[] {
   const structs = doc?.Document?.["SW.Types.PlcStruct"];
   if (!structs) return [];
   const list = Array.isArray(structs) ? structs : [structs];
+  const lines = new XmlLineIndex(source);
 
   const results: ParsedUdtDecl[] = [];
   for (const s of list) {
@@ -68,9 +78,10 @@ export function parseUdtXml(text: string): ParsedUdtDecl[] {
       .map((m) => ({
         name: m["@_Name"] as string,
         typeRef: memberDatatypeToTypeRef(m["@_Datatype"] as string),
+        line: lines.lineOf(m),
       }));
 
-    results.push({ name, members, line: 1 });
+    results.push({ name, members, line: lines.textChildLine(s, "SW.Types.PlcStruct", "Name") ?? 1 });
   }
   return results;
 }
@@ -79,6 +90,8 @@ export function parseUdtXml(text: string): ParsedUdtDecl[] {
  * block index needs (see `parseBlockXml`). */
 export interface ParsedXmlBlock {
   name: string;
+  /** Line of the block's own `<Name>` element. */
+  line: number;
   /** `SW.Blocks.InstanceDB`'s `InstanceOfName` -- the FUNCTION_BLOCK or
    * instruction this DB is the instance data for. Undefined for a global DB. */
   instanceOfName?: string;
@@ -119,14 +132,17 @@ const XML_SECTION_TO_VAR: Record<string, string> = {
  * `parseUdtXml` without either having to pre-classify it.
  */
 export function parseBlockXml(text: string): ParsedXmlBlock[] {
+  if (!text.includes("<SW.Blocks.InstanceDB") && !text.includes("<SW.Blocks.GlobalDB")) return [];
+  const source = withoutByteOrderMark(text);
   let doc: any;
   try {
-    doc = parser.parse(text);
+    doc = parser.parse(source);
   } catch {
     return [];
   }
   const root = doc?.Document;
   if (!root) return [];
+  const lines = new XmlLineIndex(source);
 
   const results: ParsedXmlBlock[] = [];
   for (const key of ["SW.Blocks.InstanceDB", "SW.Blocks.GlobalDB"]) {
@@ -143,13 +159,13 @@ export function parseBlockXml(text: string): ParsedXmlBlock[] {
         const memberList: any[] = Array.isArray(sec?.Member) ? sec.Member : sec?.Member ? [sec.Member] : [];
         const members: MemberRef[] = memberList
           .filter((m) => typeof m?.["@_Name"] === "string" && typeof m?.["@_Datatype"] === "string")
-          .map((m) => ({ name: m["@_Name"] as string, typeRef: memberDatatypeToTypeRef(m["@_Datatype"] as string) }));
+          .map((m) => ({ name: m["@_Name"] as string, typeRef: memberDatatypeToTypeRef(m["@_Datatype"] as string), line: lines.lineOf(m) }));
         if (members.length > 0) sections.push({ kind: XML_SECTION_TO_VAR[secName] ?? "VAR", members });
       }
 
       const instanceOfName = typeof attrs?.InstanceOfName === "string" ? attrs.InstanceOfName : undefined;
       const instanceOfType = typeof attrs?.InstanceOfType === "string" ? attrs.InstanceOfType : undefined;
-      results.push({ name, instanceOfName, instanceOfType, sections });
+      results.push({ name, line: lines.textChildLine(block, key, "Name") ?? 1, instanceOfName, instanceOfType, sections });
     }
   }
   return results;

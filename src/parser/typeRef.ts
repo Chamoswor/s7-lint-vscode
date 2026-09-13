@@ -13,10 +13,10 @@ export type TypeRef =
 export interface MemberRef {
   name: string;
   typeRef: TypeRef;
-  /** 1-based source line, when the parser producing this MemberRef can
-   * determine one (text formats can; the XML format currently cannot --
-   * see udtXmlParser.ts). Diagnostics fall back to the declaration's own
-   * line when this is absent. */
+  /** 1-based source line. Every source-format parser records one (see
+   * xmlSourcePosition.ts for XML exports); a member synthesized from a
+   * registry has none, and diagnostics then fall back to the declaration's
+   * own line. */
   line?: number;
 }
 

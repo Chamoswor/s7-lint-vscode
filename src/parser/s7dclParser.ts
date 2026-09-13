@@ -187,6 +187,8 @@ export interface VarSection {
 
 export interface ParsedBlockFile {
   blockType: "FUNCTION_BLOCK" | "FUNCTION" | "ORGANIZATION_BLOCK" | "DATA_BLOCK";
+  /** 1-based line of the block's name in its header. */
+  line: number;
   name: string;
   /** For a DATA_BLOCK: the type this DB is an INSTANCE of, written as a bare
    * line in the header between the pragma and `BEGIN`. Two shapes, told apart
@@ -1487,6 +1489,7 @@ function parseBlockDeclaration(cur: TokenCursor, filePragma?: Pragma | null): Pa
     safety,
     blockNumber,
     returnType,
+    line: nameTok.line,
   };
 }
 

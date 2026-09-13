@@ -55,16 +55,11 @@ function flattenVars(sections: VarSection[]): Map<string, BlockVar> {
  * `parseS7dclFile`). Empty for a file with no program-block declarations at
  * all (e.g. a pure TYPE/UDT file). */
 export function scanBlockFile(fsPath: string, text: string): BlockInfo[] {
-  // The block-name token's line isn't retained on ParsedBlockFile today;
-  // line 1 is a safe, simple fallback -- every real export's block keyword
-  // is at or near the top of the file anyway (and a multi-declaration .scl
-  // file's later declarations don't have a meaningfully "more correct" line
-  // to fall back to either without deeper parser changes).
   return parseS7dclFile(text).map((parsed) => ({
     name: parsed.name,
     blockType: parsed.blockType,
     file: fsPath,
-    declLine: 1,
+    declLine: parsed.line,
     vars: flattenVars(parsed.varSections),
     instanceOf: parsed.instanceOf,
     instructionName: parsed.instructionName,
@@ -89,7 +84,7 @@ export function scanBlockXmlFile(fsPath: string, text: string): BlockInfo[] {
     name: parsed.name,
     blockType: "DATA_BLOCK" as ParsedBlockFile["blockType"],
     file: fsPath,
-    declLine: 1,
+    declLine: parsed.line,
     vars: flattenVars(parsed.sections.map((s) => ({ kind: s.kind, members: s.members })) as VarSection[]),
     instanceOf: parsed.instanceOfName ? { name: parsed.instanceOfName, quoted: parsed.instanceOfType === "FB" } : undefined,
   }));
