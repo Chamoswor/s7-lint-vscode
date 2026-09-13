@@ -68,5 +68,6 @@ export const KNOWN_PIN_FIELDS = new Set<string>([
   "containerKinds",
   "memoryAreas",
   "allowedDeclarations",
+  "repeat",
   "note",
 ]);

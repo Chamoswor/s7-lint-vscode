@@ -15,6 +15,7 @@
 import { BlockIndex } from "../analysis/blockIndex";
 import { CallNode, ParsedBlockFile } from "../parser/s7dclParser";
 import { typeRefTopLevelName } from "../parser/typeRef";
+import { findRegistryPin, registrySpelling } from "../rules/pinMatching";
 import { InstructionEntry, RuleSet } from "../rules/types";
 import { formatDiagnostic, LintDiagnostic, LintSeverity, RegistryFix } from "./diagnostics";
 
@@ -257,18 +258,20 @@ export function checkCall(call: CallNode, ruleSet: RuleSet, networkLanguage: str
 
   for (const cp of namedCallPins) {
     if (isEnEnoParameter(cp.name, entry)) continue;
-    const exact = namedRegPins.find((rp) => rp.name === cp.name);
-    if (exact) continue;
-    const caseInsensitive = namedRegPins.find((rp) => rp.name!.toLowerCase() === cp.name!.toLowerCase());
-    if (caseInsensitive) {
+    const match = findRegistryPin(namedRegPins, cp.name!);
+    // SCL identifiers are case-insensitive -- TIA accepts `in1 :=` and
+    // rewrites it to its own spelling -- so only a .s7dcl export, whose pin
+    // names are matched exactly, can have a casing defect.
+    if (match && (match.exactCase || isScl)) continue;
+    if (match) {
       diags.push(
         formatDiagnostic(
           ruleSet,
           "pin-case-mismatch",
           cp.line,
           cp.col,
-          { pinName: cp.name!, registryName: caseInsensitive.name!, callName: call.name },
-          { variant: isScl ? "scl" : "catalog" }
+          { pinName: cp.name!, registryName: registrySpelling(match, cp.name!), callName: call.name },
+          { variant: "catalog" }
         )
       );
     } else {
@@ -277,7 +280,9 @@ export function checkCall(call: CallNode, ruleSet: RuleSet, networkLanguage: str
   }
 
   for (const rp of namedRegPins) {
-    if (!rp.required) continue;
+    // A repeated family (`repeat`) is the optional inputs TIA lets a box
+    // grow -- `required` only ever describes a fixed pin.
+    if (!rp.required || rp.repeat) continue;
     const found = namedCallPins.some((cp) => cp.name === rp.name || cp.name?.toLowerCase() === rp.name!.toLowerCase());
     // SCL permits filling ANY formal parameter positionally, strictly in its
     // declared order, regardless of whether this registry happens to record

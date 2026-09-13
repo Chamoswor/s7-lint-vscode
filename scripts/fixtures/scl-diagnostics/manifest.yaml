@@ -32,6 +32,13 @@ positive:
     compile error. It is not - a compiling S7-1500 project indexes arrays this way
     in several places, and the original entry's own note asked for a compiler check
     that was never done. Kept as a positive case so the construct stays covered.
+- id: SYN-POS-003
+  file: positive/SYN-POS-003-tia-editor-shapes.scl
+  expectedDiagnostics: 0
+  notes: Shapes TIA Portal writes or accepts that were reported as false positives
+    (GitHub issues 1-4) - a free-text REGION name followed by a parenthesised
+    (/* */) comment, MIN/MAX inputs beyond IN2, SCL parameter names in any casing,
+    and WSTRING#'' typed string constants.
 negative:
 - id: SYN-STMT-001
   file: negative/parser/SYN-STMT-001-missing-assignment-semicolon.scl
@@ -370,6 +377,14 @@ negative:
   rule: A bare, unprefixed word is only a local reference when the block declares
     it; otherwise it needs a '#' prefix (local) or quotes (global).
   registrySource: TIA Portal external-source import behavior
+  targetPlatform: S7-1200/S7-1500
+- id: SEM-CALL-001
+  file: negative/semantic/SEM-CALL-001-repeated-pin-out-of-range.scl
+  severity: error
+  layer: semantic
+  rule: A repeated instruction input only exists up to its documented limit - MAX
+    accepts IN1 through IN32, so IN33 is an unknown parameter.
+  registrySource: SCL-math.yaml
   targetPlatform: S7-1200/S7-1500
 - id: SEM-FOR-001
   file: negative/semantic/SEM-FOR-001-modify-loop-variable.scl

@@ -176,7 +176,8 @@ MUX:
     - L
     - P
     note: Second selectable value.
-  - name: INn
+  - name: IN
+    repeat: { from: 2, to: 31 }
     dir: in
     required: false
     dataTypes: ["Binary numbers", Integers, "Floating-point numbers", Timers, "Character strings", Time_Of_Day, LTime_Of_Day, Date, Date_And_Time, LDT]
@@ -272,7 +273,8 @@ DEMUX:
     - L
     - P
     note: Second selectable output.
-  - name: OUTn
+  - name: OUT
+    repeat: { from: 2, to: 31 }
     dir: out
     required: false
     dataTypes: ["Binary numbers", Integers, "Floating-point numbers", Timers, "Character strings", Time_Of_Day, LTime_Of_Day, Date, Date_And_Time, LDT]

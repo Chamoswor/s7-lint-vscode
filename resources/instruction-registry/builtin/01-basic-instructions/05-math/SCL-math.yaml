@@ -68,7 +68,8 @@ MIN:
       memoryAreas: [I, Q, M, D, L, P]
       note: Second value to compare.
 
-    - name: INn
+    - name: IN
+      repeat: { from: 3, to: 32 }
       dir: in
       required: false
       dataTypes: ["Integers", "Floating-point numbers", Time, LTime, Time_Of_Day, LTime_Of_Day, Date, LDT, Date_And_Time, DTL]
@@ -109,7 +110,8 @@ MAX:
       memoryAreas: [I, Q, M, D, L, P]
       note: Second value to compare.
 
-    - name: INn
+    - name: IN
+      repeat: { from: 3, to: 32 }
       dir: in
       required: false
       dataTypes: ["Integers", "Floating-point numbers", Time, LTime, Time_Of_Day, LTime_Of_Day, Date, LDT, Date_And_Time, DTL]

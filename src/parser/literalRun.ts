@@ -59,8 +59,8 @@ export const LITERAL_TYPE_PREFIXES = new Set([
   "SINT", "INT", "DINT", "LINT", "USINT", "UINT", "UDINT", "ULINT", "L",
   // real constants
   "REAL", "LREAL",
-  // character constants
-  "CHAR", "WCHAR",
+  // character and character-string constants (`WSTRING#''`, `STRING#'abc'`)
+  "CHAR", "WCHAR", "STRING", "WSTRING",
   ...DURATION_PREFIXES,
   ...DATE_TIME_PREFIXES,
   // pointer (not a constant notation, same token shape)

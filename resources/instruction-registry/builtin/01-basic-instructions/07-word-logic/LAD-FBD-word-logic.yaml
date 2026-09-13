@@ -30,7 +30,7 @@ And:
       I, Q, M, D, L, P, constant]}
   - {name: in2, dir: in, required: true, dataTypes: ["Bit strings"], note: "Second bit-string operand.", memoryAreas: [
       I, Q, M, D, L, P, constant]}
-  - {name: inN, dir: in, required: false, dataTypes: ["Bit strings"], note: "Optional consecutively numbered additional
+  - {name: in, repeat: {from: 3}, dir: in, required: false, dataTypes: ["Bit strings"], note: "Optional consecutively numbered additional
       bit-string operands.", memoryAreas: [I, Q, M, D, L, P, constant]}
   - {name: out, dir: out, required: true, dataTypes: ["Bit strings"], note: "Bit-string result with the selected BYTE,
       WORD, DWORD or LWORD width.", memoryAreas: [I, Q, M, D, L, P]}
@@ -54,7 +54,7 @@ Or:
       I, Q, M, D, L, P, constant]}
   - {name: in2, dir: in, required: true, dataTypes: ["Bit strings"], note: "Second bit-string operand.", memoryAreas: [
       I, Q, M, D, L, P, constant]}
-  - {name: inN, dir: in, required: false, dataTypes: ["Bit strings"], note: "Optional consecutively numbered additional
+  - {name: in, repeat: {from: 3}, dir: in, required: false, dataTypes: ["Bit strings"], note: "Optional consecutively numbered additional
       bit-string operands.", memoryAreas: [I, Q, M, D, L, P, constant]}
   - {name: out, dir: out, required: true, dataTypes: ["Bit strings"], note: "Bit-string result with the selected BYTE,
       WORD, DWORD or LWORD width.", memoryAreas: [I, Q, M, D, L, P]}
@@ -78,7 +78,7 @@ Xor:
       I, Q, M, D, L, P, constant]}
   - {name: in2, dir: in, required: true, dataTypes: ["Bit strings"], note: "Second bit-string operand.", memoryAreas: [
       I, Q, M, D, L, P, constant]}
-  - {name: inN, dir: in, required: false, dataTypes: ["Bit strings"], note: "Optional consecutively numbered additional
+  - {name: in, repeat: {from: 3}, dir: in, required: false, dataTypes: ["Bit strings"], note: "Optional consecutively numbered additional
       bit-string operands.", memoryAreas: [I, Q, M, D, L, P, constant]}
   - {name: out, dir: out, required: true, dataTypes: ["Bit strings"], note: "Bit-string result with the selected BYTE,
       WORD, DWORD or LWORD width.", memoryAreas: [I, Q, M, D, L, P]}
@@ -192,7 +192,7 @@ Mux:
   - {name: in1, dir: in, required: true, dataTypes: ["Bit strings", "Integers", "Floating-point numbers", "Timers", 
         Char, WChar, Time_Of_Day, LTime_Of_Day, Date, LDT], note: "Second selectable value.", memoryAreas: [I, Q, M, 
         D, L, P, constant]}
-  - {name: inN, dir: in, required: false, dataTypes: ["Bit strings", "Integers", "Floating-point numbers", "Timers", 
+  - {name: in, repeat: {from: 2, to: 31}, dir: in, required: false, dataTypes: ["Bit strings", "Integers", "Floating-point numbers", "Timers",
         Char, WChar, Time_Of_Day, LTime_Of_Day, Date, LDT], note: "Optional consecutively numbered selectable values,
       up to 32 inputs in total.", memoryAreas: [I, Q, M, D, L, P, constant]}
   - {name: else, dir: in, required: true, dataTypes: ["Bit strings", "Integers", "Floating-point numbers", "Timers", 
@@ -228,7 +228,7 @@ Demux:
   - {name: out1, dir: out, required: true, dataTypes: ["Bit strings", "Integers", "Floating-point numbers", "Timers",
       Char, WChar, Time_Of_Day, LTime_Of_Day, Date, LDT], note: "Second selectable output.", memoryAreas: [I, Q, M, 
         D, L, P]}
-  - {name: outN, dir: out, required: false, dataTypes: ["Bit strings", "Integers", "Floating-point numbers", "Timers",
+  - {name: out, repeat: {from: 2, to: 31}, dir: out, required: false, dataTypes: ["Bit strings", "Integers", "Floating-point numbers", "Timers",
       Char, WChar, Time_Of_Day, LTime_Of_Day, Date, LDT], note: "Optional consecutively numbered outputs, up to 32 outputs
       in total.", memoryAreas: [I, Q, M, D, L, P]}
   - {name: else, dir: out, required: true, dataTypes: ["Bit strings", "Integers", "Floating-point numbers", "Timers",

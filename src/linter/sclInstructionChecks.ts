@@ -116,6 +116,7 @@ import { TypeCacheResult } from "../cache/typeCache";
 import { CallNode, OperandRef, ParsedBlockFile, PinArg } from "../parser/s7dclParser";
 import { typeRefTopLevelName } from "../parser/typeRef";
 import { expandPinDataTypes, resolveTypeAlias } from "../rules/literalTypes";
+import { findRegistryPin } from "../rules/pinMatching";
 import { InstructionEntry, InstructionPin, RuleSet } from "../rules/types";
 import { formatDiagnostic, LintDiagnostic, LintSeverity } from "./diagnostics";
 import { checkCall, unknownInstructionFix } from "./instructionChecks";
@@ -220,7 +221,7 @@ function mapCallPinsToRegistryPins(call: CallNode, entry: InstructionEntry): Map
 
   for (const cp of call.pins) {
     if (cp.name === null) continue;
-    const regPin = entry.pins.find((p) => p.name === cp.name) ?? entry.pins.find((p) => p.name?.toLowerCase() === cp.name!.toLowerCase());
+    const regPin = findRegistryPin(entry.pins, cp.name)?.pin;
     if (regPin) map.set(cp, regPin);
   }
   return map;
@@ -333,14 +334,14 @@ function resolveTagTypeName(ref: OperandRef, block: ParsedBlockFile, blockIndex:
  * system-registry/result.yaml's `sourcePins` are zero-based indexes into
  * the instruction's OWN `pins` array (chosen over names specifically
  * because a valid entry may have unnamed pins). Matched by name
- * (case-insensitive fallback, same tolerance `checkCall` itself uses) when
- * the registry pin has one; by position among the call's OWN positional
- * pins when it doesn't. */
+ * (rules/pinMatching.ts -- case-insensitive, and the first member of a
+ * repeated family) when the registry pin has one; by position among the
+ * call's OWN positional pins when it doesn't. */
 function findCallPinForRegistryIndex(call: CallNode, entry: InstructionEntry, idx: number): PinArg | undefined {
   const regPin = entry.pins[idx];
   if (!regPin) return undefined;
   if (regPin.name !== null) {
-    return call.pins.find((p) => p.name === regPin.name) ?? call.pins.find((p) => p.name?.toLowerCase() === regPin.name!.toLowerCase());
+    return call.pins.find((p) => p.name !== null && findRegistryPin([regPin], p.name) !== undefined);
   }
   const positionalIndex = entry.pins.slice(0, idx).filter((p) => p.name === null).length;
   return call.pins.filter((p) => p.name === null)[positionalIndex];

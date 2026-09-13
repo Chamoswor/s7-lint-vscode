@@ -16,12 +16,12 @@ T_COMP:
   callShape: box
   instanceType: null
   pins:
-  - name: in1
+  - name: IN1
     dir: in
     required: true
     note: ''
     dataTypes: [Timers, Date and time]
-  - name: in2
+  - name: IN2
     dir: in
     required: true
     note: ''
@@ -44,7 +44,7 @@ T_CONV:
   callShape: box
   instanceType: null
   pins:
-  - name: in
+  - name: IN
     dir: in
     required: true
     note: ''
@@ -66,12 +66,12 @@ T_ADD:
   callShape: box
   instanceType: null
   pins:
-  - name: in1
+  - name: IN1
     dir: in
     required: true
     note: ''
     dataTypes: [Integers, Bit strings, Timers, Date and time]
-  - name: in2
+  - name: IN2
     dir: in
     required: true
     note: ''
@@ -93,12 +93,12 @@ T_SUB:
   callShape: box
   instanceType: null
   pins:
-  - name: in1
+  - name: IN1
     dir: in
     required: true
     note: ''
     dataTypes: [Integers, Bit strings, Timers, Date and time]
-  - name: in2
+  - name: IN2
     dir: in
     required: true
     note: ''
@@ -120,12 +120,12 @@ T_DIFF:
   callShape: box
   instanceType: null
   pins:
-  - name: in1
+  - name: IN1
     dir: in
     required: true
     note: ''
     dataTypes: [Date and time]
-  - name: in2
+  - name: IN2
     dir: in
     required: true
     note: ''

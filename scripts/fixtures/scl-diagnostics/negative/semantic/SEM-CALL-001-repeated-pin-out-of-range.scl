@@ -1,0 +1,11 @@
+FUNCTION "RepeatedPin_OutOfRange" : Void
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_TEMP
+      a : Int;
+   END_VAR
+
+BEGIN
+    // EXPECT-ERROR: MAX's numbered inputs stop at IN32
+    #a := MAX(IN1 := 1, IN2 := 2, IN33 := 3);
+END_FUNCTION

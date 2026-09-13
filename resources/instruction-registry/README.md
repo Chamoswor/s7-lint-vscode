@@ -123,6 +123,29 @@ InstructionName:
 Use canonical casing from the type registry. Category labels are expanded from
 `category-index.yaml`; consumers must not parse a Markdown table to infer them.
 
+### Repeated pins
+
+Some instructions accept a consecutively numbered run of the same parameter:
+MIN/MAX take `IN3` through `IN32` after the fixed `IN1`/`IN2`, and a graphical
+ADD box grows `in3`, `in4`, ... as inputs are inserted. Model the run as one pin
+whose `name` is the stem, plus `repeat`:
+
+```yaml
+- name: IN
+  repeat: { from: 3, to: 32 }
+  dir: in
+  required: false
+```
+
+- A call parameter matches when it is the stem followed by an index from
+  `from` through `to`, without leading zeros. Fixed pins are matched first, so
+  the stem may share a prefix with fixed pins such as `IN1` or `INELSE`.
+- Omit `to` when no source states the upper limit; every index from `from`
+  upward is then accepted rather than guessed.
+- `required` applies to fixed pins only; a repeated run is never reported as
+  missing.
+- Hovers show the run as `IN3..IN32`.
+
 ### Container-kind addressing
 
 `containerKinds` captures cases where an addressed scalar must belong to an
@@ -168,6 +191,9 @@ or shapes differ. SCL has additional differences:
 
 - native operators and statements replace many graphical boxes;
 - parameter names and instruction capitalization can differ;
+- parameter names are matched case-insensitively, as TIA Portal does. Entries
+  still use TIA's displayed spelling (`IN1`, `L`, `P`), because completion and
+  hovers show it;
 - graphical implicit pins may become explicit SCL parameters;
 - stateful FB instructions are called through instances;
 - `S7_Templates` pragmas do not apply to authored SCL calls.

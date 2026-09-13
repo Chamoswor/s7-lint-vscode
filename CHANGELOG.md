@@ -2,6 +2,29 @@
 
 All notable changes to S7 Lint for VS Code will be documented in this file.
 
+## 0.1.7
+Bug fixes
+
+Thanks to [@sikilde](https://github.com/sikilde) for reporting issues #1–#4
+and contributing #5.
+
+- `Date_And_Time` is accepted as a declaration datatype in every VAR section.
+  TIA Portal exports it, but it was missing from the section-legality registry
+  (#5, by [@sikilde](https://github.com/sikilde)).
+- A `REGION` name is free text up to the end of its line, and a parenthesised
+  `(/* ... */)` comment is recognised, so `REGION DESCRIPTION` followed by a
+  multilingual comment no longer reports an unknown instruction (#1).
+- Added a `repeat` pin keyword to the instruction registry for consecutively
+  numbered parameters. SCL MIN/MAX accept IN3..IN32 and MUX/DEMUX IN2..IN31 /
+  OUT2..OUT31; the graphical ADD, MUL, CALCULATE, MIN, MAX, AND, OR, XOR, MUX
+  and DEMUX boxes accept their inserted inputs/outputs (#2).
+- SCL parameter names are matched case-insensitively, as in TIA Portal, so
+  `IN1 :=` against a registry `in1` no longer warns. The SCL string and
+  date/time instructions now use TIA's upper-case parameter spelling in
+  completion and hovers (#3).
+- `STRING#'...'` and `WSTRING#'...'` typed constants are recognised, so
+  `WSTRING#''` no longer reports `'#'` as an undeclared identifier (#4).
+
 ## 0.1.6
 Bug fixes
 

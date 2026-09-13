@@ -15,6 +15,7 @@ InstructionName:
       containerKinds: [] # OMIT this key entirely unless confirmed -- e.g. [Array] or [Array, Struct]; see README's "Container-kind addressing"
       memoryAreas: [] # legal operand memory areas (I/Q/M/D/L/P/constant) -- see system-registry/memory.yaml
       allowedDeclarations: [] # legal VAR_* declaration sections (Input/Output/InOut/Static/Temp/Constant) -- takes precedence over memoryAreas when both are set, see system-registry/memory.yaml's matching.precedence
+      repeat: { from: 3, to: 32 } # OMIT unless this pin is a consecutively numbered run (IN3..IN32) -- `name` is then the stem; omit `to` when no source states the limit. See README's "Repeated pins"
       note: ""
 
   enEno: # EN/ENO metadata -- see README's "EN/ENO metadata". OMIT the whole field if unconfirmed either way, don't guess `present: false`.

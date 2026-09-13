@@ -25,8 +25,7 @@ pin-case-mismatch:
   variants:
     catalog: "Pin '{pinName}' doesn't match registry casing '{registryName}' on '{callName}' -- .s7dcl pin names are case-sensitive."
     fb-instance: "Pin '{pinName}' doesn't match '{ownerBlock}'s casing '{matchName}' on '{callName}' -- .s7dcl pin names are case-sensitive."
-    scl: "Parameter '{pinName}' doesn't match registry casing '{registryName}' on '{callName}' -- SCL parameter names are case-sensitive."
-  notes: "Same catalog/fb-instance/scl split as unknown-pin, same call sites."
+  notes: "Same catalog/fb-instance call sites as unknown-pin, but .s7dcl only: SCL identifiers are case-insensitive (TIA accepts `in1 :=` and rewrites it to its own spelling), so an SCL call -- catalog instruction or project FB alike -- never reports this."
 
 resolve-symbols-bounds-mismatch:
   severity: error

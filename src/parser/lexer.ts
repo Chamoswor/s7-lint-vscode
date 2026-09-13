@@ -109,6 +109,18 @@ export class Lexer {
         }
         continue;
       }
+      // `(/* ... */)` -- the parenthesised comment TIA writes into exported
+      // SCL, e.g. a multilingual comment directly under a REGION. Only
+      // trivia when the `*/` is IMMEDIATELY followed by `)`, so a real
+      // parenthesised expression that merely opens with a comment
+      // (`(/* note */ #a + 1)`) still lexes its `(` as punctuation.
+      if (c === "(" && this.peekChar(1) === "/" && this.peekChar(2) === "*") {
+        const close = this.text.indexOf("*/", this.pos + 3);
+        if (close !== -1 && this.text[close + 2] === ")") {
+          while (this.pos < close + 3) this.advance();
+          continue;
+        }
+      }
       if (c === "(" && this.peekChar(1) === "*") {
         const startLine = this.line;
         const startCol = this.col;
@@ -125,6 +137,26 @@ export class Lexer {
       }
       return;
     }
+  }
+
+  /** A REGION's name is free text running to the end of its line -- TIA
+   * accepts spaces, parentheses and other punctuation in it (`REGION Read
+   * inputs (pump 1)`), and exports may repeat it after END_REGION. None of it
+   * is code, so it is dropped like a comment instead of being left for every
+   * token walker to misread as a call or an operand. Stops early at a block
+   * comment opener so a comment starting on the same line still lexes whole,
+   * and leaves the line alone when it reads as code (`Region : Int;`,
+   * `Region := 1;` -- a variable that happens to be named Region). */
+  private skipRegionTitle(): void {
+    let end = this.text.indexOf("\n", this.pos);
+    if (end === -1) end = this.text.length;
+    for (const opener of ["(/*", "(*", "/*"]) {
+      const at = this.text.indexOf(opener, this.pos);
+      if (at !== -1 && at < end) end = at;
+    }
+    const rest = this.text.slice(this.pos, end).trim();
+    if (rest === "" || /^[:;.[=,)]/.test(rest)) return;
+    while (this.pos < end) this.advance();
   }
 
   /** Tokenizes the whole input up front -- these files are small (a few KB). */
@@ -179,6 +211,9 @@ export class Lexer {
         let text = this.advance();
         while (/[A-Za-z0-9_]/.test(this.peekChar())) text += this.advance();
         tokens.push({ kind: "ident", text, line: startLine, col: startCol, offset: startOffset });
+        const upper = text.toUpperCase();
+        const firstOnLine = tokens.length === 1 || tokens[tokens.length - 2].line < startLine;
+        if ((upper === "REGION" || upper === "END_REGION") && firstOnLine) this.skipRegionTitle();
         continue;
       }
 

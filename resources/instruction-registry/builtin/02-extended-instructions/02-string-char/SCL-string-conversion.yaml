@@ -16,12 +16,12 @@ S_COMP:
   callShape: box
   instanceType: null
   pins:
-  - name: in1
+  - name: IN1
     dir: in
     required: true
     note: ''
     dataTypes: [String, WString]
-  - name: in2
+  - name: IN2
     dir: in
     required: true
     note: ''
@@ -44,12 +44,12 @@ STRG_VAL:
   callShape: box
   instanceType: null
   pins:
-  - name: in
+  - name: IN
     dir: in
     required: true
     note: ''
     dataTypes: [String, WString]
-  - name: format
+  - name: FORMAT
     dir: in
     required: true
     note: ''
@@ -76,22 +76,22 @@ VAL_STRG:
   callShape: box
   instanceType: null
   pins:
-  - name: in
+  - name: IN
     dir: in
     required: true
     note: ''
     dataTypes: [Integers, Floating-point numbers]
-  - name: size
+  - name: SIZE
     dir: in
     required: true
     note: ''
     dataTypes: [UInt]
-  - name: prec
+  - name: PREC
     dir: in
     required: true
     note: ''
     dataTypes: [UInt]
-  - name: format
+  - name: FORMAT
     dir: in
     required: true
     note: ''
@@ -182,7 +182,7 @@ MAX_LEN:
   callShape: box
   instanceType: null
   pins:
-  - name: in
+  - name: IN
     dir: in
     required: true
     note: ''
@@ -308,17 +308,17 @@ ATH:
   callShape: box
   instanceType: null
   pins:
-  - name: in
+  - name: IN
     dir: in
     required: true
     note: ''
     dataTypes: [String]
-  - name: n
+  - name: N
     dir: in
     required: true
     note: ''
     dataTypes: [UInt]
-  - name: out
+  - name: OUT
     dir: inout
     required: true
     note: ''
@@ -340,17 +340,17 @@ HTA:
   callShape: box
   instanceType: null
   pins:
-  - name: in
+  - name: IN
     dir: in
     required: true
     note: ''
     dataTypes: [Array, Struct, PLC data type]
-  - name: n
+  - name: N
     dir: in
     required: true
     note: ''
     dataTypes: [UInt]
-  - name: out
+  - name: OUT
     dir: inout
     required: true
     note: ''

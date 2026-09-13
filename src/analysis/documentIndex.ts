@@ -14,6 +14,7 @@ import { SCL_RESERVED_KEYWORDS } from "../parser/s7dclParser";
 import { loadSiblingS7Res, MLC_ID_PRAGMA_KEYS, resolveMlcText, siblingS7ResPath, S7ResEntry } from "../parser/s7resParser";
 import { TypeRef, typeRefDereferencedTopLevelName, typeRefToText, typeRefTopLevelName } from "../parser/typeRef";
 import { anyDataTypeCodeNames, classifyLiteral, detectLiteralShape, expandPinDataTypes, resolveTypeAlias } from "../rules/literalTypes";
+import { findRegistryPin, pinDisplayName, registrySpelling } from "../rules/pinMatching";
 import { BaseTypeEntry, InstructionEntry, InstructionPin, RuleSet, SystemTypeEntry, SystemTypeMemberTypeRef } from "../rules/types";
 import { BlockIndex, BlockInfo, GlobalTagInfo } from "./blockIndex";
 import {
@@ -247,7 +248,7 @@ export function renderInstructionHover(name: string, entry: InstructionEntry, is
     lines.push(isScl ? "| parameter | dir | required | types |" : "| pin | dir | required | types |", "|---|---|---|---|");
     for (const p of entry.pins) {
       const types = p.dataTypes && p.dataTypes.length > 0 ? p.dataTypes.join(", ") : p.containerKinds ? `(${p.containerKinds.join("/")} element)` : "—";
-      lines.push(`| ${p.name ?? "_(positional)_"} | ${p.dir === "in" ? ":=" : "=>"} | ${p.required ? "yes" : "no"} | ${types} |`);
+      lines.push(`| ${pinDisplayName(p) ?? "_(positional)_"} | ${p.dir === "in" ? ":=" : "=>"} | ${p.required ? "yes" : "no"} | ${types} |`);
     }
     lines.push("");
   }
@@ -631,7 +632,8 @@ export function listInstanceMembers(
     const entry = (preferScl ? ruleSet.sclInstructions[instrName] : undefined) ?? ruleSet.instructions[instrName];
     if (!entry) continue;
     for (const pin of entry.pins) {
-      if (!pin.name || seen.has(pin.name.toLowerCase())) continue;
+      // A repeated family (`repeat`) names no single member to offer.
+      if (!pin.name || pin.repeat || seen.has(pin.name.toLowerCase())) continue;
       seen.add(pin.name.toLowerCase());
       result.push({ name: pin.name, dataTypes: refineCounterValueTypes(instanceTypeName, pin.dataTypes ?? []), source: instrName });
     }
@@ -2407,7 +2409,9 @@ export function buildDocumentIndex(
   // known pin list -- unlike a catalog instruction's pins, these aren't
   // optional-vs-required in the same sense, so only name/casing/direction
   // are checked here, mirroring instructionChecks.ts's unknown-pin/
-  // pin-case-mismatch checks for catalog instructions.
+  // pin-case-mismatch checks for catalog instructions. Casing only counts in
+  // a .s7dcl RUNG: SCL identifiers are case-insensitive, so an SCL body's
+  // `#inst(start := ...)` against a declared `Start` is legal.
   const FB_PIN_SECTIONS = new Set(["VAR_INPUT", "VAR_OUTPUT", "VAR_IN_OUT"]);
   function checkFbInstancePin(nameTok: Token, pinName: string, opTok: Token, ownerBlock: BlockInfo, callName: string): void {
     const exact = ownerBlock.vars.get(pinName);
@@ -2425,7 +2429,7 @@ export function buildDocumentIndex(
       );
       return;
     }
-    if (!exact) {
+    if (!exact && !inSclBody) {
       diagnostics.push(
         formatDiagnostic(
           ruleSet,
@@ -2514,11 +2518,14 @@ export function buildDocumentIndex(
         cur.peek(1).kind === "op" &&
         (cur.peek(1).text === ":=" || cur.peek(1).text === "=>");
       let pin: InstructionPin | undefined;
+      let pinLabel: string | undefined;
       if (isNamed) {
         const nameTok = cur.next();
         const pinName = isQuotedName ? nameTok.value ?? "" : nameTok.text;
         const opTok = cur.next(); // := or =>
-        pin = instructionEntry?.pins.find((p) => p.name === pinName || p.name?.toLowerCase() === pinName.toLowerCase());
+        const pinMatch = instructionEntry ? findRegistryPin(instructionEntry.pins, pinName) : undefined;
+        pin = pinMatch?.pin;
+        pinLabel = pinMatch && registrySpelling(pinMatch, pinName);
         const fbVar = ownerBlock?.vars.get(pinName);
         const hover = pin
           ? `**${nameTok.text}** (${pin.dir === "in" ? ":=" : "=>"}, ${pin.required ? "required" : "optional"})${pin.dataTypes?.length ? `\n\ntypes: ${pin.dataTypes.join(", ")}` : ""}${pin.note ? `\n\n${pin.note}` : ""}`
@@ -2542,7 +2549,7 @@ export function buildDocumentIndex(
           const { skip, types } = expandPinDataTypes(pin.dataTypes, ruleSet);
           if (!skip) {
             const severity: LintSeverity = instructionEntry.confidence === "confirmed-compiled" ? "error" : "warning";
-            reportOperandTypeMismatch(operand, types, severity, `pin '${pin.name}' on '${callName}'`);
+            reportOperandTypeMismatch(operand, types, severity, `pin '${pinLabel}' on '${callName}'`);
           }
         }
         if (callName === matchingBounds.instruction && (pin?.name === matchingBounds.pins[0] || pin?.name === matchingBounds.pins[1])) {

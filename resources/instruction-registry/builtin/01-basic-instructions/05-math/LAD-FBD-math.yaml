@@ -15,8 +15,9 @@
 # EN and ENO remain represented by the existing `enEno` field. EN permits T
 # and C only on S7-1500 where the individual instruction table states this.
 #
-# `inN` represents additional consecutively numbered graphical inputs. It is
-# a registry placeholder, not a literal pin name in exported block code.
+# Additional consecutively numbered graphical inputs (in3, in4, ...) are one
+# `in` pin with `repeat: {from: 3}` -- see the instruction-registry README's
+# "Repeated pins". The upper limit stays open where no source states it.
 #
 $fileLanguage: [LAD, FBD]
 
@@ -29,7 +30,7 @@ Calculate:
       input operand.", memoryAreas: [I, Q, M, D, L, P, constant]}
   - {name: in2, dir: in, required: true, dataTypes: ["Bit strings", "Integers", "Floating-point numbers"], note: "Second
       input operand.", memoryAreas: [I, Q, M, D, L, P, constant]}
-  - {name: inN, dir: in, required: false, dataTypes: ["Bit strings", "Integers", "Floating-point numbers"], note: "Optional
+  - {name: in, repeat: {from: 3}, dir: in, required: false, dataTypes: ["Bit strings", "Integers", "Floating-point numbers"], note: "Optional
       consecutively numbered additional input operands.", memoryAreas: [I, Q, M, D, L, P, constant]}
   - {name: out, dir: out, required: true, dataTypes: ["Bit strings", "Integers", "Floating-point numbers"], note: "Calculated
       output value.", memoryAreas: [I, Q, M, D, L, P]}
@@ -53,7 +54,7 @@ Add:
     memoryAreas: [I, Q, M, D, L, P, constant]}
   - {name: in2, dir: in, required: true, dataTypes: ["Integers", "Floating-point numbers"], note: "Second input operand.",
     memoryAreas: [I, Q, M, D, L, P, constant]}
-  - {name: inN, dir: in, required: false, dataTypes: ["Integers", "Floating-point numbers"], note: "Optional consecutively
+  - {name: in, repeat: {from: 3}, dir: in, required: false, dataTypes: ["Integers", "Floating-point numbers"], note: "Optional consecutively
       numbered additional input operands.", memoryAreas: [I, Q, M, D, L, P, constant]}
   - {name: out, dir: out, required: true, dataTypes: ["Integers", "Floating-point numbers"], note: "Calculated output
       value.", memoryAreas: [I, Q, M, D, L, P]}
@@ -98,7 +99,7 @@ Mul:
     memoryAreas: [I, Q, M, D, L, P, constant]}
   - {name: in2, dir: in, required: true, dataTypes: ["Integers", "Floating-point numbers"], note: "Second input operand.",
     memoryAreas: [I, Q, M, D, L, P, constant]}
-  - {name: inN, dir: in, required: false, dataTypes: ["Integers", "Floating-point numbers"], note: "Optional consecutively
+  - {name: in, repeat: {from: 3}, dir: in, required: false, dataTypes: ["Integers", "Floating-point numbers"], note: "Optional consecutively
       numbered additional input operands.", memoryAreas: [I, Q, M, D, L, P, constant]}
   - {name: out, dir: out, required: true, dataTypes: ["Integers", "Floating-point numbers"], note: "Calculated output
       value.", memoryAreas: [I, Q, M, D, L, P]}
@@ -258,7 +259,7 @@ MIN:
       note: "First input operand.", memoryAreas: [I, Q, M, D, L, P, constant]}
   - {name: in2, dir: in, required: true, dataTypes: ["Integers", "Floating-point numbers", DTL, Date_And_Time], 
       note: "Second input operand.", memoryAreas: [I, Q, M, D, L, P, constant]}
-  - {name: inN, dir: in, required: false, dataTypes: ["Integers", "Floating-point numbers", DTL, Date_And_Time], 
+  - {name: in, repeat: {from: 3}, dir: in, required: false, dataTypes: ["Integers", "Floating-point numbers", DTL, Date_And_Time], 
       note: "Optional consecutively numbered additional input operands.", memoryAreas: [I, Q, M, D, L, P, constant]}
   - {name: out, dir: out, required: true, dataTypes: ["Integers", "Floating-point numbers", DTL, Date_And_Time], 
       note: "Calculated output value.", memoryAreas: [I, Q, M, D, L, P]}
@@ -282,7 +283,7 @@ MAX:
       note: "First input operand.", memoryAreas: [I, Q, M, D, L, P, constant]}
   - {name: in2, dir: in, required: true, dataTypes: ["Integers", "Floating-point numbers", DTL, Date_And_Time], 
       note: "Second input operand.", memoryAreas: [I, Q, M, D, L, P, constant]}
-  - {name: inN, dir: in, required: false, dataTypes: ["Integers", "Floating-point numbers", DTL, Date_And_Time], 
+  - {name: in, repeat: {from: 3}, dir: in, required: false, dataTypes: ["Integers", "Floating-point numbers", DTL, Date_And_Time], 
       note: "Optional consecutively numbered additional input operands.", memoryAreas: [I, Q, M, D, L, P, constant]}
   - {name: out, dir: out, required: true, dataTypes: ["Integers", "Floating-point numbers", DTL, Date_And_Time], 
       note: "Calculated output value.", memoryAreas: [I, Q, M, D, L, P]}

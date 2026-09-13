@@ -240,6 +240,18 @@ function validatePin(pin: unknown, at: string, ctx: ValidationContext, add: (f: 
   checkStringListRefs(pin.dataTypes, `${at}.dataTypes`, ctx.catalog.validPinDataTypes, "warning", "unknown-data-type", add);
   checkStringListRefs(pin.memoryAreas, `${at}.memoryAreas`, ctx.memoryAreaSet, "error", "unknown-memory-area", add);
   checkStringListRefs(pin.allowedDeclarations, `${at}.allowedDeclarations`, ctx.declarationSet, "error", "unknown-declaration-section", add);
+  // repeat: { from, to? } -- a numbered pin family, see rules/types.ts's PinRepeat.
+  if ("repeat" in pin) {
+    const repeat = pin.repeat;
+    const from = isObj(repeat) ? repeat.from : undefined;
+    const to = isObj(repeat) ? repeat.to : undefined;
+    const isIndex = (v: unknown): v is number => typeof v === "number" && Number.isInteger(v) && v >= 0;
+    if (!isIndex(from) || (to != null && (!isIndex(to) || to < from))) {
+      add({ severity: "error", code: "invalid-pin-repeat", fieldPath: `${at}.repeat`, message: "Pin 'repeat' must be a mapping with a non-negative integer 'from' and an optional integer 'to' no lower than 'from'." });
+    } else if (typeof pin.name !== "string" || pin.name === "") {
+      add({ severity: "error", code: "invalid-pin-repeat", fieldPath: `${at}.name`, message: "A repeated pin needs a 'name' -- the stem every numbered parameter starts with." });
+    }
+  }
 
   for (const key of Object.keys(pin)) {
     if (!KNOWN_PIN_FIELDS.has(key)) {

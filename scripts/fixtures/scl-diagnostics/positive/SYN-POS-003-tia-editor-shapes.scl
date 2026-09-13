@@ -1,0 +1,35 @@
+FUNCTION "TiaEditorShapes_Positive" : Void
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_TEMP
+      a : Int;
+      b : Int;
+      sText : WString;
+      pos : Int;
+   END_VAR
+
+BEGIN
+    // A region name is free text, and may be followed by a parenthesised comment
+    REGION DESCRIPTION
+    (/*
+
+    Describes the block.
+
+    */)
+    END_REGION DESCRIPTION
+
+    REGION Read inputs (pump 1)
+        #a := 1;
+    END_REGION
+
+    // MIN/MAX accept consecutively numbered inputs beyond IN2
+    #a := MAX(IN1 := 55, IN2 := 33, IN3 := 88, IN4 := #b);
+    #b := MIN(IN1 := 1, IN2 := 2, IN3 := 3);
+
+    // SCL parameter names are case-insensitive
+    #b := MIN(in1 := #a, In2 := #b);
+
+    // Typed character-string constants
+    #pos := FIND(IN1 := #sText, IN2 := WSTRING#'{');
+    #sText := REPLACE(IN1 := #sText, IN2 := WSTRING#'', L := 1, P := #pos);
+END_FUNCTION

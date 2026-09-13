@@ -60,7 +60,7 @@ interface ParsedRadixLiteral {
  *
  * Used for SHAPE detection only -- `classifyLiteral` deliberately does NOT
  * resolve these to their named type, see its own comment. */
-const TYPED_CONSTANT_PREFIX_RE = /^(BOOL|BYTE|WORD|DWORD|LWORD|SINT|INT|DINT|LINT|USINT|UINT|UDINT|ULINT|REAL|LREAL|CHAR|WCHAR)#/i;
+const TYPED_CONSTANT_PREFIX_RE = /^(BOOL|BYTE|WORD|DWORD|LWORD|SINT|INT|DINT|LINT|USINT|UINT|UDINT|ULINT|REAL|LREAL|CHAR|WCHAR|STRING|WSTRING)#/i;
 
 /** `16#FF` / `2#0101` / `8#377` / `B#16#0F` / `W#16#F1C0` / `DW#16#20_F30A`. */
 function parseRadixLiteral(text: string): ParsedRadixLiteral | null {

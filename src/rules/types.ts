@@ -28,7 +28,22 @@ export interface InstructionPin {
    * instruction-specific restriction overriding the general mapping's
    * default), per system-registry/memory.yaml's `matching.precedence`. */
   allowedDeclarations?: string[];
+  /** Marks this pin as a numbered family rather than one parameter -- see
+   * `PinRepeat`. */
+  repeat?: PinRepeat;
   note?: string;
+}
+
+/** A pin TIA lets a box/call repeat with consecutive numbers (MIN/MAX's
+ * IN3..IN32, ADD's extra inputs). The pin's `name` is the stem, and each
+ * accepted parameter is the stem followed by an index from `from` through
+ * `to` -- `name: IN` with `{ from: 3, to: 32 }` accepts IN3..IN32. `to`
+ * omitted means the upper limit isn't transcribed, so any index from `from`
+ * upward is accepted rather than guessed at. See
+ * instruction-registry/README.md's "Repeated pins". */
+export interface PinRepeat {
+  from: number;
+  to?: number;
 }
 
 /** Mirrors system-registry/result.yaml's `resultKinds` enum. */

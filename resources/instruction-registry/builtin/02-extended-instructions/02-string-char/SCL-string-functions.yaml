@@ -16,7 +16,7 @@ LEN:
   callShape: box
   instanceType: null
   pins:
-  - name: in
+  - name: IN
     dir: in
     required: true
     note: ''
@@ -38,12 +38,12 @@ CONCAT:
   callShape: box
   instanceType: null
   pins:
-  - name: in1
+  - name: IN1
     dir: in
     required: true
     note: ''
     dataTypes: [String, WString]
-  - name: in2
+  - name: IN2
     dir: in
     required: true
     note: ''
@@ -65,12 +65,12 @@ LEFT:
   callShape: box
   instanceType: null
   pins:
-  - name: in
+  - name: IN
     dir: in
     required: true
     note: ''
     dataTypes: [String, WString]
-  - name: l
+  - name: L
     dir: in
     required: true
     note: ''
@@ -92,12 +92,12 @@ RIGHT:
   callShape: box
   instanceType: null
   pins:
-  - name: in
+  - name: IN
     dir: in
     required: true
     note: ''
     dataTypes: [String, WString]
-  - name: l
+  - name: L
     dir: in
     required: true
     note: ''
@@ -119,17 +119,17 @@ MID:
   callShape: box
   instanceType: null
   pins:
-  - name: in
+  - name: IN
     dir: in
     required: true
     note: ''
     dataTypes: [String, WString]
-  - name: l
+  - name: L
     dir: in
     required: true
     note: ''
     dataTypes: [Int]
-  - name: p
+  - name: P
     dir: in
     required: true
     note: ''
@@ -151,17 +151,17 @@ DELETE:
   callShape: box
   instanceType: null
   pins:
-  - name: in
+  - name: IN
     dir: in
     required: true
     note: ''
     dataTypes: [String, WString]
-  - name: l
+  - name: L
     dir: in
     required: true
     note: ''
     dataTypes: [Int]
-  - name: p
+  - name: P
     dir: in
     required: true
     note: ''
@@ -183,17 +183,17 @@ INSERT:
   callShape: box
   instanceType: null
   pins:
-  - name: in1
+  - name: IN1
     dir: in
     required: true
     note: ''
     dataTypes: [String, WString]
-  - name: in2
+  - name: IN2
     dir: in
     required: true
     note: ''
     dataTypes: [String, WString]
-  - name: p
+  - name: P
     dir: in
     required: true
     note: ''
@@ -215,22 +215,22 @@ REPLACE:
   callShape: box
   instanceType: null
   pins:
-  - name: in1
+  - name: IN1
     dir: in
     required: true
     note: ''
     dataTypes: [String, WString]
-  - name: in2
+  - name: IN2
     dir: in
     required: true
     note: ''
     dataTypes: [String, WString]
-  - name: l
+  - name: L
     dir: in
     required: true
     note: ''
     dataTypes: [Int]
-  - name: p
+  - name: P
     dir: in
     required: true
     note: ''
@@ -252,12 +252,12 @@ FIND:
   callShape: box
   instanceType: null
   pins:
-  - name: in1
+  - name: IN1
     dir: in
     required: true
     note: ''
     dataTypes: [String, WString]
-  - name: in2
+  - name: IN2
     dir: in
     required: true
     note: ''
