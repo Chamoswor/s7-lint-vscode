@@ -110,6 +110,16 @@ function buildLocalDeclMap(block: ParsedBlockFile): Map<string, TypeRef> {
   return map;
 }
 
+/** The type of a FUNCTION's result variable -- the function's own name,
+ * typed by its `FUNCTION "Name" : <ReturnType>` header. Undefined when
+ * `name` isn't that variable, or when the result has no type to check
+ * against (a `Void` function). */
+function functionResultTypeRef(block: ParsedBlockFile, name: string): TypeRef | undefined {
+  if (block.blockType !== "FUNCTION" || !block.returnType || !nameEq(name, block.name)) return undefined;
+  const topLevelName = typeRefTopLevelName(block.returnType);
+  return topLevelName && !nameEq(topLevelName, "Void") ? block.returnType : undefined;
+}
+
 /** The type name to key the NEXT step's member lookup off of -- drills
  * through `array`/`reference` the same way `documentIndex.ts`'s own
  * resolution does, so `Array[0..1] of "MyUdt"` and `REF_TO "MyUdt"` both
@@ -265,14 +275,16 @@ export function resolveOperandRef(
     }
   } else {
     const localDecls = buildLocalDeclMap(block);
-    const localTypeRef = localDecls.get(segments[0].toLowerCase());
+    const localTypeRef = localDecls.get(segments[0].toLowerCase()) ?? functionResultTypeRef(block, segments[0]);
     if (!localTypeRef) {
       // A FUNCTION's return value is addressed through the function's OWN
       // name (`#TheFunction := ...`), which is IEC 61131-3's result-variable
       // convention and is never declared in a VAR section -- so treating it
       // as an undeclared tag flagged the one legal way to return a value.
       // Scoped to a FUNCTION: a FUNCTION_BLOCK has no result variable, so a
-      // `#SameNameAsTheFB` there really is undeclared.
+      // `#SameNameAsTheFB` there really is undeclared. The function's own
+      // name only gets this far when its result has no type to check
+      // against (a `Void` function), so it is left unresolved.
       if (block.blockType === "FUNCTION" && nameEq(segments[0], block.name)) {
         return { kind: "unresolved-path" };
       }

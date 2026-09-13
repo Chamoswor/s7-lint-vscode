@@ -19,6 +19,11 @@ BEGIN
     // EXPECT-WARNING: TT-W001
     // Int is implicitly converted to Real.
 
+    #v_int := #v_int-1.5;
+    // EXPECT-WARNING: TT-W002
+    // Without spaces the '-' is still subtraction, so the Real operand is
+    // implicitly converted exactly as in TT-W001.
+
 
     // ------------------------------------------------------------
     // Invalid explicit conversions

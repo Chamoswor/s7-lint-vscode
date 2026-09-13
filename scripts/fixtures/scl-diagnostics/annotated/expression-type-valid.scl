@@ -59,4 +59,14 @@ BEGIN
     #v_word_a := #v_word_a AND #v_word_b;
     // EXPECT-PASS: TT-P010
 
+    // Binary operators written without surrounding spaces
+    #v_int_a := 4-1;
+    // EXPECT-PASS: TT-P011
+
+    #v_dint_a := #v_dint_a-1;
+    // EXPECT-PASS: TT-P012
+
+    #v_real_a := #v_real_a*-1.0;
+    // EXPECT-PASS: TT-P013
+
 END_FUNCTION_BLOCK

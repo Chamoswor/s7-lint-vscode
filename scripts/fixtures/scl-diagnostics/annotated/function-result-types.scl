@@ -1,0 +1,35 @@
+FUNCTION "ResultTypes" : Int
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+
+VAR_INPUT
+    v_int  : Int;
+END_VAR
+
+VAR_TEMP
+    v_real : Real;
+END_VAR
+
+BEGIN
+    // The result variable is the function's own name, typed by its header.
+    #ResultTypes := #v_int;
+    // EXPECT-PASS: FR-P001
+
+    #ResultTypes := #v_int + 1;
+    // EXPECT-PASS: FR-P002
+
+    #ResultTypes := INT_TO_REAL(#v_int);
+    // EXPECT-WARNING: FR-W001
+    // INT_TO_REAL returns Real, but the result variable is an Int.
+
+    #v_real := #v_real + #ResultTypes;
+    // EXPECT-WARNING: FR-W002
+    // Reading the result variable: its Int is implicitly converted to Real.
+
+    IF #ResultTypes THEN
+    // EXPECT-ERROR: FR-E001
+    // An Int result variable is not a Bool condition.
+        #ResultTypes := 0;
+    END_IF;
+
+END_FUNCTION

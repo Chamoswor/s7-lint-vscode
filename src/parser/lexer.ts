@@ -43,23 +43,49 @@ const MULTI_CHAR_OPS = [":=", "?=", "=>", "<>", "<=", ">="];
 // `ARRAY[]` once "*" disappeared).
 // "%" prefixes an absolute/direct address (`%I0.0`, `%MW10`, base-types.yaml's
 // `addressExamples`) -- same "silently vanished" story as ^ and *. A
-// standalone "+" (not immediately adjacent to a digit -- that case is
-// folded into a signed number token above, mirroring "-") falls here too,
-// so e.g. an illegal array-index EXPRESSION like `#i + 1`
-// (composition-rules.yaml's array.index.actualParameterRule) is visible
-// as a real token instead of silently vanishing.
-// "-"/"/"/"<"/">" were the SAME "silently vanished" bug as "+" above, just
-// never actually fixed for these four despite the comment's own claim of
-// mirroring "-" -- confirmed by direct lexer output: `#a - #b`, `#a / #b`,
-// `#a < #b`, `#a > #b` each used to tokenize as just `#a`, `#b` with NO
-// operator token in between at all (silently swallowed by the fallback
-// "unknown character, skip" branch), while `#a + #b` and the two-char forms
-// (`<=`, `>=`, `<>`, already in MULTI_CHAR_OPS) worked fine. A bare "-"
-// immediately before a digit is still caught by the signed-number rule
-// ABOVE this PUNCT check (checked first in `tokenize()`'s if/else chain),
-// so adding "-" here only affects the subtraction-operator case that rule
-// doesn't already claim.
+// standalone "+" falls here too, so e.g. an illegal array-index EXPRESSION
+// like `#i + 1` (composition-rules.yaml's array.index.actualParameterRule) is
+// visible as a real token instead of silently vanishing.
+// "-"/"/"/"<"/">" were the SAME "silently vanished" bug as "+" above --
+// confirmed by direct lexer output: `#a - #b`, `#a / #b`, `#a < #b`,
+// `#a > #b` each used to tokenize as just `#a`, `#b` with NO operator token
+// in between at all (silently swallowed by the fallback "unknown character,
+// skip" branch). A "+"/"-" touching a digit only reaches this check when
+// `signBelongsToNumber` rejects it, i.e. when it is the binary operator.
 const PUNCT = "{}[]()：:;,.=^*%+-<>/";
+
+/** Keywords that end a clause or an operator rather than an operand, so a
+ * `+`/`-` right after one is a sign: `#a AND -1`, `TO -1 BY -1`, `OF -1:`.
+ * Kept here rather than imported from s7dclParser.ts's SCL_RESERVED_KEYWORDS,
+ * which would make the lexer depend on the parser built on top of it. */
+const SIGN_CONTEXT_KEYWORDS = new Set([
+  "IF", "THEN", "ELSE", "ELSIF", "END_IF",
+  "CASE", "OF", "END_CASE",
+  "FOR", "TO", "BY", "DO", "END_FOR",
+  "WHILE", "END_WHILE",
+  "REPEAT", "UNTIL", "END_REPEAT",
+  "CONTINUE", "EXIT", "GOTO", "RETURN",
+  "REGION", "END_REGION",
+  "AND", "OR", "XOR", "NOT", "MOD",
+]);
+
+/**
+ * True when a `+`/`-` immediately followed by a digit is the sign of that
+ * number rather than a binary operator. Decided by the token before it: a
+ * binary operator can only follow something that ends an operand -- a
+ * number, a string, a name, or a closing `)`/`]`/`^`. Folding the sign
+ * unconditionally turned `4-1` into the two numbers `4` and `-1`, losing the
+ * subtraction and reporting a missing semicolon. The lone `#` of a signed
+ * typed constant (`int#-32768`, `T#-10s`) ends no operand, so that value
+ * keeps its sign.
+ */
+function signBelongsToNumber(prev: Token | undefined): boolean {
+  if (!prev) return true;
+  if (prev.kind === "number" || prev.kind === "string") return false;
+  if (prev.kind === "ident") return prev.text === "#" || SIGN_CONTEXT_KEYWORDS.has(prev.text.toUpperCase());
+  if (prev.kind === "punct") return prev.text !== ")" && prev.text !== "]" && prev.text !== "^";
+  return true; // an operator: `:=`, `<=`, `<>`, ...
+}
 
 export class Lexer {
   private pos = 0;
@@ -217,7 +243,7 @@ export class Lexer {
         continue;
       }
 
-      if (/[0-9]/.test(c) || ((c === "-" || c === "+") && /[0-9]/.test(this.peekChar(1)))) {
+      if (/[0-9]/.test(c) || ((c === "-" || c === "+") && /[0-9]/.test(this.peekChar(1)) && signBelongsToNumber(tokens[tokens.length - 1]))) {
         let text = this.advance();
         while (/[0-9]/.test(this.peekChar())) text += this.advance();
         tokens.push({ kind: "number", text, line: startLine, col: startCol, offset: startOffset });

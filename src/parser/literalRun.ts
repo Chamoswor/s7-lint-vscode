@@ -47,9 +47,8 @@ const DURATION_PREFIXES = new Set(["T", "TIME", "LT", "LTIME", "S5T", "S5TIME"])
 
 /** Prefixes whose value half is a date and/or a time of day (9.1.3.6,
  * 9.1.3.8) -- `DATE#1995-11-11`, `TOD#11:11:11`, `DT#95-01-01-12:12:12.2`.
- * The `-` and `:` separators are ordinary punctuation to the lexer (a `-`
- * hugging a digit even folds into the number token), so these get the
- * date/time-separator tail rules. */
+ * The `-` and `:` separators are ordinary punctuation to the lexer, so these
+ * get the date/time-separator tail rules. */
 const DATE_TIME_PREFIXES = new Set(["D", "DATE", "DT", "DATE_AND_TIME", "LDT", "DTL", "TOD", "TIME_OF_DAY", "LTOD", "LTIME_OF_DAY"]);
 
 export const LITERAL_TYPE_PREFIXES = new Set([
@@ -118,10 +117,10 @@ export function literalRunLength(cur: TokenCursor, offset: number, opts: Literal
 }
 
 /** Which extra tail rules the run may use, decided by the prefix. Scoping
- * them this way is what keeps the permissive ones safe: a `-`-led number
+ * them this way is what keeps the permissive ones safe: a `-` separator
  * continues a `DATE#1995-11-11`, but on a plain numeric run the very same
- * token shape is ordinary subtraction (`4-1`), and a `.`+ident continues a
- * `P#DB10.DBX20.0` but elsewhere is member access. */
+ * token shape is ordinary subtraction (`16#FF-1`), and a `.`+ident continues
+ * a `P#DB10.DBX20.0` but elsewhere is member access. */
 type RunTailMode = "numeric" | "duration" | "dateTime" | "pointer";
 
 function tailModeFor(prefixText: string, opts: LiteralRunOptions): RunTailMode {
@@ -148,9 +147,7 @@ function scanRunTail(cur: TokenCursor, offset: number, startLen: number, startPr
   let prev = startPrev;
   // An `#` that the lexer had to emit on its OWN, with no value glued to
   // it -- which only happens when the very next character can't continue
-  // an identifier, i.e. a sign (`int#-32768`) or a quote (`char#'B'`). A
-  // NON-empty segment like the `#FF` of `16#FF` must NOT pull in a
-  // following signed number: there, `16#FF-1` is a subtraction.
+  // an identifier, i.e. a sign (`int#-32768`) or a quote (`char#'B'`).
   const prevIsEmptyHash = (): boolean => prev.kind === "ident" && prev.text === "#";
   for (;;) {
     const nxt = cur.peek(offset + n);
@@ -164,12 +161,10 @@ function scanRunTail(cur: TokenCursor, offset: number, startLen: number, startPr
       continue;
     }
 
-    // The value half of a SIGNED typed constant (`int#-32768`), or the
-    // next dash-separated field of a date (`DATE#1995-11-11`). Either way
-    // the sign is part of the number token -- lexer.ts folds a `-`/`+`
-    // sitting immediately before a digit into the number -- so the `#`
-    // lexes alone and the value arrives as its own adjacent token.
-    if (nxt.kind === "number" && (prevIsEmptyHash() || (mode === "dateTime" && nxt.text.startsWith("-")))) {
+    // The value half of a SIGNED typed constant (`int#-32768`): lexer.ts
+    // folds a sign that follows the lone `#` into the number, so the value
+    // arrives as its own adjacent token.
+    if (nxt.kind === "number" && prevIsEmptyHash()) {
       n++;
       prev = nxt;
       continue;
@@ -185,11 +180,11 @@ function scanRunTail(cur: TokenCursor, offset: number, startLen: number, startPr
       continue;
     }
 
-    // A decimal point (`1.5`, `real#1.5`, `TIME#24.855134d`), a time-of-day
-    // separator (`TOD#11:11:11`), or a P#-pointer's dotted address tail
-    // (`P#DB10.DBX20.0` -- the only case where the segment after the dot
-    // may be an ident rather than a number).
-    if (nxt.kind === "punct" && (nxt.text === "." || (mode === "dateTime" && nxt.text === ":"))) {
+    // A decimal point (`1.5`, `real#1.5`, `TIME#24.855134d`), a date or
+    // time-of-day separator (`DATE#1995-11-11`, `TOD#11:11:11`), or a
+    // P#-pointer's dotted address tail (`P#DB10.DBX20.0` -- the only case
+    // where the segment after the dot may be an ident rather than a number).
+    if (nxt.kind === "punct" && (nxt.text === "." || (mode === "dateTime" && (nxt.text === ":" || nxt.text === "-")))) {
       const after = cur.peek(offset + n + 1);
       if (tokensAdjacent(nxt, after) && (after.kind === "number" || (mode === "pointer" && after.kind === "ident"))) {
         n += 2;
@@ -208,12 +203,19 @@ function scanRunTail(cur: TokenCursor, offset: number, startLen: number, startPr
         continue;
       }
       // `3.0E+10` -- same exponent, but the explicit sign made the lexer
-      // cut after the `E` and fold the sign into the following number.
+      // cut after the `E`, leaving the sign and the digits as two more tokens.
       if (mode === "numeric" && prev.kind === "number" && /^[eE]$/.test(nxt.text)) {
-        const after = cur.peek(offset + n + 1);
-        if (tokensAdjacent(nxt, after) && after.kind === "number") {
-          n += 2;
-          prev = after;
+        const sign = cur.peek(offset + n + 1);
+        const digits = cur.peek(offset + n + 2);
+        if (
+          tokensAdjacent(nxt, sign) &&
+          sign.kind === "punct" &&
+          (sign.text === "+" || sign.text === "-") &&
+          tokensAdjacent(sign, digits) &&
+          digits.kind === "number"
+        ) {
+          n += 3;
+          prev = digits;
           continue;
         }
       }

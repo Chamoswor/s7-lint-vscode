@@ -51,13 +51,16 @@ nearest non-comment statement above it. This runner is strict on that statement
 line: pass means zero diagnostics, while warning/error means exactly one
 diagnostic of the requested severity.
 
-The two files have complementary roles:
+The files have complementary roles:
 
 - `annotated/expression-type-valid.scl` guards accepted arithmetic,
   conversions, comparisons, Boolean expressions, and bit-string expressions.
 - `annotated/expression-type-diagnostics.scl` guards rejected combinations,
   implicit-conversion warnings, nested-error propagation, and recovery after an
   earlier error.
+- `annotated/function-result-types.scl` guards a FUNCTION's result variable
+  (its own name), which is typed by the declared return type and checked like
+  any other local variable.
 
 ## Adding or changing fixtures
 

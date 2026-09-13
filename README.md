@@ -128,6 +128,7 @@ commands below link to their test runners in the GitHub repository:
 
 | Command | Scope | Test runner |
 |---|---|---|
+| `npm run test:lexer` | operator/sign tokenization and literal re-joining | [`test-lexer.js`](https://github.com/Chamoswor/s7-lint-vscode/blob/main/scripts/test-lexer.js) |
 | `npm run test:s7res` | multilingual-resource diagnostics | [`test-s7res-checks.js`](https://github.com/Chamoswor/s7-lint-vscode/blob/main/scripts/test-s7res-checks.js) |
 | `npm run test:s7res-quickfix` | multilingual-resource quick fixes | [`test-s7res-quickfix.js`](https://github.com/Chamoswor/s7-lint-vscode/blob/main/scripts/test-s7res-quickfix.js) |
 | `npm run test:plc-tags` | PLC-tag resolution from XML exports | [`test-plc-tags.js`](https://github.com/Chamoswor/s7-lint-vscode/blob/main/scripts/test-plc-tags.js) |
@@ -192,15 +193,9 @@ by S7 Lint and preserves unrelated or manually customized semantic colors.
   [`platform-availability.NOTLOADED.yaml`](resources/type-registry/platform-availability.NOTLOADED.yaml)
   is therefore not loaded. When IEC modes permit different results, the linter
   uses the permissive interpretation; bit-string arithmetic is one example.
-- **FUNCTION result types:** The result variable is recognized, but its declared
-  return type is not retained by the parser. Assignments to it are therefore
-  not type-checked.
 - **Incomplete type information:** Checks that require an unresolved symbol or
   an expression without one safely inferred type are skipped instead of
   guessed.
-- **Operator spacing:** The lexer treats `+` or `-` immediately followed by a
-  digit as part of a signed number. Consequently, `4-1` loses its subtraction
-  operator and can produce a missing-semicolon diagnostic; use `4 - 1`.
 - **XML source locations:** XML UDT members do not retain source positions, so
   related cache diagnostics point to line 1 instead of the exact member.
 - **Workspace updates:** Relevant file changes rebuild the complete type and

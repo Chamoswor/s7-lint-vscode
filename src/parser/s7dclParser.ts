@@ -14,7 +14,7 @@
 import { Lexer, Token, TokenCursor } from "./lexer";
 import { isLiteralOrWireTail, literalRunLength, tokensAdjacent } from "./literalRun";
 import { Pragma, parsePragmaBlock } from "./pragma";
-import { MemberRef, parseTypeRefFromCursor } from "./typeRef";
+import { MemberRef, TypeRef, parseTypeRefFromCursor } from "./typeRef";
 
 export type PinDir = "in" | "out" | null;
 
@@ -213,6 +213,11 @@ export interface ParsedBlockFile {
   safety?: boolean;
   /** Siemens block number from `S7_BlockNumber`, normalized as an integer. */
   blockNumber?: number;
+  /** A FUNCTION's declared return type (`FUNCTION "Name" : Int`), which is
+   * also the type of its result variable -- the function's own name inside
+   * its body. `Void` for a function that returns nothing; undefined for
+   * every other block type. */
+  returnType?: TypeRef;
   varSections: VarSection[];
   networks: NetworkNode[];
   /** Instruction/instance calls found in a `BEGIN ... END_xxx` SCL statement
@@ -1346,6 +1351,12 @@ function parseBlockDeclaration(cur: TokenCursor, filePragma?: Pragma | null): Pa
   const nameTok = cur.next();
   const name = nameTok.kind === "string" ? (nameTok.value ?? nameTok.text) : nameTok.text;
 
+  // `FUNCTION "Name" : <ReturnType>` -- the only block header carrying a
+  // type, written before the header pragma. Left to the loop below as an
+  // unknown header token, its type was lost and the pragma after it was
+  // never read as the block's own.
+  const returnType = blockType === "FUNCTION" && cur.tryPunct(":") ? parseTypeRefFromCursor(cur) : undefined;
+
   // Block-level attributes, e.g. S7_Language / S7_Optimized_Access, and (on an
   // instruction instance DB) InstructionName -- see ParsedBlockFile.
   const inlineHeaderPragma = cur.isPunct("{") ? parsePragmaBlock(cur) : null;
@@ -1475,6 +1486,7 @@ function parseBlockDeclaration(cur: TokenCursor, filePragma?: Pragma | null): Pa
     optimizedAccess,
     safety,
     blockNumber,
+    returnType,
   };
 }
 
