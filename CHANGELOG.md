@@ -2,7 +2,7 @@
 
 All notable changes to S7 Lint for VS Code will be documented in this file.
 
-## Unreleased
+## 0.1.8
 
 - Quoted local instance calls such as `#"Sensor-1_Instance"(...)` resolve
   in LAD/FBD exports and SCL, including instruction calls through quoted
@@ -54,12 +54,15 @@ Thanks to [@sikilde](https://github.com/sikilde) for reporting issues #7 and #8.
   and the file's entries loaded into the LAD/FBD map. Renamed to
   `SCL-conversion.yaml`; the Instruction Registry Editor now warns about a
   registry file whose name encodes no language (#7).
-- The SCL instruction registry covers the 64-bit conversions: every explicit
-  conversion Siemens documents for S7-1500 to or from `LInt`, `ULInt` and
-  `LWord` (132 `<src>_TO_<dst>` functions, e.g. `INT_TO_ULINT`), transcribed
-  from the STEP 7 "Explicit conversion of ..." tables. They are no longer
-  reported as unknown instructions, their argument and result types are
-  checked, and the explicit-conversion Quick Fix can offer them.
+- The SCL instruction registry covers the complete S7-1500 explicit-conversion
+  table: every `<src>_TO_<dst>` function the STEP 7 "Explicit conversion of
+  ..." help pages document (330 new entries, e.g. `INT_TO_ULINT`,
+  `INT_TO_LTIME`, `BYTE_TO_CHAR`, `DATE_TO_LDT`, `WSTRING_TO_LINT`), the
+  S5TIME pairs and the BCD16/BCD32 functions. The registry previously held
+  the S7-1200 subset only, so any conversion involving `LInt`, `ULInt`,
+  `LWord`, `LTime`, `LTime_Of_Day`, `LDT`, `Date_And_Time`, `WChar` or
+  `WString` was reported as an unknown instruction. Argument and result
+  types are checked, and the explicit-conversion Quick Fix can offer them.
 
 ## 0.1.7
 Bug fixes

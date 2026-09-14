@@ -472,6 +472,265 @@ TIME_TO_ULINT:
     Returns the TIME duration as its ULINT millisecond representation. S7-1500 only. Example: #Result :=
     TIME_TO_ULINT(#Value);
   source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of TIME (S7-1500)"
+TIME_TO_BYTE:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [Time]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype Time.
+  result:
+    kind: value
+    dataTypes: [Byte]
+    notes: The bit pattern of the source value is transferred unchanged, right-justified, to the target data type.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := TIME_TO_BYTE(#Value);
+  source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of TIME (S7-1500)"
+TIME_TO_WORD:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [Time]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype Time.
+  result:
+    kind: value
+    dataTypes: [Word]
+    notes: The bit pattern of the source value is transferred unchanged, right-justified, to the target data type.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := TIME_TO_WORD(#Value);
+  source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of TIME (S7-1500)"
+TIME_TO_DWORD:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [Time]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype Time.
+  result:
+    kind: value
+    dataTypes: [DWord]
+    notes: The bit pattern of the source value is transferred unchanged, right-justified, to the target data type.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := TIME_TO_DWORD(#Value);
+  source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of TIME (S7-1500)"
+TIME_TO_SINT:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [Time]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype Time.
+  result:
+    kind: value
+    dataTypes: [SInt]
+    notes: Converted function value of datatype SInt.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Returns the TIME duration as its SINT millisecond representation. Example: #Result :=
+    TIME_TO_SINT(#Value);
+  source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of TIME (S7-1500)"
+TIME_TO_USINT:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [Time]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype Time.
+  result:
+    kind: value
+    dataTypes: [USInt]
+    notes: Converted function value of datatype USInt.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Returns the TIME duration as its USINT millisecond representation. Example: #Result :=
+    TIME_TO_USINT(#Value);
+  source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of TIME (S7-1500)"
+TIME_TO_INT:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [Time]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype Time.
+  result:
+    kind: value
+    dataTypes: [Int]
+    notes: Converted function value of datatype Int.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Returns the TIME duration as its INT millisecond representation. Example: #Result := TIME_TO_INT(#Value);
+  source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of TIME (S7-1500)"
+TIME_TO_UINT:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [Time]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype Time.
+  result:
+    kind: value
+    dataTypes: [UInt]
+    notes: Converted function value of datatype UInt.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Returns the TIME duration as its UINT millisecond representation. Example: #Result :=
+    TIME_TO_UINT(#Value);
+  source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of TIME (S7-1500)"
+TIME_TO_UDINT:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [Time]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype Time.
+  result:
+    kind: value
+    dataTypes: [UDInt]
+    notes: Converted function value of datatype UDInt.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Returns the TIME duration as its UDINT millisecond representation. Example: #Result :=
+    TIME_TO_UDINT(#Value);
+  source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of TIME (S7-1500)"
+TIME_TO_LTIME:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [Time]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype Time.
+  result:
+    kind: value
+    dataTypes: [LTime]
+    notes: The duration is converted to the target data type (T#10ms becomes LTIME#10ms).
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function, S7-1500 only. Example: #Result := TIME_TO_LTIME(#Value);
+  source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of TIME (S7-1500)"
+TIME_TO_S5TIME:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [Time]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype Time.
+  result:
+    kind: value
+    dataTypes: [S5Time]
+    notes: The duration is converted to the target data type (T#10ms becomes S5T#10ms).
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: shape-only
+  notes: >-
+    Typed SCL conversion function, S7-1500 only. Example: #Result := TIME_TO_S5TIME(#Value); The STEP 7 help
+    row for this conversion prints the function name as TIME_TO_TIME, which looks like a typo; TIME_TO_S5TIME
+    follows the naming of every other S5TIME conversion but is not confirmed against a compiled block.
+  source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of TIME (S7-1500)"
+TIME_TO_TOD:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [Time]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype Time.
+  result:
+    kind: value
+    dataTypes: [Time_Of_Day]
+    notes: The bit pattern of the source value is transferred unchanged, right-justified; if the source is outside the value range of TOD the destination remains unchanged.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := TIME_TO_TOD(#Value);
+  source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of TIME (S7-1500)"
 LTIME_TO_LWORD:
   family: conversion
   callShape: box
@@ -543,6 +802,380 @@ LTIME_TO_ULINT:
     Returns the LTIME duration as its ULINT nanosecond representation. S7-1500 only. Example: #Result :=
     LTIME_TO_ULINT(#Value);
   source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of LTIME (S7-1500)"
+LTIME_TO_BYTE:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [LTime]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype LTime.
+  result:
+    kind: value
+    dataTypes: [Byte]
+    notes: The bit pattern of the source value is transferred unchanged, right-justified, to the target data type.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function, S7-1500 only. Example: #Result := LTIME_TO_BYTE(#Value);
+  source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of LTIME (S7-1500)"
+LTIME_TO_WORD:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [LTime]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype LTime.
+  result:
+    kind: value
+    dataTypes: [Word]
+    notes: The bit pattern of the source value is transferred unchanged, right-justified, to the target data type.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function, S7-1500 only. Example: #Result := LTIME_TO_WORD(#Value);
+  source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of LTIME (S7-1500)"
+LTIME_TO_DWORD:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [LTime]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype LTime.
+  result:
+    kind: value
+    dataTypes: [DWord]
+    notes: The bit pattern of the source value is transferred unchanged, right-justified, to the target data type.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function, S7-1500 only. Example: #Result := LTIME_TO_DWORD(#Value);
+  source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of LTIME (S7-1500)"
+LTIME_TO_SINT:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [LTime]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype LTime.
+  result:
+    kind: value
+    dataTypes: [SInt]
+    notes: Converted function value of datatype SInt.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Returns the LTIME duration as its SINT nanosecond representation. S7-1500 only. Example: #Result :=
+    LTIME_TO_SINT(#Value);
+  source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of LTIME (S7-1500)"
+LTIME_TO_USINT:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [LTime]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype LTime.
+  result:
+    kind: value
+    dataTypes: [USInt]
+    notes: Converted function value of datatype USInt.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Returns the LTIME duration as its USINT nanosecond representation. S7-1500 only. Example: #Result :=
+    LTIME_TO_USINT(#Value);
+  source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of LTIME (S7-1500)"
+LTIME_TO_INT:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [LTime]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype LTime.
+  result:
+    kind: value
+    dataTypes: [Int]
+    notes: Converted function value of datatype Int.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Returns the LTIME duration as its INT nanosecond representation. S7-1500 only. Example: #Result :=
+    LTIME_TO_INT(#Value);
+  source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of LTIME (S7-1500)"
+LTIME_TO_UINT:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [LTime]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype LTime.
+  result:
+    kind: value
+    dataTypes: [UInt]
+    notes: Converted function value of datatype UInt.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Returns the LTIME duration as its UINT nanosecond representation. S7-1500 only. Example: #Result :=
+    LTIME_TO_UINT(#Value);
+  source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of LTIME (S7-1500)"
+LTIME_TO_DINT:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [LTime]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype LTime.
+  result:
+    kind: value
+    dataTypes: [DInt]
+    notes: Converted function value of datatype DInt.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Returns the LTIME duration as its DINT nanosecond representation. S7-1500 only. Example: #Result :=
+    LTIME_TO_DINT(#Value);
+  source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of LTIME (S7-1500)"
+LTIME_TO_UDINT:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [LTime]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype LTime.
+  result:
+    kind: value
+    dataTypes: [UDInt]
+    notes: Converted function value of datatype UDInt.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Returns the LTIME duration as its UDINT nanosecond representation. S7-1500 only. Example: #Result :=
+    LTIME_TO_UDINT(#Value);
+  source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of LTIME (S7-1500)"
+LTIME_TO_TIME:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [LTime]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype LTime.
+  result:
+    kind: value
+    dataTypes: [Time]
+    notes: The duration is converted to the target data type (LTIME#10ms becomes T#10ms).
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function, S7-1500 only. Example: #Result := LTIME_TO_TIME(#Value);
+  source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of LTIME (S7-1500)"
+LTIME_TO_S5TIME:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [LTime]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype LTime.
+  result:
+    kind: value
+    dataTypes: [S5Time]
+    notes: The duration is converted to the target data type (LTIME#10ms becomes S5T#10ms).
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function, S7-1500 only. Example: #Result := LTIME_TO_S5TIME(#Value);
+  source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of LTIME (S7-1500)"
+LTIME_TO_LTOD:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [LTime]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype LTime.
+  result:
+    kind: value
+    dataTypes: [LTime_Of_Day]
+    notes: The bit pattern of the source value is transferred unchanged, right-justified; if the source is outside the value range of LTOD the destination remains unchanged.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function, S7-1500 only. Example: #Result := LTIME_TO_LTOD(#Value);
+  source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of LTIME (S7-1500)"
+LTIME_TO_LDT:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [LTime]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype LTime.
+  result:
+    kind: value
+    dataTypes: [LDT]
+    notes: The duration is interpreted as the time since 1970-01-01 00:00:00 and returned as LDT (LTIME#10ms becomes LDT#1970-01-01-00:00:00.010000000).
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function, S7-1500 only. Example: #Result := LTIME_TO_LDT(#Value);
+  source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of LTIME (S7-1500)"
+S5TIME_TO_WORD:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [S5Time]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype S5Time.
+  result:
+    kind: value
+    dataTypes: [Word]
+    notes: The bit pattern of the source value is transferred unchanged, right-justified, to the target data type.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function, S7-1500 only. Example: #Result := S5TIME_TO_WORD(#Value);
+  source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of S5TIME (S7-1500)"
+S5TIME_TO_TIME:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [S5Time]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype S5Time.
+  result:
+    kind: value
+    dataTypes: [Time]
+    notes: The duration is converted to the target data type (S5T#10ms becomes T#10ms).
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function, S7-1500 only. Example: #Result := S5TIME_TO_TIME(#Value);
+  source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of S5TIME (S7-1500)"
+S5TIME_TO_LTIME:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [S5Time]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype S5Time.
+  result:
+    kind: value
+    dataTypes: [LTime]
+    notes: The duration is converted to the target data type (S5T#10ms becomes LTIME#10ms).
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function, S7-1500 only. Example: #Result := S5TIME_TO_LTIME(#Value);
+  source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of S5TIME (S7-1500)"
 BOOL_TO_BYTE:
   family: conversion
   callShape: box
@@ -726,6 +1359,98 @@ BOOL_TO_ULINT:
   confidence: official-doc
   notes: >-
     Typed SCL conversion function, S7-1500 only. Example: #Result := BOOL_TO_ULINT(#Value);
+  source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of BOOL (S7-1500)"
+BOOL_TO_SINT:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [Bool]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype Bool.
+  result:
+    kind: value
+    dataTypes: [SInt]
+    notes: The Bool value is transferred to the least significant bit of the target data type; all other bits are 0.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := BOOL_TO_SINT(#Value);
+  source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of BOOL (S7-1500)"
+BOOL_TO_USINT:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [Bool]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype Bool.
+  result:
+    kind: value
+    dataTypes: [USInt]
+    notes: The Bool value is transferred to the least significant bit of the target data type; all other bits are 0.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := BOOL_TO_USINT(#Value);
+  source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of BOOL (S7-1500)"
+BOOL_TO_UINT:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [Bool]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype Bool.
+  result:
+    kind: value
+    dataTypes: [UInt]
+    notes: The Bool value is transferred to the least significant bit of the target data type; all other bits are 0.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := BOOL_TO_UINT(#Value);
+  source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of BOOL (S7-1500)"
+BOOL_TO_UDINT:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [Bool]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype Bool.
+  result:
+    kind: value
+    dataTypes: [UDInt]
+    notes: The Bool value is transferred to the least significant bit of the target data type; all other bits are 0.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := BOOL_TO_UDINT(#Value);
   source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of BOOL (S7-1500)"
 BYTE_TO_BOOL:
   family: conversion
@@ -1003,6 +1728,190 @@ BYTE_TO_ULINT:
   notes: >-
     Typed SCL conversion function, S7-1500 only. Example: #Result := BYTE_TO_ULINT(#Value);
   source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of BYTE (S7-1500)"
+BYTE_TO_TIME:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [Byte]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype Byte.
+  result:
+    kind: value
+    dataTypes: [Time]
+    notes: The bit pattern of the source value is transferred unchanged, right-justified, to the target data type.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := BYTE_TO_TIME(#Value);
+  source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of BYTE (S7-1500)"
+BYTE_TO_LTIME:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [Byte]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype Byte.
+  result:
+    kind: value
+    dataTypes: [LTime]
+    notes: The bit pattern of the source value is transferred unchanged, right-justified, to the target data type.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function, S7-1500 only. Example: #Result := BYTE_TO_LTIME(#Value);
+  source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of BYTE (S7-1500)"
+BYTE_TO_TOD:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [Byte]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype Byte.
+  result:
+    kind: value
+    dataTypes: [Time_Of_Day]
+    notes: The bit pattern of the source value is transferred unchanged, right-justified, to the target data type.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := BYTE_TO_TOD(#Value);
+  source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of BYTE (S7-1500)"
+BYTE_TO_LTOD:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [Byte]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype Byte.
+  result:
+    kind: value
+    dataTypes: [LTime_Of_Day]
+    notes: The bit pattern of the source value is transferred unchanged, right-justified, to the target data type.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function, S7-1500 only. Example: #Result := BYTE_TO_LTOD(#Value);
+  source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of BYTE (S7-1500)"
+BYTE_TO_DATE:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [Byte]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype Byte.
+  result:
+    kind: value
+    dataTypes: [Date]
+    notes: The bit pattern of the source value is transferred unchanged, right-justified, to the target data type.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := BYTE_TO_DATE(#Value);
+  source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of BYTE (S7-1500)"
+BYTE_TO_LDT:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [Byte]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype Byte.
+  result:
+    kind: value
+    dataTypes: [LDT]
+    notes: The bit pattern of the source value is transferred unchanged, right-justified, to the target data type.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function, S7-1500 only. Example: #Result := BYTE_TO_LDT(#Value);
+  source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of BYTE (S7-1500)"
+BYTE_TO_CHAR:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [Byte]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype Byte.
+  result:
+    kind: value
+    dataTypes: [Char]
+    notes: The bit pattern of the source value is transferred unchanged, right-justified, to the target data type.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := BYTE_TO_CHAR(#Value);
+  source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of BYTE (S7-1500)"
+BYTE_TO_WCHAR:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [Byte]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype Byte.
+  result:
+    kind: value
+    dataTypes: [WChar]
+    notes: The bit pattern of the source value is transferred unchanged, right-justified, to the target data type.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := BYTE_TO_WCHAR(#Value);
+  source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of BYTE (S7-1500)"
 WORD_TO_BOOL:
   family: conversion
   callShape: box
@@ -1278,6 +2187,260 @@ WORD_TO_ULINT:
   confidence: official-doc
   notes: >-
     Typed SCL conversion function, S7-1500 only. Example: #Result := WORD_TO_ULINT(#Value);
+  source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of WORD (S7-1500)"
+WORD_TO_TIME:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [Word]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype Word.
+  result:
+    kind: value
+    dataTypes: [Time]
+    notes: The bit pattern of the source value is transferred unchanged, right-justified, to the target data type.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := WORD_TO_TIME(#Value);
+  source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of WORD (S7-1500)"
+WORD_TO_LTIME:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [Word]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype Word.
+  result:
+    kind: value
+    dataTypes: [LTime]
+    notes: The bit pattern of the source value is transferred unchanged, right-justified, to the target data type.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function, S7-1500 only. Example: #Result := WORD_TO_LTIME(#Value);
+  source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of WORD (S7-1500)"
+WORD_TO_S5TIME:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [Word]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype Word.
+  result:
+    kind: value
+    dataTypes: [S5Time]
+    notes: The bit pattern of the source value is transferred unchanged, right-justified, to the target data type.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function, S7-1500 only. Example: #Result := WORD_TO_S5TIME(#Value);
+  source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of WORD (S7-1500)"
+WORD_TO_TOD:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [Word]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype Word.
+  result:
+    kind: value
+    dataTypes: [Time_Of_Day]
+    notes: The bit pattern of the source value is transferred unchanged, right-justified, to the target data type.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := WORD_TO_TOD(#Value);
+  source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of WORD (S7-1500)"
+WORD_TO_LTOD:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [Word]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype Word.
+  result:
+    kind: value
+    dataTypes: [LTime_Of_Day]
+    notes: The bit pattern of the source value is transferred unchanged, right-justified, to the target data type.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function, S7-1500 only. Example: #Result := WORD_TO_LTOD(#Value);
+  source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of WORD (S7-1500)"
+WORD_TO_DATE:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [Word]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype Word.
+  result:
+    kind: value
+    dataTypes: [Date]
+    notes: The bit pattern of the source value is transferred unchanged, right-justified, to the target data type.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := WORD_TO_DATE(#Value);
+  source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of WORD (S7-1500)"
+WORD_TO_LDT:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [Word]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype Word.
+  result:
+    kind: value
+    dataTypes: [LDT]
+    notes: The bit pattern of the source value is transferred unchanged, right-justified, to the target data type.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function, S7-1500 only. Example: #Result := WORD_TO_LDT(#Value);
+  source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of WORD (S7-1500)"
+WORD_TO_CHAR:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [Word]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype Word.
+  result:
+    kind: value
+    dataTypes: [Char]
+    notes: The bit pattern of the source value is transferred unchanged, right-justified, to the target data type.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := WORD_TO_CHAR(#Value);
+  source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of WORD (S7-1500)"
+WORD_TO_WCHAR:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [Word]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype Word.
+  result:
+    kind: value
+    dataTypes: [WChar]
+    notes: The bit pattern of the source value is transferred unchanged, right-justified, to the target data type.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := WORD_TO_WCHAR(#Value);
+  source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of WORD (S7-1500)"
+WORD_BCD16_TO_INT:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [Word]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype Word holding a BCD16-coded value.
+  result:
+    kind: value
+    dataTypes: [Int]
+    notes: The Word is read as a BCD16-coded value between -999 and +999 and returned as Int in binary notation.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function, same as BCD16_TO_INT with the Word source spelled out. Example: #Result :=
+    WORD_BCD16_TO_INT(#Value);
+  source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of WORD (S7-1500)"
+BCD16_TO_INT:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [Word]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype Word holding a BCD16-coded value.
+  result:
+    kind: value
+    dataTypes: [Int]
+    notes: The Word is read as a BCD16-coded value between -999 and +999 and returned as Int in binary notation.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := BCD16_TO_INT(#Value);
   source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of WORD (S7-1500)"
 DWORD_TO_BOOL:
   family: conversion
@@ -1577,6 +2740,237 @@ DWORD_TO_ULINT:
   confidence: official-doc
   notes: >-
     Typed SCL conversion function, S7-1500 only. Example: #Result := DWORD_TO_ULINT(#Value);
+  source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of DWORD (S7-1500)"
+DWORD_TO_TIME:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [DWord]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype DWord.
+  result:
+    kind: value
+    dataTypes: [Time]
+    notes: The bit pattern of the source value is transferred unchanged, right-justified, to the target data type.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := DWORD_TO_TIME(#Value);
+  source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of DWORD (S7-1500)"
+DWORD_TO_LTIME:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [DWord]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype DWord.
+  result:
+    kind: value
+    dataTypes: [LTime]
+    notes: The bit pattern of the source value is transferred unchanged, right-justified, to the target data type.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function, S7-1500 only. Example: #Result := DWORD_TO_LTIME(#Value);
+  source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of DWORD (S7-1500)"
+DWORD_TO_TOD:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [DWord]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype DWord.
+  result:
+    kind: value
+    dataTypes: [Time_Of_Day]
+    notes: The bit pattern of the source value is transferred unchanged, right-justified, to the target data type.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := DWORD_TO_TOD(#Value);
+  source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of DWORD (S7-1500)"
+DWORD_TO_LTOD:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [DWord]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype DWord.
+  result:
+    kind: value
+    dataTypes: [LTime_Of_Day]
+    notes: The bit pattern of the source value is transferred unchanged, right-justified, to the target data type.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function, S7-1500 only. Example: #Result := DWORD_TO_LTOD(#Value);
+  source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of DWORD (S7-1500)"
+DWORD_TO_DATE:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [DWord]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype DWord.
+  result:
+    kind: value
+    dataTypes: [Date]
+    notes: The bit pattern of the source value is transferred unchanged, right-justified, to the target data type.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := DWORD_TO_DATE(#Value);
+  source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of DWORD (S7-1500)"
+DWORD_TO_LDT:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [DWord]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype DWord.
+  result:
+    kind: value
+    dataTypes: [LDT]
+    notes: The bit pattern of the source value is transferred unchanged, right-justified, to the target data type.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function, S7-1500 only. Example: #Result := DWORD_TO_LDT(#Value);
+  source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of DWORD (S7-1500)"
+DWORD_TO_CHAR:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [DWord]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype DWord.
+  result:
+    kind: value
+    dataTypes: [Char]
+    notes: The bit pattern of the source value is transferred unchanged, right-justified, to the target data type.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := DWORD_TO_CHAR(#Value);
+  source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of DWORD (S7-1500)"
+DWORD_TO_WCHAR:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [DWord]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype DWord.
+  result:
+    kind: value
+    dataTypes: [WChar]
+    notes: The bit pattern of the source value is transferred unchanged, right-justified, to the target data type.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := DWORD_TO_WCHAR(#Value);
+  source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of DWORD (S7-1500)"
+DWORD_BCD32_TO_DINT:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [DWord]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype DWord holding a BCD32-coded value.
+  result:
+    kind: value
+    dataTypes: [DInt]
+    notes: The DWord is read as a BCD32-coded value between -9999999 and +9999999 and returned as DInt in binary notation.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function, same as BCD32_TO_DINT with the DWord source spelled out. Example: #Result
+    := DWORD_BCD32_TO_DINT(#Value);
+  source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of DWORD (S7-1500)"
+BCD32_TO_DINT:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [DWord]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype DWord holding a BCD32-coded value.
+  result:
+    kind: value
+    dataTypes: [DInt]
+    notes: The DWord is read as a BCD32-coded value between -9999999 and +9999999 and returned as DInt in binary notation.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := BCD32_TO_DINT(#Value);
   source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of DWORD (S7-1500)"
 LWORD_TO_BOOL:
   family: conversion
@@ -2429,6 +3823,196 @@ SINT_TO_ULINT:
   notes: >-
     Typed SCL conversion function, S7-1500 only. Example: #Result := SINT_TO_ULINT(#Value);
   source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of SINT (S7-1500)"
+SINT_TO_TIME:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [SInt]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype SInt.
+  result:
+    kind: value
+    dataTypes: [Time]
+    notes: Converted function value of datatype Time.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Interprets the SINT value as milliseconds and returns a TIME value. Example: #Result :=
+    SINT_TO_TIME(#Value);
+  source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of SINT (S7-1500)"
+SINT_TO_LTIME:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [SInt]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype SInt.
+  result:
+    kind: value
+    dataTypes: [LTime]
+    notes: Converted function value of datatype LTime.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Interprets the SINT value as nanoseconds and returns an LTIME value (S7-1500 only). Example: #Result :=
+    SINT_TO_LTIME(#Value);
+  source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of SINT (S7-1500)"
+SINT_TO_TOD:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [SInt]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype SInt.
+  result:
+    kind: value
+    dataTypes: [Time_Of_Day]
+    notes: Converted function value of datatype Time_Of_Day.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Interprets the SINT value as milliseconds since midnight and returns a TOD value. Example: #Result :=
+    SINT_TO_TOD(#Value);
+  source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of SINT (S7-1500)"
+SINT_TO_LTOD:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [SInt]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype SInt.
+  result:
+    kind: value
+    dataTypes: [LTime_Of_Day]
+    notes: Converted function value of datatype LTime_Of_Day.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Interprets the SINT value as nanoseconds since midnight and returns an LTOD value (S7-1500 only). Example:
+    #Result := SINT_TO_LTOD(#Value);
+  source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of SINT (S7-1500)"
+SINT_TO_DATE:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [SInt]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype SInt.
+  result:
+    kind: value
+    dataTypes: [Date]
+    notes: Converted function value of datatype Date.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Interprets the SINT value as days since 1990-01-01 and returns a DATE value. Example: #Result :=
+    SINT_TO_DATE(#Value);
+  source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of SINT (S7-1500)"
+SINT_TO_LDT:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [SInt]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype SInt.
+  result:
+    kind: value
+    dataTypes: [LDT]
+    notes: Converted function value of datatype LDT.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Interprets the SINT value as nanoseconds since 1970-01-01 00:00:00 and returns an LDT value (S7-1500
+    only). Example: #Result := SINT_TO_LDT(#Value);
+  source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of SINT (S7-1500)"
+SINT_TO_WSTRING:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [SInt]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype SInt.
+  result:
+    kind: value
+    dataTypes: [WString]
+    notes: The value is converted.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := SINT_TO_WSTRING(#Value);
+  source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of SINT (S7-1500)"
+SINT_TO_WCHAR:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [SInt]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype SInt.
+  result:
+    kind: value
+    dataTypes: [WChar]
+    notes: The value is converted.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := SINT_TO_WCHAR(#Value);
+  source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of SINT (S7-1500)"
 USINT_TO_BOOL:
   family: conversion
   callShape: box
@@ -2773,6 +4357,196 @@ USINT_TO_ULINT:
   confidence: official-doc
   notes: >-
     Typed SCL conversion function, S7-1500 only. Example: #Result := USINT_TO_ULINT(#Value);
+  source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of USINT (S7-1500)"
+USINT_TO_TIME:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [USInt]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype USInt.
+  result:
+    kind: value
+    dataTypes: [Time]
+    notes: Converted function value of datatype Time.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Interprets the USINT value as milliseconds and returns a TIME value. Example: #Result :=
+    USINT_TO_TIME(#Value);
+  source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of USINT (S7-1500)"
+USINT_TO_LTIME:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [USInt]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype USInt.
+  result:
+    kind: value
+    dataTypes: [LTime]
+    notes: Converted function value of datatype LTime.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Interprets the USINT value as nanoseconds and returns an LTIME value (S7-1500 only). Example: #Result :=
+    USINT_TO_LTIME(#Value);
+  source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of USINT (S7-1500)"
+USINT_TO_TOD:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [USInt]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype USInt.
+  result:
+    kind: value
+    dataTypes: [Time_Of_Day]
+    notes: Converted function value of datatype Time_Of_Day.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Interprets the USINT value as milliseconds since midnight and returns a TOD value. Example: #Result :=
+    USINT_TO_TOD(#Value);
+  source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of USINT (S7-1500)"
+USINT_TO_LTOD:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [USInt]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype USInt.
+  result:
+    kind: value
+    dataTypes: [LTime_Of_Day]
+    notes: Converted function value of datatype LTime_Of_Day.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Interprets the USINT value as nanoseconds since midnight and returns an LTOD value (S7-1500 only).
+    Example: #Result := USINT_TO_LTOD(#Value);
+  source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of USINT (S7-1500)"
+USINT_TO_DATE:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [USInt]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype USInt.
+  result:
+    kind: value
+    dataTypes: [Date]
+    notes: Converted function value of datatype Date.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Interprets the USINT value as days since 1990-01-01 and returns a DATE value. Example: #Result :=
+    USINT_TO_DATE(#Value);
+  source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of USINT (S7-1500)"
+USINT_TO_LDT:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [USInt]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype USInt.
+  result:
+    kind: value
+    dataTypes: [LDT]
+    notes: Converted function value of datatype LDT.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Interprets the USINT value as nanoseconds since 1970-01-01 00:00:00 and returns an LDT value (S7-1500
+    only). Example: #Result := USINT_TO_LDT(#Value);
+  source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of USINT (S7-1500)"
+USINT_TO_WSTRING:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [USInt]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype USInt.
+  result:
+    kind: value
+    dataTypes: [WString]
+    notes: The value is converted.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := USINT_TO_WSTRING(#Value);
+  source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of USINT (S7-1500)"
+USINT_TO_WCHAR:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [USInt]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype USInt.
+  result:
+    kind: value
+    dataTypes: [WChar]
+    notes: The value is converted.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := USINT_TO_WCHAR(#Value);
   source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of USINT (S7-1500)"
 INT_TO_BOOL:
   family: conversion
@@ -3119,6 +4893,244 @@ INT_TO_ULINT:
   notes: >-
     Typed SCL conversion function, S7-1500 only. Example: #Result := INT_TO_ULINT(#Value);
   source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of INT (S7-1500)"
+INT_TO_TIME:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [Int]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype Int.
+  result:
+    kind: value
+    dataTypes: [Time]
+    notes: Converted function value of datatype Time.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Interprets the INT value as milliseconds and returns a TIME value. Example: #Result :=
+    INT_TO_TIME(#Value);
+  source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of INT (S7-1500)"
+INT_TO_LTIME:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [Int]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype Int.
+  result:
+    kind: value
+    dataTypes: [LTime]
+    notes: Converted function value of datatype LTime.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Interprets the INT value as nanoseconds and returns an LTIME value (S7-1500 only). Example: #Result :=
+    INT_TO_LTIME(#Value);
+  source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of INT (S7-1500)"
+INT_TO_TOD:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [Int]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype Int.
+  result:
+    kind: value
+    dataTypes: [Time_Of_Day]
+    notes: Converted function value of datatype Time_Of_Day.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Interprets the INT value as milliseconds since midnight and returns a TOD value. Example: #Result :=
+    INT_TO_TOD(#Value);
+  source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of INT (S7-1500)"
+INT_TO_LTOD:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [Int]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype Int.
+  result:
+    kind: value
+    dataTypes: [LTime_Of_Day]
+    notes: Converted function value of datatype LTime_Of_Day.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Interprets the INT value as nanoseconds since midnight and returns an LTOD value (S7-1500 only). Example:
+    #Result := INT_TO_LTOD(#Value);
+  source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of INT (S7-1500)"
+INT_TO_DATE:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [Int]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype Int.
+  result:
+    kind: value
+    dataTypes: [Date]
+    notes: Converted function value of datatype Date.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Interprets the INT value as days since 1990-01-01 and returns a DATE value. Example: #Result :=
+    INT_TO_DATE(#Value);
+  source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of INT (S7-1500)"
+INT_TO_LDT:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [Int]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype Int.
+  result:
+    kind: value
+    dataTypes: [LDT]
+    notes: Converted function value of datatype LDT.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Interprets the INT value as nanoseconds since 1970-01-01 00:00:00 and returns an LDT value (S7-1500 only).
+    Example: #Result := INT_TO_LDT(#Value);
+  source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of INT (S7-1500)"
+INT_TO_WSTRING:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [Int]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype Int.
+  result:
+    kind: value
+    dataTypes: [WString]
+    notes: The value is converted.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := INT_TO_WSTRING(#Value);
+  source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of INT (S7-1500)"
+INT_TO_WCHAR:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [Int]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype Int.
+  result:
+    kind: value
+    dataTypes: [WChar]
+    notes: The value is converted.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := INT_TO_WCHAR(#Value);
+  source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of INT (S7-1500)"
+INT_TO_BCD16:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [Int]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype Int, between -999 and +999.
+  result:
+    kind: value
+    dataTypes: [Word]
+    notes: The value is returned BCD16-coded in a Word.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. The Int value must lie between -999 and +999; on overflow ENO is set to 0
+    (the OV bit under IEC check). Example: #Result := INT_TO_BCD16(#Value);
+  source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of INT (S7-1500)"
+INT_TO_BCD16_WORD:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [Int]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype Int, between -999 and +999.
+  result:
+    kind: value
+    dataTypes: [Word]
+    notes: The value is returned BCD16-coded in a Word.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function, same as INT_TO_BCD16 with the Word target spelled out. Example: #Result :=
+    INT_TO_BCD16_WORD(#Value);
+  source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of INT (S7-1500)"
 UINT_TO_BOOL:
   family: conversion
   callShape: box
@@ -3440,6 +5452,172 @@ UINT_TO_ULINT:
   confidence: official-doc
   notes: >-
     Typed SCL conversion function, S7-1500 only. Example: #Result := UINT_TO_ULINT(#Value);
+  source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of UINT (S7-1500)"
+UINT_TO_TIME:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [UInt]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype UInt.
+  result:
+    kind: value
+    dataTypes: [Time]
+    notes: Converted function value of datatype Time.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Interprets the UINT value as milliseconds and returns a TIME value. Example: #Result :=
+    UINT_TO_TIME(#Value);
+  source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of UINT (S7-1500)"
+UINT_TO_LTIME:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [UInt]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype UInt.
+  result:
+    kind: value
+    dataTypes: [LTime]
+    notes: Converted function value of datatype LTime.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Interprets the UINT value as nanoseconds and returns an LTIME value (S7-1500 only). Example: #Result :=
+    UINT_TO_LTIME(#Value);
+  source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of UINT (S7-1500)"
+UINT_TO_TOD:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [UInt]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype UInt.
+  result:
+    kind: value
+    dataTypes: [Time_Of_Day]
+    notes: Converted function value of datatype Time_Of_Day.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Interprets the UINT value as milliseconds since midnight and returns a TOD value. Example: #Result :=
+    UINT_TO_TOD(#Value);
+  source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of UINT (S7-1500)"
+UINT_TO_LTOD:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [UInt]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype UInt.
+  result:
+    kind: value
+    dataTypes: [LTime_Of_Day]
+    notes: Converted function value of datatype LTime_Of_Day.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Interprets the UINT value as nanoseconds since midnight and returns an LTOD value (S7-1500 only). Example:
+    #Result := UINT_TO_LTOD(#Value);
+  source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of UINT (S7-1500)"
+UINT_TO_LDT:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [UInt]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype UInt.
+  result:
+    kind: value
+    dataTypes: [LDT]
+    notes: Converted function value of datatype LDT.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Interprets the UINT value as nanoseconds since 1970-01-01 00:00:00 and returns an LDT value (S7-1500
+    only). Example: #Result := UINT_TO_LDT(#Value);
+  source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of UINT (S7-1500)"
+UINT_TO_WSTRING:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [UInt]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype UInt.
+  result:
+    kind: value
+    dataTypes: [WString]
+    notes: The value is converted.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := UINT_TO_WSTRING(#Value);
+  source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of UINT (S7-1500)"
+UINT_TO_WCHAR:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [UInt]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype UInt.
+  result:
+    kind: value
+    dataTypes: [WChar]
+    notes: The value is converted.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := UINT_TO_WCHAR(#Value);
   source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of UINT (S7-1500)"
 DINT_TO_BOOL:
   family: conversion
@@ -3808,6 +5986,220 @@ DINT_TO_ULINT:
   confidence: official-doc
   notes: >-
     Typed SCL conversion function, S7-1500 only. Example: #Result := DINT_TO_ULINT(#Value);
+  source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of DINT (S7-1500)"
+DINT_TO_LTIME:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [DInt]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype DInt.
+  result:
+    kind: value
+    dataTypes: [LTime]
+    notes: Converted function value of datatype LTime.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Interprets the DINT value as nanoseconds and returns an LTIME value (S7-1500 only). Example: #Result :=
+    DINT_TO_LTIME(#Value);
+  source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of DINT (S7-1500)"
+DINT_TO_TOD:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [DInt]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype DInt.
+  result:
+    kind: value
+    dataTypes: [Time_Of_Day]
+    notes: Converted function value of datatype Time_Of_Day.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Interprets the DINT value as milliseconds since midnight and returns a TOD value. Example: #Result :=
+    DINT_TO_TOD(#Value);
+  source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of DINT (S7-1500)"
+DINT_TO_LTOD:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [DInt]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype DInt.
+  result:
+    kind: value
+    dataTypes: [LTime_Of_Day]
+    notes: Converted function value of datatype LTime_Of_Day.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Interprets the DINT value as nanoseconds since midnight and returns an LTOD value (S7-1500 only). Example:
+    #Result := DINT_TO_LTOD(#Value);
+  source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of DINT (S7-1500)"
+DINT_TO_DATE:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [DInt]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype DInt.
+  result:
+    kind: value
+    dataTypes: [Date]
+    notes: Converted function value of datatype Date.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Interprets the DINT value as days since 1990-01-01 and returns a DATE value. Example: #Result :=
+    DINT_TO_DATE(#Value);
+  source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of DINT (S7-1500)"
+DINT_TO_LDT:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [DInt]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype DInt.
+  result:
+    kind: value
+    dataTypes: [LDT]
+    notes: Converted function value of datatype LDT.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Interprets the DINT value as nanoseconds since 1970-01-01 00:00:00 and returns an LDT value (S7-1500
+    only). Example: #Result := DINT_TO_LDT(#Value);
+  source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of DINT (S7-1500)"
+DINT_TO_WSTRING:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [DInt]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype DInt.
+  result:
+    kind: value
+    dataTypes: [WString]
+    notes: The value is converted.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := DINT_TO_WSTRING(#Value);
+  source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of DINT (S7-1500)"
+DINT_TO_WCHAR:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [DInt]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype DInt.
+  result:
+    kind: value
+    dataTypes: [WChar]
+    notes: The value is converted.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := DINT_TO_WCHAR(#Value);
+  source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of DINT (S7-1500)"
+DINT_TO_BCD32:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [DInt]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype DInt, between -9999999 and +9999999.
+  result:
+    kind: value
+    dataTypes: [DWord]
+    notes: The value is returned BCD32-coded in a DWord.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. The DInt value must lie between -9999999 and +9999999; on overflow ENO is
+    set to 0 (the OV bit under IEC check). Example: #Result := DINT_TO_BCD32(#Value);
+  source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of DINT (S7-1500)"
+DINT_TO_BCD32_DWORD:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [DInt]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype DInt, between -9999999 and +9999999.
+  result:
+    kind: value
+    dataTypes: [DWord]
+    notes: The value is returned BCD32-coded in a DWord.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function, same as DINT_TO_BCD32 with the DWord target spelled out. Example: #Result
+    := DINT_TO_BCD32_DWORD(#Value);
   source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of DINT (S7-1500)"
 UDINT_TO_BOOL:
   family: conversion
@@ -4199,6 +6591,172 @@ UDINT_TO_ULINT:
   confidence: official-doc
   notes: >-
     Typed SCL conversion function, S7-1500 only. Example: #Result := UDINT_TO_ULINT(#Value);
+  source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of UDINT (S7-1500)"
+UDINT_TO_TIME:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [UDInt]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype UDInt.
+  result:
+    kind: value
+    dataTypes: [Time]
+    notes: Converted function value of datatype Time.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Interprets the UDINT value as milliseconds and returns a TIME value. Example: #Result :=
+    UDINT_TO_TIME(#Value);
+  source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of UDINT (S7-1500)"
+UDINT_TO_LTIME:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [UDInt]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype UDInt.
+  result:
+    kind: value
+    dataTypes: [LTime]
+    notes: Converted function value of datatype LTime.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Interprets the UDINT value as nanoseconds and returns an LTIME value (S7-1500 only). Example: #Result :=
+    UDINT_TO_LTIME(#Value);
+  source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of UDINT (S7-1500)"
+UDINT_TO_LTOD:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [UDInt]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype UDInt.
+  result:
+    kind: value
+    dataTypes: [LTime_Of_Day]
+    notes: Converted function value of datatype LTime_Of_Day.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Interprets the UDINT value as nanoseconds since midnight and returns an LTOD value (S7-1500 only).
+    Example: #Result := UDINT_TO_LTOD(#Value);
+  source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of UDINT (S7-1500)"
+UDINT_TO_DATE:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [UDInt]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype UDInt.
+  result:
+    kind: value
+    dataTypes: [Date]
+    notes: Converted function value of datatype Date.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Interprets the UDINT value as days since 1990-01-01 and returns a DATE value. Example: #Result :=
+    UDINT_TO_DATE(#Value);
+  source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of UDINT (S7-1500)"
+UDINT_TO_LDT:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [UDInt]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype UDInt.
+  result:
+    kind: value
+    dataTypes: [LDT]
+    notes: Converted function value of datatype LDT.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Interprets the UDINT value as nanoseconds since 1970-01-01 00:00:00 and returns an LDT value (S7-1500
+    only). Example: #Result := UDINT_TO_LDT(#Value);
+  source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of UDINT (S7-1500)"
+UDINT_TO_WSTRING:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [UDInt]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype UDInt.
+  result:
+    kind: value
+    dataTypes: [WString]
+    notes: The value is converted.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := UDINT_TO_WSTRING(#Value);
+  source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of UDINT (S7-1500)"
+UDINT_TO_WCHAR:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [UDInt]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype UDInt.
+  result:
+    kind: value
+    dataTypes: [WChar]
+    notes: The value is converted.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := UDINT_TO_WCHAR(#Value);
   source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of UDINT (S7-1500)"
 LINT_TO_BOOL:
   family: conversion
@@ -5548,6 +8106,29 @@ REAL_TO_ULINT:
     Narrowing typed SCL conversion, S7-1500 only. ENO/error behavior depends on the active IEC-check and
     target CPU rules. Example: #Result := REAL_TO_ULINT(#Value);
   source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of REAL (S7-1500)"
+REAL_TO_WSTRING:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [Real]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype Real.
+  result:
+    kind: value
+    dataTypes: [WString]
+    notes: The value is converted.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := REAL_TO_WSTRING(#Value);
+  source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of REAL (S7-1500)"
 LREAL_TO_SINT:
   family: conversion
   callShape: box
@@ -5780,6 +8361,29 @@ LREAL_TO_ULINT:
     Narrowing typed SCL conversion, S7-1500 only. ENO/error behavior depends on the active IEC-check and
     target CPU rules. Example: #Result := LREAL_TO_ULINT(#Value);
   source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of LREAL (S7-1500)"
+LREAL_TO_WSTRING:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [LReal]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype LReal.
+  result:
+    kind: value
+    dataTypes: [WString]
+    notes: The value is converted.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := LREAL_TO_WSTRING(#Value);
+  source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of LREAL (S7-1500)"
 DTL_TO_DATE:
   family: conversion
   callShape: box
@@ -5826,6 +8430,190 @@ DTL_TO_TOD:
   notes: >-
     Typed SCL conversion function. Example: #Result := DTL_TO_TOD(#Value);
   source: "official instruction documentation (paraphrased)"
+DTL_TO_LTOD:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [DTL]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype DTL.
+  result:
+    kind: value
+    dataTypes: [LTime_Of_Day]
+    notes: Returns the time-of-day part of the source value.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function, S7-1500 only. Example: #Result := DTL_TO_LTOD(#Value);
+  source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of DTL (S7-1500)"
+DTL_TO_DT:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [DTL]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype DTL.
+  result:
+    kind: value
+    dataTypes: [Date_And_Time]
+    notes: The value is converted to the target data type.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function, S7-1500 only. Example: #Result := DTL_TO_DT(#Value);
+  source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of DTL (S7-1500)"
+DTL_TO_LDT:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [DTL]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype DTL.
+  result:
+    kind: value
+    dataTypes: [LDT]
+    notes: The value is converted to the target data type.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function, S7-1500 only. Example: #Result := DTL_TO_LDT(#Value);
+  source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of DTL (S7-1500)"
+DT_TO_TOD:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [Date_And_Time]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype Date_And_Time.
+  result:
+    kind: value
+    dataTypes: [Time_Of_Day]
+    notes: Returns the time-of-day part of the source value.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function, S7-1500 only. Example: #Result := DT_TO_TOD(#Value);
+  source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of DT (S7-1500)"
+DT_TO_LTOD:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [Date_And_Time]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype Date_And_Time.
+  result:
+    kind: value
+    dataTypes: [LTime_Of_Day]
+    notes: Returns the time-of-day part of the source value.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function, S7-1500 only. Example: #Result := DT_TO_LTOD(#Value);
+  source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of DT (S7-1500)"
+DT_TO_DATE:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [Date_And_Time]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype Date_And_Time.
+  result:
+    kind: value
+    dataTypes: [Date]
+    notes: Returns the date part of the source value.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function, S7-1500 only. Example: #Result := DT_TO_DATE(#Value);
+  source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of DT (S7-1500)"
+DT_TO_LDT:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [Date_And_Time]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype Date_And_Time.
+  result:
+    kind: value
+    dataTypes: [LDT]
+    notes: The value is converted to the target data type.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function, S7-1500 only. Example: #Result := DT_TO_LDT(#Value);
+  source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of DT (S7-1500)"
+DT_TO_DTL:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [Date_And_Time]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype Date_And_Time.
+  result:
+    kind: value
+    dataTypes: [DTL]
+    notes: The value is converted to the target data type.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function, S7-1500 only. Example: #Result := DT_TO_DTL(#Value);
+  source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of DT (S7-1500)"
 TOD_TO_UDINT:
   family: conversion
   callShape: box
@@ -5920,6 +8708,305 @@ TOD_TO_ULINT:
     Returns the time of day as milliseconds since midnight in ULINT. S7-1500 only. Example: #Result :=
     TOD_TO_ULINT(#Value);
   source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of TOD (S7-1500)"
+TOD_TO_BYTE:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [Time_Of_Day]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype Time_Of_Day.
+  result:
+    kind: value
+    dataTypes: [Byte]
+    notes: The bit pattern of the source value is transferred unchanged, right-justified, to the target data type.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := TOD_TO_BYTE(#Value);
+  source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of TOD (S7-1500)"
+TOD_TO_WORD:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [Time_Of_Day]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype Time_Of_Day.
+  result:
+    kind: value
+    dataTypes: [Word]
+    notes: The bit pattern of the source value is transferred unchanged, right-justified, to the target data type.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := TOD_TO_WORD(#Value);
+  source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of TOD (S7-1500)"
+TOD_TO_DWORD:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [Time_Of_Day]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype Time_Of_Day.
+  result:
+    kind: value
+    dataTypes: [DWord]
+    notes: The bit pattern of the source value is transferred unchanged, right-justified, to the target data type.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := TOD_TO_DWORD(#Value);
+  source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of TOD (S7-1500)"
+TOD_TO_SINT:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [Time_Of_Day]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype Time_Of_Day.
+  result:
+    kind: value
+    dataTypes: [SInt]
+    notes: Converted function value of datatype SInt.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Returns the time of day as milliseconds since midnight in SINT. Example: #Result := TOD_TO_SINT(#Value);
+  source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of TOD (S7-1500)"
+TOD_TO_USINT:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [Time_Of_Day]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype Time_Of_Day.
+  result:
+    kind: value
+    dataTypes: [USInt]
+    notes: Converted function value of datatype USInt.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Returns the time of day as milliseconds since midnight in USINT. Example: #Result := TOD_TO_USINT(#Value);
+  source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of TOD (S7-1500)"
+TOD_TO_INT:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [Time_Of_Day]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype Time_Of_Day.
+  result:
+    kind: value
+    dataTypes: [Int]
+    notes: Converted function value of datatype Int.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Returns the time of day as milliseconds since midnight in INT. Example: #Result := TOD_TO_INT(#Value);
+  source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of TOD (S7-1500)"
+TOD_TO_UINT:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [Time_Of_Day]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype Time_Of_Day.
+  result:
+    kind: value
+    dataTypes: [UInt]
+    notes: Converted function value of datatype UInt.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Returns the time of day as milliseconds since midnight in UINT. Example: #Result := TOD_TO_UINT(#Value);
+  source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of TOD (S7-1500)"
+TOD_TO_DINT:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [Time_Of_Day]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype Time_Of_Day.
+  result:
+    kind: value
+    dataTypes: [DInt]
+    notes: Converted function value of datatype DInt.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Returns the time of day as milliseconds since midnight in DINT. Example: #Result := TOD_TO_DINT(#Value);
+  source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of TOD (S7-1500)"
+TOD_TO_TIME:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [Time_Of_Day]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype Time_Of_Day.
+  result:
+    kind: value
+    dataTypes: [Time]
+    notes: Returns the time since midnight as a TIME duration.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := TOD_TO_TIME(#Value);
+  source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of TOD (S7-1500)"
+TOD_TO_LTOD:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [Time_Of_Day]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype Time_Of_Day.
+  result:
+    kind: value
+    dataTypes: [LTime_Of_Day]
+    notes: The value is converted to the target data type.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function, S7-1500 only. Example: #Result := TOD_TO_LTOD(#Value);
+  source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of TOD (S7-1500)"
+TOD_TO_DT:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [Time_Of_Day]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype Time_Of_Day.
+  result:
+    kind: value
+    dataTypes: [Date_And_Time]
+    notes: Sets the time-of-day part of the target data type.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function, S7-1500 only. Example: #Result := TOD_TO_DT(#Value);
+  source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of TOD (S7-1500)"
+TOD_TO_LDT:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [Time_Of_Day]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype Time_Of_Day.
+  result:
+    kind: value
+    dataTypes: [LDT]
+    notes: Sets the time-of-day part of the target data type.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function, S7-1500 only. Example: #Result := TOD_TO_LDT(#Value);
+  source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of TOD (S7-1500)"
+TOD_TO_DTL:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [Time_Of_Day]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype Time_Of_Day.
+  result:
+    kind: value
+    dataTypes: [DTL]
+    notes: Sets the time-of-day part of the target data type.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := TOD_TO_DTL(#Value);
+  source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of TOD (S7-1500)"
 LTOD_TO_LWORD:
   family: conversion
   callShape: box
@@ -5990,6 +9077,334 @@ LTOD_TO_ULINT:
   notes: >-
     Returns the time of day as nanoseconds since midnight in ULINT. S7-1500 only. Example: #Result :=
     LTOD_TO_ULINT(#Value);
+  source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of LTOD (S7-1500)"
+LTOD_TO_BYTE:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [LTime_Of_Day]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype LTime_Of_Day.
+  result:
+    kind: value
+    dataTypes: [Byte]
+    notes: The bit pattern of the source value is transferred unchanged, right-justified, to the target data type.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function, S7-1500 only. Example: #Result := LTOD_TO_BYTE(#Value);
+  source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of LTOD (S7-1500)"
+LTOD_TO_WORD:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [LTime_Of_Day]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype LTime_Of_Day.
+  result:
+    kind: value
+    dataTypes: [Word]
+    notes: The bit pattern of the source value is transferred unchanged, right-justified, to the target data type.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function, S7-1500 only. Example: #Result := LTOD_TO_WORD(#Value);
+  source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of LTOD (S7-1500)"
+LTOD_TO_DWORD:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [LTime_Of_Day]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype LTime_Of_Day.
+  result:
+    kind: value
+    dataTypes: [DWord]
+    notes: The bit pattern of the source value is transferred unchanged, right-justified, to the target data type.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function, S7-1500 only. Example: #Result := LTOD_TO_DWORD(#Value);
+  source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of LTOD (S7-1500)"
+LTOD_TO_SINT:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [LTime_Of_Day]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype LTime_Of_Day.
+  result:
+    kind: value
+    dataTypes: [SInt]
+    notes: Converted function value of datatype SInt.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Returns the time of day as nanoseconds since midnight in SINT. S7-1500 only. Example: #Result :=
+    LTOD_TO_SINT(#Value);
+  source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of LTOD (S7-1500)"
+LTOD_TO_USINT:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [LTime_Of_Day]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype LTime_Of_Day.
+  result:
+    kind: value
+    dataTypes: [USInt]
+    notes: Converted function value of datatype USInt.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Returns the time of day as nanoseconds since midnight in USINT. S7-1500 only. Example: #Result :=
+    LTOD_TO_USINT(#Value);
+  source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of LTOD (S7-1500)"
+LTOD_TO_INT:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [LTime_Of_Day]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype LTime_Of_Day.
+  result:
+    kind: value
+    dataTypes: [Int]
+    notes: Converted function value of datatype Int.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Returns the time of day as nanoseconds since midnight in INT. S7-1500 only. Example: #Result :=
+    LTOD_TO_INT(#Value);
+  source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of LTOD (S7-1500)"
+LTOD_TO_UINT:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [LTime_Of_Day]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype LTime_Of_Day.
+  result:
+    kind: value
+    dataTypes: [UInt]
+    notes: Converted function value of datatype UInt.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Returns the time of day as nanoseconds since midnight in UINT. S7-1500 only. Example: #Result :=
+    LTOD_TO_UINT(#Value);
+  source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of LTOD (S7-1500)"
+LTOD_TO_DINT:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [LTime_Of_Day]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype LTime_Of_Day.
+  result:
+    kind: value
+    dataTypes: [DInt]
+    notes: Converted function value of datatype DInt.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Returns the time of day as nanoseconds since midnight in DINT. S7-1500 only. Example: #Result :=
+    LTOD_TO_DINT(#Value);
+  source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of LTOD (S7-1500)"
+LTOD_TO_UDINT:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [LTime_Of_Day]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype LTime_Of_Day.
+  result:
+    kind: value
+    dataTypes: [UDInt]
+    notes: Converted function value of datatype UDInt.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Returns the time of day as nanoseconds since midnight in UDINT. S7-1500 only. Example: #Result :=
+    LTOD_TO_UDINT(#Value);
+  source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of LTOD (S7-1500)"
+LTOD_TO_LTIME:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [LTime_Of_Day]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype LTime_Of_Day.
+  result:
+    kind: value
+    dataTypes: [LTime]
+    notes: Returns the time since midnight as an LTIME duration.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function, S7-1500 only. Example: #Result := LTOD_TO_LTIME(#Value);
+  source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of LTOD (S7-1500)"
+LTOD_TO_TOD:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [LTime_Of_Day]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype LTime_Of_Day.
+  result:
+    kind: value
+    dataTypes: [Time_Of_Day]
+    notes: The value is converted to the target data type.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function, S7-1500 only. Example: #Result := LTOD_TO_TOD(#Value);
+  source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of LTOD (S7-1500)"
+LTOD_TO_DT:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [LTime_Of_Day]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype LTime_Of_Day.
+  result:
+    kind: value
+    dataTypes: [Date_And_Time]
+    notes: Sets the time-of-day part of the target data type.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function, S7-1500 only. Example: #Result := LTOD_TO_DT(#Value);
+  source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of LTOD (S7-1500)"
+LTOD_TO_LDT:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [LTime_Of_Day]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype LTime_Of_Day.
+  result:
+    kind: value
+    dataTypes: [LDT]
+    notes: Sets the time-of-day part of the target data type.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function, S7-1500 only. Example: #Result := LTOD_TO_LDT(#Value);
+  source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of LTOD (S7-1500)"
+LTOD_TO_DTL:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [LTime_Of_Day]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype LTime_Of_Day.
+  result:
+    kind: value
+    dataTypes: [DTL]
+    notes: Sets the time-of-day part of the target data type.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function, S7-1500 only. Example: #Result := LTOD_TO_DTL(#Value);
   source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of LTOD (S7-1500)"
 DATE_TO_UINT:
   family: conversion
@@ -6085,6 +9500,261 @@ DATE_TO_ULINT:
     Returns the date as the number of days since 1990-01-01 in ULINT. S7-1500 only. Example: #Result :=
     DATE_TO_ULINT(#Value);
   source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of DATE (S7-1500)"
+DATE_TO_BYTE:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [Date]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype Date.
+  result:
+    kind: value
+    dataTypes: [Byte]
+    notes: The bit pattern of the source value is transferred unchanged, right-justified, to the target data type.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := DATE_TO_BYTE(#Value);
+  source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of DATE (S7-1500)"
+DATE_TO_WORD:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [Date]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype Date.
+  result:
+    kind: value
+    dataTypes: [Word]
+    notes: The bit pattern of the source value is transferred unchanged, right-justified, to the target data type.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := DATE_TO_WORD(#Value);
+  source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of DATE (S7-1500)"
+DATE_TO_DWORD:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [Date]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype Date.
+  result:
+    kind: value
+    dataTypes: [DWord]
+    notes: The bit pattern of the source value is transferred unchanged, right-justified, to the target data type.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := DATE_TO_DWORD(#Value);
+  source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of DATE (S7-1500)"
+DATE_TO_SINT:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [Date]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype Date.
+  result:
+    kind: value
+    dataTypes: [SInt]
+    notes: Converted function value of datatype SInt.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Returns the date as the number of days since 1990-01-01 in SINT. Example: #Result := DATE_TO_SINT(#Value);
+  source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of DATE (S7-1500)"
+DATE_TO_USINT:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [Date]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype Date.
+  result:
+    kind: value
+    dataTypes: [USInt]
+    notes: Converted function value of datatype USInt.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Returns the date as the number of days since 1990-01-01 in USINT. Example: #Result :=
+    DATE_TO_USINT(#Value);
+  source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of DATE (S7-1500)"
+DATE_TO_INT:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [Date]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype Date.
+  result:
+    kind: value
+    dataTypes: [Int]
+    notes: Converted function value of datatype Int.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Returns the date as the number of days since 1990-01-01 in INT. Example: #Result := DATE_TO_INT(#Value);
+  source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of DATE (S7-1500)"
+DATE_TO_DINT:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [Date]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype Date.
+  result:
+    kind: value
+    dataTypes: [DInt]
+    notes: Converted function value of datatype DInt.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Returns the date as the number of days since 1990-01-01 in DINT. Example: #Result := DATE_TO_DINT(#Value);
+  source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of DATE (S7-1500)"
+DATE_TO_UDINT:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [Date]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype Date.
+  result:
+    kind: value
+    dataTypes: [UDInt]
+    notes: Converted function value of datatype UDInt.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Returns the date as the number of days since 1990-01-01 in UDINT. Example: #Result :=
+    DATE_TO_UDINT(#Value);
+  source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of DATE (S7-1500)"
+DATE_TO_DT:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [Date]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype Date.
+  result:
+    kind: value
+    dataTypes: [Date_And_Time]
+    notes: Sets the date part of the target data type; the time-of-day part is 00:00:00.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function, S7-1500 only. Example: #Result := DATE_TO_DT(#Value);
+  source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of DATE (S7-1500)"
+DATE_TO_LDT:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [Date]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype Date.
+  result:
+    kind: value
+    dataTypes: [LDT]
+    notes: Sets the date part of the target data type; the time-of-day part is 00:00:00.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function, S7-1500 only. Example: #Result := DATE_TO_LDT(#Value);
+  source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of DATE (S7-1500)"
+DATE_TO_DTL:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [Date]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype Date.
+  result:
+    kind: value
+    dataTypes: [DTL]
+    notes: Sets the date part of the target data type; the time-of-day part is 00:00:00.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := DATE_TO_DTL(#Value);
+  source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of DATE (S7-1500)"
 LDT_TO_LWORD:
   family: conversion
   callShape: box
@@ -6155,6 +9825,357 @@ LDT_TO_ULINT:
   notes: >-
     Returns the date and time as nanoseconds since 1970-01-01 00:00:00 in ULINT. S7-1500 only. Example:
     #Result := LDT_TO_ULINT(#Value);
+  source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of LDT (S7-1500)"
+LDT_TO_BYTE:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [LDT]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype LDT.
+  result:
+    kind: value
+    dataTypes: [Byte]
+    notes: The bit pattern of the source value is transferred unchanged, right-justified, to the target data type.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function, S7-1500 only. Example: #Result := LDT_TO_BYTE(#Value);
+  source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of LDT (S7-1500)"
+LDT_TO_WORD:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [LDT]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype LDT.
+  result:
+    kind: value
+    dataTypes: [Word]
+    notes: The bit pattern of the source value is transferred unchanged, right-justified, to the target data type.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function, S7-1500 only. Example: #Result := LDT_TO_WORD(#Value);
+  source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of LDT (S7-1500)"
+LDT_TO_DWORD:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [LDT]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype LDT.
+  result:
+    kind: value
+    dataTypes: [DWord]
+    notes: The bit pattern of the source value is transferred unchanged, right-justified, to the target data type.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function, S7-1500 only. Example: #Result := LDT_TO_DWORD(#Value);
+  source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of LDT (S7-1500)"
+LDT_TO_SINT:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [LDT]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype LDT.
+  result:
+    kind: value
+    dataTypes: [SInt]
+    notes: Converted function value of datatype SInt.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Returns the date and time as nanoseconds since 1970-01-01 00:00:00 in SINT. S7-1500 only. Example: #Result
+    := LDT_TO_SINT(#Value);
+  source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of LDT (S7-1500)"
+LDT_TO_USINT:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [LDT]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype LDT.
+  result:
+    kind: value
+    dataTypes: [USInt]
+    notes: Converted function value of datatype USInt.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Returns the date and time as nanoseconds since 1970-01-01 00:00:00 in USINT. S7-1500 only. Example:
+    #Result := LDT_TO_USINT(#Value);
+  source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of LDT (S7-1500)"
+LDT_TO_INT:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [LDT]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype LDT.
+  result:
+    kind: value
+    dataTypes: [Int]
+    notes: Converted function value of datatype Int.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Returns the date and time as nanoseconds since 1970-01-01 00:00:00 in INT. S7-1500 only. Example: #Result
+    := LDT_TO_INT(#Value);
+  source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of LDT (S7-1500)"
+LDT_TO_UINT:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [LDT]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype LDT.
+  result:
+    kind: value
+    dataTypes: [UInt]
+    notes: Converted function value of datatype UInt.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Returns the date and time as nanoseconds since 1970-01-01 00:00:00 in UINT. S7-1500 only. Example: #Result
+    := LDT_TO_UINT(#Value);
+  source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of LDT (S7-1500)"
+LDT_TO_DINT:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [LDT]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype LDT.
+  result:
+    kind: value
+    dataTypes: [DInt]
+    notes: Converted function value of datatype DInt.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Returns the date and time as nanoseconds since 1970-01-01 00:00:00 in DINT. S7-1500 only. Example: #Result
+    := LDT_TO_DINT(#Value);
+  source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of LDT (S7-1500)"
+LDT_TO_UDINT:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [LDT]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype LDT.
+  result:
+    kind: value
+    dataTypes: [UDInt]
+    notes: Converted function value of datatype UDInt.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Returns the date and time as nanoseconds since 1970-01-01 00:00:00 in UDINT. S7-1500 only. Example:
+    #Result := LDT_TO_UDINT(#Value);
+  source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of LDT (S7-1500)"
+LDT_TO_LTIME:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [LDT]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype LDT.
+  result:
+    kind: value
+    dataTypes: [LTime]
+    notes: The bit pattern of the source value is transferred unchanged to the target data type.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function, S7-1500 only. Example: #Result := LDT_TO_LTIME(#Value);
+  source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of LDT (S7-1500)"
+LDT_TO_TOD:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [LDT]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype LDT.
+  result:
+    kind: value
+    dataTypes: [Time_Of_Day]
+    notes: Returns the time-of-day part of the source value.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function, S7-1500 only. Example: #Result := LDT_TO_TOD(#Value);
+  source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of LDT (S7-1500)"
+LDT_TO_LTOD:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [LDT]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype LDT.
+  result:
+    kind: value
+    dataTypes: [LTime_Of_Day]
+    notes: Returns the time-of-day part of the source value.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function, S7-1500 only. Example: #Result := LDT_TO_LTOD(#Value);
+  source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of LDT (S7-1500)"
+LDT_TO_DATE:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [LDT]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype LDT.
+  result:
+    kind: value
+    dataTypes: [Date]
+    notes: Returns the date part of the source value.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function, S7-1500 only. Example: #Result := LDT_TO_DATE(#Value);
+  source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of LDT (S7-1500)"
+LDT_TO_DT:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [LDT]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype LDT.
+  result:
+    kind: value
+    dataTypes: [Date_And_Time]
+    notes: The value is converted to the target data type.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function, S7-1500 only. Example: #Result := LDT_TO_DT(#Value);
+  source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of LDT (S7-1500)"
+LDT_TO_DTL:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [LDT]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype LDT.
+  result:
+    kind: value
+    dataTypes: [DTL]
+    notes: The value is converted to the target data type.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function, S7-1500 only. Example: #Result := LDT_TO_DTL(#Value);
   source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of LDT (S7-1500)"
 CHAR_TO_SINT:
   family: conversion
@@ -6386,6 +10407,98 @@ CHAR_TO_ULINT:
   notes: >-
     Typed SCL conversion function, S7-1500 only. Example: #Result := CHAR_TO_ULINT(#Value);
   source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of CHAR (S7-1500)"
+CHAR_TO_BYTE:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [Char]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype Char.
+  result:
+    kind: value
+    dataTypes: [Byte]
+    notes: The bit pattern of the source value is transferred unchanged, right-justified, to the target data type.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := CHAR_TO_BYTE(#Value);
+  source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of CHAR (S7-1500)"
+CHAR_TO_WORD:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [Char]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype Char.
+  result:
+    kind: value
+    dataTypes: [Word]
+    notes: The bit pattern of the source value is transferred unchanged, right-justified, to the target data type.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := CHAR_TO_WORD(#Value);
+  source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of CHAR (S7-1500)"
+CHAR_TO_DWORD:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [Char]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype Char.
+  result:
+    kind: value
+    dataTypes: [DWord]
+    notes: The bit pattern of the source value is transferred unchanged, right-justified, to the target data type.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := CHAR_TO_DWORD(#Value);
+  source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of CHAR (S7-1500)"
+CHAR_TO_WCHAR:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [Char]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype Char.
+  result:
+    kind: value
+    dataTypes: [WChar]
+    notes: The value is converted.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := CHAR_TO_WCHAR(#Value);
+  source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of CHAR (S7-1500)"
 WCHAR_TO_LWORD:
   family: conversion
   callShape: box
@@ -6454,6 +10567,259 @@ WCHAR_TO_ULINT:
   confidence: official-doc
   notes: >-
     Typed SCL conversion function, S7-1500 only. Example: #Result := WCHAR_TO_ULINT(#Value);
+  source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of WCHAR (S7-1500)"
+WCHAR_TO_BYTE:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [WChar]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype WChar.
+  result:
+    kind: value
+    dataTypes: [Byte]
+    notes: The bit pattern of the source value is transferred unchanged, right-justified, to the target data type.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := WCHAR_TO_BYTE(#Value);
+  source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of WCHAR (S7-1500)"
+WCHAR_TO_WORD:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [WChar]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype WChar.
+  result:
+    kind: value
+    dataTypes: [Word]
+    notes: The bit pattern of the source value is transferred unchanged, right-justified, to the target data type.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := WCHAR_TO_WORD(#Value);
+  source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of WCHAR (S7-1500)"
+WCHAR_TO_DWORD:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [WChar]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype WChar.
+  result:
+    kind: value
+    dataTypes: [DWord]
+    notes: The bit pattern of the source value is transferred unchanged, right-justified, to the target data type.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := WCHAR_TO_DWORD(#Value);
+  source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of WCHAR (S7-1500)"
+WCHAR_TO_SINT:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [WChar]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype WChar.
+  result:
+    kind: value
+    dataTypes: [SInt]
+    notes: The value is converted.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := WCHAR_TO_SINT(#Value);
+  source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of WCHAR (S7-1500)"
+WCHAR_TO_USINT:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [WChar]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype WChar.
+  result:
+    kind: value
+    dataTypes: [USInt]
+    notes: The value is converted.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := WCHAR_TO_USINT(#Value);
+  source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of WCHAR (S7-1500)"
+WCHAR_TO_INT:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [WChar]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype WChar.
+  result:
+    kind: value
+    dataTypes: [Int]
+    notes: The value is converted.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := WCHAR_TO_INT(#Value);
+  source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of WCHAR (S7-1500)"
+WCHAR_TO_UINT:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [WChar]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype WChar.
+  result:
+    kind: value
+    dataTypes: [UInt]
+    notes: The value is converted.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := WCHAR_TO_UINT(#Value);
+  source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of WCHAR (S7-1500)"
+WCHAR_TO_DINT:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [WChar]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype WChar.
+  result:
+    kind: value
+    dataTypes: [DInt]
+    notes: The value is converted.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := WCHAR_TO_DINT(#Value);
+  source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of WCHAR (S7-1500)"
+WCHAR_TO_UDINT:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [WChar]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype WChar.
+  result:
+    kind: value
+    dataTypes: [UDInt]
+    notes: The value is converted.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := WCHAR_TO_UDINT(#Value);
+  source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of WCHAR (S7-1500)"
+WCHAR_TO_WSTRING:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [WChar]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype WChar.
+  result:
+    kind: value
+    dataTypes: [WString]
+    notes: The value is transferred to the first character of the string.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := WCHAR_TO_WSTRING(#Value);
+  source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of WCHAR (S7-1500)"
+WCHAR_TO_CHAR:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [WChar]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype WChar.
+  result:
+    kind: value
+    dataTypes: [Char]
+    notes: The value is converted.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := WCHAR_TO_CHAR(#Value);
   source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of WCHAR (S7-1500)"
 STRING_TO_SINT:
   family: conversion
@@ -6708,6 +11074,29 @@ STRING_TO_ULINT:
   notes: >-
     Typed SCL conversion function, S7-1500 only. Example: #Result := STRING_TO_ULINT(#Value);
   source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of STRING (S7-1500)"
+STRING_TO_WSTRING:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [String]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype String.
+  result:
+    kind: value
+    dataTypes: [WString]
+    notes: The value is converted.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := STRING_TO_WSTRING(#Value);
+  source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of STRING (S7-1500)"
 WSTRING_TO_LINT:
   family: conversion
   callShape: box
@@ -6753,4 +11142,234 @@ WSTRING_TO_ULINT:
   confidence: official-doc
   notes: >-
     Typed SCL conversion function, S7-1500 only. Example: #Result := WSTRING_TO_ULINT(#Value);
+  source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of WSTRING (S7-1500)"
+WSTRING_TO_SINT:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [WString]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype WString.
+  result:
+    kind: value
+    dataTypes: [SInt]
+    notes: The value is converted.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := WSTRING_TO_SINT(#Value);
+  source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of WSTRING (S7-1500)"
+WSTRING_TO_USINT:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [WString]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype WString.
+  result:
+    kind: value
+    dataTypes: [USInt]
+    notes: The value is converted.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := WSTRING_TO_USINT(#Value);
+  source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of WSTRING (S7-1500)"
+WSTRING_TO_INT:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [WString]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype WString.
+  result:
+    kind: value
+    dataTypes: [Int]
+    notes: The value is converted.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := WSTRING_TO_INT(#Value);
+  source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of WSTRING (S7-1500)"
+WSTRING_TO_UINT:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [WString]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype WString.
+  result:
+    kind: value
+    dataTypes: [UInt]
+    notes: The value is converted.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := WSTRING_TO_UINT(#Value);
+  source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of WSTRING (S7-1500)"
+WSTRING_TO_DINT:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [WString]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype WString.
+  result:
+    kind: value
+    dataTypes: [DInt]
+    notes: The value is converted.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := WSTRING_TO_DINT(#Value);
+  source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of WSTRING (S7-1500)"
+WSTRING_TO_UDINT:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [WString]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype WString.
+  result:
+    kind: value
+    dataTypes: [UDInt]
+    notes: The value is converted.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := WSTRING_TO_UDINT(#Value);
+  source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of WSTRING (S7-1500)"
+WSTRING_TO_REAL:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [WString]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype WString.
+  result:
+    kind: value
+    dataTypes: [Real]
+    notes: The value is converted.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := WSTRING_TO_REAL(#Value);
+  source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of WSTRING (S7-1500)"
+WSTRING_TO_LREAL:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [WString]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype WString.
+  result:
+    kind: value
+    dataTypes: [LReal]
+    notes: The value is converted.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := WSTRING_TO_LREAL(#Value);
+  source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of WSTRING (S7-1500)"
+WSTRING_TO_STRING:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [WString]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype WString.
+  result:
+    kind: value
+    dataTypes: [String]
+    notes: The value is converted.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := WSTRING_TO_STRING(#Value);
+  source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of WSTRING (S7-1500)"
+WSTRING_TO_WCHAR:
+  family: conversion
+  callShape: box
+  instanceType: null
+  pins:
+  - name: null
+    dir: in
+    required: true
+    dataTypes: [WString]
+    memoryAreas: [I, Q, M, D, L, P, constant]
+    note: Source expression of datatype WString.
+  result:
+    kind: value
+    dataTypes: [WChar]
+    notes: The first character of the string is copied to the WChar.
+  template:
+    shape: none
+    keys: []
+    extra: {}
+  confidence: official-doc
+  notes: >-
+    Typed SCL conversion function. Example: #Result := WSTRING_TO_WCHAR(#Value);
   source: "official instruction documentation (paraphrased): STEP 7 help, Explicit conversion of WSTRING (S7-1500)"
