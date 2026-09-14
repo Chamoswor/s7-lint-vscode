@@ -48,6 +48,11 @@ CONCAT:
     required: true
     note: ''
     dataTypes: [String, WString]
+  - {name: IN,
+    repeat: {from: 3, to: 31},
+    dir: in,
+    required: false,
+    dataTypes: [String, WString]}
   template:
     shape: none
     keys: []
