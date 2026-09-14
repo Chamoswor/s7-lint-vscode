@@ -238,5 +238,7 @@ for (const [label, text] of [["DB first", SCL_WITH_DB], ["DB last", SCL_DB_LAST]
   ok(member("Nonsense") && member("Nonsense").hoverMarkdown.includes("not found on"), "an unknown member is still reported as not found");
 }
 
+require("./test-quoted-instance-calls");
+
 console.log(`\n${passed} passed, ${failed} failed.`);
 if (failed > 0) process.exit(1);

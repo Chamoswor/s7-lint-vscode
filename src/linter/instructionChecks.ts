@@ -363,6 +363,10 @@ export function checkInstructions(block: ParsedBlockFile, ruleSet: RuleSet, bloc
           diags.push(...checkExternalCall(call, ruleSet, blockIndex));
           continue;
         }
+        // A local LAD/FBD CallBox is resolved through its declared FB type
+        // by documentIndex, which also checks the project's interface pins.
+        // It has no instruction-registry name to validate here.
+        if (call.name === "" && call.instancePrefix !== null) continue;
         const instanceType = call.instancePrefix ? instanceTypes.get(call.instancePrefix.toLowerCase()) : undefined;
         diags.push(...checkCall(call, ruleSet, networkLanguage, instanceType));
       }

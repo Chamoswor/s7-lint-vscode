@@ -18,7 +18,11 @@ Module._resolveFilename = function (request, ...args) {
 const vscode = require("./vscode-shim.js");
 const { loadRuleSet } = require("../out/rules/loadRules");
 const { BlockIndex } = require("../out/analysis/blockIndex");
-const { lookupType } = require("../out/cache/typeCache");
+const { buildDocumentIndex } = require("../out/analysis/documentIndex");
+const { lookupType, buildTypeCache } = require("../out/cache/typeCache");
+const { parseS7dclFile } = require("../out/parser/s7dclParser");
+const { checkSclInstructions } = require("../out/linter/sclInstructionChecks");
+const { checkUndeclaredIdentifiers, checkIllegalDotAccess } = require("../out/linter/symbolChecks");
 const { WorkspaceSources, sourceKindOf } = require("../out/cache/workspaceSources");
 const { CacheManager } = require("../out/cache/cacheManager");
 
@@ -135,6 +139,73 @@ const caseSensitive = new WorkspaceSources(false);
 caseSensitive.set("/proj/Types/A.udt", udtText("UDT_A"));
 assert.equal(caseSensitive.deleteAll(["/proj/types"]), 0, "on a case-sensitive file system, folders differing only in case stay apart");
 assert.equal(caseSensitive.deleteAll(["/proj/Types"]), 1);
+
+// Technology objects use a distinct XML element but expose ordinary instance
+// metadata and interface sections. Both direct member references and calls
+// must resolve from the XML export, including after an incremental update.
+const technologicalXml = `<?xml version="1.0" encoding="utf-8"?>
+<Document>
+  <SW.TechnologicalObjects.TechnologicalInstanceDB ID="0">
+    <AttributeList>
+      <InstanceOfName>PID_Compact</InstanceOfName>
+      <Interface><Sections xmlns="http://www.siemens.com/automation/Openness/SW/Interface/v5">
+        <Section Name="Input"><Member Name="Setpoint" Datatype="Real" /></Section>
+        <Section Name="Output"><Member Name="Error" Datatype="Bool" /></Section>
+        <Section Name="InOut"><Member Name="Mode" Datatype="Int" /></Section>
+        <Section Name="Static"><Member Name="InternalVersion" Datatype="DWord" /></Section>
+      </Sections></Interface>
+      <Name>Controller_DB</Name>
+    </AttributeList>
+  </SW.TechnologicalObjects.TechnologicalInstanceDB>
+</Document>
+`;
+const technologyPath = "C:/proj/technology/Controller.xml";
+const technologySources = new WorkspaceSources(true);
+technologySources.set(technologyPath, technologicalXml);
+assert.deepEqual(typeNames(technologySources), [], "a technology instance is a block, not a PLC data type");
+const technologyIndex = new BlockIndex();
+const applyTechnologySources = () => {
+  const scan = technologySources.blockSources();
+  technologyIndex.setScanned(scan.xmlBlocks, scan.textBlocks, scan.tags);
+};
+applyTechnologySources();
+const technologyDb = technologyIndex.get("Controller_DB");
+assert.ok(technologyDb, "a technology object XML export creates an indexed DATA_BLOCK");
+assert.equal(technologyDb.blockType, "DATA_BLOCK");
+assert.deepEqual(technologyDb.instanceOf, { name: "PID_Compact", quoted: false });
+assert.deepEqual([...technologyDb.vars.values()].map((v) => [v.name, v.section]), [
+  ["Setpoint", "VAR_INPUT"], ["Error", "VAR_OUTPUT"], ["Mode", "VAR_IN_OUT"], ["InternalVersion", "VAR"],
+]);
+const technologyLine = (text) => technologicalXml.slice(0, technologicalXml.indexOf(text)).split("\n").length;
+assert.equal(technologyDb.declLine, technologyLine("<Name>Controller_DB</Name>"));
+assert.equal(technologyDb.vars.get("Mode").member.line, technologyLine('<Member Name="Mode"'));
+const technologyCaller = `FUNCTION_BLOCK "ControllerCaller"
+VAR_TEMP
+  operatingMode : Int;
+  hasError : Bool;
+END_VAR
+BEGIN
+  "Controller_DB".Setpoint := 12.0;
+  #hasError := "Controller_DB".Error;
+  "Controller_DB"(Mode := #operatingMode);
+END_FUNCTION_BLOCK`;
+const [technologyBlock] = parseS7dclFile(technologyCaller);
+const technologyCache = buildTypeCache(ruleSet, []);
+assert.deepEqual([
+  ...checkSclInstructions(technologyBlock, ruleSet, technologyIndex, technologyCache),
+  ...checkUndeclaredIdentifiers(technologyBlock, technologyIndex, technologyCache, ruleSet),
+  ...checkIllegalDotAccess(technologyBlock, technologyIndex, technologyCache, ruleSet),
+  ...buildDocumentIndex(technologyCaller, ruleSet, technologyIndex).diagnostics,
+], [], "technology object member operands and PID calls resolve without false positives");
+const [invalidTechnologyCall] = parseS7dclFile(technologyCaller.replaceAll('"Controller_DB"', '"MissingController_DB"'));
+assert.ok(checkSclInstructions(invalidTechnologyCall, ruleSet, technologyIndex, technologyCache).some((d) => d.code === "external-symbol-not-found"),
+  "misspelled technology instance references still report an unknown external symbol");
+technologySources.set(technologyPath, technologicalXml.replace("<Name>Controller_DB</Name>", "<Name>RenamedController_DB</Name>"));
+applyTechnologySources();
+assert.ok(!technologyIndex.get("Controller_DB") && technologyIndex.get("RenamedController_DB"));
+technologySources.deleteAll([technologyPath]);
+applyTechnologySources();
+assert.equal(technologyIndex.values().length, 0);
 
 // --- CacheManager against an in-memory workspace -------------------------------
 const files = new Map();

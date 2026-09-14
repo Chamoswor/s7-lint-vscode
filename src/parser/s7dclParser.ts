@@ -700,6 +700,20 @@ function localTagName(text: string, localTags: LocalTagNames | undefined): strin
   return localTags.get(text.toLowerCase());
 }
 
+/** A local call head occupies one token (#Instance) or two adjacent tokens
+ * (#"Instance-name"). Keep the name and span together so neither form is
+ * re-read as an unrelated external call on the next parser iteration. */
+function peekLocalCallHead(cur: TokenCursor): { name: string; span: number } | undefined {
+  const head = cur.peek();
+  if (head.kind !== "ident" || !head.text.startsWith("#")) return undefined;
+  if (head.text.length > 1) return { name: head.text.slice(1), span: 1 };
+  const quoted = cur.peek(1);
+  if (quoted.kind === "string" && quoted.text.startsWith('"') && tokensAdjacent(head, quoted)) {
+    return { name: quoted.value ?? "", span: 2 };
+  }
+  return undefined;
+}
+
 function tryParseCall(cur: TokenCursor, allowBareInstanceCall = false, localTags?: LocalTagNames): CallNode | null {
   const t0 = cur.peek();
   if (t0.kind === "string" && t0.text.startsWith('"') && cur.peek(1).kind === "punct" && cur.peek(1).text === "(") {
@@ -715,32 +729,26 @@ function tryParseCall(cur: TokenCursor, allowBareInstanceCall = false, localTags
     const pins = parseCallArgs(cur, allowBareInstanceCall, localTags);
     return { name: "", instancePrefix: null, externalName: nameTok.value ?? "", pins, line: nameTok.line, col: nameTok.col };
   }
-  if (t0.kind === "ident" && t0.text.startsWith("#")) {
-    // `#Instance.Name(...)` instance-dot call. A bare `#tag` NOT followed
-    // by `.Ident(` is a plain operand reference, not a call -- leave it
-    // for the caller to skip.
-    const t1 = cur.peek(1);
-    const t2 = cur.peek(2);
-    const t3 = cur.peek(3);
+  const localHead = peekLocalCallHead(cur);
+  if (localHead) {
+    const t1 = cur.peek(localHead.span);
+    const t2 = cur.peek(localHead.span + 1);
+    const t3 = cur.peek(localHead.span + 2);
     if (t1.kind === "punct" && t1.text === "." && t2.kind === "ident" && t3.kind === "punct" && t3.text === "(") {
-      const instTok = cur.next(); // #Instance
+      for (let i = 0; i < localHead.span; i++) cur.next();
       cur.next(); // .
-      const nameTok = cur.next(); // Name
+      const nameTok = cur.next();
       const pins = parseCallArgs(cur, allowBareInstanceCall, localTags);
-      return { name: nameTok.text, instancePrefix: instTok.text.slice(1), pins, line: instTok.line, col: instTok.col };
+      return { name: nameTok.text, instancePrefix: localHead.name, pins, line: t0.line, col: t0.col };
     }
-    // SCL's `#Instance(...)` call shape -- unlike FBD/LAD, SCL calls a
-    // declared FB instance directly with no `.BaseName` suffix; the
-    // instance's OWN VAR declaration supplies which instruction it calls.
-    // This parser has no visibility into the block's VAR sections here, so
-    // `name` is left empty (a sentinel) for the caller to resolve -- see
-    // linter/sclInstructionChecks.ts. Only enabled for an SCL statement
-    // body (parseSclBody) -- parseRung leaves this false so LAD/FBD RUNG
-    // parsing is unaffected.
-    if (allowBareInstanceCall && t1.kind === "punct" && t1.text === "(") {
-      const instTok = cur.next(); // #Instance
+    // Direct local calls are SCL instance calls or LAD/FBD CallBoxes. Their
+    // declaration supplies the callable type; an empty name is the same
+    // sentinel the SCL resolver already uses. Graphical interface checks
+    // resolve these through the local declaration in documentIndex.
+    if (t1.kind === "punct" && t1.text === "(") {
+      for (let i = 0; i < localHead.span; i++) cur.next();
       const pins = parseCallArgs(cur, allowBareInstanceCall, localTags);
-      return { name: "", instancePrefix: instTok.text.slice(1), pins, line: instTok.line, col: instTok.col };
+      return { name: "", instancePrefix: localHead.name, pins, line: t0.line, col: t0.col };
     }
     return null;
   }
@@ -786,9 +794,10 @@ function parseRung(cur: TokenCursor): RungNode {
   cur.tryIdent("RUNG");
   const wireHeader = tryConsumeWireLabel(cur) ?? undefined;
   const headerToken = cur.peek();
+  const localHead = peekLocalCallHead(cur);
+  const afterLocalHead = localHead ? cur.peek(localHead.span) : undefined;
   const startsCall =
-    (headerToken.kind === "ident" && headerToken.text.startsWith("#") &&
-      ((cur.peek(1).kind === "punct" && cur.peek(1).text === "(") || (cur.peek(1).kind === "punct" && cur.peek(1).text === "."))) ||
+    (afterLocalHead?.kind === "punct" && (afterLocalHead.text === "(" || afterLocalHead.text === ".")) ||
     ((headerToken.kind === "ident" || headerToken.kind === "string") && cur.peek(1).kind === "punct" && cur.peek(1).text === "(");
   const enableInput = wireHeader
     ? { text: `wire#${wireHeader.name}`, line: wireHeader.line, col: wireHeader.col }
@@ -804,11 +813,9 @@ function parseRung(cur: TokenCursor): RungNode {
       pendingPragma = parsePragmaBlock(cur) ?? undefined;
       continue;
     }
-    if (cur.peek().kind === "ident" && cur.peek().text.startsWith("#") && cur.peek(1).kind === "punct" && cur.peek(1).text === "(") {
-      hasCallBox = true;
-    }
     const call = tryParseCall(cur);
     if (call) {
+      if (call.name === "" && call.instancePrefix !== null) hasCallBox = true;
       call.pragma = pendingPragma;
       pendingPragma = undefined;
       calls.push(call);
@@ -1228,6 +1235,7 @@ function parseSclBody(
   // in distributed-process-control.scl's `#WaterFlow[#i] := LIMIT(...)`, flagging a mismatch
   // against `#i`'s declared type instead of the array's element type).
   let lastTopLevelRef: OperandRef | null = null;
+  let lastTopLevelRefEndOffset: number | undefined;
   let lastTopLevelRefIndexed = false;
   let bracketDepth = 0;
   while (!cur.isIdent(endKeyword) && !cur.atEnd()) {
@@ -1304,27 +1312,51 @@ function parseSclBody(
     // once a call attempt above has failed.)
     const t0 = cur.peek();
     if (looksLikeOperandRefStart(cur, localTags) && !isLiteralOrWireTail(prevToken, t0)) {
-      const ref = peekOperandRefChain(cur, localTags);
+      const { ref, length } = peekOperandRefChainAt(cur, 0, localTags);
       operandRefs.push(ref);
       if (bracketDepth === 0) {
+        lastTopLevelRefEndOffset = cur.peek(length - 1).offset;
         lastTopLevelRef = ref;
         lastTopLevelRefIndexed = false;
       }
     } else if (looksLikeExternalRefStart(cur) && !isQuotedLocalTagName(prevToken, t0) && !isQuotedChainMember(prevToken, t0)) {
-      const ref = peekExternalRefChain(cur);
+      const { ref, length } = peekExternalRefChainAt(cur, 0);
       operandRefs.push(ref);
       if (bracketDepth === 0) {
+        lastTopLevelRefEndOffset = cur.peek(length - 1).offset;
         lastTopLevelRef = ref;
         lastTopLevelRefIndexed = false;
       }
     } else if (t0.kind === "string" && t0.text.startsWith('"') && !isQuotedLocalTagName(prevToken, t0) && !isQuotedChainMember(prevToken, t0)) {
       const candidate = peekQuotedExternalCandidateAt(cur, 0);
-      if (candidate) operandRefs.push(candidate);
+      if (candidate) {
+        operandRefs.push(candidate);
+        if (bracketDepth === 0) {
+          lastTopLevelRef = candidate;
+          lastTopLevelRefEndOffset = t0.offset;
+          lastTopLevelRefIndexed = false;
+        }
+      }
     } else if (t0.kind === "punct" && t0.text === "[" && bracketDepth === 0) {
       lastTopLevelRefIndexed = true; // the pending top-level ref is being indexed, e.g. #arr[#i]
     }
     if (t0.kind === "punct" && (t0.text === "[" || t0.text === "(")) bracketDepth++;
     else if (t0.kind === "punct" && (t0.text === "]" || t0.text === ")")) bracketDepth = Math.max(0, bracketDepth - 1);
+
+    // The reference must end immediately before := (ignoring trivia).
+    // A condition before THEN/DO is not the target of a following absolute
+    // address assignment, even though no semicolon separates the two.
+    if (t0.kind === "op" && t0.text === ":=" && prevToken?.offset !== lastTopLevelRefEndOffset) {
+      lastTopLevelRef = null;
+    }
+
+    // A target belongs to this statement only. An unmodeled next LHS
+    // (for example an absolute output address) must not inherit its type
+    // from the previous statement's last local operand.
+    if (isSemicolon(t0) && bracketDepth === 0) {
+      lastTopLevelRef = null;
+      lastTopLevelRefIndexed = false;
+    }
 
     prevToken = cur.next(); // skip anything this parser doesn't model (statements, operators, operands, comments already stripped by the lexer)
   }

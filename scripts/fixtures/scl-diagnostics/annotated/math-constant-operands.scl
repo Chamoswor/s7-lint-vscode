@@ -1,0 +1,84 @@
+FUNCTION "MathConstantOperands" : Void
+VAR_INPUT
+    value : Real;
+    raw : Int;
+END_VAR
+VAR_TEMP
+    limited : Real;
+    rounded : Int;
+    integerResult : DInt;
+    elapsed : LReal;
+END_VAR
+VAR CONSTANT
+    LOWER_BOUND : Real := -32768.0;
+    UPPER_BOUND : Real := 32767.0;
+    HALF : Real := 0.5;
+    RAW_ZERO : Int := 0;
+    RAW_HALF : Int := 13824;
+    RAW_FULL_SCALE : Int := 27648;
+    STATE_CONST : LReal := LREAL#0.0;
+END_VAR
+BEGIN
+    // Named constants are legal expression inputs, including nested calls.
+    #limited := LIMIT(MN := #LOWER_BOUND, IN := #value, MX := #UPPER_BOUND);
+    // EXPECT-PASS: MC-LIMIT-BOUNDS
+    #limited := LIMIT(MN := #LOWER_BOUND, IN := #HALF, MX := #UPPER_BOUND);
+    // EXPECT-PASS: MC-LIMIT-ALL-CONSTANTS
+    #rounded := REAL_TO_INT(LIMIT(MN := #LOWER_BOUND, IN := #value, MX := #UPPER_BOUND));
+    // EXPECT-PASS: MC-LIMIT-NESTED
+    #limited := LIMIT(MN := -32768.0, IN := #value, MX := 32767.0);
+    // EXPECT-PASS: MC-LIMIT-LITERALS
+    #limited := LIMIT(MN := #LOWER_BOUND + 1.0, IN := #value, MX := #UPPER_BOUND - 1.0);
+    // EXPECT-PASS: MC-LIMIT-EXPRESSIONS
+
+    // Positional math operands and repeated MIN/MAX inputs accept constants too.
+    #limited := ABS(#HALF);
+    // EXPECT-PASS: MC-ABS
+    #limited := MIN(IN1 := #LOWER_BOUND, IN2 := #UPPER_BOUND, IN3 := #HALF);
+    // EXPECT-PASS: MC-MIN
+    #limited := MAX(IN1 := #LOWER_BOUND, IN2 := #UPPER_BOUND, IN3 := #HALF);
+    // EXPECT-PASS: MC-MAX
+    #limited := SQR(#HALF);
+    // EXPECT-PASS: MC-SQR
+    #limited := SQRT(#HALF);
+    // EXPECT-PASS: MC-SQRT
+    #limited := LN(#HALF);
+    // EXPECT-PASS: MC-LN
+    #limited := EXP(#HALF);
+    // EXPECT-PASS: MC-EXP
+    #limited := SIN(#HALF);
+    // EXPECT-PASS: MC-SIN
+    #limited := COS(#HALF);
+    // EXPECT-PASS: MC-COS
+    #limited := TAN(#HALF);
+    // EXPECT-PASS: MC-TAN
+    #limited := ASIN(#HALF);
+    // EXPECT-PASS: MC-ASIN
+    #limited := ACOS(#HALF);
+    // EXPECT-PASS: MC-ACOS
+    #limited := ATAN(#HALF);
+    // EXPECT-PASS: MC-ATAN
+    #limited := FRAC(#HALF);
+    // EXPECT-PASS: MC-FRAC
+
+    #limited := NORM_X(MIN := 0, VALUE := #raw, MAX := #RAW_FULL_SCALE);
+    // EXPECT-PASS: MC-NORM-BOUND
+    #limited := NORM_X(MIN := #RAW_ZERO, VALUE := #RAW_HALF, MAX := #RAW_FULL_SCALE);
+    // EXPECT-PASS: MC-NORM-ALL-CONSTANTS
+    #limited := SCALE_X(MIN := #LOWER_BOUND, VALUE := #HALF, MAX := #UPPER_BOUND);
+    // EXPECT-PASS: MC-SCALE
+    #integerResult := ROUND(#HALF);
+    // EXPECT-PASS: MC-ROUND
+    #integerResult := CEIL(#HALF);
+    // EXPECT-PASS: MC-CEIL
+    #integerResult := FLOOR(#HALF);
+    // EXPECT-PASS: MC-FLOOR
+    #integerResult := TRUNC(#HALF);
+    // EXPECT-PASS: MC-TRUNC
+
+    // Writable-state and declaration-specific restrictions remain enforced.
+    #elapsed := RUNTIME(MEM := #STATE_CONST);
+    // EXPECT-WARNING: MC-RUNTIME-CONSTANT-STATE
+    TypeOf(#HALF);
+    // EXPECT-WARNING: MC-TYPEOF-CONSTANT-DECLARATION
+END_FUNCTION

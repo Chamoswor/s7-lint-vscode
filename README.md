@@ -22,7 +22,9 @@ the target CPU and TIA Portal compiler.
 - `.udt`: text-format PLC data type declarations.
 - `**/*.xml`: TIA XML exports, anywhere in the workspace. PLC data type exports
   feed the workspace type cache; DATA_BLOCK exports (`SW.Blocks.InstanceDB`/
-  `GlobalDB`) feed the block index, so references to an instance DB resolve even
+  `GlobalDB`) and technology-object instance DBs
+  (`SW.TechnologicalObjects.TechnologicalInstanceDB`) feed the block index,
+  so references to an instance DB resolve even
   though TIA writes it in a different format from the FUNCTION_BLOCK it
   instances. Every file is offered to both parsers -- they key off different
   root elements -- because export layout does not reliably separate the two.

@@ -20,7 +20,7 @@ ROUND:
     dir: in
     required: true
     dataTypes: [Floating-point numbers]
-    memoryAreas: [I, Q, M, D, L, P]
+    memoryAreas: [I, Q, M, D, L, P, constant]
     note: Floating-point expression to round.
   result:
     kind: inferred
@@ -46,7 +46,7 @@ CEIL:
     dir: in
     required: true
     dataTypes: [Floating-point numbers]
-    memoryAreas: [I, Q, M, D, L, P]
+    memoryAreas: [I, Q, M, D, L, P, constant]
     note: Floating-point expression to round upward.
   result:
     kind: inferred
@@ -72,7 +72,7 @@ FLOOR:
     dir: in
     required: true
     dataTypes: [Floating-point numbers]
-    memoryAreas: [I, Q, M, D, L, P]
+    memoryAreas: [I, Q, M, D, L, P, constant]
     note: Floating-point expression to round downward.
   result:
     kind: inferred
@@ -98,7 +98,7 @@ TRUNC:
     dir: in
     required: true
     dataTypes: [Floating-point numbers]
-    memoryAreas: [I, Q, M, D, L]
+    memoryAreas: [I, Q, M, D, L, constant]
     note: Floating-point expression whose fractional part is discarded.
   result:
     kind: inferred
@@ -123,19 +123,19 @@ SCALE_X:
     dir: in
     required: true
     dataTypes: [Integers, Floating-point numbers]
-    memoryAreas: [I, Q, M, D, L]
+    memoryAreas: [I, Q, M, D, L, constant]
     note: Low limit of the destination range.
   - name: VALUE
     dir: in
     required: true
     dataTypes: [Floating-point numbers]
-    memoryAreas: [I, Q, M, D, L]
+    memoryAreas: [I, Q, M, D, L, constant]
     note: Normalized value to scale. A constant used here must be declared.
   - name: MAX
     dir: in
     required: true
     dataTypes: [Integers, Floating-point numbers]
-    memoryAreas: [I, Q, M, D, L]
+    memoryAreas: [I, Q, M, D, L, constant]
     note: High limit of the destination range.
   result:
     kind: inferred
@@ -161,19 +161,19 @@ NORM_X:
     dir: in
     required: true
     dataTypes: [Integers, Floating-point numbers]
-    memoryAreas: [I, Q, M, D, L]
+    memoryAreas: [I, Q, M, D, L, constant]
     note: Low limit of the source range.
   - name: VALUE
     dir: in
     required: true
     dataTypes: [Integers, Floating-point numbers]
-    memoryAreas: [I, Q, M, D, L]
+    memoryAreas: [I, Q, M, D, L, constant]
     note: Value to normalize.
   - name: MAX
     dir: in
     required: true
     dataTypes: [Integers, Floating-point numbers]
-    memoryAreas: [I, Q, M, D, L]
+    memoryAreas: [I, Q, M, D, L, constant]
     note: High limit of the source range.
   result:
     kind: inferred

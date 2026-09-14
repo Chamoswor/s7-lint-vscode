@@ -22,6 +22,12 @@ export interface ParsedUdtDecl {
   line: number;
 }
 
+const XML_BLOCK_ELEMENTS = [
+  "SW.Blocks.InstanceDB",
+  "SW.Blocks.GlobalDB",
+  "SW.TechnologicalObjects.TechnologicalInstanceDB",
+];
+
 const parser = new XMLParser({
   ignoreAttributes: false,
   attributeNamePrefix: "@_",
@@ -32,8 +38,7 @@ const parser = new XMLParser({
     name === "Member" ||
     name === "Section" ||
     name === "SW.Types.PlcStruct" ||
-    name === "SW.Blocks.InstanceDB" ||
-    name === "SW.Blocks.GlobalDB",
+    XML_BLOCK_ELEMENTS.includes(name),
 });
 
 function memberDatatypeToTypeRef(datatype: string): TypeRef {
@@ -92,7 +97,7 @@ export interface ParsedXmlBlock {
   name: string;
   /** Line of the block's own `<Name>` element. */
   line: number;
-  /** `SW.Blocks.InstanceDB`'s `InstanceOfName` -- the FUNCTION_BLOCK or
+  /** An instance DB's `InstanceOfName` -- the FUNCTION_BLOCK or
    * instruction this DB is the instance data for. Undefined for a global DB. */
   instanceOfName?: string;
   /** `InstanceOfType`, e.g. `FB`. Undefined for a global DB. */
@@ -120,8 +125,10 @@ const XML_SECTION_TO_VAR: Record<string, string> = {
 /**
  * Parses a `*.xml` block export into the DATA_BLOCKs it declares.
  *
- * TIA exports an instance DB as XML (`SW.Blocks.InstanceDB`) while the
- * FUNCTION_BLOCK it instances is exported as text, so a workspace can
+ * TIA exports ordinary instance DBs (`SW.Blocks.InstanceDB`) and technology
+ * object instance DBs (`SW.TechnologicalObjects.TechnologicalInstanceDB`)
+ * using the same XML interface/instance metadata. A user FUNCTION_BLOCK
+ * can still be exported as text, so a workspace can
  * legitimately hold blocks in both formats. Indexing only the text ones made
  * every reference to an XML-exported DB -- `"Some_DB".member` operands, and
  * `"Some_DB"(...)` calls -- look like a reference to a block that does not
@@ -132,7 +139,7 @@ const XML_SECTION_TO_VAR: Record<string, string> = {
  * `parseUdtXml` without either having to pre-classify it.
  */
 export function parseBlockXml(text: string): ParsedXmlBlock[] {
-  if (!text.includes("<SW.Blocks.InstanceDB") && !text.includes("<SW.Blocks.GlobalDB")) return [];
+  if (!XML_BLOCK_ELEMENTS.some((key) => text.includes(`<${key}`))) return [];
   const source = normalizeXmlSource(text);
   let doc: any;
   try {
@@ -145,7 +152,7 @@ export function parseBlockXml(text: string): ParsedXmlBlock[] {
   const lines = new XmlLineIndex(source);
 
   const results: ParsedXmlBlock[] = [];
-  for (const key of ["SW.Blocks.InstanceDB", "SW.Blocks.GlobalDB"]) {
+  for (const key of XML_BLOCK_ELEMENTS) {
     for (const block of (root[key] ?? []) as any[]) {
       const attrs = block?.AttributeList;
       const name: unknown = attrs?.Name;

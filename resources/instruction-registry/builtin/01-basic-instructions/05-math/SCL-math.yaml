@@ -8,10 +8,10 @@
 # OUT pin. Unary functions use one positional `<Expression>` argument, therefore
 # their input pin has `name: null`.
 #
-# All documented expression operands and function values use memory areas
-# I, Q, M, D, L or P. Literal constants may occur inside an SCL expression,
-# but `constant` is not listed as a separate memory area in these function
-# parameter tables.
+# Input expressions accept both literal and declared constants. Their memory
+# areas therefore include `constant`, even where Siemens' parameter tables
+# list only addressable operand areas. Function values still require writable
+# destinations; this input allowance does not apply to result storage.
 #
 # MIN and MAX accept between 2 and 32 inputs. TOD, LTOD, DATE and LDT are legal
 # only when IEC Check is disabled. LIMIT requires MN, IN and MX to have the same
@@ -28,7 +28,7 @@ ABS:
       dir: in
       required: true
       dataTypes: [SInt, Int, DInt, LInt, "Floating-point numbers"]
-      memoryAreas: [I, Q, M, D, L, P]
+      memoryAreas: [I, Q, M, D, L, P, constant]
       note: >-
         Positional input expression. LINT is available on S7-1500; the other
         listed signed integer types and floating-point types are supported
@@ -58,14 +58,14 @@ MIN:
       dir: in
       required: true
       dataTypes: ["Integers", "Floating-point numbers", Time, LTime, Time_Of_Day, LTime_Of_Day, Date, LDT, Date_And_Time, DTL]
-      memoryAreas: [I, Q, M, D, L, P]
+      memoryAreas: [I, Q, M, D, L, P, constant]
       note: First value to compare.
 
     - name: IN2
       dir: in
       required: true
       dataTypes: ["Integers", "Floating-point numbers", Time, LTime, Time_Of_Day, LTime_Of_Day, Date, LDT, Date_And_Time, DTL]
-      memoryAreas: [I, Q, M, D, L, P]
+      memoryAreas: [I, Q, M, D, L, P, constant]
       note: Second value to compare.
 
     - name: IN
@@ -73,7 +73,7 @@ MIN:
       dir: in
       required: false
       dataTypes: ["Integers", "Floating-point numbers", Time, LTime, Time_Of_Day, LTime_Of_Day, Date, LDT, Date_And_Time, DTL]
-      memoryAreas: [I, Q, M, D, L, P]
+      memoryAreas: [I, Q, M, D, L, P, constant]
       note: Optional consecutively numbered inputs IN3 through IN32.
 
   result:
@@ -100,14 +100,14 @@ MAX:
       dir: in
       required: true
       dataTypes: ["Integers", "Floating-point numbers", Time, LTime, Time_Of_Day, LTime_Of_Day, Date, LDT, Date_And_Time, DTL]
-      memoryAreas: [I, Q, M, D, L, P]
+      memoryAreas: [I, Q, M, D, L, P, constant]
       note: First value to compare.
 
     - name: IN2
       dir: in
       required: true
       dataTypes: ["Integers", "Floating-point numbers", Time, LTime, Time_Of_Day, LTime_Of_Day, Date, LDT, Date_And_Time, DTL]
-      memoryAreas: [I, Q, M, D, L, P]
+      memoryAreas: [I, Q, M, D, L, P, constant]
       note: Second value to compare.
 
     - name: IN
@@ -115,7 +115,7 @@ MAX:
       dir: in
       required: false
       dataTypes: ["Integers", "Floating-point numbers", Time, LTime, Time_Of_Day, LTime_Of_Day, Date, LDT, Date_And_Time, DTL]
-      memoryAreas: [I, Q, M, D, L, P]
+      memoryAreas: [I, Q, M, D, L, P, constant]
       note: Optional consecutively numbered inputs IN3 through IN32.
 
   result:
@@ -142,21 +142,21 @@ LIMIT:
       dir: in
       required: true
       dataTypes: ["Integers", "Floating-point numbers", Time, LTime, Time_Of_Day, LTime_Of_Day, Date, LDT, Date_And_Time, DTL]
-      memoryAreas: [I, Q, M, D, L, P]
+      memoryAreas: [I, Q, M, D, L, P, constant]
       note: Low limit.
 
     - name: IN
       dir: in
       required: true
       dataTypes: ["Integers", "Floating-point numbers", Time, LTime, Time_Of_Day, LTime_Of_Day, Date, LDT, Date_And_Time, DTL]
-      memoryAreas: [I, Q, M, D, L, P]
+      memoryAreas: [I, Q, M, D, L, P, constant]
       note: Value to clamp.
 
     - name: MX
       dir: in
       required: true
       dataTypes: ["Integers", "Floating-point numbers", Time, LTime, Time_Of_Day, LTime_Of_Day, Date, LDT, Date_And_Time, DTL]
-      memoryAreas: [I, Q, M, D, L, P]
+      memoryAreas: [I, Q, M, D, L, P, constant]
       note: High limit.
 
   result:
@@ -183,7 +183,7 @@ SQR:
       dir: in
       required: true
       dataTypes: ["Floating-point numbers"]
-      memoryAreas: [I, Q, M, D, L, P]
+      memoryAreas: [I, Q, M, D, L, P, constant]
       note: Positional floating-point expression to square.
 
   result:
@@ -207,7 +207,7 @@ SQRT:
       dir: in
       required: true
       dataTypes: ["Floating-point numbers"]
-      memoryAreas: [I, Q, M, D, L, P]
+      memoryAreas: [I, Q, M, D, L, P, constant]
       note: Positional floating-point expression.
 
   result:
@@ -232,7 +232,7 @@ LN:
       dir: in
       required: true
       dataTypes: ["Floating-point numbers"]
-      memoryAreas: [I, Q, M, D, L, P]
+      memoryAreas: [I, Q, M, D, L, P, constant]
       note: Positional floating-point expression.
 
   result:
@@ -256,7 +256,7 @@ EXP:
       dir: in
       required: true
       dataTypes: ["Floating-point numbers"]
-      memoryAreas: [I, Q, M, D, L, P]
+      memoryAreas: [I, Q, M, D, L, P, constant]
       note: Positional exponent expression.
 
   result:
@@ -280,7 +280,7 @@ SIN:
       dir: in
       required: true
       dataTypes: ["Floating-point numbers"]
-      memoryAreas: [I, Q, M, D, L, P]
+      memoryAreas: [I, Q, M, D, L, P, constant]
       note: Positional angle expression in radians.
 
   result:
@@ -304,7 +304,7 @@ COS:
       dir: in
       required: true
       dataTypes: ["Floating-point numbers"]
-      memoryAreas: [I, Q, M, D, L, P]
+      memoryAreas: [I, Q, M, D, L, P, constant]
       note: Positional angle expression in radians.
 
   result:
@@ -328,7 +328,7 @@ TAN:
       dir: in
       required: true
       dataTypes: ["Floating-point numbers"]
-      memoryAreas: [I, Q, M, D, L, P]
+      memoryAreas: [I, Q, M, D, L, P, constant]
       note: Positional angle expression in radians.
 
   result:
@@ -352,7 +352,7 @@ ASIN:
       dir: in
       required: true
       dataTypes: ["Floating-point numbers"]
-      memoryAreas: [I, Q, M, D, L, P]
+      memoryAreas: [I, Q, M, D, L, P, constant]
       note: Positional sine value in the interval [-1, +1].
 
   result:
@@ -377,7 +377,7 @@ ACOS:
       dir: in
       required: true
       dataTypes: ["Floating-point numbers"]
-      memoryAreas: [I, Q, M, D, L, P]
+      memoryAreas: [I, Q, M, D, L, P, constant]
       note: Positional cosine value in the interval [-1, +1].
 
   result:
@@ -402,7 +402,7 @@ ATAN:
       dir: in
       required: true
       dataTypes: ["Floating-point numbers"]
-      memoryAreas: [I, Q, M, D, L, P]
+      memoryAreas: [I, Q, M, D, L, P, constant]
       note: Positional tangent value.
 
   result:
@@ -426,7 +426,7 @@ FRAC:
       dir: in
       required: true
       dataTypes: ["Floating-point numbers"]
-      memoryAreas: [I, Q, M, D, L, P]
+      memoryAreas: [I, Q, M, D, L, P, constant]
       note: Positional floating-point expression whose fractional part is returned.
 
   result:

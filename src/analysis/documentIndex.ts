@@ -1950,16 +1950,17 @@ export function buildDocumentIndex(
     classifyPragma();
     if (cur.isIdent("END_VAR") || cur.isIdent("END_STRUCT") || cur.atEnd()) return undefined;
     const nameTok = cur.next();
+    const name = nameTok.kind === "string" ? nameTok.value ?? nameTok.text : nameTok.text;
     classifyPragma();
     const section = context === "STRUCT" ? "STRUCT" : currentSectionKind ?? "VAR";
     const declSpanIndex = spans.length;
-    push(nameTok, "variable", ["declaration"], undefined, undefined, memberRenameKey(nameTok.text, section));
+    push(nameTok, "variable", ["declaration"], undefined, undefined, memberRenameKey(name, section));
     cur.tryPunct(":");
     const { text, typeRef, leafName, topLevelName, derefTopLevelName, arrayBounds, elementTopLevelName, elementLeafName, structMembers } = walkTypeRef(context);
     checkSectionLegality(nameTok, topLevelName, section);
     for (const typeName of new Set([topLevelName, elementTopLevelName, derefTopLevelName])) checkPlatformAvailability(nameTok, typeName);
     const decl: LocalDecl = {
-      name: nameTok.text,
+      name,
       leafName,
       topLevelName,
       derefTopLevelName,
@@ -1974,10 +1975,10 @@ export function buildDocumentIndex(
       structMembers,
       declarationSpanIndex: declSpanIndex,
     };
-    localDecls.set(nameTok.text, decl);
+    localDecls.set(name, decl);
     // A STRUCT/UDT field is reachable as `#owner.field`, never as a base tag
     // of its own -- so only VAR-section members join the block's scope.
-    if (context === "VAR") currentBlockTags.set(nameTok.text.toLowerCase(), decl);
+    if (context === "VAR") currentBlockTags.set(name.toLowerCase(), decl);
     // The declared type is only known AFTER walkTypeRef, so the name's own
     // span is retyped here rather than guessed at push time. Instance names
     // remain variables/properties/parameters; their declared FB/timer type is

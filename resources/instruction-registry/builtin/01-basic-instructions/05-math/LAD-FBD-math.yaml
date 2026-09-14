@@ -292,11 +292,12 @@ MAX:
   enEno:
     en: {present: true, dataTypes: [Bool], memoryArea: {"S7-1200": [I, Q, M, D, L, constant], "S7-1500": [I, Q, M, D, L, T, C, constant]}}
     eno: {present: true, dataTypes: [Bool], memoryArea: {"S7-1200": [I, Q, M, D, L], "S7-1500": [I, Q, M, D, L]}}
-  template: {shape: eno-pair, keys: [value_type], extra: {S7_GenerateENO: "TRUE"}}
+  template: {shape: single, keys: [value_type], extra: {}}
   confidence: shape-only
   notes: >-
     Returns the greatest value among IN1, IN2 and any consecutively inserted INn inputs. All connected
-    operands must satisfy the instruction's datatype-compatibility rules.
+    operands must satisfy the instruction's datatype-compatibility rules. Valid wired exports omit
+    S7_GenerateENO, so it is an optional call setting rather than a required template attribute.
   source: "docs/fbd-knowhow/05-Math.md"
 Limit:
   family: math

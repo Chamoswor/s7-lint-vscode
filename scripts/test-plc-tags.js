@@ -160,6 +160,77 @@ const invalidSclDiagnostics = [
 assert.ok(invalidSclDiagnostics.some((diagnostic) => diagnostic.code === "condition-not-bool"));
 assert.ok(invalidSclDiagnostics.some((diagnostic) => diagnostic.code === "expr-arithmetic-domain-mismatch"));
 
+// Quoted global assignment targets must never inherit the preceding local
+// operand. This mirrors sequential process-value writes in a TIA export.
+const assignmentSource = [
+  'FUNCTION "TagAssignments" : Void',
+  'VAR_INPUT',
+  '  measurement : Real;',
+  'END_VAR',
+  'BEGIN',
+  '  "Unindexed_Output" := #measurement;',
+  '  "AI_Safety_Count" := REAL_TO_INT(#measurement);',
+  '  "AI_Safety_Count" := 1 + 2;',
+  '  "Unindexed_Output" := REAL_TO_INT(#measurement);',
+  '  %QW92 := REAL_TO_INT(#measurement);',
+  'END_FUNCTION',
+].join("\n");
+const assignmentBlock = parseS7dclFile(assignmentSource)[0];
+assert.deepEqual(
+  assignmentBlock.sclCalls.map((call) => call.assignmentTarget?.segments),
+  [["AI_Safety_Count"], ["Unindexed_Output"], undefined],
+  "each conversion must bind to its own target; absolute addresses must not reuse the previous statement"
+);
+assert.ok(assignmentBlock.sclCalls.slice(0, 2).every((call) => call.assignmentTarget.external));
+assert.ok(assignmentBlock.sclAssignments.some((assignment) =>
+  assignment.target.external && assignment.target.segments[0] === "AI_Safety_Count" && assignment.expr.kind === "binary"
+));
+assert.deepEqual(checkSclInstructions(assignmentBlock, ruleSet, blockIndex, emptyTypeCache), []);
+assert.deepEqual(checkSclExpressionTypes(assignmentBlock, ruleSet, blockIndex, emptyTypeCache), []);
+
+// A quoted or local condition is also not the target of the first body
+// assignment. There need not be a semicolon between THEN/DO and that LHS.
+for (const [condition, endKeyword] of [
+  ['IF "FDI_NS2_E_Stop_NC_FB" THEN', "END_IF;"],
+  ['WHILE "FDI_NS2_E_Stop_NC_FB" DO', "END_WHILE;"],
+  ["IF #enabled THEN", "END_IF;"],
+]) {
+  const conditionalBlock = parseS7dclFile([
+    'FUNCTION "ConditionalTagAssignment" : Void',
+    "VAR_INPUT",
+    "  enabled : Bool;",
+    "  measurement : Real;",
+    "END_VAR",
+    "BEGIN",
+    condition,
+    "  %QW92 := REAL_TO_INT(#measurement);",
+    endKeyword,
+    condition,
+    "  %QW92 := 1 + 2;",
+    endKeyword,
+    "END_FUNCTION",
+  ].join("\n"))[0];
+  assert.equal(conditionalBlock.sclCalls[0].assignmentTarget, undefined);
+  assert.deepEqual(conditionalBlock.sclAssignments, []);
+  assert.deepEqual(checkSclInstructions(conditionalBlock, ruleSet, blockIndex, emptyTypeCache), []);
+  assert.deepEqual(checkSclExpressionTypes(conditionalBlock, ruleSet, blockIndex, emptyTypeCache), []);
+}
+
+// A resolvable but incompatible global target must still be diagnosed.
+const invalidAssignment = parseS7dclFile([
+  'FUNCTION "InvalidTagAssignment" : Void',
+  'VAR_INPUT',
+  '  measurement : Real;',
+  'END_VAR',
+  'BEGIN',
+  '  "FDO_Safety_OK_ST" := REAL_TO_INT(#measurement);',
+  'END_FUNCTION',
+].join("\n"))[0];
+const invalidAssignmentDiags = checkSclInstructions(invalidAssignment, ruleSet, blockIndex, emptyTypeCache);
+assert.equal(invalidAssignmentDiags.length, 1);
+assert.equal(invalidAssignmentDiags[0].code, "result-type-mismatch");
+assert.ok(invalidAssignmentDiags[0].message.includes("FDO_Safety_OK_ST"));
+
 console.log("PLC tag XML parser/index regressions passed for .s7dcl and .scl.");
 
 // Optional real-project probe:

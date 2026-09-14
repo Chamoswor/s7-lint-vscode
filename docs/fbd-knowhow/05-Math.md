@@ -51,7 +51,15 @@ e.g. `MUL / Auto (Real)` vs `NEG / Real`):
   { S7_Templates := "SrcType := Real" }
   Neg( in := #tMaxStep, out => #tNegMaxStep )
   ```
-- **`MIN`, `MAX`, `Limit`** (the clamp family) need `value_type` +
+- **`MAX`** exports can use `value_type` without an `S7_GenerateENO` pragma:
+  ```
+  { S7_Templates := "value_type := DInt" }
+  MAX( in1 := #remainingSeconds, in2 := 0, out => #displaySeconds )
+  ```
+  A wired TIA Portal export confirms that ENO generation is optional for
+  `MAX`; the presence of the pragma in another example does not make it
+  mandatory.
+- **`Limit`** is confirmed here with `value_type` +
   `S7_GenerateENO := "TRUE"`:
   ```
   {
@@ -64,6 +72,8 @@ e.g. `MUL / Auto (Real)` vs `NEG / Real`):
   in `FB_ControlValve.s7dcl` for both a plain `[0, 100]` clamp and an
   asymmetric `[-tMaxStep, +tMaxStep]` slew-rate clamp (which still needs
   a separate `Neg` to produce the negative bound first).
+- `MIN` currently retains the clamp-family template assumption in the
+  registry; whether its ENO pragma is required has not been confirmed.
 - Not yet confirmed either way: `Sqr`/`Sqrt`/`Ln`/`Exp`/trig/`Frac`/`Expt`
   — check before assuming.
 

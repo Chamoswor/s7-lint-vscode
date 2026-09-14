@@ -31,6 +31,33 @@ function readText(p) {
   return fs.readFileSync(p, "utf-8");
 }
 
+// A wired TIA FBD MAX export can omit the ENO-generation setting. Keep
+// validating the generic datatype template while allowing the call setting
+// to be omitted or explicitly enabled/disabled.
+for (const enoSetting of [undefined, "TRUE", "FALSE"]) {
+  const maxExport = `FUNCTION_BLOCK "DisplayRemainingTime"
+VAR_TEMP
+  remainingSeconds : DInt;
+  displaySeconds : DInt;
+END_VAR
+{ S7_Language := "FBD" }
+NETWORK
+  RUNG
+    { S7_Templates := "value_type := DInt"${enoSetting === undefined ? "" : `; S7_GenerateENO := "${enoSetting}"`} }
+    MAX(in1 := #remainingSeconds, in2 := 0, out => #displaySeconds)
+  END_RUNG
+END_NETWORK
+END_FUNCTION_BLOCK`;
+  const maxBlock = parseS7dclBlock(maxExport);
+  if (!maxBlock) throw new Error("MAX export fixture failed to parse");
+  const maxDiags = checkInstructions(maxBlock, ruleSet);
+  if (maxDiags.length !== 0) throw new Error(`MAX with ENO setting ${enoSetting} must be accepted: ${JSON.stringify(maxDiags)}`);
+  const invalidMax = parseS7dclBlock(maxExport.replace("value_type := DInt", "value_type := TypoType"));
+  if (!checkInstructions(invalidMax, ruleSet).some((d) => d.code === "template-value-unrecognized")) {
+    throw new Error("MAX must still reject an unrecognized template datatype");
+  }
+}
+
 const safetyCallWithoutMetadata = parseS7dclBlock(`
 { S7_Safety := "TRUE" }
 FUNCTION_BLOCK "SafetyHelper"

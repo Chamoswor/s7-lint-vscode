@@ -3,6 +3,19 @@
 All notable changes to S7 Lint for VS Code will be documented in this file.
 
 ## Unreleased
+
+- Quoted local instance calls such as `#"Sensor-1_Instance"(...)` resolve
+  in LAD/FBD exports and SCL, including instruction calls through quoted
+  instance names.
+- Assignments to quoted PLC tags use the receiving tag's type. A preceding
+  statement's local operand can no longer cause a false result-type mismatch.
+- Math and numeric conversion inputs accept named constants, including
+  the bounds of `LIMIT`, `NORM_X` and `SCALE_X`.
+- XML technology-object instance DBs (including `PID_Compact`) are indexed,
+  so their calls and member references resolve across the workspace.
+- Graphical `MAX` calls accept TIA exports without an `S7_GenerateENO`
+  attribute; the existing template datatype check still applies.
+
 Fixes for the README's known limitations
 
 - `+` and `-` written without spaces are operators again: `4-1` and `#a-1`
@@ -41,6 +54,12 @@ Thanks to [@sikilde](https://github.com/sikilde) for reporting issues #7 and #8.
   and the file's entries loaded into the LAD/FBD map. Renamed to
   `SCL-conversion.yaml`; the Instruction Registry Editor now warns about a
   registry file whose name encodes no language (#7).
+- The SCL instruction registry covers the 64-bit conversions: every explicit
+  conversion Siemens documents for S7-1500 to or from `LInt`, `ULInt` and
+  `LWord` (132 `<src>_TO_<dst>` functions, e.g. `INT_TO_ULINT`), transcribed
+  from the STEP 7 "Explicit conversion of ..." tables. They are no longer
+  reported as unknown instructions, their argument and result types are
+  checked, and the explicit-conversion Quick Fix can offer them.
 
 ## 0.1.7
 Bug fixes
