@@ -79,11 +79,10 @@ export class ExprConversionQuickFixProvider implements vscode.CodeActionProvider
       // below always refuse.
       const funcName = `${fix.rightType.toUpperCase()}_TO_${fix.leftType.toUpperCase()}`;
       // Only offer this when the suggested conversion is a REAL,
-      // registered instruction -- e.g. no `LInt_TO_...`/`..._TO_LInt` pair
-      // is catalogued yet (Siemens' own official conversion-instructions
-      // table this registry was transcribed from doesn't document LInt/
-      // ULInt at all), so inserting one there would just trade one
-      // diagnostic (`expr-implicit-numeric-conversion`) for another
+      // registered instruction -- Siemens documents no explicit conversion
+      // for some pairs at all (`REAL_TO_LWORD`, `BOOL_TO_REAL`, ...), and
+      // an uncatalogued one would just trade one diagnostic
+      // (`expr-implicit-numeric-conversion`) for another
       // (`unknown-instruction`) -- never guessed.
       if (!this.ruleSet.sclInstructions[funcName] && !this.ruleSet.instructions[funcName]) continue;
 
