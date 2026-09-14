@@ -655,6 +655,18 @@ test("VAR / instanceValue : \" -> user-defined types only, none of the built-ins
   assert.equal(items[0].insertText, 'UserDefined";');
 });
 
+test("VAR RETAIN / instanceValue : \" -> same as plain VAR (the modifier is section header, not a member) -- issue #8", () => {
+  const { document, position } = withCursor('FUNCTION_BLOCK "X"\nVAR RETAIN\n   instanceValue : "|\nEND_VAR\nBEGIN\nEND_FUNCTION_BLOCK\n', "s7scl");
+  const items = provider.provideCompletionItems(document, position);
+  assert.deepEqual(labels(items), ["UserDefined"]);
+});
+
+test("VAR DB_SPECIFIC / struct_test : Str -> offers Struct like plain VAR ('Set in IDB' section) -- issue #8", () => {
+  const { document, position } = withCursor('FUNCTION_BLOCK "X"\nVAR DB_SPECIFIC\n   struct_test : Str|\nEND_VAR\nBEGIN\nEND_FUNCTION_BLOCK\n', "s7scl");
+  const items = provider.provideCompletionItems(document, position);
+  assert.ok(items.some((i) => i.label === "Struct"), "Struct must be offered in a DB_SPECIFIC static section");
+});
+
 test("VAR_CONSTANT / c : \" -> NO user-defined type suggestions (Struct illegal in Constant)", () => {
   const { document, position } = withCursor('FUNCTION_BLOCK "X"\nVAR_CONSTANT\n   c : "|\nEND_VAR\nBEGIN\nEND_FUNCTION_BLOCK\n', "s7scl");
   const items = provider.provideCompletionItems(document, position);

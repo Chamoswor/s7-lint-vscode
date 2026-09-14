@@ -28,6 +28,20 @@ Fixes for the README's known limitations
   `platform-availability.yaml`), and `tiaLint.iecCheck` reports bit-string
   arithmetic as a block's IEC check would.
 
+Thanks to [@sikilde](https://github.com/sikilde) for reporting issues #7 and #8.
+
+- `VAR RETAIN`, `VAR DB_SPECIFIC` ("Set in IDB"), `VAR_INPUT RETAIN` and the
+  other storage modifiers TIA Portal writes on a section keyword's own line
+  are recognised. The modifier was read as the first member's name, so that
+  member reported a missing `:` and every use of it was flagged as
+  undeclared (#8).
+- "Add to the instruction registry" works for SCL conversion instructions.
+  The SCL conversion file was named `SCL.-conversion.yaml`, which the loader
+  didn't classify as SCL, so the Quick Fix had no file to put the entry in
+  and the file's entries loaded into the LAD/FBD map. Renamed to
+  `SCL-conversion.yaml`; the Instruction Registry Editor now warns about a
+  registry file whose name encodes no language (#7).
+
 ## 0.1.7
 Bug fixes
 

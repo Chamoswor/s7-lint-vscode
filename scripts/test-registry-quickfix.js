@@ -12,6 +12,9 @@ const { scaffoldInstruction } = require("../out/instructionEditor/registryQuickF
 const { checkInstructions, unknownInstructionFix } = require("../out/linter/instructionChecks");
 const { parseS7dclBlock } = require("../out/parser/s7dclParser");
 const { loadRuleSet } = require("../out/rules/loadRules");
+const { EditorService } = require("../out/instructionEditor/editorService");
+const { discoverInstructionFiles } = require("../out/instructionEditor/registryPaths");
+const { detectLanguage } = require("../out/rules/fileLanguage");
 
 let passed = 0;
 let failed = 0;
@@ -71,6 +74,21 @@ const boxFix = unknownInstructionFix(
 );
 ok(boxFix && boxFix.callShape === "box" && boxFix.pins[0].name === "IN", "existing plain SCL box scaffold remains supported");
 
+// GitHub issue #7: the SCL conversion file was named `SCL.-conversion.yaml`,
+// which rules/fileLanguage.ts doesn't classify as SCL -- so "Add to the
+// instruction registry" for an SCL conversion instruction found no SCL file
+// to put it in (and the file's entries loaded into the LAD/FBD map). Every
+// builtin file must encode its language in its basename.
+const registryRoot = path.join(realResources, "instruction-registry");
+const unclassified = discoverInstructionFiles(registryRoot).filter((f) => !detectLanguage(f.fileName));
+ok(unclassified.length === 0, `every registry file's basename encodes its language (offenders: ${unclassified.map((f) => f.relPath).join(", ") || "none"})`);
+const sclConversionTarget = new EditorService(realResources).suggestFileForFamily("conversion", true);
+ok(
+  sclConversionTarget === "builtin/01-basic-instructions/10-conversion/SCL-conversion.yaml",
+  `SCL 'conversion' scaffold has a target file (got ${sclConversionTarget})`
+);
+ok(loadRuleSet(realResources).sclInstructions.INT_TO_UINT !== undefined, "SCL conversion entries load into the SCL map, not the LAD/FBD one");
+
 const tempRoot = fs.mkdtempSync(path.join(os.tmpdir(), "registry-qf-"));
 const tempResources = path.join(tempRoot, "resources");
 fs.cpSync(realResources, tempResources, { recursive: true });
@@ -97,6 +115,21 @@ try {
     !checkInstructions(block, reloaded, new BlockIndex()).some((d) => d.code === "unknown-instruction"),
     "reloaded scaffold resolves the original unknown-instruction diagnostic"
   );
+
+  // Issue #7 end to end: an SCL conversion instruction the registry doesn't
+  // know yet scaffolds into the SCL conversion file and loads as SCL.
+  const conversion = scaffoldInstruction(tempResources, {
+    instructionName: "MYTYPE_TO_INT",
+    family: "conversion",
+    scl: true,
+    callShape: "box",
+    pins: [{ name: "IN", dir: "in" }],
+  });
+  ok(
+    conversion.ok && conversion.relPath === "builtin/01-basic-instructions/10-conversion/SCL-conversion.yaml",
+    `SCL conversion scaffold saves into SCL-conversion.yaml (${conversion.reason || conversion.relPath})`
+  );
+  ok(loadRuleSet(tempResources).sclInstructions.MYTYPE_TO_INT !== undefined, "scaffolded SCL conversion entry loads into the SCL map");
 } finally {
   fs.rmSync(tempRoot, { recursive: true, force: true });
 }

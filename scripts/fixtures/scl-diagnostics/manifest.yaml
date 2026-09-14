@@ -39,6 +39,14 @@ positive:
     (GitHub issues 1-4) - a free-text REGION name followed by a parenthesised
     (/* */) comment, MIN/MAX inputs beyond IN2, SCL parameter names in any casing,
     and WSTRING#'' typed string constants.
+- id: SYN-POS-004
+  file: positive/SYN-POS-004-retain-sections.scl
+  expectedDiagnostics: 0
+  notes: The storage modifiers TIA Portal writes on the section keyword's own
+    line - VAR RETAIN, VAR DB_SPECIFIC ("Set in IDB"), VAR_INPUT RETAIN,
+    VAR_OUTPUT DB_SPECIFIC and a global DB's VAR RETAIN. The modifier used to
+    be read as the first member's name, so that member reported a missing ':'
+    and every use of it was undeclared (GitHub issue 8).
 negative:
 - id: SYN-STMT-001
   file: negative/parser/SYN-STMT-001-missing-assignment-semicolon.scl

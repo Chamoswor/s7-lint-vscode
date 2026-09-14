@@ -41,6 +41,21 @@ const TOP_LEVEL_KEYWORDS = ["FUNCTION_BLOCK", "FUNCTION", "ORGANIZATION_BLOCK", 
  * body's own instruction/tag completions. */
 const TOP_LEVEL_CLOSERS = ["END_FUNCTION_BLOCK", "END_FUNCTION", "END_ORGANIZATION_BLOCK", "END_DATA_BLOCK", "END_TYPE"];
 export const VAR_SECTION_KEYWORDS = ["VAR_INPUT", "VAR_OUTPUT", "VAR_IN_OUT", "VAR_TEMP", "VAR_CONSTANT", "VAR"] as const;
+/** `VAR RETAIN` / `VAR DB_SPECIFIC` / `VAR_INPUT RETAIN`: the storage
+ * modifier TIA writes after the section keyword -- part of the header, not
+ * the section's first declaration (the same small copy of the parser's own
+ * VAR_SECTION_MODIFIERS, by the convention noted below). */
+const VAR_SECTION_MODIFIERS = new Set(["RETAIN", "NON_RETAIN", "DB_SPECIFIC"]);
+
+/** True when `tokens[i]` is a section-header storage modifier rather than a
+ * declaration name -- a declaration's name is always followed by `:` or a
+ * `{...}` pragma, a modifier never is. */
+function isVarSectionModifierAt(tokens: Token[], i: number): boolean {
+  const t = tokens[i];
+  if (!t || t.kind !== "ident" || !VAR_SECTION_MODIFIERS.has(t.text.toUpperCase())) return false;
+  const nxt = tokens[i + 1];
+  return !(nxt && nxt.kind === "punct" && (nxt.text === ":" || nxt.text === "{"));
+}
 export type SclSection = (typeof VAR_SECTION_KEYWORDS)[number] | "TYPE" | "DATA_BLOCK";
 
 /** `SclSection` -> resources/type-registry/section-legality.yaml's own
@@ -450,6 +465,7 @@ export function resolveSclCompletionContext(text: string, offset: number): SclCo
     }
     if ((VAR_SECTION_KEYWORDS as readonly string[]).includes(up)) {
       section = up as SclSection;
+      if (isVarSectionModifierAt(tokens, i + 1)) i++; // `VAR RETAIN`: the modifier isn't the first declaration
       sectionStart = i + 1;
       continue;
     }

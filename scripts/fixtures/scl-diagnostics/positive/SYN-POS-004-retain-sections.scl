@@ -1,0 +1,69 @@
+FUNCTION_BLOCK "RetainSections"
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_INPUT
+      iSomeInputInt { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Int;
+   END_VAR
+   VAR_INPUT RETAIN
+      iRetainInputInt : Int;
+   END_VAR
+
+   VAR_OUTPUT
+      iSomeOutputInt { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Int;
+   END_VAR
+   VAR_OUTPUT DB_SPECIFIC
+      iIdbOutputInt : Int;
+   END_VAR
+
+   VAR_IN_OUT
+      iSomeInOutInt { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Int;
+   END_VAR
+
+   VAR
+      iSomeInt { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Int;
+   END_VAR
+   VAR RETAIN
+      iSomeRetainInt { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Int;
+   END_VAR
+   VAR DB_SPECIFIC
+      DataBuffer { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Array[0..15] of Byte;
+   END_VAR
+   VAR
+      iSomeOtherInt { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Int;
+   END_VAR
+
+   VAR_TEMP
+      bSomeTempBool : Bool;
+   END_VAR
+
+   VAR CONSTANT
+      ciSomeConstantInt : Int := 5;
+   END_VAR
+
+
+BEGIN
+	IF (#iSomeInOutInt = #iSomeInt) THEN
+	    #iSomeOutputInt := #iSomeInputInt;
+	END_IF;
+	
+	IF (#iSomeInputInt = #iSomeRetainInt) THEN
+	    #iSomeOtherInt := #iSomeRetainInt;
+	END_IF;
+	
+	#iIdbOutputInt := #iRetainInputInt;
+	#DataBuffer[1] := #DataBuffer[0];
+	#bSomeTempBool := (#iSomeInOutInt = #ciSomeConstantInt);
+END_FUNCTION_BLOCK
+
+DATA_BLOCK "RetainSectionsData"
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+NON_RETAIN
+   VAR RETAIN
+      Counter : Int;
+   END_VAR
+   VAR 
+      Flag : Bool;
+   END_VAR
+BEGIN
+END_DATA_BLOCK

@@ -24,6 +24,10 @@ import { formatDiagnostic, LintDiagnostic } from "./diagnostics";
 
 const BLOCK_KEYWORDS = ["FUNCTION_BLOCK", "FUNCTION", "ORGANIZATION_BLOCK", "DATA_BLOCK"];
 const VAR_KEYWORDS = ["VAR_INPUT", "VAR_OUTPUT", "VAR_IN_OUT", "VAR_TEMP", "VAR_CONSTANT", "VAR"];
+/** `VAR RETAIN` / `VAR DB_SPECIFIC` / `VAR_INPUT RETAIN`: the storage
+ * modifier TIA writes after the section keyword (mirrors s7dclParser.ts's
+ * own VAR_SECTION_MODIFIERS -- a separate copy, see this file's header). */
+const VAR_SECTION_MODIFIERS = new Set(["RETAIN", "NON_RETAIN", "DB_SPECIFIC"]);
 
 /** SCL's reserved statement/operator keywords -- mirrors s7dclParser.ts's
  * own `SCL_RESERVED_KEYWORDS` (kept as a separate copy since this module is
@@ -788,6 +792,18 @@ export function checkSclSyntaxStructure(text: string, ruleSet: RuleSet): LintDia
     }
   }
 
+  /** `VAR RETAIN` etc.: the modifier is part of the section header, not the
+   * first member's name -- without this it reports a missing `:` on it
+   * (GitHub issue #8). A member is told apart by what follows its name:
+   * `:` or a `{...}` pragma. */
+  function skipVarSectionModifier(): void {
+    const t = cur.peek();
+    if (t.kind !== "ident" || !VAR_SECTION_MODIFIERS.has(t.text.toUpperCase())) return;
+    const nxt = cur.peek(1);
+    if (nxt.kind === "punct" && (nxt.text === ":" || nxt.text === "{")) return;
+    cur.next();
+  }
+
   function checkVarSection(): void {
     for (;;) {
       if (cur.atEnd() || cur.isIdent("END_VAR")) return;
@@ -808,6 +824,7 @@ export function checkSclSyntaxStructure(text: string, ruleSet: RuleSet): LintDia
       if (varKw) {
         cur.next();
         if (isVarConstant) cur.next();
+        skipVarSectionModifier();
         checkVarSection();
         cur.tryIdent("END_VAR");
         continue;

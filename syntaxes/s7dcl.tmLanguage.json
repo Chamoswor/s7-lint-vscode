@@ -73,7 +73,7 @@
     },
     "var-keywords": {
       "name": "keyword.control.var.s7dcl",
-      "match": "\\b(VAR_INPUT|VAR_OUTPUT|VAR_IN_OUT|VAR_TEMP|VAR_CONSTANT|VAR|END_VAR|RETAIN|NON_RETAIN)\\b"
+      "match": "\\b(VAR_INPUT|VAR_OUTPUT|VAR_IN_OUT|VAR_TEMP|VAR_CONSTANT|VAR|END_VAR|RETAIN|NON_RETAIN|DB_SPECIFIC)\\b"
     },
     "network-keywords": {
       "name": "keyword.control.network.s7dcl",

@@ -2,6 +2,7 @@
 // adds registry-scoped findings (duplicate names, empty files/entries) that a
 // single-entry check can't see. This is what the editor's "validate all" panel
 // and a future CI/`npm test` gate would call.
+import { detectLanguage } from "../rules/fileLanguage";
 import { OptionCatalog } from "./externalRegistries";
 import { RegistryWorkspace } from "./registryIndex";
 import { KNOWN_FAMILIES } from "./schemaEnums";
@@ -34,6 +35,20 @@ export function validateWorkspace(ws: RegistryWorkspace, ctx: ValidationContext)
     const entries = doc.entries();
     if (entries.length === 0 && errs.length === 0) {
       findings.push({ severity: "warning", code: "empty-file", file: relPath, fieldPath: "", message: "File contains no instruction entries." });
+    }
+    // The basename is what routes a file's entries (rules/fileLanguage.ts):
+    // a name that encodes no language still loads, but into the graphical
+    // map whatever its `$fileLanguage` says, and the scaffold Quick Fix can't
+    // target it for that language (GitHub issue #7: `SCL.-conversion.yaml`).
+    const fileName = relPath.slice(relPath.lastIndexOf("/") + 1);
+    if (!detectLanguage(fileName)) {
+      findings.push({
+        severity: "warning",
+        code: "file-language-unknown",
+        file: relPath,
+        fieldPath: "",
+        message: `File name '${fileName}' doesn't encode a language. Name it SCL-*.yaml, LAD-FBD-*.yaml, LAD-*.yaml or FBD-*.yaml so its entries load into the right map.`,
+      });
     }
     for (const entry of entries) {
       const js = doc.entryJS(entry.uid);

@@ -213,6 +213,10 @@ export interface LocalDecl {
 }
 
 const VAR_SECTION_KEYWORDS = ["VAR_INPUT", "VAR_OUTPUT", "VAR_IN_OUT", "VAR_TEMP", "VAR_CONSTANT", "VAR"];
+/** `VAR RETAIN` / `VAR DB_SPECIFIC` / `VAR_INPUT RETAIN`: the storage
+ * modifier TIA writes after the section keyword (mirrors s7dclParser.ts's
+ * own VAR_SECTION_MODIFIERS; a separate copy by this project's convention). */
+const VAR_SECTION_MODIFIERS = new Set(["RETAIN", "NON_RETAIN", "DB_SPECIFIC"]);
 const BLOCK_KEYWORDS = ["FUNCTION_BLOCK", "FUNCTION", "ORGANIZATION_BLOCK", "DATA_BLOCK"];
 
 const PRAGMA_DOCS: Record<string, string> = {
@@ -2856,6 +2860,19 @@ export function buildDocumentIndex(
     return VAR_SECTION_KEYWORDS.find((kw) => cur.isIdent(kw)) ?? null;
   }
 
+  /** `VAR RETAIN` etc.: the modifier belongs to the section header and must
+   * not be walked as the first member -- it would be declared as a variable
+   * named RETAIN and the real first member would lose its type (GitHub
+   * issue #8). A member is told apart by what follows its name: `:` or a
+   * `{...}` pragma. Coloured by the TextMate grammar, so no span here. */
+  function skipVarSectionModifier(): void {
+    const t = cur.peek();
+    if (t.kind !== "ident" || !VAR_SECTION_MODIFIERS.has(t.text.toUpperCase())) return;
+    const nxt = cur.peek(1);
+    if (nxt.kind === "punct" && (nxt.text === ":" || nxt.text === "{")) return;
+    cur.next();
+  }
+
   /** `{ IF: "END_IF", ... }` -- every SCL block-statement keyword that
    * needs its own nesting depth tracked while scanning a FOR loop's body
    * for the loop's OWN matching END_FOR (`checkForLoop`'s own inner scan). */
@@ -3172,6 +3189,7 @@ export function buildDocumentIndex(
         if (varKw) {
           cur.next();
           if (varKw === "VAR CONSTANT") cur.next(); // consume "CONSTANT" too
+          skipVarSectionModifier();
           currentSectionKind = varKw === "VAR CONSTANT" ? "VAR_CONSTANT" : varKw;
           while (!cur.isIdent("END_VAR") && !cur.atEnd()) {
             const member = walkVarMember("VAR");

@@ -183,7 +183,13 @@ export interface NetworkNode {
 export interface VarSection {
   kind: string; // VAR | VAR_INPUT | VAR_OUTPUT | VAR_IN_OUT | VAR_TEMP | VAR_CONSTANT
   members: MemberRef[];
+  /** The storage modifier written after the section keyword (`VAR RETAIN`,
+   * `VAR DB_SPECIFIC`, `VAR_INPUT RETAIN`, ...), if any -- the FB
+   * interface's Retain column ("Retain" / "Non-retain" / "Set in IDB"). */
+  retain?: VarSectionModifier;
 }
+
+export type VarSectionModifier = "RETAIN" | "NON_RETAIN" | "DB_SPECIFIC";
 
 export interface ParsedBlockFile {
   blockType: "FUNCTION_BLOCK" | "FUNCTION" | "ORGANIZATION_BLOCK" | "DATA_BLOCK";
@@ -264,6 +270,27 @@ const BLOCK_KEYWORDS = ["FUNCTION_BLOCK", "FUNCTION", "ORGANIZATION_BLOCK", "DAT
  * only needs the keywords that appear alone on a line. */
 const DB_HEADER_KEYWORDS = new Set(["NON_RETAIN", "RETAIN", "READ_ONLY", "UNLINKED", "BEGIN"]);
 const VAR_KEYWORDS = ["VAR_INPUT", "VAR_OUTPUT", "VAR_IN_OUT", "VAR_TEMP", "VAR_CONSTANT", "VAR"];
+
+/** Storage modifiers TIA writes on the section-keyword line itself --
+ * `VAR RETAIN` / `VAR DB_SPECIFIC` for a static section whose Retain column
+ * is "Retain" / "Set in IDB", likewise after VAR_INPUT/VAR_OUTPUT, and
+ * `VAR RETAIN` in a global DB. Like `VAR CONSTANT`, the modifier is a
+ * separate ident token, so it has to be consumed with the keyword or it is
+ * read as the first member's name (GitHub issue #8). */
+const VAR_SECTION_MODIFIERS = new Set(["RETAIN", "NON_RETAIN", "DB_SPECIFIC"]);
+
+/** Consumes the `RETAIN`/`NON_RETAIN`/`DB_SPECIFIC` modifier that may sit
+ * right after a section keyword, if present. Told apart from a member
+ * declaration by shape: a member's name is always followed by `:` or a
+ * `{...}` pragma, a modifier never is. */
+function tryConsumeVarSectionModifier(cur: TokenCursor): VarSectionModifier | undefined {
+  const t = cur.peek();
+  if (t.kind !== "ident" || !VAR_SECTION_MODIFIERS.has(t.text.toUpperCase())) return undefined;
+  const nxt = cur.peek(1);
+  if (nxt.kind === "punct" && (nxt.text === ":" || nxt.text === "{")) return undefined;
+  cur.next();
+  return t.text.toUpperCase() as VarSectionModifier;
+}
 
 /** SCL's own reserved statement/operator keywords -- a real instruction
  * name can never collide with one of these (reserved words aren't legal
@@ -1393,12 +1420,13 @@ function parseBlockDeclaration(cur: TokenCursor, filePragma?: Pragma | null): Pa
     if (varKw) {
       cur.next();
       if (isVarConstant) cur.next(); // consume "CONSTANT" too
+      const retain = tryConsumeVarSectionModifier(cur);
       const members: MemberRef[] = [];
       while (!cur.isIdent("END_VAR") && !cur.atEnd()) {
         members.push(parseVarMember(cur));
       }
       cur.tryIdent("END_VAR");
-      varSections.push({ kind: varKw, members });
+      varSections.push(retain ? { kind: varKw, members, retain } : { kind: varKw, members });
       headerDone = true;
       continue;
     }

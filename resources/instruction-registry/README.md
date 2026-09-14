@@ -12,9 +12,16 @@ constraints, confidence, and evidence category.
 
 `src/rules/loadRules.ts` builds two independent maps:
 
-- every YAML file except `_template.yaml` and `*-SCL.yaml` is merged into
+- every YAML file except `_template.yaml` and the SCL files is merged into
   `RuleSet.instructions` for LAD/FBD lookup;
-- `*-SCL.yaml` files are merged into `RuleSet.sclInstructions`.
+- SCL files (`SCL-*.yaml`, or the older `*-SCL.yaml` suffix form) are merged
+  into `RuleSet.sclInstructions`.
+
+The language is read from the file's basename only (`src/rules/fileLanguage.ts`):
+a `SCL-`/`LAD-FBD-`/`LAD-`/`FBD-` prefix or the matching `-SCL`/... suffix. A
+name that encodes neither (e.g. a typo like `SCL.-conversion.yaml`) loads into
+the LAD/FBD map regardless of its `$fileLanguage`, and the Instruction Registry
+Editor warns about it.
 
 The maps are separate because SCL can use different capitalization, parameter
 names, explicit pins, or instruction names. SCL lookup checks the SCL map first
@@ -25,7 +32,7 @@ and then falls back to the general map when no dedicated SCL entry exists.
 The loader walks this directory **recursively**, so `*.yaml` files can be
 sorted into subfolders (e.g. `motion/12c-motion-axis-LAD-FBD.yaml`) for
 organization without changing how they load. Only the file's basename is
-meaningful: the `-SCL.yaml`/`-LAD-FBD.yaml`/etc. suffix rules, the
+meaningful: the `SCL-`/`LAD-FBD-`/etc. prefix (or suffix) rules, the
 `_template.yaml` exclusion, and the merge order into `RuleSet.instructions` /
 `RuleSet.sclInstructions` all apply the same way regardless of which
 subfolder a file lives in. There is no naming requirement on subfolder
@@ -42,9 +49,9 @@ override mechanism; later files would silently replace earlier entries.
 
 File names encode family and language scope:
 
-- `*-LAD-FBD.yaml`: graphical call shapes shared by LAD and FBD.
-- `*-LAD.yaml` or `*-FBD.yaml`: language-specific graphical shapes.
-- `*-SCL.yaml`: complete SCL entries with SCL spelling and calling convention.
+- `LAD-FBD-*.yaml` (or `*-LAD-FBD.yaml`): graphical call shapes shared by LAD and FBD.
+- `LAD-*.yaml` or `FBD-*.yaml` (or the `-LAD`/`-FBD` suffix form): language-specific graphical shapes.
+- `SCL-*.yaml` (or `*-SCL.yaml`): complete SCL entries with SCL spelling and calling convention.
 - [`_template.yaml`](_template.yaml): copyable schema; never loaded.
 
 Families are grouped by numeric prefix:
