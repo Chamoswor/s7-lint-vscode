@@ -81,6 +81,16 @@ type-illegal-section:
   severity: error
   message: "'{typeName}' is not legal in a {section} section -- section-legality.yaml's per-section additionalDatatypes list doesn't include it there."
 
+type-unavailable-on-platform:
+  severity: warning
+  message: "'{typeName}' is not available on {platform} (tiaLint.targetPlatform)."
+  notes: "Emitted by analysis/documentIndex.ts's checkPlatformAvailability only when the tiaLint.targetPlatform setting names a CPU family -- for a declaration's type, an array's element type, a REF_TO target, or a FUNCTION's return type. Availability comes from type-registry/platform-availability.yaml, limited to the rows rules/platformAvailability.ts lints."
+
+type-requires-s7-1500-compatible-mode:
+  severity: information
+  message: "'{typeName}' is available on {platform} only in S7-1500-compatible mode (tiaLint.targetPlatform)."
+  notes: "Same check as type-unavailable-on-platform, for platform-availability.yaml's \"S7-1500-compatible\" S7-1200 G2 entries."
+
 instance-type-illegal-context:
   severity: error
   message: "'{typeName}' is an instruction instance type -- it can only be declared in a FUNCTION_BLOCK's VAR sections, not in {context}."

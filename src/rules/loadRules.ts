@@ -4,6 +4,7 @@ import * as fs from "fs";
 import * as path from "path";
 import * as yaml from "js-yaml";
 import { isSclFile } from "./fileLanguage";
+import { parsePlatformAvailability } from "./platformAvailability";
 import {
   AnyPointerRegistry,
   BaseTypeRegistry,
@@ -151,6 +152,7 @@ export function loadRuleSet(resourcesDir: string): RuleSet {
   const references = readYaml<ReferencesRegistry>(path.join(typeDir, "references.yaml"));
   const symbolicRuntimeAccess = readYaml<SymbolicRuntimeAccessRegistry>(path.join(typeDir, "symbolic-runtime-access.yaml"));
   const exprOperators = readYaml<ExpressionOperatorRules>(path.join(typeDir, "expression-operators.yaml"));
+  const platformAvailability = parsePlatformAvailability(readYaml<unknown>(path.join(typeDir, "platform-availability.yaml")));
 
   return {
     instructions,
@@ -169,5 +171,6 @@ export function loadRuleSet(resourcesDir: string): RuleSet {
     symbolicRuntimeAccess,
     exprOperators,
     diagnostics: loadDiagnosticRegistry(resourcesDir),
+    platformAvailability,
   };
 }

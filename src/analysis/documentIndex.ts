@@ -6,7 +6,7 @@
 // all share -- see providers/*.ts -- so highlighting, hover, and ctrl-click
 // stay in lockstep with the same yaml-backed RuleSet + workspace BlockIndex
 // instead of three independently-drifting implementations.
-import { formatDiagnostic, LintDiagnostic, LintSeverity } from "../linter/diagnostics";
+import { formatDiagnostic, LintDiagnostic, LintOptions, LintSeverity } from "../linter/diagnostics";
 import { lookupType, TypeCacheResult } from "../cache/typeCache";
 import { Lexer, Token, TokenCursor } from "../parser/lexer";
 import { literalRunLength, tokensAdjacent } from "../parser/literalRun";
@@ -15,6 +15,7 @@ import { loadSiblingS7Res, MLC_ID_PRAGMA_KEYS, resolveMlcText, siblingS7ResPath,
 import { TypeRef, typeRefDereferencedTopLevelName, typeRefToText, typeRefTopLevelName } from "../parser/typeRef";
 import { anyDataTypeCodeNames, classifyLiteral, detectLiteralShape, expandPinDataTypes, resolveTypeAlias } from "../rules/literalTypes";
 import { findRegistryPin, pinDisplayName, registrySpelling } from "../rules/pinMatching";
+import { platformSupport } from "../rules/platformAvailability";
 import { BaseTypeEntry, InstructionEntry, InstructionPin, RuleSet, SystemTypeEntry, SystemTypeMemberTypeRef } from "../rules/types";
 import { BlockIndex, BlockInfo, GlobalTagInfo } from "./blockIndex";
 import {
@@ -658,7 +659,8 @@ export function buildDocumentIndex(
   blockIndex: BlockIndex,
   docPath?: string,
   mlcLocale: string = "en-US",
-  typeCache?: TypeCacheResult
+  typeCache?: TypeCacheResult,
+  options: LintOptions = {}
 ): DocumentIndex {
   const tokens = new Lexer(text).tokenize();
   const cur = new TokenCursor(tokens);
@@ -1103,6 +1105,21 @@ export function buildDocumentIndex(
     if (listedForSection) return;
     if (!ruleSet.baseTypes[topLevelName] && !ruleSet.systemTypes[topLevelName] && !ruleSet.opaqueSectionNames.has(topLevelName)) return;
     diagnostics.push(formatDiagnostic(ruleSet, "type-illegal-section", nameTok.line, nameTok.col, { typeName: topLevelName, section }));
+  }
+
+  /** `tiaLint.targetPlatform`: a declared data type the configured CPU family
+   * doesn't support (see rules/platformAvailability.ts). Silent without a
+   * configured platform, and for any type the linted registry rows don't
+   * mention. */
+  function checkPlatformAvailability(tok: Token, typeName: string | null): void {
+    const platform = options.targetPlatform;
+    if (!platform || !typeName) return;
+    const support = platformSupport(ruleSet, typeName, platform);
+    if (support === false) {
+      diagnostics.push(formatDiagnostic(ruleSet, "type-unavailable-on-platform", tok.line, tok.col, { typeName, platform }));
+    } else if (support === "S7-1500-compatible") {
+      diagnostics.push(formatDiagnostic(ruleSet, "type-requires-s7-1500-compatible-mode", tok.line, tok.col, { typeName, platform }));
+    }
   }
 
   /** Flags a literal whose classified type(s) don't include any of
@@ -1936,6 +1953,7 @@ export function buildDocumentIndex(
     cur.tryPunct(":");
     const { text, typeRef, leafName, topLevelName, derefTopLevelName, arrayBounds, elementTopLevelName, elementLeafName, structMembers } = walkTypeRef(context);
     checkSectionLegality(nameTok, topLevelName, section);
+    for (const typeName of new Set([topLevelName, elementTopLevelName, derefTopLevelName])) checkPlatformAvailability(nameTok, typeName);
     const decl: LocalDecl = {
       name: nameTok.text,
       leafName,
@@ -3105,7 +3123,8 @@ export function buildDocumentIndex(
       // `typeNameSemantics` every other type occurrence goes through.
       if (blockKeyword === "FUNCTION" && cur.isPunct(":")) {
         cur.next();
-        walkTypeRef("VAR");
+        const returnTypeTok = cur.peek();
+        checkPlatformAvailability(returnTypeTok, walkTypeRef("VAR").topLevelName);
       }
       classifyPragma(); // block-level attributes
 

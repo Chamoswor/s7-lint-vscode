@@ -4,6 +4,8 @@
 // facts supported by their evidence; shape-only entries may intentionally
 // omit dataTypes or enEno (see that README's confidence section).
 
+import type { PlatformAvailability } from "./platformAvailability";
+
 export type CallShape = "box" | "instance-dot" | "coil-ref";
 export type PinDir = "in" | "out" | "inout";
 export type Confidence = "confirmed-compiled" | "official-doc" | "shape-only";
@@ -430,6 +432,9 @@ export interface RuleSet {
   /** resources/diagnostic-registry/*.yaml -- every LintDiagnostic code's
    * severity/message, read by linter/diagnostics.ts's formatDiagnostic. */
   diagnostics: DiagnosticRegistry;
+  /** type-registry/platform-availability.yaml -- which CPU families support
+   * a data type, see rules/platformAvailability.ts. */
+  platformAvailability: PlatformAvailability;
 }
 
 /** Mirrors type-registry/expression-operators.yaml -- see that file's own
@@ -438,6 +443,9 @@ export interface RuleSet {
 export interface ExpressionOperatorDomainRule {
   operators: string[];
   allowedDomainPairs: [string, string][];
+  /** Allowed pairs a block's IEC check property rejects -- reported only
+   * when `tiaLint.iecCheck` says the property is on. */
+  iecCheckRejectedDomainPairs?: [string, string][];
   warnOnMismatchWithinDomain?: string[];
   requireExactTypeMatch?: string[];
 }

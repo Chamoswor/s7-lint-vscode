@@ -110,7 +110,7 @@ notes: |
   - section-legality.yaml already lists `Pointer` as legal in InOut/Input
     additionalDatatypes; its earlier "no base-types.yaml entry describes
     its format/size" caveat is RESOLVED now — update that note.
-  - platform-availability.NOTLOADED.yaml's `pointer.Pointer` row already marks it
+  - platform-availability.yaml's `pointer.Pointer` row already marks it
     S7-300/400 + S7-1500 only (not plain S7-1200); this file's
     `platformOnly` sub-codes are a finer-grained restriction layered on
     top, same relationship any-pointer.yaml has to its own platform row.

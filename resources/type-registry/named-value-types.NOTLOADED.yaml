@@ -17,7 +17,7 @@
 # here has that confirmation yet, it's transcribed documentation only.
 
 platform:
-  requirement: "S7-1500 only (confirms platform-availability.NOTLOADED.yaml's existing 'Named value data types (NVT)' row: S7-1500 true, S7-1200/S7-300-400 false, S7-1200 G2 'S7-1500-compatible')."
+  requirement: "S7-1500 only (confirms platform-availability.yaml's existing 'Named value data types (NVT)' row: S7-1500 true, S7-1200/S7-300-400 false, S7-1200 G2 'S7-1500-compatible')."
   supportedLanguages: [LAD, FBD, SCL, GRAPH]
   notes: "STL is NOT listed among supported languages — unconfirmed whether that's a real exclusion or just an omission from this particular doc page. Also: 'available only within software units' — a project-organizational scoping concept, not itself a syntax rule; a lint server would need to know which software unit a block belongs to if it ever needs to check NVT visibility/publication rules (see declarationFileFormat.publishing below), which this repo doesn't currently model at all."
 

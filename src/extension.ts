@@ -3,7 +3,7 @@ import * as path from "path";
 import * as vscode from "vscode";
 import { buildDocumentIndex } from "./analysis/documentIndex";
 import { CacheManager } from "./cache/cacheManager";
-import { getMlcLocale } from "./config";
+import { getLintOptions, getMlcLocale } from "./config";
 import { checkMainSafetyBlockInterface, checkStructCountPerDataBlock } from "./linter/compositionChecks";
 import { LintDiagnostic, LintSeverity } from "./linter/diagnostics";
 import { checkSclExpressionTypes } from "./linter/exprTypeChecks";
@@ -252,9 +252,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
   };
 
   context.subscriptions.push(cacheManager.onDidRebuild(relintAllOpen));
-  cacheManager.watch(context, async () => {
-    await cacheManager.rebuild();
-  });
+  cacheManager.watch(context);
 
   // Keep open buffers visible to the shared block index, so hover/definition/
   // rename/completion resolve a block declared in an UNSAVED document exactly
@@ -307,6 +305,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
   context.subscriptions.push(
     vscode.workspace.onDidChangeConfiguration((e) => {
       if (e.affectsConfiguration("tiaLint.mlcLocale")) mlcHints.refreshAllVisible();
+      if (e.affectsConfiguration("tiaLint.targetPlatform") || e.affectsConfiguration("tiaLint.iecCheck")) relintAllOpen();
       if (e.affectsConfiguration(RECOMMENDED_SEMANTIC_COLORS_SETTING)) {
         if (recommendedSemanticColorsEnabled()) void ensureRecommendedSemanticColors(false);
         else void removeRecommendedSemanticColors(false);
@@ -392,15 +391,14 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
   context.subscriptions.push(
     RegistryEditorPanel.onDidSave(async (savedFiles) => {
       if (!reloadRuleSet()) return;
-      // The UDT/type cache is built FROM the rule set (see CacheManager's own
-      // `buildTypeCache(this.ruleSet, files)`), so a system-types.yaml change
-      // needs the cache rebuilt too -- reloading the rule set alone would
-      // leave symbol resolution using the old type table. Gated on that file
-      // actually having been written, because a rebuild re-parses every UDT
-      // and block file in the workspace and the common case (an
-      // instruction-registry edit) doesn't affect the cache at all.
+      // The UDT/type cache is built FROM the rule set (see CacheManager's
+      // `recompute`), so a system-types.yaml change needs the cache rebuilt
+      // too -- reloading the rule set alone would leave symbol resolution
+      // using the old type table. Workspace files parse the same either way,
+      // so none is read again; and the common case (an instruction-registry
+      // edit) doesn't affect the cache at all.
       if (savedFiles.includes(EXTERNAL_REGISTRY_FILES.systemTypes)) {
-        await cacheManager.rebuild(); // fires onDidRebuild -> relintAllOpen
+        cacheManager.recompute(); // fires onDidRebuild -> relintAllOpen
       } else {
         relintAllOpen();
       }
@@ -536,6 +534,7 @@ function lintDocument(doc: vscode.TextDocument): void {
   if (!isS7dcl && !isScl && !isS7res && !isUdtSource) return;
 
   const diagnostics: vscode.Diagnostic[] = [];
+  const lintOptions = getLintOptions(doc.uri);
 
   if (isS7res) {
     const sourceText = siblingSourceText(fsPath);
@@ -564,7 +563,7 @@ function lintDocument(doc: vscode.TextDocument): void {
       for (const d of checkSclConditionTypes(block, blockIndex, cacheManager.getTypeCacheResult(), ruleSet)) {
         diagnostics.push(toVscodeDiagnostic(doc, d));
       }
-      for (const d of checkSclExpressionTypes(block, ruleSet, blockIndex, cacheManager.getTypeCacheResult())) {
+      for (const d of checkSclExpressionTypes(block, ruleSet, blockIndex, cacheManager.getTypeCacheResult(), lintOptions)) {
         diagnostics.push(toVscodeDiagnostic(doc, d));
       }
     }
@@ -574,7 +573,7 @@ function lintDocument(doc: vscode.TextDocument): void {
     // Literal-vs-declared-type checks + UDT-cache-relevant spans -- covers
     // every declaration in the file (see analysis/documentIndex.ts's own
     // multi-declaration top-level walk).
-    for (const d of buildDocumentIndex(text, ruleSet, blockIndex, fsPath, getMlcLocale(doc.uri)).diagnostics) {
+    for (const d of buildDocumentIndex(text, ruleSet, blockIndex, fsPath, getMlcLocale(doc.uri), undefined, lintOptions).diagnostics) {
       diagnostics.push(toVscodeDiagnostic(doc, d));
     }
   } else if (isS7dcl) {
@@ -613,7 +612,7 @@ function lintDocument(doc: vscode.TextDocument): void {
     // Literal-vs-declared-type checks (VAR defaults, instruction pin
     // arguments) -- see analysis/documentIndex.ts. Runs for both "block"
     // and "type"-kind files; independent of the AST-based checks above.
-    for (const d of buildDocumentIndex(text, ruleSet, blockIndex, fsPath, getMlcLocale(doc.uri)).diagnostics) {
+    for (const d of buildDocumentIndex(text, ruleSet, blockIndex, fsPath, getMlcLocale(doc.uri), undefined, lintOptions).diagnostics) {
       diagnostics.push(toVscodeDiagnostic(doc, d));
     }
   }

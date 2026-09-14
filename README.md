@@ -45,6 +45,8 @@ the target CPU and TIA Portal compiler.
   references, array bounds, and nesting limits.
 - **Declarations and data access:** Applies section, reference, pointer, array,
   operand-type, and selected cross-parameter rules when enough context exists.
+  With `tiaLint.targetPlatform` set, declared data types are also checked
+  against that CPU family.
 - **Multilingual resources:** Validates `.s7res` structure, IDs, text values,
   MLC references, and orphaned entries before TIA Portal import.
 
@@ -140,6 +142,7 @@ commands below link to their test runners in the GitHub repository:
 | `npm run test:registry-quickfix` | instruction-registry quick fixes | [`test-registry-quickfix.js`](https://github.com/Chamoswor/s7-lint-vscode/blob/main/scripts/test-registry-quickfix.js) |
 | `npm run test:manifest` | manifest-driven parser and semantic diagnostics | [`run-manifest-smoke-tests.js`](https://github.com/Chamoswor/s7-lint-vscode/blob/main/scripts/run-manifest-smoke-tests.js) |
 | `npm run test:annotated` | exact line-annotated expression diagnostics | [`run-annotated-diagnostic-tests.js`](https://github.com/Chamoswor/s7-lint-vscode/blob/main/scripts/run-annotated-diagnostic-tests.js) |
+| `npm run test:target` | `tiaLint.targetPlatform` and `tiaLint.iecCheck` checks | [`test-target-settings.js`](https://github.com/Chamoswor/s7-lint-vscode/blob/main/scripts/test-target-settings.js) |
 | `npm run test:instance-context` | instance-type context legality (VAR sections, call shapes) | [`test-instance-type-context.js`](https://github.com/Chamoswor/s7-lint-vscode/blob/main/scripts/test-instance-type-context.js) |
 | `npm run test:editor` | instruction registry editor's YAML document model | [`test-instruction-editor.js`](https://github.com/Chamoswor/s7-lint-vscode/blob/main/scripts/test-instruction-editor.js) |
 | `npm run test:editor-service` | instruction registry editor's service/workspace layer | [`test-editor-service.js`](https://github.com/Chamoswor/s7-lint-vscode/blob/main/scripts/test-editor-service.js) |
@@ -174,6 +177,11 @@ The extension contributes these commands:
 - **S7 Lint: Install Recommended Semantic Colors**
 - **S7 Lint: Disable Recommended Semantic Colors**
 
+The type cache and block index follow workspace changes incrementally: a
+burst of file events re-reads only the files involved, including folders that
+are deleted or moved in as a whole. **S7 Lint: Rebuild Type Cache** forces a
+full rescan.
+
 Two further commands back the registry quick fixes
 (`tiaLint.registryMarkPinOptional`, `tiaLint.registryScaffoldInstruction`).
 They take arguments supplied by the diagnostic, so they are hidden from the
@@ -182,6 +190,12 @@ command palette and are invoked from the lightbulb only.
 `tiaLint.mlcLocale` selects the preferred locale for multilingual resource
 resolution. Resolution falls back to `en-US` and then to an available locale.
 
+`tiaLint.targetPlatform` names the CPU family the project targets (`S7-1200`,
+`S7-1200 G2`, `S7-1500`, or `S7-300/400`); declarations whose data type that
+family doesn't support are then reported. `tiaLint.iecCheck` lints as if the
+blocks' IEC check property were enabled, which makes arithmetic on bit strings
+an error. Both are off by default, because exported sources record neither.
+
 `tiaLint.recommendedSemanticColors.enabled` controls automatic installation of
 the theme-scoped S7 semantic palette. Disabling it removes only values managed
 by S7 Lint and preserves unrelated or manually customized semantic colors.
@@ -189,16 +203,19 @@ by S7 Lint and preserves unrelated or manually customized semantic colors.
 ## Known limitations
 
 - **Target-specific validation:** CPU family, firmware, and a block's IEC-check
-  setting are not available from the supported project sources. Platform data
-  in
-  [`platform-availability.NOTLOADED.yaml`](resources/type-registry/platform-availability.NOTLOADED.yaml)
-  is therefore not loaded. When IEC modes permit different results, the linter
-  uses the permissive interpretation; bit-string arithmetic is one example.
+  setting are not recorded in the supported project sources. The CPU family
+  and the IEC check can be stated in settings instead. Without
+  `tiaLint.targetPlatform`, declared data types are not checked against a CPU
+  family; without `tiaLint.iecCheck`, the linter uses the permissive
+  interpretation where the IEC check changes the result (bit-string
+  arithmetic). Firmware versions are not considered, the IEC check is one
+  assumption for all blocks rather than a per-block property, and the system
+  data type rows that
+  [`platform-availability.yaml`](resources/type-registry/platform-availability.yaml)
+  itself marks as unverified are not used.
 - **Incomplete type information:** Checks that require an unresolved symbol or
   an expression without one safely inferred type are skipped instead of
   guessed.
-- **Workspace updates:** Relevant file changes rebuild the complete type and
-  block caches rather than updating only the affected entries.
 - **Registry confidence:** Checks based on `shape-only` instruction entries are
   generally warnings. Hard errors require stronger evidence such as
   `confirmed-compiled` data.

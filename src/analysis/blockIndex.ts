@@ -112,22 +112,27 @@ export class BlockIndex {
    * rather than two different blocks.
    */
   rebuild(files: { path: string; text: string }[], xmlFiles: { path: string; text: string }[] = []): void {
+    this.setScanned(
+      xmlFiles.flatMap((f) => scanBlockXmlFile(f.path, f.text)),
+      files.flatMap((f) => scanBlockFile(f.path, f.text)),
+      xmlFiles.flatMap((f) => parsePlcTagXml(f.text).map((tag) => ({ ...tag, file: f.path })))
+    );
+  }
+
+  /** `rebuild` from blocks and tags that are already scanned -- what
+   * cache/workspaceSources.ts keeps per file, so a change re-parses only the
+   * file that changed. Same precedence as `rebuild`. */
+  setScanned(xmlBlocks: BlockInfo[], textBlocks: BlockInfo[], tags: GlobalTagInfo[]): void {
     const next = new Map<string, BlockInfo>();
+    for (const info of xmlBlocks) next.set(info.name, info);
+    for (const info of textBlocks) next.set(info.name, info);
     const nextGlobalTags = new Map<string, GlobalTagInfo>();
-    for (const f of xmlFiles) {
-      for (const info of scanBlockXmlFile(f.path, f.text)) next.set(info.name, info);
-      for (const tag of parsePlcTagXml(f.text)) {
-        // PLC identifiers are case-insensitive. First declaration wins so a
-        // duplicate export remains deterministic and points at the first
-        // source file discovered by VS Code's workspace scan.
-        const key = tag.name.toLowerCase();
-        if (!nextGlobalTags.has(key)) nextGlobalTags.set(key, { ...tag, file: f.path });
-      }
-    }
-    for (const f of files) {
-      for (const info of scanBlockFile(f.path, f.text)) {
-        next.set(info.name, info);
-      }
+    for (const tag of tags) {
+      // PLC identifiers are case-insensitive. First declaration wins so a
+      // duplicate export remains deterministic and points at the first
+      // source file discovered by VS Code's workspace scan.
+      const key = tag.name.toLowerCase();
+      if (!nextGlobalTags.has(key)) nextGlobalTags.set(key, tag);
     }
     this.diskBlocks = next;
     this.globalTags = nextGlobalTags;

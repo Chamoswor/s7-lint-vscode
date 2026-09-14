@@ -4,7 +4,7 @@
 # (2026-07-13). confidence: official-doc, same tier as base-types.yaml.
 #
 # EVENT_HWINT / OB_HWINT (originally transcribed as EVENT_HWNT / OB_HWNT
-# from data-types-ext) corrected 2026-07-13 after platform-availability.NOTLOADED.yaml
+# from data-types-ext) corrected 2026-07-13 after platform-availability.yaml
 # confirmed that spelling from a second, independent Siemens source
 # (the "Overview of the valid data types" table) — see that file's
 # trailing `notes` block.

@@ -6,7 +6,7 @@
 // its declared Bool/Int/... type instead of treating it as a string literal.
 import { XMLParser } from "fast-xml-parser";
 import { TypeRef, parseTypeRefText } from "./typeRef";
-import { XmlLineIndex, withoutByteOrderMark } from "./xmlSourcePosition";
+import { XmlLineIndex, normalizeXmlSource } from "./xmlSourcePosition";
 
 export interface ParsedPlcTag {
   name: string;
@@ -27,7 +27,7 @@ const parser = new XMLParser({
 /** Returns every tag declared by a TIA PLC tag-table XML export. */
 export function parsePlcTagXml(text: string): ParsedPlcTag[] {
   if (!text.includes("<SW.Tags.PlcTagTable")) return [];
-  const source = withoutByteOrderMark(text);
+  const source = normalizeXmlSource(text);
   let doc: any;
   try {
     doc = parser.parse(source);

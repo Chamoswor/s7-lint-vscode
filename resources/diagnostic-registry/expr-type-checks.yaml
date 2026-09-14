@@ -14,6 +14,11 @@ expr-arithmetic-domain-mismatch:
   message: "'{op}' is not a valid arithmetic operator between '{leftType}' and '{rightType}'."
   notes: "leftType/rightType are the two operands' own resolved types; the domains they belong to (numeric/time/bool/bit-string) are what expression-operators.yaml's arithmetic.allowedDomainPairs actually checks, not the concrete type names themselves."
 
+expr-arithmetic-iec-check:
+  severity: error
+  message: "'{op}' between '{leftType}' and '{rightType}' is rejected while a block's IEC check is enabled (tiaLint.iecCheck)."
+  notes: "Emitted by linter/exprTypeChecks.ts's evalBinary only when the tiaLint.iecCheck setting is on, for a domain pair in expression-operators.yaml's arithmetic.iecCheckRejectedDomainPairs -- accepted by TIA with the property off, which is why the pair stays in allowedDomainPairs."
+
 expr-logical-domain-mismatch:
   severity: error
   message: "'{op}' is not valid between '{leftType}' and '{rightType}' -- AND/OR/XOR require two BOOL operands or two matching bit-string operands (Word/DWord/...)."

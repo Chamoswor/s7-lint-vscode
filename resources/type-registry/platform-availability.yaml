@@ -2,6 +2,12 @@
 # pasted from Siemens' TIA Portal Information System by the user
 # (2026-07-13). confidence: official-doc.
 #
+# Runtime use: loaded by rules/loadRules.ts, and checked only when the user
+# sets tiaLint.targetPlatform -- the exported sources never name their CPU.
+# rules/platformAvailability.ts lints only `true`/`false`/"S7-1500-compatible"
+# values, and skips the systemDataTypes category (see its CAVEAT note) and the
+# unresolved `Any` row.
+#
 # Orthogonal to every other file in type-registry/, the same way
 # section-legality.yaml is: this says WHICH CPU FAMILY a type name is
 # valid on, not what the type IS (base-types.yaml / system-types.yaml) or
@@ -133,6 +139,7 @@ categories:
 
   pointer:
     References:
+      aliases: [Reference] # base-types.yaml's name for the type of a REF_TO declaration
       "S7-300/400": false
       "S7-1200": false
       "S7-1500": true
@@ -215,7 +222,7 @@ categories:
       "S7-1200": false
       "S7-1500": true
       "S7-1200 G2": true
-      notes: "RESOLVED 2026-07-13 — user confirmed this table (platform-availability.NOTLOADED.yaml) is correct over section-legality.yaml's allSections list (which lists HW_MODULE as legal in every section, inherited from data-types-ext/All.md without a platform scope). Treat HW_MODULE as S7-1500/S7-1200 G2-only, not universally legal — consistent with the project's primary targets (S7-1200 G2 and S7-1500), where this table's answer applies either way."
+      notes: "RESOLVED 2026-07-13 — user confirmed this table (platform-availability.yaml) is correct over section-legality.yaml's allSections list (which lists HW_MODULE as legal in every section, inherited from data-types-ext/All.md without a platform scope). Treat HW_MODULE as S7-1500/S7-1200 G2-only, not universally legal — consistent with the project's primary targets (S7-1200 G2 and S7-1500), where this table's answer applies either way."
     HW_INTERFACE:  { "S7-300/400": false, "S7-1200": true, "S7-1500": true, "S7-1200 G2": true }
     HW_IEPORT:     { "S7-300/400": false, "S7-1200": true, "S7-1500": true, "S7-1200 G2": true }
     HW_HSC:        { "S7-300/400": false, "S7-1200": true, "S7-1500": true, "S7-1200 G2": true }

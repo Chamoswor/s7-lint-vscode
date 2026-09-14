@@ -13,7 +13,7 @@
 // shape (and the same cache graph algorithm) as the .udt text format.
 import { XMLParser } from "fast-xml-parser";
 import { MemberRef, TypeRef, parseTypeRefText } from "./typeRef";
-import { XmlLineIndex, withoutByteOrderMark } from "./xmlSourcePosition";
+import { XmlLineIndex, normalizeXmlSource } from "./xmlSourcePosition";
 
 export interface ParsedUdtDecl {
   name: string;
@@ -45,7 +45,7 @@ export function parseUdtXml(text: string): ParsedUdtDecl[] {
   // Every XML export is offered to every XML parser, so skip the parse
   // outright when this one's root element can't be in the file.
   if (!text.includes("<SW.Types.PlcStruct")) return [];
-  const source = withoutByteOrderMark(text);
+  const source = normalizeXmlSource(text);
   let doc: any;
   try {
     doc = parser.parse(source);
@@ -133,7 +133,7 @@ const XML_SECTION_TO_VAR: Record<string, string> = {
  */
 export function parseBlockXml(text: string): ParsedXmlBlock[] {
   if (!text.includes("<SW.Blocks.InstanceDB") && !text.includes("<SW.Blocks.GlobalDB")) return [];
-  const source = withoutByteOrderMark(text);
+  const source = normalizeXmlSource(text);
   let doc: any;
   try {
     doc = parser.parse(source);

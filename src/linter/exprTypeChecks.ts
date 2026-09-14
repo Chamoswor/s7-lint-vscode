@@ -30,13 +30,15 @@ import { ParsedBlockFile, SclAssignmentExpr, SclExprNode } from "../parser/s7dcl
 import { typeRefTopLevelName } from "../parser/typeRef";
 import { expandPinDataTypes, resolveTypeAlias } from "../rules/literalTypes";
 import { InstructionEntry, RuleSet } from "../rules/types";
-import { formatDiagnostic, LintDiagnostic } from "./diagnostics";
+import { formatDiagnostic, LintDiagnostic, LintOptions } from "./diagnostics";
 
 interface EvalContext {
   block: ParsedBlockFile;
   blockIndex: BlockIndex;
   typeCache: TypeCacheResult;
   ruleSet: RuleSet;
+  /** `tiaLint.iecCheck` -- see LintOptions. */
+  iecCheck: boolean;
 }
 
 interface ExprEval {
@@ -326,6 +328,18 @@ function evalBinary(node: Extract<SclExprNode, { kind: "binary" }>, ctx: EvalCon
       );
       return { typeName: null };
     }
+    // A pair TIA accepts only while a block's IEC check is off (arithmetic
+    // on bit strings) -- an error once the user says the property is on.
+    if (ctx.iecCheck && domainPairAllowed(leftDomain, rightDomain, ops.arithmetic.iecCheckRejectedDomainPairs ?? [])) {
+      diags.push(
+        formatDiagnostic(ctx.ruleSet, "expr-arithmetic-iec-check", node.line, node.col, {
+          op,
+          leftType: left.typeName,
+          rightType: right.typeName,
+        })
+      );
+      return { typeName: null };
+    }
     if (leftDomain === rightDomain && (ops.arithmetic.warnOnMismatchWithinDomain ?? []).includes(leftDomain)) {
       if (left.typeName !== right.typeName && !left.looseIntLiteral && !right.looseIntLiteral) {
         pushImplicitConversionWarning(node, left.typeName, right.typeName, ctx, diags);
@@ -404,8 +418,14 @@ function evalExpr(node: SclExprNode, ctx: EvalContext, diags: LintDiagnostic[]):
  * analogous check for a `#lhs := Call(...)` assignment; this checker is
  * scoped to the RHS expression's OWN internal operator consistency, not
  * assignability to the target). */
-export function checkSclExpressionTypes(block: ParsedBlockFile, ruleSet: RuleSet, blockIndex: BlockIndex, typeCache: TypeCacheResult): LintDiagnostic[] {
-  const ctx: EvalContext = { block, blockIndex, typeCache, ruleSet };
+export function checkSclExpressionTypes(
+  block: ParsedBlockFile,
+  ruleSet: RuleSet,
+  blockIndex: BlockIndex,
+  typeCache: TypeCacheResult,
+  options: LintOptions = {}
+): LintDiagnostic[] {
+  const ctx: EvalContext = { block, blockIndex, typeCache, ruleSet, iecCheck: options.iecCheck === true };
   const diags: LintDiagnostic[] = [];
   for (const assignment of block.sclAssignments as SclAssignmentExpr[]) {
     evalExpr(assignment.expr, ctx, diags);

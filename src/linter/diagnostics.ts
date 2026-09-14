@@ -5,9 +5,19 @@
 // by rules/loadRules.ts), and `formatDiagnostic` below is the one place that
 // turns a registry entry + a call site's params into a real LintDiagnostic.
 // See resources/diagnostic-registry/README.md for the YAML schema.
+import type { TargetPlatform } from "../rules/platformAvailability";
 import { DiagnosticSpec, LintSeverity, RuleSet } from "../rules/types";
 
 export type { LintSeverity } from "../rules/types";
+
+/** Facts about the target that exported sources don't record, as stated by
+ * the user's settings (`tiaLint.targetPlatform`, `tiaLint.iecCheck` -- see
+ * config.ts). Left out, checks keep their permissive defaults: no platform
+ * availability checks, and the blocks' IEC check assumed off. */
+export interface LintOptions {
+  targetPlatform?: TargetPlatform;
+  iecCheck?: boolean;
+}
 
 /**
  * What a Quick Fix needs to repair the instruction REGISTRY itself, for the

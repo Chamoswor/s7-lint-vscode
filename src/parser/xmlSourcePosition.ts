@@ -7,10 +7,14 @@ import { XMLParser } from "fast-xml-parser";
 
 const METADATA = XMLParser.getMetaDataSymbol() as unknown as symbol;
 
-/** Drops a leading byte-order mark, so the offsets the parser reports and
- * the line table are computed over exactly the same text. */
-export function withoutByteOrderMark(text: string): string {
-  return text.charCodeAt(0) === 0xfeff ? text.slice(1) : text;
+/** The text to parse and to index lines over: without a leading byte-order
+ * mark, and with every line break as `\n`. fast-xml-parser normalizes CRLF
+ * itself (as the XML spec requires), so on a CRLF export -- TIA's default on
+ * Windows -- its offsets drift one character per line break unless the text
+ * was normalized the same way first. */
+export function normalizeXmlSource(text: string): string {
+  const withoutByteOrderMark = text.charCodeAt(0) === 0xfeff ? text.slice(1) : text;
+  return withoutByteOrderMark.replace(/\r\n?/g, "\n");
 }
 
 export class XmlLineIndex {

@@ -119,6 +119,41 @@ class CodeAction {
 }
 const CodeActionKind = { QuickFix: "quickfix" };
 
+// -- cache/cacheManager.ts's own additional surface ----------------------
+// A test installs its own `workspace.findFiles`/`fs`/`createFileSystemWatcher`
+// on the shared `workspace` object above to stand in for a real workspace.
+class Disposable {
+  constructor(callOnDispose) {
+    this.callOnDispose = callOnDispose;
+  }
+  dispose() {
+    if (this.callOnDispose) this.callOnDispose();
+  }
+}
+class EventEmitter {
+  constructor() {
+    this.listeners = new Set();
+    this.event = (listener) => {
+      this.listeners.add(listener);
+      return new Disposable(() => this.listeners.delete(listener));
+    };
+  }
+  fire(value) {
+    for (const listener of [...this.listeners]) listener(value);
+  }
+  dispose() {
+    this.listeners.clear();
+  }
+}
+class RelativePattern {
+  constructor(base, pattern) {
+    this.baseUri = typeof base === "string" ? Uri.file(base) : base;
+    this.base = this.baseUri.fsPath;
+    this.pattern = pattern;
+  }
+}
+const FileType = { Unknown: 0, File: 1, Directory: 2, SymbolicLink: 64 };
+
 module.exports = {
   Position,
   Range,
@@ -135,4 +170,8 @@ module.exports = {
   MarkdownString,
   CodeAction,
   CodeActionKind,
+  Disposable,
+  EventEmitter,
+  RelativePattern,
+  FileType,
 };

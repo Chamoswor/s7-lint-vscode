@@ -33,12 +33,12 @@
 #     Interface editor export confirms the key is 'ErrorStruct' (matches
 #     section-legality.yaml); the Siemens 'System data types' reference
 #     page's 'ERROR_STRUCT' spelling was not what TIA itself uses.
-#   - EVENT_HWINT / OB_HWINT — RESOLVED 2026-07-13: platform-availability.NOTLOADED.yaml
+#   - EVENT_HWINT / OB_HWINT — RESOLVED 2026-07-13: platform-availability.yaml
 #     (a second, independent Siemens source) agrees with the spelling
 #     used here; section-legality.yaml's EVENT_HWNT / OB_HWNT was a
 #     transcription typo and has been corrected to match.
 # `HW_DPMASTER` and `CONN_R_ID` are new here and not present in
-# section-legality.yaml — RESOLVED: platform-availability.NOTLOADED.yaml shows
+# section-legality.yaml — RESOLVED: platform-availability.yaml shows
 # both are S7-1500-only, so their absence from data-types-ext
 # (S7-1200-scoped) is expected, not a registry gap. `Remote` (originally
 # transcribed here as `REMOTE` from the Siemens hardware-data-types page)
@@ -433,7 +433,7 @@ VREF:
   members: null # TODO
   confidence: shape-only
   source: "Siemens TIA Portal Information System — System data types"
-  notes: "Not present in section-legality.yaml or data-types-ext — confirm which VAR_* sections legally accept it before relying on that as a gap vs. an omission. CORRECTED 2026-07-13 — user could not declare VREF on a real S7-1200 G2 CPU; platform-availability.NOTLOADED.yaml's S7-1200 G2 column updated to false (was wrongly 'true', a bad guess from an ambiguous 3-token source-table row). S7-1500 availability still unconfirmed — don't assume it from this entry's platform data alone."
+  notes: "Not present in section-legality.yaml or data-types-ext — confirm which VAR_* sections legally accept it before relying on that as a gap vs. an omission. CORRECTED 2026-07-13 — user could not declare VREF on a real S7-1200 G2 CPU; platform-availability.yaml's S7-1200 G2 column updated to false (was wrongly 'true', a bad guess from an ambiguous 3-token source-table row). S7-1500 availability still unconfirmed — don't assume it from this entry's platform data alone."
 
 SSL_HEADER:
   sizeBytes: 4
@@ -443,7 +443,7 @@ SSL_HEADER:
   members: null # TODO
   confidence: official-doc
   source: "Siemens TIA Portal Information System — System data types"
-  notes: "Not present in section-legality.yaml or data-types-ext — same caveat as VREF. CONFIRMED 2026-07-13 — user could not find/declare RDSYSST on a real S7-1200 G2 CPU either, matching this entry's S7-300/400-only platform data in platform-availability.NOTLOADED.yaml. RDSYSST is a legacy SFC51-era instruction with no S7-1200/S7-1500/G2 equivalent — out of scope for this project's target platforms (see tia_target_platforms memory), deprioritize filling in `members` here."
+  notes: "Not present in section-legality.yaml or data-types-ext — same caveat as VREF. CONFIRMED 2026-07-13 — user could not find/declare RDSYSST on a real S7-1200 G2 CPU either, matching this entry's S7-300/400-only platform data in platform-availability.yaml. RDSYSST is a legacy SFC51-era instruction with no S7-1200/S7-1500/G2 equivalent — out of scope for this project's target platforms (see tia_target_platforms memory), deprioritize filling in `members` here."
 
 CONDITIONS:
   sizeBytes: 52
@@ -698,7 +698,7 @@ HW_DPMASTER:
   usedByInstructions: []
   confidence: official-doc
   source: "Siemens TIA Portal Information System — Hardware data types"
-  notes: "RESOLVED — not present in section-legality.yaml's allSections list, but platform-availability.NOTLOADED.yaml shows HW_DPMASTER is S7-1500-only; data-types-ext (S7-1200-scoped) correctly excludes it. Not a registry gap."
+  notes: "RESOLVED — not present in section-legality.yaml's allSections list, but platform-availability.yaml shows HW_DPMASTER is S7-1500-only; data-types-ext (S7-1200-scoped) correctly excludes it. Not a registry gap."
 
 HW_DPSLAVE:
   basicDataType: HW_DEVICE
@@ -815,7 +815,7 @@ EVENT_HWINT:
   usedByInstructions: []
   confidence: shape-only
   source: "Siemens TIA Portal Information System — Hardware data types"
-  notes: "Confirmed canonical spelling — platform-availability.NOTLOADED.yaml (a second, independent Siemens source) agrees. section-legality.yaml's earlier 'EVENT_HWNT' (transcribed from data-types-ext) was a typo and has been corrected."
+  notes: "Confirmed canonical spelling — platform-availability.yaml (a second, independent Siemens source) agrees. section-legality.yaml's earlier 'EVENT_HWNT' (transcribed from data-types-ext) was a typo and has been corrected."
 
 OB_ANY:
   basicDataType: Int
@@ -878,7 +878,7 @@ OB_HWINT:
   usedByInstructions: []
   confidence: shape-only
   source: "Siemens TIA Portal Information System — Hardware data types"
-  notes: "Confirmed canonical spelling — platform-availability.NOTLOADED.yaml (a second, independent Siemens source) agrees. section-legality.yaml's earlier 'OB_HWNT' (transcribed from data-types-ext) was a typo and has been corrected."
+  notes: "Confirmed canonical spelling — platform-availability.yaml (a second, independent Siemens source) agrees. section-legality.yaml's earlier 'OB_HWNT' (transcribed from data-types-ext) was a typo and has been corrected."
 
 OB_DIAG:
   basicDataType: OB_ANY
@@ -968,7 +968,7 @@ CONN_R_ID:
   usedByInstructions: []
   confidence: official-doc
   source: "Siemens TIA Portal Information System — Hardware data types"
-  notes: "RESOLVED — not present in section-legality.yaml's allSections CONN_* set (CONN_ANY/CONN_OUC/CONN_PRG only), but platform-availability.NOTLOADED.yaml shows CONN_R_ID is S7-1500-only; data-types-ext (S7-1200-scoped) correctly excludes it. Not a registry gap."
+  notes: "RESOLVED — not present in section-legality.yaml's allSections CONN_* set (CONN_ANY/CONN_OUC/CONN_PRG only), but platform-availability.yaml shows CONN_R_ID is S7-1500-only; data-types-ext (S7-1200-scoped) correctly excludes it. Not a registry gap."
 
 DB_ANY:
   basicDataType: UInt

@@ -8,7 +8,7 @@
 
 platform:
   requirement: "S7-1500 series CPU, firmware >= V2.5"
-  notes: "No S7-1200 support at all (any firmware) — References simply don't exist there, unlike most other gaps in this repo which are S7-1200-vs-S7-1500 SPLITS. platform-availability.NOTLOADED.yaml's existing `pointer.References` row (S7-1500 true, S7-1200 G2 true, S7-1200 false) already matches this; this page adds the firmware >=V2.5 floor as a refinement — a fourth availability axis, the same shape as 02-comparators.yaml's STRUCT/ARRAY/VARIANT-comparison firmware gate (S7-1200>=V4.2 / S7-1500>=V2.0)."
+  notes: "No S7-1200 support at all (any firmware) — References simply don't exist there, unlike most other gaps in this repo which are S7-1200-vs-S7-1500 SPLITS. platform-availability.yaml's existing `pointer.References` row (S7-1500 true, S7-1200 G2 true, S7-1200 false) already matches this; this page adds the firmware >=V2.5 floor as a refinement — a fourth availability axis, the same shape as 02-comparators.yaml's STRUCT/ARRAY/VARIANT-comparison firmware gate (S7-1200>=V4.2 / S7-1500>=V2.0)."
 
 declaration:
   keyword: "REF_TO <data type>"

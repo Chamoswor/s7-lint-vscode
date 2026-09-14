@@ -77,7 +77,7 @@ dataTypeCodes:
   "B#16#1A": { name: BLOCK_SDB, description: "System data block", platformOnly: "S7-300/400" }
   "B#16#1C": { name: COUNTER, description: "Counter", platformOnly: "S7-300/400" }
   "B#16#1D": { name: TIMER, description: "Timer", platformOnly: "S7-300/400" }
-  notes: "Names here are the LEGACY/STL-style spellings printed by Siemens' own ANY-pointer table (BOOL/BYTE/INT/DINT/REAL/TOD/DT/...), NOT necessarily identical to base-types.yaml's canonical keys (Bool/Byte/Int/DInt/Real/Time_Of_Day/Date_And_Time/...) — map through base-types.yaml's `aliases` field (e.g. TOD -> Time_Of_Day, DT -> Date_And_Time) rather than treating these as literal base-types.yaml keys. `platformOnly: S7-300/400` entries mirror this file's own footnote 1 ('These data types can only be used for the ANY pointer on a CPU S7-300/400') — cross-check against platform-availability.NOTLOADED.yaml if a lint rule ever needs to gate ANY-pointer data-type selection by target CPU."
+  notes: "Names here are the LEGACY/STL-style spellings printed by Siemens' own ANY-pointer table (BOOL/BYTE/INT/DINT/REAL/TOD/DT/...), NOT necessarily identical to base-types.yaml's canonical keys (Bool/Byte/Int/DInt/Real/Time_Of_Day/Date_And_Time/...) — map through base-types.yaml's `aliases` field (e.g. TOD -> Time_Of_Day, DT -> Date_And_Time) rather than treating these as literal base-types.yaml keys. `platformOnly: S7-300/400` entries mirror this file's own footnote 1 ('These data types can only be used for the ANY pointer on a CPU S7-300/400') — cross-check against platform-availability.yaml if a lint rule ever needs to gate ANY-pointer data-type selection by target CPU."
 
 # --- Memory area coding (the "Memory area" structure component) ---
 memoryAreaCodes:
@@ -95,7 +95,7 @@ notes: |
   Cross-references worth keeping in sync:
   - base-types.yaml's `Any` entry points here for the full shape; keep
     the summary there in sync if this file's structure/grammar changes.
-  - platform-availability.NOTLOADED.yaml's `pointer.Any` row already marks Any as
+  - platform-availability.yaml's `pointer.Any` row already marks Any as
     S7-300/400 + S7-1500 only (not plain S7-1200) — this file's
     `platformOnly: S7-300/400` sub-codes are a FINER-GRAINED restriction
     layered on top of that (a subset of Any's already-restricted data-type/

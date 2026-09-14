@@ -62,7 +62,7 @@ assert.deepEqual(
   "each top-level member keeps its own line"
 );
 
-const [udtWithBomAndCrlf] = parseUdtXml("﻿" + udtXml.replace(/\n/g, "\r\n"));
+const [udtWithBomAndCrlf] = parseUdtXml(String.fromCharCode(0xfeff) + udtXml.replace(/\n/g, "\r\n"));
 assert.equal(udtWithBomAndCrlf.line, udt.line, "a byte-order mark and CRLF line endings don't shift the declaration line");
 assert.deepEqual(
   udtWithBomAndCrlf.members.map((m) => m.line),

@@ -2,6 +2,32 @@
 
 All notable changes to S7 Lint for VS Code will be documented in this file.
 
+## Unreleased
+Fixes for the README's known limitations
+
+- `+` and `-` written without spaces are operators again: `4-1` and `#a-1`
+  no longer lose the subtraction and report a missing semicolon, and such
+  expressions are type-checked. Signed literals (`:= -1`, `Array[-5..-1]`,
+  `int#-32768`), dates and exponents lex as before.
+- A FUNCTION's result variable (its own name) has the declared return type,
+  so assignments to it and conditions on it are checked like any other local
+  variable.
+- XML exports keep their source lines. PLC data type, DATA_BLOCK and PLC tag
+  declarations and their members report diagnostics and Go to Definition on
+  their own line instead of line 1, also in CRLF files. Every block in a
+  multi-block `.scl` file navigates to its own header.
+- Type-cache diagnostics are shown for an XML PLC data type outside a
+  `PLC data types` folder.
+- The type cache and block index follow workspace changes incrementally: only
+  the files involved are read again, a burst of file events is applied once,
+  updates can no longer finish out of order, and folders deleted or moved in
+  as a whole are picked up. Saving `system-types.yaml` in the Instruction
+  Registry Editor no longer rescans the workspace.
+- New settings, both off by default: `tiaLint.targetPlatform` reports declared
+  data types the chosen CPU family doesn't support (from the now-loaded
+  `platform-availability.yaml`), and `tiaLint.iecCheck` reports bit-string
+  arithmetic as a block's IEC check would.
+
 ## 0.1.7
 Bug fixes
 

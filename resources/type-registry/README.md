@@ -19,11 +19,11 @@ relevant fields, and verify behavior with the automated tests.
 | [references.yaml](references.yaml) | `REF_TO`, `REF()`, dereference, assignment, and declaration rules | loaded |
 | [symbolic-runtime-access.yaml](symbolic-runtime-access.yaml) | symbolic runtime access and matching-array constraints | loaded |
 | [bcd-formats.yaml](bcd-formats.yaml) | BCD conversion formats that are not ordinary declared types | loaded |
+| [platform-availability.yaml](platform-availability.yaml) | data-type availability per CPU family, checked when `tiaLint.targetPlatform` is set | loaded |
 | [slice-access.md](slice-access.md) | maintainer reference for slice and string-index syntax | documentation only |
 | [named-value-types.NOTLOADED.yaml](named-value-types.NOTLOADED.yaml) | named-value-type research not yet supported by the lexer or rule loader | not loaded |
-| [platform-availability.NOTLOADED.yaml](platform-availability.NOTLOADED.yaml) | CPU-family availability pending target-platform configuration | not loaded |
 
-`src/rules/loadRules.ts` explicitly loads the eleven files marked `loaded`.
+`src/rules/loadRules.ts` explicitly loads the twelve files marked `loaded`.
 The `.NOTLOADED.yaml` suffix is intentional and prevents unfinished reference
 data from being mistaken for enforced behavior.
 

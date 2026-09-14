@@ -482,6 +482,32 @@
           "scope": "window",
           "markdownDescription": "Automatically install theme-scoped colors for S7 datatype families, UDTs, DATA_BLOCK objects, PLC tags, callable types/instances, structured members, and indexable values when a supported editor is active. Disable this to remove S7 Lint-managed preset rules while preserving unrelated or manually customized semantic color rules."
         },
+        "tiaLint.targetPlatform": {
+          "type": "string",
+          "enum": [
+            "",
+            "S7-1200",
+            "S7-1200 G2",
+            "S7-1500",
+            "S7-300/400"
+          ],
+          "enumDescriptions": [
+            "Not set: declared data types are not checked against a CPU family.",
+            "S7-1200",
+            "S7-1200 G2. A type available only in S7-1500-compatible mode is reported as information.",
+            "S7-1500",
+            "S7-300/400"
+          ],
+          "default": "",
+          "scope": "resource",
+          "markdownDescription": "CPU family the project targets. Exported sources don't record it, so declared data types are checked against the family's availability (`resources/type-registry/platform-availability.yaml`) only when this is set."
+        },
+        "tiaLint.iecCheck": {
+          "type": "boolean",
+          "default": false,
+          "scope": "resource",
+          "markdownDescription": "Lint as if the blocks' **IEC check** property is enabled. Exported sources don't record it, so by default the linter accepts what TIA Portal accepts with the property off, such as arithmetic on bit strings (`#w := #w + 1` on a `Word`)."
+        },
         "tiaLint.mlcLocale": {
           "type": "string",
           "default": "en-US",
@@ -498,12 +524,13 @@
     "bundle:ext": "esbuild src/extension.ts --bundle --platform=node --format=cjs --external:vscode --outfile=dist/extension.js --sourcemap",
     "bundle:webview": "esbuild src/instructionEditor/webview/main.ts --bundle --format=iife --platform=browser --outfile=dist/instructionEditor.webview.js --sourcemap",
     "watch": "tsc -watch -p ./",
-    "test": "npm run compile && npm run typecheck:webview && npm run test:lexer && npm run test:s7res &&npm run test:s7res-quickfix && npm run test:plc-tags && npm run test:positions && npm run test:semantic-colors && npm run test:completion && npm run test:rename && npm run test:quickfix && npm run test:registry-quickfix && npm run test:manifest && npm run test:annotated && npm run test:instance-context && npm run test:editor && npm run test:editor-service && npm run test:smoke",
+    "test": "npm run compile && npm run typecheck:webview && npm run test:lexer && npm run test:s7res &&npm run test:s7res-quickfix && npm run test:plc-tags && npm run test:positions && npm run test:workspace && npm run test:semantic-colors && npm run test:completion && npm run test:rename && npm run test:quickfix && npm run test:registry-quickfix && npm run test:manifest && npm run test:annotated && npm run test:target && npm run test:instance-context && npm run test:editor && npm run test:editor-service && npm run test:smoke",
     "test:lexer": "node scripts/test-lexer.js",
     "test:s7res": "node scripts/test-s7res-checks.js",
     "test:s7res-quickfix": "node scripts/test-s7res-quickfix.js",
     "test:plc-tags": "node scripts/test-plc-tags.js",
     "test:positions": "node scripts/test-source-positions.js",
+    "test:workspace": "node scripts/test-workspace-sources.js",
     "test:instance-context": "node scripts/test-instance-type-context.js",
     "test:editor": "node scripts/test-instruction-editor.js",
     "test:editor-service": "node scripts/test-editor-service.js",
@@ -515,6 +542,7 @@
     "test:registry-quickfix": "node scripts/test-registry-quickfix.js",
     "test:manifest": "node scripts/run-manifest-smoke-tests.js",
     "test:annotated": "node scripts/run-annotated-diagnostic-tests.js",
+    "test:target": "node scripts/test-target-settings.js",
     "test:smoke": "node scripts/smoke-test.js",
     "package": "npm run bundle"
   },
